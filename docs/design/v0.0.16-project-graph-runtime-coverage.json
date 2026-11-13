@@ -1,0 +1,4661 @@
+{
+  "task_criteria": [
+    {
+      "id": "T257-AC01",
+      "source_line": 36,
+      "text_sha256": "089ec3004df621038e2d0eaf454105cc65e1ea7cdbd63bffed086131f06f9e46",
+      "design_sections": [
+        "1",
+        "5",
+        "6",
+        "13",
+        "6.4",
+        "13.4",
+        "15"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "AM-SEL-01",
+          "kind": "Ready gate and public acceptance dependency",
+          "detail": "Independent frozen-contract owner review/refreeze and operator disposition of graph-only public selection-reference amendment; relevant installed related read/seam/fault/rebuild assertions cannot execute meaningfully without it."
+        }
+      ],
+      "disposition": "open-decision:OD-04"
+    },
+    {
+      "id": "T257-AC02",
+      "source_line": 37,
+      "text_sha256": "158c00b7e114adc379bc870b72c6bd9097af6956a1506195e18963a48b54d844",
+      "design_sections": [
+        "7",
+        "11",
+        "13",
+        "6.4",
+        "13.4",
+        "15"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "AM-SEL-01",
+          "kind": "Ready gate and public acceptance dependency",
+          "detail": "Independent frozen-contract owner review/refreeze and operator disposition of graph-only public selection-reference amendment; relevant installed related read/seam/fault/rebuild assertions cannot execute meaningfully without it."
+        }
+      ],
+      "disposition": "open-decision:OD-04"
+    },
+    {
+      "id": "T257-AC03",
+      "source_line": 38,
+      "text_sha256": "e395e49ecbdc66dd40d4fc9fc7ad26180762d39c7fe91a5da40412deae22fe1d",
+      "design_sections": [
+        "9",
+        "11",
+        "13",
+        "6.4",
+        "13.4",
+        "15",
+        "9.2",
+        "9.3",
+        "9.5"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "AM-SEL-01",
+          "kind": "Ready gate and public acceptance dependency",
+          "detail": "Independent frozen-contract owner review/refreeze and operator disposition of graph-only public selection-reference amendment; relevant installed related read/seam/fault/rebuild assertions cannot execute meaningfully without it."
+        }
+      ],
+      "disposition": "open-decision:OD-04"
+    },
+    {
+      "id": "T257-AC04",
+      "source_line": 39,
+      "text_sha256": "d4dc0657577edcdb139397f8655103e6968be36c4f1a3b3c70d621c4e09d936c",
+      "design_sections": [
+        "4",
+        "9.3",
+        "10",
+        "13",
+        "9.2",
+        "9.5",
+        "8.3",
+        "9.4",
+        "15",
+        "16"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "OD-01",
+          "kind": "profile enablement/installed acceptance input",
+          "detail": "Selected exact supported platform/artifact/carrier profile approval/qualification; not a v0.0.15 task-delivery Ready gate."
+        },
+        {
+          "id": "OD-02",
+          "kind": "measurement and operating-budget approval input",
+          "detail": "First authorize exact bounded M0 study profile/budget; later approve measured namespace-scaled runtime policy. Project inheritance remains automatic unless narrower."
+        },
+        {
+          "id": "OD-07",
+          "kind": "operator workflow enablement choice",
+          "detail": "Admin-enrolled hardware-verified approval workflow must be accepted; native-permission alternative is permitted but deferred, not assumed supported."
+        }
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "T257-AC05",
+      "source_line": 40,
+      "text_sha256": "31396982e7e7871b549ddd466c23c1d45727ce6b859add629247ced874c2b539",
+      "design_sections": [
+        "5.2",
+        "8",
+        "9.1",
+        "13",
+        "7.2",
+        "13.1",
+        "13.4",
+        "15"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "AM-SEL-01",
+          "kind": "public-freshness acceptance dependency",
+          "detail": "Fresh installed related-read proof requires approved/refrozen public graph-only source selection.",
+          "scope": "Only public graph-freshness subcells; ordinary checkpoint/write survival and content-free upkeep do not depend on it."
+        },
+        {
+          "id": "OD-02",
+          "kind": "measurement/automatic-upkeep operating-policy approval input",
+          "detail": "Installed measurement first needs the exact M0 authorization under an accepted grant path; automatic upkeep needs its measured scoped installation resource-policy approval. Permanent deferral/disable does not satisfy T:39/40/73 or deliver #257.",
+          "scope": "Graph measurement/automatic upkeep and freshness acceptance; ordinary canonical write/checkpoint survival does not depend on semantic resource approval."
+        }
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "T257-AC06",
+      "source_line": 41,
+      "text_sha256": "ac8afeb98fdce6b163dace74c900cb06349211c7eca0ce1c080015c584d92d36",
+      "design_sections": [
+        "1",
+        "13",
+        "15",
+        "16",
+        "6.4",
+        "13.4"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "AM-SEL-01",
+          "kind": "Ready gate and public acceptance dependency",
+          "detail": "Independent frozen-contract owner review/refreeze and operator disposition of graph-only public selection-reference amendment; relevant installed related read/seam/fault/rebuild assertions cannot execute meaningfully without it."
+        }
+      ],
+      "disposition": "open-decision:OD-04"
+    },
+    {
+      "id": "T257-AC07",
+      "source_line": 45,
+      "text_sha256": "9c2d64aaf4eace896286015678086a56588e2ad502b73857b322297ba10952e8",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "12",
+        "13",
+        "6.4",
+        "13.4",
+        "15"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "AM-SEL-01",
+          "kind": "Ready gate and public acceptance dependency",
+          "detail": "Independent frozen-contract owner review/refreeze and operator disposition of graph-only public selection-reference amendment; relevant installed related read/seam/fault/rebuild assertions cannot execute meaningfully without it."
+        },
+        {
+          "id": "Q-REAL-PROVIDER",
+          "kind": "real runtime evidence required for the cell; G3-versus-joint-G2 delivery allocation pending OD-08",
+          "detail": "A real qualified provider is necessary to pass the stopped/release cell. Whether absence delays G3 delivery or the exact cell transfers explicitly unexercised to #256 joint acceptance requires OD-08; current frozen allocation remains until changed."
+        },
+        {
+          "id": "OD-08",
+          "kind": "operator/contract-owner delivery allocation choice",
+          "detail": "Current frozen default waits for real stopped/hook-release evidence; proposed explicit transfer retains the exact unexercised cells under #256 joint acceptance. No transfer/waiver approved here."
+        }
+      ],
+      "disposition": "open-decision:OD-04"
+    },
+    {
+      "id": "T257-AC08",
+      "source_line": 46,
+      "text_sha256": "113e7873483a927eab8a3e218433b1a2e847c6bd205b725165fde3d4860d89e6",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "6.2",
+        "13",
+        "6.4",
+        "13.4",
+        "15"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "AM-SEL-01",
+          "kind": "Ready gate and public acceptance dependency",
+          "detail": "Independent frozen-contract owner review/refreeze and operator disposition of graph-only public selection-reference amendment; relevant installed related read/seam/fault/rebuild assertions cannot execute meaningfully without it."
+        }
+      ],
+      "disposition": "open-decision:OD-04"
+    },
+    {
+      "id": "T257-AC09",
+      "source_line": 47,
+      "text_sha256": "20d8aa02b7acebc3855d1cc6376dceeb27de9abd5d06495274f118f9a6626fb2",
+      "design_sections": [
+        "6.3",
+        "8",
+        "10.1",
+        "12",
+        "13",
+        "6.4",
+        "13.4",
+        "15"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "AM-SEL-01",
+          "kind": "Ready gate and public acceptance dependency",
+          "detail": "Independent frozen-contract owner review/refreeze and operator disposition of graph-only public selection-reference amendment; relevant installed related read/seam/fault/rebuild assertions cannot execute meaningfully without it."
+        },
+        {
+          "id": "Q-REAL-PROVIDER",
+          "kind": "real runtime evidence required for the cell; G3-versus-joint-G2 delivery allocation pending OD-08",
+          "detail": "A real qualified provider is necessary to pass the stopped/release cell. Whether absence delays G3 delivery or the exact cell transfers explicitly unexercised to #256 joint acceptance requires OD-08; current frozen allocation remains until changed."
+        },
+        {
+          "id": "OD-08",
+          "kind": "operator/contract-owner delivery allocation choice",
+          "detail": "Current frozen default waits for real stopped/hook-release evidence; proposed explicit transfer retains the exact unexercised cells under #256 joint acceptance. No transfer/waiver approved here."
+        }
+      ],
+      "disposition": "open-decision:OD-04"
+    },
+    {
+      "id": "T257-AC10",
+      "source_line": 73,
+      "text_sha256": "d568dcd44933ce3f219a7707163005291b951f03b0e80ed1047865575422b990",
+      "design_sections": [
+        "1",
+        "4",
+        "10.1",
+        "13.3",
+        "16",
+        "8.3",
+        "9.4",
+        "15"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [
+        {
+          "id": "OD-01",
+          "kind": "profile enablement/installed acceptance input",
+          "detail": "Selected exact supported platform/artifact/carrier profile approval/qualification; not a v0.0.15 task-delivery Ready gate."
+        },
+        {
+          "id": "OD-02",
+          "kind": "measurement and operating-budget approval input",
+          "detail": "First authorize exact bounded M0 study profile/budget; later approve measured namespace-scaled runtime policy. Project inheritance remains automatic unless narrower."
+        },
+        {
+          "id": "OD-07",
+          "kind": "operator workflow enablement choice",
+          "detail": "Admin-enrolled hardware-verified approval workflow must be accepted; native-permission alternative is permitted but deferred, not assumed supported."
+        }
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "T257-AC11",
+      "source_line": 74,
+      "text_sha256": "0cff8bbe3d7a85fd43e7ae814b2fe93496957cdc673f866033639bf0b7f7d520",
+      "design_sections": [
+        "4",
+        "5",
+        "7",
+        "9",
+        "13",
+        "9.2",
+        "9.3",
+        "9.5"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [],
+      "disposition": "covered"
+    },
+    {
+      "id": "T257-AC12",
+      "source_line": 75,
+      "text_sha256": "d64cabab8baff8d0b1980e3a658e83d3a654944d0088f50b74fb6ba747108456",
+      "design_sections": [
+        "1",
+        "2",
+        "4",
+        "16"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [],
+      "disposition": "covered"
+    },
+    {
+      "id": "T257-AC13",
+      "source_line": 76,
+      "text_sha256": "d6f034a0e3f7af6c90484a4748d8758abec88e85d686da3fbca4aa1c3d66bf2e",
+      "design_sections": [
+        "1",
+        "6.3",
+        "8",
+        "10.1"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [],
+      "disposition": "covered"
+    },
+    {
+      "id": "T257-AC14",
+      "source_line": 77,
+      "text_sha256": "5b5d23ceffd5d7bb5e854d255eedb8cc2e6d0dc10fcb3545e7457d06d0d2038e",
+      "design_sections": [
+        "1",
+        "13",
+        "15",
+        "16"
+      ],
+      "acceptance_state": "not-executed; design only",
+      "dependencies": [],
+      "disposition": "covered"
+    }
+  ],
+  "contract_requirements": [
+    {
+      "id": "C-1-L36-1",
+      "section": "1",
+      "source_line": 36,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "ba51b269e96a393ede15a9f4c4cdf51064795cb8e57ef44f9c161bf3eaf8e5e8",
+      "requirement_summary": "**G1 research versus profile enablement.** The eight original ADR-0024 G1 research criteria were independently accepted at `362ab0a`; this amendment MUST NOT reopen them.",
+      "design_sections": [
+        "1",
+        "2",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-1-L42-1",
+      "section": "1",
+      "source_line": 42,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "4064df32b4698a68b4d5858f6c812de0d166c8697f4fec190511229db6a25901",
+      "requirement_summary": "This amended contract's independent review MUST explicitly decide those additive research obligations and their limitations; the original eight-criterion verdict MUST NOT be borrowed as that decision.",
+      "design_sections": [
+        "1",
+        "2",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "out-of-scope:#255",
+      "owner_note": "Already discharged amended G1 research-contract review obligation; preserved historical authority, not a new G3 operator decision or reopened research gate."
+    },
+    {
+      "id": "C-1-L44-1",
+      "section": "1",
+      "source_line": 44,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "f192daf8710f690d91e0e45d909a4ca4ec988b05ef10d4df07bcfab5fdbba2b7",
+      "requirement_summary": "This amended contract's independent review MUST explicitly decide those additive research obligations and their limitations; the original eight-criterion verdict MUST NOT be borrowed as that decision.",
+      "design_sections": [
+        "1",
+        "2",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "out-of-scope:#255",
+      "owner_note": "Already discharged amended G1 research-contract review obligation; preserved historical authority, not a new G3 operator decision or reopened research gate."
+    },
+    {
+      "id": "C-1-L53-1",
+      "section": "1",
+      "source_line": 53,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "7564de0ca3910df352cfc8b67984a3d5e24451a5a378e27b42a30f2125aad713",
+      "requirement_summary": "This split MUST NOT waive any before-enable obligation, qualify an unavailable profile, require the .16 product to close .15 research, or make a dependent implementation Ready without its own design approval.",
+      "design_sections": [
+        "1",
+        "2",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-1-L69-1",
+      "section": "1",
+      "source_line": 69,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "abb013663537eed126e5cb355630803edc516aecd4d5b8346b1143ceea6ae5a4",
+      "requirement_summary": "Core MUST receive its own exact artifact/platform, eligibility, numerical, quality and resource qualification before enablement; it inherits no reference quality pass.",
+      "design_sections": [
+        "1",
+        "2",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "open-decision:OD-01"
+    },
+    {
+      "id": "C-1-L99-1",
+      "section": "1",
+      "source_line": 99,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9260ddd645937c2e71db4fe23487c8d2cfe869299f02677108ff3dbb434ab59e",
+      "requirement_summary": "Actual source build: llama.cpp `a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07`, reports 9341; the short commit is not on the ordinary fetched main ancestry and MUST be fetched by full SHA.",
+      "design_sections": [
+        "1",
+        "2",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "out-of-scope:#256",
+      "owner_note": "Managed-model artifact identity/verified-binary prohibition belongs to G2; no historical b9341 artifact offered by G3."
+    },
+    {
+      "id": "C-1-L100-1",
+      "section": "1",
+      "source_line": 100,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "177e857b681ad771d624e625325e2df117f10606133037b6e29ecc20c54ed247",
+      "requirement_summary": "A release tag `b9341` was not found; it MUST NOT be offered as a verified binary.",
+      "design_sections": [
+        "1",
+        "2",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "out-of-scope:#256",
+      "owner_note": "Managed-model artifact identity/verified-binary prohibition belongs to G2; no historical b9341 artifact offered by G3."
+    },
+    {
+      "id": "C-1-L122-1",
+      "section": "1",
+      "source_line": 122,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "e27037f584b7ea9d5b22a9c793b4973550898abcec494249ca03a2717ccf36f4",
+      "requirement_summary": "ANN qualification MUST independently establish eligible exact-cosine agreement, recall with `k<N`, ordering/rescoring and completeness; the observed SSG ranking MUST NOT be adopted as accepted AM behavior.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Future product-profile qualification/non-adoption rule retained explicitly, consistent with the conditional ANN policy; not assigned to closed #255 research and not enabling ANN."
+    },
+    {
+      "id": "C-1-L124-1",
+      "section": "1",
+      "source_line": 124,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "68cf5b17d5c02d037f03fbd9369f4fc13d8a77ec72ce142ad2469b9d4c3ceedb",
+      "requirement_summary": "ANN qualification MUST independently establish eligible exact-cosine agreement, recall with `k<N`, ordering/rescoring and completeness; the observed SSG ranking MUST NOT be adopted as accepted AM behavior.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Future product-profile qualification/non-adoption rule retained explicitly, consistent with the conditional ANN policy; not assigned to closed #255 research and not enabling ANN."
+    },
+    {
+      "id": "C-2-L145-1",
+      "section": "2",
+      "source_line": 145,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9ae0ae1164741ef1f1f97da29eb9bde9696cce38ef8ba1711e899abb37cb3c52",
+      "requirement_summary": "A shipped MEL PDF alone MUST NOT be treated as Enterprise acceptance by a Community user; applicable Enterprise components/features remain a separate boundary question.",
+      "design_sections": [
+        "1",
+        "2",
+        "4",
+        "16"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-2-L148-1",
+      "section": "2",
+      "source_line": 148,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "41870a2aef1141eddab0e3299e3cbfb9dce243abd65e65759c156b7834af5818",
+      "requirement_summary": "G1's BOM MUST bind the exact examined image, distro package versions, Python distribution versions/metadata, installed query-module inventory and every retained license-file hash.",
+      "design_sections": [
+        "1",
+        "2",
+        "4",
+        "16"
+      ],
+      "disposition": "out-of-scope:#255"
+    },
+    {
+      "id": "C-2-L154-1",
+      "section": "2",
+      "source_line": 154,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "a14423a99a732c933f332b276894f5a62a592a900f708077c962bfd3b6dbe77f",
+      "requirement_summary": "Unknown license/revision coverage MUST remain explicit.",
+      "design_sections": [
+        "1",
+        "2",
+        "4",
+        "16"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-2-L155-1",
+      "section": "2",
+      "source_line": 155,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "2e07b2d7c13018447a2f6540d0dffc6f80820dedd3778fce82c6e09362cf0e6c",
+      "requirement_summary": "Core-versus-MAGE comparison MUST cover needed vector/query capabilities as well as footprint and notices.",
+      "design_sections": [
+        "1",
+        "2",
+        "4",
+        "16"
+      ],
+      "disposition": "out-of-scope:#255"
+    },
+    {
+      "id": "C-2-L165-1",
+      "section": "2",
+      "source_line": 165,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9b7663851011c67c3b6ea45e192770d41fcf197271cd965e49606903314494a4",
+      "requirement_summary": "Hypothetical bundled third-party images/weights or hosted offerings are outside this scope and MUST NOT hold up the private build.",
+      "design_sections": [
+        "1",
+        "2",
+        "4",
+        "16"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-3-L175-1",
+      "section": "3",
+      "source_line": 175,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "92749e1943e07c8884bab86a9a36b8d076367a189e873e0cb723f61bff274573",
+      "requirement_summary": "Optional graph/model clients MUST NOT become import-time requirements for ordinary AM operations.",
+      "design_sections": [
+        "3",
+        "12",
+        "14"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-3-L193-1",
+      "section": "3",
+      "source_line": 193,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "7c0f29caae7ed0f8972b37dc9c7bc6cd9410323880c4a0f2c4561a570714ca03",
+      "requirement_summary": "The optional vector provider uses the audited NumPy implementation and resident execution model fixed in §8; its backend, wheel, ABI and hash MUST be pinned and qualified for each enabled platform profile.",
+      "design_sections": [
+        "3",
+        "12",
+        "14"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-3-L197-1",
+      "section": "3",
+      "source_line": 197,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "644c1b9cb2fc3d071581687932dec934b20e6f84b0cebf8926524158f40724d0",
+      "requirement_summary": "Every newly imported native-reader dependency MUST join #206's authenticated engine closure; lazy loading cannot bypass source binding.",
+      "design_sections": [
+        "3",
+        "12",
+        "14"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-4-L205-1",
+      "section": "4",
+      "source_line": 205,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "1707b814f14f8552d6424989f46913c1c9246d81a737c2e869e9f84ec8abaa81",
+      "requirement_summary": "Candidate and active instances MUST be distinct.",
+      "design_sections": [
+        "4",
+        "7",
+        "9"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-4-L211-1",
+      "section": "4",
+      "source_line": 211,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "b4975ca547498c3fde2169ab2350ae238e80aab2678b8c6d5addff47b4b54f9a",
+      "requirement_summary": "Service names may use a bounded hash prefix only if the receipt verifies the complete identity; a name collision or missing receipt MUST refuse adoption.",
+      "design_sections": [
+        "4",
+        "7",
+        "9"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-4-L227-1",
+      "section": "4",
+      "source_line": 227,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "bb7516498ac90a8f8058d7c41ccbb496f552786501d3d7ef80d759b7fbc2e715",
+      "requirement_summary": "The new candidate MUST copy verified compatible vectors for unchanged exact rendered-source/profile keys and embed only changed/new eligible sources or sources lacking a verified compatible copy.",
+      "design_sections": [
+        "4",
+        "7",
+        "9"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5-L297-1",
+      "section": "5",
+      "source_line": 297,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "52298fe93e6e2bff5002102506f033f02d8c047765fce0eba40cc2f755e8238a",
+      "requirement_summary": "#257 MUST deliver the typed query/capability and disclosure seam without depending on #256 being completed; #256 depends on #257, not the reverse.",
+      "design_sections": [
+        "5",
+        "6.3",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5-L299-1",
+      "section": "5",
+      "source_line": 299,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "c0ec228b17df8b5d25fe21511b18c7fb8101dc9ccf78ef9c53be16cae97bf4fa",
+      "requirement_summary": "A requested provider that is not installed or has no qualified profile MUST return `unavailable`/`profile-disabled`, `vector_capability:unavailable`, or a higher observed status under §12.1.",
+      "design_sections": [
+        "5",
+        "6.3",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5-L304-1",
+      "section": "5",
+      "source_line": 304,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "ba38f5eace423d9831707286fc8eb07bf932ae6af3bce8b70b4e222f6119a90a",
+      "requirement_summary": "The builder inherits §6's eligible-domain, page, hop and time bounds; it MUST NOT build all-pairs 50k relations or change recorded edges.",
+      "design_sections": [
+        "5",
+        "6.3",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5-L308-1",
+      "section": "5",
+      "source_line": 308,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "15b3ebef12dac0107bf21085ba62e244103451f4e1fa0844e5355eb60cc3089e",
+      "requirement_summary": "#256's independent v0.0.16 acceptance MUST exercise recorded and inferred labels.",
+      "design_sections": [
+        "5",
+        "6.3",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-5-L315-1",
+      "section": "5",
+      "source_line": 315,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "c28f91636fc17ce58d8ef5dba47c5c51dcd31a0d8218eb94d58d0adbee1a3bef",
+      "requirement_summary": "A hidden correction withholds obsolete guidance without revealing its replacement; graph absence MUST NOT reactivate the old claim.",
+      "design_sections": [
+        "5",
+        "6.3",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5.1-L320-1",
+      "section": "5.1",
+      "source_line": 320,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9104ba374c4988f4bba0e9411d7e2cc689bfacc91a9a3143d01495122093f841",
+      "requirement_summary": "The builder MUST maintain distinct inventories for graph metadata, document vectors and request-qualified current guidance.",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "7.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5.1-L323-1",
+      "section": "5.1",
+      "source_line": 323,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "a4355153e3ed104846dd307882b078a681023e2cd3422eae1017bf6f0733b7da",
+      "requirement_summary": "V1 MAY project permitted inactive RecordVersion metadata and recorded assertions for historical/provenance paths; it MUST NOT embed or copy vectors for superseded, revoked or expired versions, or persist their bodies in graph properties.",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "7.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5.1-L325-1",
+      "section": "5.1",
+      "source_line": 325,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9c6f794f5cd7f44196b88d80a6cd7e26cf87f963f04d951790577a017bb3fc7f",
+      "requirement_summary": "The historical native seam MUST inspect the canonical version's disclosure metadata without promoting it through `lifecycle.current`; unknown qualification remains unavailable under §6.",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "7.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5.1-L328-1",
+      "section": "5.1",
+      "source_line": 328,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "49e178c2aeeb4440197c6fc27adf626a83d496b925970e8529997e4b115359d3",
+      "requirement_summary": "Deleted/compacted canonical content MUST NOT be recovered to fill that seam.",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "7.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5.1-L330-1",
+      "section": "5.1",
+      "source_line": 330,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "d30e06e4404fd6a5cdb98552ff998e11c2a7480f7dec7bd72f8bcac9bd00fbac",
+      "requirement_summary": "Document-vector eligibility MUST use the source-change operation's native security, visibility, admission, lifecycle and disclosure gates, not the last query's task applicability.",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "7.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5.1-L333-1",
+      "section": "5.1",
+      "source_line": 333,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "323512a7bd7a5cd208a4c6bd73e2028342aae399ab643c5a9e89b393d8874345",
+      "requirement_summary": "A permitted active task-conditioned source MAY be indexed before a request supplies that task, but MUST NOT pass current recall without the required context.",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "7.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5.1-L336-1",
+      "section": "5.1",
+      "source_line": 336,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "2752983b6b10cd54c459020d9b1a4f71ac486bc6730399a99c326d32ef7428e4",
+      "requirement_summary": "The manifest MUST record each inventory and its exclusion basis separately.",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "7.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-5.1-L337-1",
+      "section": "5.1",
+      "source_line": 337,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "f61d7048f8d542ab598b11b1b09c72bca28f7a99a4c8e9bc180df14b291fc0ed",
+      "requirement_summary": "An ordinary current search MUST score only the active vector inventory and then apply all fresh request gates in §8.",
+      "design_sections": [
+        "5.2",
+        "6.1",
+        "7.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L346-1",
+      "section": "6",
+      "source_line": 346,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "d670dc1825555d3119e942ce6c21ab084da1eb3256d9f39ff10f50bb5b7e69b5",
+      "requirement_summary": "Reader credentials/protocol MUST have no write authority where the chosen deployment can enforce it; template validation alone is not a database ACL.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L366-1",
+      "section": "6",
+      "source_line": 366,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "998ba0b8bb0d7fb9944f7901446351cedfab066e734a6badadf7908667d0065a",
+      "requirement_summary": "Every source-bearing path node MUST be fenced against its exact key/hash in the appropriate freshly qualified set.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L368-1",
+      "section": "6",
+      "source_line": 368,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "24d7945bc40820f860e4f3ef5ce5609429b01c5bdc9017deaa5e904eaa292d48",
+      "requirement_summary": "Every recorded edge asserting source freshly qualifies.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L368-2",
+      "section": "6",
+      "source_line": 368,
+      "keyword_ordinal": 2,
+      "keyword": "MUST",
+      "source_line_sha256": "24d7945bc40820f860e4f3ef5ce5609429b01c5bdc9017deaa5e904eaa292d48",
+      "requirement_summary": "Every recorded edge assertion hash equals the exact canonical asserting-source hash.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L377-1",
+      "section": "6",
+      "source_line": 377,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9cf66fce8938576e6f5c983da9fbd83fd308651fde7c42e595f824a5ed32f644",
+      "requirement_summary": "Both participating sources MUST freshly qualify for disclosure; a matching inference-record hash does not authorize a hidden, stale, deleted or foreign source.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L417-1",
+      "section": "6",
+      "source_line": 417,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "4d48b396a2ec2895c08b556292d3ba4974e821a042526f15adc34f6480fbde27",
+      "requirement_summary": "The new seam MUST freshly bind the canonical index path/hash, actual inherited route chain, authority, scope/conditions, visibility/security and frontier, and authorize only the assertion's disclosure.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L419-1",
+      "section": "6",
+      "source_line": 419,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "8bcd38c649976b546ce288410b00b83c506eb7737c28ea6d64f124a2305ca8b3",
+      "requirement_summary": "It MUST NOT emit an index body as guidance or a semantic result.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L424-1",
+      "section": "6",
+      "source_line": 424,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "997291861c53569d9cb367d12b80e9f36c547c6ac7a14eeac3c0f75f7d20460d",
+      "requirement_summary": "The seed MUST be a freshly qualified current RecordVersion selected through native recall.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L426-1",
+      "section": "6",
+      "source_line": 426,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "1368928794f3be6523ba1beedd729c3aa014747625c67e9444f57b0a412c1609",
+      "requirement_summary": "A historical selection reference can identify a returned historical pointer, but MUST NOT become a traversal seed in v1: return `refused`/`invalid-related-seed`, exit 1.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L428-1",
+      "section": "6",
+      "source_line": 428,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "fd368d12510b6064462b242b1e8dac2e0ed6f818462d4c39e38a012dbc2a8f80",
+      "requirement_summary": "Related paths MUST be nonempty and simple (no repeated node); their target MUST differ from the seed and be a source-bearing RecordVersion or ContextSource with a canonical path/hash.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L429-1",
+      "section": "6",
+      "source_line": 429,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "ae052e2766ba02a6f3226ffbc07353c2ee5e1cc96d6f326f9cb5bf9aa0a11a07",
+      "requirement_summary": "Related paths MUST be nonempty and simple (no repeated node); their target MUST differ from the seed and be a source-bearing RecordVersion or ContextSource with a canonical path/hash.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L434-1",
+      "section": "6",
+      "source_line": 434,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "dce83647bda7965e32a809ea1798fc2cb7d32546da1119877f29d983cbe9cf1e",
+      "requirement_summary": "Rows MUST retain stored `from`/`to` direction even when traversed in reverse; the ordered row list MUST describe a connected walk starting at the seed.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L435-1",
+      "section": "6",
+      "source_line": 435,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "459b690a56c9d82130df014005b23b67040f5c162ec75b2e91dc94da2b25bc39",
+      "requirement_summary": "Rows MUST retain stored `from`/`to` direction even when traversed in reverse; the ordered row list MUST describe a connected walk starting at the seed.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L440-1",
+      "section": "6",
+      "source_line": 440,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "ed547a91af5dbbf3b219f487d014306851fe9965f7b18c03e4a59797b65f346a",
+      "requirement_summary": "Templates MUST NOT manufacture a zero-hop seed pointer or promote path targets into primary guidance.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L442-1",
+      "section": "6",
+      "source_line": 442,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "15ca859902d66887503797d9a5a0d5dcb29384c80b92a5cca9de766335493e97",
+      "requirement_summary": "A seed needed as primary guidance MUST be obtained and scored by §8, even when it also asserts a returned edge.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L457-1",
+      "section": "6",
+      "source_line": 457,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "8c7c1425479335dc38bc96d86c45d4f8af10bf33318c71a1f88af3b6fd35c0ed",
+      "requirement_summary": "Target kind MUST be canonical `episodic-attempt`, `project-decision`, or `result`; this is a kind filter, not a fabricated attempt edge.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L461-1",
+      "section": "6",
+      "source_line": 461,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "b781aa54e987cf5036929363a52df47b4a19d4696502708a82aa8b4b51e0efc4",
+      "requirement_summary": "Each pointer's `relation_channel` MUST be `inferred` if any row in any returned path is inferred; otherwise it MUST be `recorded`.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L462-1",
+      "section": "6",
+      "source_line": 462,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "11c924d99beb4e72d98926351c2f201dcc19f15602baa99c93b587f5d8ec65e3",
+      "requirement_summary": "Each pointer's `relation_channel` MUST be `inferred` if any row in any returned path is inferred; otherwise it MUST be `recorded`.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L498-1",
+      "section": "6",
+      "source_line": 498,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "20e47cfc63f5da7183e8b76b614c99fe6a104b96969731b1f97f6182271089e8",
+      "requirement_summary": "Parameters MUST be values, never interpolated Cypher, labels, procedures or paths.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6-L507-1",
+      "section": "6",
+      "source_line": 507,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "4755e5934fb03fef6149abfea58c6dc382e11963142bedb12ab4d8d9bed10572",
+      "requirement_summary": "A shared dataset MUST use its own physical generation/isolation domain; its dataset/clone/authority-freshness namespace binding is defined by #55/#253 and qualified separately.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "out-of-scope:#55/#253"
+    },
+    {
+      "id": "C-6-L516-1",
+      "section": "6",
+      "source_line": 516,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "a87fcb108c4a6a3a31bc79165136e2700d4c82efed000ba36a8e9a078748210c",
+      "requirement_summary": "G1 and local G3/G2/P1/#200 acceptance MUST NOT wait for shared implementation.",
+      "design_sections": [
+        "6",
+        "12",
+        "13"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6.1-L520-1",
+      "section": "6.1",
+      "source_line": 520,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "2e118b4f0e31e339dc536ba18ff2d7d42d882586d14f3b33e9fed7f8d849c792",
+      "requirement_summary": "Topic indexes and router entries MUST remain canonical navigation, not semantic guidance records.",
+      "design_sections": [
+        "6.1",
+        "6.2",
+        "13.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6.1-L525-1",
+      "section": "6.1",
+      "source_line": 525,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "17430ae335242c291951b593caaf4fb0d90e1d5a548c64b2071c4387e0f57948",
+      "requirement_summary": "The invoking harness can use those observed maps for orientation; it MUST NOT invent a completed discovery trace or claim embedding/graph discovery completeness from them.",
+      "design_sections": [
+        "6.1",
+        "6.2",
+        "13.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6.1-L529-1",
+      "section": "6.1",
+      "source_line": 529,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "88e8e82c586bbaf849be24f9f2d2ce6ad18a4db18b219996813f770f67b340b0",
+      "requirement_summary": "Graph Route/`ROUTES_TO` data MUST preserve the canonical index assertion for build/provenance checks.",
+      "design_sections": [
+        "6.1",
+        "6.2",
+        "13.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6.1-L530-1",
+      "section": "6.1",
+      "source_line": 530,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "12b401c4bb5d36df27e3904f93f6dc11aea3db2255d3159ef36c9dd644c878eb",
+      "requirement_summary": "It MUST NOT become a lesson-relatedness join, a RecordVersion seed, or a topic-index body disguised as ContextSource.",
+      "design_sections": [
+        "6.1",
+        "6.2",
+        "13.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-6.1-L532-1",
+      "section": "6.1",
+      "source_line": 532,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "886f66888d22c998aaeaff6e2f693bd7eeae3f8ea4316034a213f7b54817d407",
+      "requirement_summary": "`semantic-result-v1` has no route-pointer payload: #252/#200 MUST keep navigation observations separately typed rather than insert them into `results` or `related`.",
+      "design_sections": [
+        "6.1",
+        "6.2",
+        "13.1"
+      ],
+      "disposition": "out-of-scope:#252/#200"
+    },
+    {
+      "id": "C-6.1-L534-1",
+      "section": "6.1",
+      "source_line": 534,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "582c44fbdf52d0a7a6e35cf529fd31afcc267ef5d767c110a2be1c6e5d7b25ce",
+      "requirement_summary": "Search MUST NOT claim the route-orientation case passed merely because it returned tolerated member lessons.",
+      "design_sections": [
+        "6.1",
+        "6.2",
+        "13.1"
+      ],
+      "disposition": "out-of-scope:#252/#200"
+    },
+    {
+      "id": "C-8.1-L829-1",
+      "section": "8.1",
+      "source_line": 829,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "12e6245be602beccb115f77363efa1217ef77fa567e32b5d8aaf2c2bf88d4cd7",
+      "requirement_summary": "V1 MUST persist source/profile-bound float32 vectors and compute eligible exact cosine outside the graph engine.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L830-1",
+      "section": "8.1",
+      "source_line": 830,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "27aad09e6e34ce9731a1aa58e9b607c29b9bea2e2dd69d3c783a6ed50db6e800",
+      "requirement_summary": "Its production graph build MUST NOT create a Memgraph vector index or attach a duplicate graph vector property; typed graph projection/querying remains REQUIRED.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-8.1-L832-1",
+      "section": "8.1",
+      "source_line": 832,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "b6e18ca59e844e6e05aa530cd26b7354d563e4cf77b3f229328675e78418c1de",
+      "requirement_summary": "Dot products MUST accumulate in float64 over the persisted float32 values with explicit norm handling; nonfinite or zero norms refuse.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L834-1",
+      "section": "8.1",
+      "source_line": 834,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "d70fb7aee7946eced8705311d4d7d76a59cb1e841c5bde679ec1b2d7b0401e32",
+      "requirement_summary": "Scores MUST remain signed; absolute values and the observed engine-reported antiparallel similarity MUST NOT be used.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L835-1",
+      "section": "8.1",
+      "source_line": 835,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "3eaf6899d017da0248bec819942c46bb7b964969daeb522ba5561511602f8a54",
+      "requirement_summary": "Scores MUST remain signed; absolute values and the observed engine-reported antiparallel similarity MUST NOT be used.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L836-1",
+      "section": "8.1",
+      "source_line": 836,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "e5c9ae7b32040a4b61978dbcbd20dc4c05522edd45935bc0426e047a72e0bf38",
+      "requirement_summary": "Numerical measurement MUST bind the implementation, normalization and persisted representation, with an independent oracle; no unmeasured rank/tolerance pass follows from this rule.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L848-1",
+      "section": "8.1",
+      "source_line": 848,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "303bb73abf8b3828e6a0cc0eee62ea743a3f027bd0fecbd5025ce2b7893b6ef1",
+      "requirement_summary": "Matrix length MUST equal `N * D * 4`.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L862-1",
+      "section": "8.1",
+      "source_line": 862,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "e518964004d883a4234e9c637873860eea09798d1aa7ef65775f840891803920",
+      "requirement_summary": "Search/related MUST NOT start it or substitute a transient provider; a stopped or not-running worker of a qualified provider is `unavailable`/`runtime-stopped`.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-8.1-L864-1",
+      "section": "8.1",
+      "source_line": 864,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "e4f5498f43b177d8347fc91e3b77f74f5871e4e0a5ec7ddd08a4fac5f713198d",
+      "requirement_summary": "It MUST NOT reload the matrix or make a full N × D float64 copy per query.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L879-1",
+      "section": "8.1",
+      "source_line": 879,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "2890838c95a2dc18b3e46a5f18e4207aaff3cb0f49f710701bc341a247018f98",
+      "requirement_summary": "Absolute score error MUST be at most `2e-5`, an engineering qualification ceiling, not an observed pass or relevance cutoff.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L880-1",
+      "section": "8.1",
+      "source_line": 880,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "18d405d3390e8377ff37ed29dbc1a7eddd9d6751bdda0b9c1de433519d558bb3",
+      "requirement_summary": "Membership comparisons MUST be tie-aware within that bound; runtime order stays descending score then tagged key, without tolerance-based reordering.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-8.1-L893-1",
+      "section": "8.1",
+      "source_line": 893,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "37b519addabd35a1e6130ccae23bb2f472e25696b5201b66b449242689d0be53",
+      "requirement_summary": "For subsequent profile qualification, core native/exact cells MUST run independently of and before optional ANN index DDL.",
+      "design_sections": [
+        "7",
+        "9.1",
+        "13.3",
+        "15"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment."
+    },
+    {
+      "id": "C-8.1-L894-1",
+      "section": "8.1",
+      "source_line": 894,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "3a3f9b3105f34b63ef3ca84a5cb886c63a8a75092e82803c61b5fe8e3a509148",
+      "requirement_summary": "Failed or unattempted cells MUST NOT become passing measurements or complete coverage.",
+      "design_sections": [
+        "7",
+        "9.1",
+        "13.3",
+        "15"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment."
+    },
+    {
+      "id": "C-8.1-L896-1",
+      "section": "8.1",
+      "source_line": 896,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "bca59beb3a33c93f4aee25111b51d791011b0e90e5f2030f9eedbead2b52887c",
+      "requirement_summary": "An ANN experiment MUST use a separately owned candidate and frozen protocol with eligible N, K, returned-candidate budget, requested/effective index capacity, insertion order, engine settings and original-vector exact rescoring recorded.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment.",
+      "coverage_note": "Exact conditional frozen ANN experiment rule now stated in §13.3; production ANN remains disabled. Any experiment needs its own approved source-bound design binding C §8.1 L893–917; no implementation/qualification pass claimed."
+    },
+    {
+      "id": "C-8.1-L901-1",
+      "section": "8.1",
+      "source_line": 901,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "105624fb3a39432754523a174b42d960ba084219ae540c39e10f6a7b5c09bf04",
+      "requirement_summary": "Budget-`<N` candidate recall is distinct from exhaustive candidate count and from internal ANN visitation, which MUST remain unknown when unobservable.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment.",
+      "coverage_note": "Exact conditional frozen ANN experiment rule now stated in §13.3; production ANN remains disabled. Any experiment needs its own approved source-bound design binding C §8.1 L893–917; no implementation/qualification pass claimed."
+    },
+    {
+      "id": "C-8.1-L903-1",
+      "section": "8.1",
+      "source_line": 903,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "b8bacf23e900c617d27ee6895bd12d27b317cf92ec2741b7523f5f2d4ef83eb2",
+      "requirement_summary": "It MUST NOT mix projects/generations or use global top-K then filtering as eligible-completeness evidence.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment.",
+      "coverage_note": "Exact conditional frozen ANN experiment rule now stated in §13.3; production ANN remains disabled. Any experiment needs its own approved source-bound design binding C §8.1 L893–917; no implementation/qualification pass claimed."
+    },
+    {
+      "id": "C-8.1-L906-1",
+      "section": "8.1",
+      "source_line": 906,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "a588fdbcc96515a7ca1e3ddf234140ad4e86aa738395d98da796a56d1008c308",
+      "requirement_summary": "Before index DDL, the builder MUST close and consume its own transactions/results, verify the candidate's owned identity and retain available transaction/index inventories.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment.",
+      "coverage_note": "Exact conditional frozen ANN experiment rule now stated in §13.3; production ANN remains disabled. Any experiment needs its own approved source-bound design binding C §8.1 L893–917; no implementation/qualification pass claimed."
+    },
+    {
+      "id": "C-8.1-L908-1",
+      "section": "8.1",
+      "source_line": 908,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "7a35f74ca8a649e4b0852ee1f00d58e2e4e410f13c3b25a0c48df85e1ec621ba",
+      "requirement_summary": "Driver retry helpers MUST be disabled for build DDL.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment.",
+      "coverage_note": "Exact conditional frozen ANN experiment rule now stated in §13.3; production ANN remains disabled. Any experiment needs its own approved source-bound design binding C §8.1 L893–917; no implementation/qualification pass claimed."
+    },
+    {
+      "id": "C-8.1-L910-1",
+      "section": "8.1",
+      "source_line": 910,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "bac65475d6380b8b4652d6cf776f5d97746a8913cc36d88f867f17cac8685ae9",
+      "requirement_summary": "A transient unique-storage-access error, timeout, dropped connection or unknown commit outcome MUST NOT cause a retry, snapshot deletion, setting change or alternate index name.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment.",
+      "coverage_note": "Exact conditional frozen ANN experiment rule now stated in §13.3; production ANN remains disabled. Any experiment needs its own approved source-bound design binding C §8.1 L893–917; no implementation/qualification pass claimed."
+    },
+    {
+      "id": "C-8.1-L913-1",
+      "section": "8.1",
+      "source_line": 913,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "fbcd77d924c8610860825ba8771d90e796e4b9c118635faaf42f9969a77a7117",
+      "requirement_summary": "The candidate MUST NOT publish.",
+      "design_sections": [
+        "7",
+        "9.1",
+        "13.3",
+        "15"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment."
+    },
+    {
+      "id": "C-8.1-L915-1",
+      "section": "8.1",
+      "source_line": 915,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "efa636ffdaef07cb417ec81dc65b02fb3ccc04495d4d1c2bab8d62a3cb2f5a39",
+      "requirement_summary": "A known stopped failed candidate is discarded; an unresolved operation/worker/cleanup remains fenced and `erasure-pending`, and the experiment MUST halt rather than continue allocating.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment.",
+      "coverage_note": "Exact conditional frozen ANN experiment rule now stated in §13.3; production ANN remains disabled. Any experiment needs its own approved source-bound design binding C §8.1 L893–917; no implementation/qualification pass claimed."
+    },
+    {
+      "id": "C-8.1-L917-1",
+      "section": "8.1",
+      "source_line": 917,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "4ecbb8e85857f812c5ccc823f551f330829083b15dae62a10913ffa670b06573",
+      "requirement_summary": "Only verified whole-candidate disposal permits a separately approved fresh attempt; it MUST have a new identity and retain the original failure.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "owner_note": "Subsequent v0.0.16 profile-enable/experimental safety duty for #257/#256, not closed #255 research; production ANN remains disabled and these restrictions govern any separately authorized experiment.",
+      "coverage_note": "Exact conditional frozen ANN experiment rule now stated in §13.3; production ANN remains disabled. Any experiment needs its own approved source-bound design binding C §8.1 L893–917; no implementation/qualification pass claimed."
+    },
+    {
+      "id": "C-8.1-L924-1",
+      "section": "8.1",
+      "source_line": 924,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "8f5fbf1947807a6cee095398bedc26232e7dee36ebbd55091aca698611feadac",
+      "requirement_summary": "Comparison/admission and three-view sharing keep their separate exhaustive/ semantic-judgment contracts and MUST NOT accept retrieval top-K as novelty, compatibility or frontier coverage.",
+      "design_sections": [
+        "6.3",
+        "7.1",
+        "8",
+        "9",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-9-L969-1",
+      "section": "9",
+      "source_line": 969,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "6838daa444f7f2ff12390a70165881ed7688826fd99c06ba16d1c71255afbcc1",
+      "requirement_summary": "Every embedding attempt MUST have a private, content-free journal entry before transport admission, binding attempt/operation IDs, namespace, generation UUID, bank-state key, privacy epoch, embedding-profile digest, approval-reference digest, purpose (`document`, `query` or synthetic capability), and the ordered exact source/rendered hashes for document inputs.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L974-1",
+      "section": "9",
+      "source_line": 974,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "ae195a577847ce2c12652a91a0fc59b3d9674b2ef18700efc89d6153b264485d",
+      "requirement_summary": "Query attempts bind the request ID and generation, not retained query text/vector; synthetic probes MUST NOT be attributed to a canonical document.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L975-1",
+      "section": "9",
+      "source_line": 975,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "799ab9ab783da9c3363b9bff9fa716c3a054e598203acb2e925d4007f5a45690",
+      "requirement_summary": "Entries MUST distinguish `prepared`, `dispatched`, `completed`, `failed` and `outcome-unknown`; successful HTTP is not proof of publication, erasure or provider deletion.",
+      "design_sections": [
+        "7",
+        "9",
+        "12",
+        "7.2",
+        "15"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L977-1",
+      "section": "9",
+      "source_line": 977,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "6e76f70d448195cf8338cbfec4d7b977fa3988e70a11676a82c7624c5fc90787",
+      "requirement_summary": "Vector reuse/copy MUST be recorded separately with source/target ownership and keys; it is not a provider send.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L988-1",
+      "section": "9",
+      "source_line": 988,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "c1c83153715b5c45078a51822455d03065c7abfc61b225c755eb9c7897ae83ec",
+      "requirement_summary": "Immediately before dispatch, the worker MUST recheck source eligibility, approval/ceiling, stopped/inhibit state and all epoch/profile pins under the common publication lock; it MUST register the transport attempt there before releasing the lock.",
+      "design_sections": [
+        "7",
+        "9",
+        "12",
+        "7.2",
+        "15"
+      ],
+      "disposition": "covered",
+      "contract_owner_acceptance_required": "I-PIN-01: full native pin hash outside publication, fresh witnesses/inhibit/epoch/pointer under it; fail-open hint loss never authorizes stale disclosure. Technical interpretation must be explicitly accepted before Ready."
+    },
+    {
+      "id": "C-9-L990-1",
+      "section": "9",
+      "source_line": 990,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "0e58aada6a5acd23dc030474fa25e253c6d4a88627c2cb98d7360eae97e7a528",
+      "requirement_summary": "Immediately before dispatch, the worker MUST recheck source eligibility, approval/ceiling, stopped/inhibit state and all epoch/profile pins under the common publication lock; it MUST register the transport attempt there before releasing the lock.",
+      "design_sections": [
+        "7",
+        "9",
+        "12",
+        "7.2",
+        "15"
+      ],
+      "disposition": "covered",
+      "contract_owner_acceptance_required": "I-PIN-01: full native pin hash outside publication, fresh witnesses/inhibit/epoch/pointer under it; fail-open hint loss never authorizes stale disclosure. Technical interpretation must be explicitly accepted before Ready."
+    },
+    {
+      "id": "C-9-L992-1",
+      "section": "9",
+      "source_line": 992,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "fcc52b118f5c2238ed46094a2b113965bb49a6ede8fb45f83bf40f17fc55fdd7",
+      "requirement_summary": "It MUST NOT hold the bank lock across model/network work.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L993-1",
+      "section": "9",
+      "source_line": 993,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "c4d9b3521103e0c0927a755e2029e1f6633ce99ea1182e26baa6fb2cc73d5e2b",
+      "requirement_summary": "An attempt not admitted before a privacy fence MUST NOT dispatch under the old epoch.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L994-1",
+      "section": "9",
+      "source_line": 994,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "c342ab64998bfe67c555ac7d6e8744b4023b5e4ae5dfdf3478d7be16355c2998",
+      "requirement_summary": "The transport MUST support cancellation of admitted in-flight work; after a fence its response MUST be discarded and MUST NOT fill or publish a generation.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L995-1",
+      "section": "9",
+      "source_line": 995,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "7d3046ff42bbe5c2196a282dce0756e22a2ad4b238a01435c5475f463507ae7c",
+      "requirement_summary": "A post-fence response is discarded.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L995-2",
+      "section": "9",
+      "source_line": 995,
+      "keyword_ordinal": 2,
+      "keyword": "MUST",
+      "source_line_sha256": "7d3046ff42bbe5c2196a282dce0756e22a2ad4b238a01435c5475f463507ae7c",
+      "requirement_summary": "A post-fence response cannot fill or publish a generation.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-9-L1007-1",
+      "section": "9",
+      "source_line": 1007,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9b10ec571910ddc679fff7467f8e15a7187ab85342f612f310bd80fdadeea3d0",
+      "requirement_summary": "Reader leases MUST NOT delay privacy fencing or disposal.",
+      "design_sections": [
+        "7",
+        "9",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-10-L1017-1",
+      "section": "10",
+      "source_line": 1017,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "eaa6926718e732533f2678ca9d99a823a90197423fe2407530c9cecd0988ba17",
+      "requirement_summary": "It may provision and dispose owned per-generation instances, but MUST NOT restart a stopped runtime, download software, change endpoint/model or silently disclose to a fallback provider.",
+      "design_sections": [
+        "8",
+        "9.1",
+        "10"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-10-L1044-1",
+      "section": "10",
+      "source_line": 1044,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "aace4a7e9061906f12f009a24f7c3aef3c2d2ea59bc7b7864c324f1a3aa9a7c1",
+      "requirement_summary": "Per-project operational bindings (profile identity and any narrower ceilings) attached to the remembered destination/scope choice are additional constraints and MUST NOT expand the installation ceiling.",
+      "design_sections": [
+        "8",
+        "9.1",
+        "10"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-10-L1046-1",
+      "section": "10",
+      "source_line": 1046,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "ae74f83649be471fdd022789fa389a6e0616c11358a3719f7b22cbf13167193a",
+      "requirement_summary": "Without a narrower project constraint, the project inherits the installation ceilings; an absent narrowing MUST NOT cause resource-limit or an extra setup question.",
+      "design_sections": [
+        "8",
+        "9.1",
+        "10"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-10-L1054-1",
+      "section": "10",
+      "source_line": 1054,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "12a54f1a34d188c82cb7376aaabfc29af72509dbd5f6ae0f16a0d22d18089005",
+      "requirement_summary": "Missing or invalid installation instance/memory/provider ceilings MUST leave automatic maintenance `pending`/`resource-limit`; missing disclosure authority has §12's higher-precedence `approval-required`.",
+      "design_sections": [
+        "8",
+        "9.1",
+        "10"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-10-L1057-1",
+      "section": "10",
+      "source_line": 1057,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "c187c5f03f9ce63992baa05f7bce0915074dbba0b84854fe10cb6f8056afc7af",
+      "requirement_summary": "Each batch MUST fit the effective installation/inherited-or-narrower project input, aggregate-token, byte and in-flight ceilings and the provider's declared limits; reserve the full known cost before dispatch and retain unknown/failed sends against that reservation until reconciled, never refund on an unknown outcome.",
+      "design_sections": [
+        "8",
+        "9.1",
+        "10"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-10-L1062-1",
+      "section": "10",
+      "source_line": 1062,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "29db3fcbbb86e9ff84c84c42218fdd252004b3f7c083a04d02b1626b2b217b83",
+      "requirement_summary": "Without trustworthy token accounting, token-capped remote automatic work MUST NOT dispatch.",
+      "design_sections": [
+        "8",
+        "9.1",
+        "10"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-10-L1064-1",
+      "section": "10",
+      "source_line": 1064,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "551f74dcbe6c11b217a85bd50b824ac90146783f65fcf5296b3a88be6240da6c",
+      "requirement_summary": "The 30-second slice is a scheduler checkpoint boundary, not permission to repeat an ambiguous request: an in-flight operation MUST be resolved/cancelled and journalled before resumption or a new batch.",
+      "design_sections": [
+        "8",
+        "9.1",
+        "10"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11-L1078-1",
+      "section": "11",
+      "source_line": 1078,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "56f48fd64e614f59a5baf75153ff416679b9dcfd6ff55b7cea44b793d046679c",
+      "requirement_summary": "Completion/reconciliation may take the endpoint-budget lock alone, but MUST release it before acquiring publication/bank/builder locks.",
+      "design_sections": [
+        "9",
+        "12",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11-L1107-1",
+      "section": "11",
+      "source_line": 1107,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "000327841ba8e19dd9c460df6a384522e57d9e9a58ef6f6a49284f7978ee96c0",
+      "requirement_summary": "On each privacy-epoch fence the resident worker MUST release every affected generation's mmap, open descriptor, array view and derived request buffer before acknowledging release.",
+      "design_sections": [
+        "9",
+        "12",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11-L1112-1",
+      "section": "11",
+      "source_line": 1112,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "6b164d3746e1532baa6f76f9bd2d131d88a3396f345049bfb9b39d1c33864f0d",
+      "requirement_summary": "Unlinked paths alone do not release mapped data; an outstanding view MUST NOT receive a release acknowledgment.",
+      "design_sections": [
+        "9",
+        "12",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1121-1",
+      "section": "11.1",
+      "source_line": 1121,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "bcf3081a9c8b38feb38ba567fb823ef483dc7f755dbf38a20f343e21d4bb4773",
+      "requirement_summary": "The receipt MUST distinguish canonical commit, fence completion, each admitted transport attempt, and verified local disposal.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1122-1",
+      "section": "11.1",
+      "source_line": 1122,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "68b5752a732e0c82a0d468f63d7b6740d32a731485481171ec76f958dd214a04",
+      "requirement_summary": "The fence MUST prevent new old-epoch transport admissions immediately; it MUST cancel registered in-flight work without waiting to fence publication.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1123-1",
+      "section": "11.1",
+      "source_line": 1123,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "11125401d74f1594cf4622368040bcbb6cc75362ab3bacf9d57ceac94a618820",
+      "requirement_summary": "The fence MUST prevent new old-epoch transport admissions immediately; it MUST cancel registered in-flight work without waiting to fence publication.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1127-1",
+      "section": "11.1",
+      "source_line": 1127,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "14e101daf17a58ba75dc298b78a4e72a1c18363bbedb5ce1c7e5658c7ed00127",
+      "requirement_summary": "A pre-fence send MUST NOT be labelled a post-delete resend merely because it appears in a later observation, nor omitted from the overall disclosure history.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1130-1",
+      "section": "11.1",
+      "source_line": 1130,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "a196302199a7367db169b79168310e522c05818e90852b5f7894b748ab415ba6",
+      "requirement_summary": "Each experiment observation MUST reference only its own generation/request send attempt IDs and any explicitly reused vector keys.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1132-1",
+      "section": "11.1",
+      "source_line": 1132,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "3cfd2baab4bb90017a23afb9470728a2a4c91c23bbbb3a49e572e0795cf86575",
+      "requirement_summary": "A whole-run ledger MAY be retained separately but MUST NOT be copied into each generation's send counts.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1133-1",
+      "section": "11.1",
+      "source_line": 1133,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "08c6a0c6abd97bd1c96bd1ef8e8993d8139f9182b60ddb2795231d40782f69db",
+      "requirement_summary": "A deletion control MUST enumerate all pre-fence owned copies (active, retired, interrupted/unpublished candidates, copied vector rows, graph/WAL/snapshot and content-bearing buffers/logs) and record their post-fence disposal independently of post-fence send absence.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1136-1",
+      "section": "11.1",
+      "source_line": 1136,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9e1739326e688908e0cd4099b94ee7b910e3ec8a300a21957dd322b56aa7e4fe",
+      "requirement_summary": "New generations MUST omit prohibited rows, and rebuild/restore MUST consult the current tombstone/epoch rather than old caches.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1137-1",
+      "section": "11.1",
+      "source_line": 1137,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "92fb6868972bc3d32c4516799ab59def0f8d1b32daf3408c33042217c9117445",
+      "requirement_summary": "New generations MUST omit prohibited rows, and rebuild/restore MUST consult the current tombstone/epoch rather than old caches.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1139-1",
+      "section": "11.1",
+      "source_line": 1139,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "8b2762b59391b7334683d2bb7564b515dc1b8a0a57580af34eab759444a6c691",
+      "requirement_summary": "Production journals MUST contain hashes/opaque identities, never the canary bodies, prompts, tokens or secret values.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1144-1",
+      "section": "11.1",
+      "source_line": 1144,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "e4a850e984f9a534b1295d9e9106ebca1ae8cbb3d9b5bc870af8bca4c847a0eb",
+      "requirement_summary": "These rules correct future accounting; the frozen case-76 failure, original whole-run send oracle, raw rows and retained `erasure-pending` outcome in §13 MUST remain unchanged.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-11.1-L1169-1",
+      "section": "11.1",
+      "source_line": 1169,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "cd9ac0f44ee41699265719fc85398d52d44935301011b00db87cb5225cdcb04d",
+      "requirement_summary": "Receipts MUST set `forensic_media_provider_backup_erasure:false`: Podman VM disk images, filesystem/APFS and Time Machine snapshots, swap, provider retention, external backups, Git history and already disclosed bytes are excluded.",
+      "design_sections": [
+        "9",
+        "13.2"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12-L1205-1",
+      "section": "12",
+      "source_line": 1205,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "3070c07f2fde85b36758708cfb2186116148cbf5807d2230257cffa21793dc4b",
+      "requirement_summary": "Diagnose may inspect local receipts; it MUST NOT contact a destination that lacks applicable authorization, send project content, download, or start/stop/modify any BYO service.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12-L1212-1",
+      "section": "12",
+      "source_line": 1212,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "777a149c328fbf9a39b161d1145dde5692036d511e850a470b8644fdbfb608b7",
+      "requirement_summary": "AM MUST remember that choice for the same project across agent sessions, lookups and ordinary permitted memory updates, as [the operator selected](../research/data/g1-embedding-choice-lifetime-disposition-20261109.json).",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1215-1",
+      "section": "12",
+      "source_line": 1215,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "30fa7b2d6a7acba423670a748fd26d921cadb1d536250c5c99a4a8c79252ed09",
+      "requirement_summary": "It MUST ask again when the destination or permitted memory/disclosure scope changes, and MUST stop relying on the choice upon revocation.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1216-1",
+      "section": "12",
+      "source_line": 1216,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9b535f261d9b55b49d947cc2482a1d3ba3b31c39f8953a8decbe7c2a4352396a",
+      "requirement_summary": "It MUST ask again when the destination or permitted memory/disclosure scope changes, and MUST stop relying on the choice upon revocation.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1217-1",
+      "section": "12",
+      "source_line": 1217,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "82c901645a9994be654b3f7b1bbba1b68e81eb6fb11f6d9286558c68311accb8",
+      "requirement_summary": "Revocation or a destination/scope change MUST invalidate queued sends under that choice; every send MUST recheck current approval before dispatch, including each batch.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1218-1",
+      "section": "12",
+      "source_line": 1218,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "c1d746f4d3b8958803804d5fddec612f764d067c2481894ff445b5a926fa64c7",
+      "requirement_summary": "Revocation or a destination/scope change MUST invalidate queued sends under that choice; every send MUST recheck current approval before dispatch, including each batch.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1219-1",
+      "section": "12",
+      "source_line": 1219,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "2f9072a8703055cf02b2f207018e564cca6db35490729334af9e45123e22fe22",
+      "requirement_summary": "A new session, credential rotation or vector/profile rebuild MUST NOT alone create another disclosure prompt when that destination/scope is unchanged.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1222-1",
+      "section": "12",
+      "source_line": 1222,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "d91ebeed0c2dfe50c9a388ff10b061a4cd7e397950ba3e1a10434c800136d8ac",
+      "requirement_summary": "Recording revocation or changing the approved destination/scope MUST take the same publication lock as the pre-send approval check; queued work MUST carry the approval version and fail that check after the change.",
+      "design_sections": [
+        "8.4",
+        "9.4",
+        "12"
+      ],
+      "disposition": "covered",
+      "owner_note": "G3 supplies common publication-lock/version/queued-admission seam; G2 supplies remote receipt issuer/disclosure verification."
+    },
+    {
+      "id": "C-12-L1223-1",
+      "section": "12",
+      "source_line": 1223,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "9acf2516ce0ff849bc223801de2aebf19dbc3e2edcade16c03af18d6f980ea5c",
+      "requirement_summary": "Recording revocation or changing the approved destination/scope MUST take the same publication lock as the pre-send approval check; queued work MUST carry the approval version and fail that check after the change.",
+      "design_sections": [
+        "8.4",
+        "9.4",
+        "12"
+      ],
+      "disposition": "covered",
+      "owner_note": "G3 supplies common publication-lock/version/queued-admission seam; G2 supplies remote receipt issuer/disclosure verification."
+    },
+    {
+      "id": "C-12-L1233-1",
+      "section": "12",
+      "source_line": 1233,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "e220f0ae61cfca86cfaf05f491514e8bebd9c6bf578227bd21ff1104a3d178d2",
+      "requirement_summary": "Bank-state key, generation, profile and checkout context MUST NOT be grant-lifetime keys; an ordinary write, checkpoint, rebuild or another verified checkout of that same project/bank MUST NOT expire the unchanged destination/scope choice.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1234-1",
+      "section": "12",
+      "source_line": 1234,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "40ef4fad7a567e502567ea496d2a434f773ce8c7200457b34da0587966823059",
+      "requirement_summary": "Bank-state key, generation, profile and checkout context MUST NOT be grant-lifetime keys; an ordinary write, checkpoint, rebuild or another verified checkout of that same project/bank MUST NOT expire the unchanged destination/scope choice.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1244-1",
+      "section": "12",
+      "source_line": 1244,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "bcc54253a1361b3d588d44348c81d9312e88c4b1d54f1c7f9fad2f283388542b",
+      "requirement_summary": "A boolean flag, answer, bearer path, general tool permission or PTY MUST NOT establish operator origin.",
+      "design_sections": [
+        "9.4",
+        "10.2",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12-L1249-1",
+      "section": "12",
+      "source_line": 1249,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "3dedf29470a8c0c0606e1479d06ebdda8b6607e49bdf1edac7ae24248ccc4723",
+      "requirement_summary": "#256's engineering design MUST bind supported trusted-channel verifiers, issuer/receipt authentication and revocation checks before implementation Ready; the operator is not asked to design those mechanisms.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256"
+    },
+    {
+      "id": "C-12-L1321-1",
+      "section": "12",
+      "source_line": 1321,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "cd7bf5570b6909e966f9b44d0bc1c5998f6de7dfda10f508e319f655eab3516b",
+      "requirement_summary": "Each group's `sources` MUST contain freshly qualified unchanged native retrieval payloads exactly as `results[].native`, not assembly's extra labelled rows; record lifecycle/trust remain in `record.status`/`record.trust`.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#252"
+    },
+    {
+      "id": "C-12-L1325-1",
+      "section": "12",
+      "source_line": 1325,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "0dbd3eafb73abeeddf51c45dc81a70427acf2a102c4e8807bb25d18329af47d5",
+      "requirement_summary": "#252 owns mandatory group placement before optional results; it MUST preserve semantic order as specified in §8 and may deduplicate only without losing those source bindings.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#252"
+    },
+    {
+      "id": "C-12-L1352-1",
+      "section": "12",
+      "source_line": 1352,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "99835cde40d0db8c8475e9d81af9e9bea6607deb4a1bdb276b251a3e77f029ce",
+      "requirement_summary": "#253 MUST add explicit local/shared authority labels, shared dataset/record versions, and per-domain coverage/freshness through a separately reviewed additive schema revision before shared acceptance.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "out-of-scope:#253"
+    },
+    {
+      "id": "C-12-L1355-1",
+      "section": "12",
+      "source_line": 1355,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "12547bfd608d788d5c82fd6583a54c8faa541339e07913b20fe0e5f4d4200bcc",
+      "requirement_summary": "Local consumers MUST NOT infer shared absence from v1.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12-L1359-1",
+      "section": "12",
+      "source_line": 1359,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "92dbae91e24347f6adb66f928fda1eef10b3f5f034994878591478f68631d1f1",
+      "requirement_summary": "In a harness-bound session, a mismatched repository/bank/ path or foreign selection reference MUST be refused without sibling access.",
+      "design_sections": [
+        "9.4",
+        "15"
+      ],
+      "disposition": "covered",
+      "dependency_note": "G3 refuses a mismatched repository/bank/path or foreign selection reference without sibling access once an authentic invoking binding exists (§9.4). The new general harness-bound versus plain-terminal binding/origin mechanism and its integrated acceptance remain #200/#253 responsibilities; dependency on their authentic binding is not a new local-G3 Ready gate or a claimed harness-origin pass."
+    },
+    {
+      "id": "C-12-L1367-1",
+      "section": "12",
+      "source_line": 1367,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "80fb80e46c5c09caa2aa499b131acae8d6c6274972f26f946add002652817f83",
+      "requirement_summary": "Equal observed values MAY be retained as context but MUST NOT supply Git truth.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12-L1391-1",
+      "section": "12",
+      "source_line": 1391,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "16873d7ba64d6ecce43e703688a2bd641ddac1bf5d79552c7e640fc52c0f6a0e",
+      "requirement_summary": "Missing, capped, withheld or opaque-truncation coverage MUST NOT be represented as complete semantic no-match.",
+      "design_sections": [
+        "6.4",
+        "10",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1425-1",
+      "section": "12.1",
+      "source_line": 1425,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "5d534683bcab31082fd820489ba55e72103b69c43105555de93c90991d94477f",
+      "requirement_summary": "Without literal fallback it MUST equal top-level `reason_code`; this equality is a producer obligation.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1477-1",
+      "section": "12.1",
+      "source_line": 1477,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "d65d0fb5116bc0f35beaf591ca7a228ecf7104da621453664354d6c74e89e387",
+      "requirement_summary": "These failures MUST NOT mutate canonical bank bytes, Git index/HEAD, unrelated files or user-managed services.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1490-1",
+      "section": "12.1",
+      "source_line": 1490,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "bab57bdf4d7117a31a15e2f52f86cd7a4250c82114cc4c45f3624c9280ac3697",
+      "requirement_summary": "If `missing-score` is primary, both overall and semantic status MUST be `stale`; if its exclusion is emitted, semantic status MUST be `stale`.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1491-1",
+      "section": "12.1",
+      "source_line": 1491,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "71b36df683c5aceea44b373134ceba3f4179cf77cf1b1531338b395b1e08bb20",
+      "requirement_summary": "If `missing-score` is primary, both overall and semantic status MUST be `stale`; if its exclusion is emitted, semantic status MUST be `stale`.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1509-1",
+      "section": "12.1",
+      "source_line": 1509,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "51ce9c17aadc767bb9f19e6fd0d750af051aff4c79d184bbd3ded62ba4511b51",
+      "requirement_summary": "Explicit literal fallback is the sole reason-selection exception: only after a semantic status other than qualified or partial, an allowed switch to literal MUST use literal-fallback regardless of the semantic primary reason, retain that semantic status and actual assurance/coverage limitations, and derive overall status/exit from the fresh native literal operation.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1518-1",
+      "section": "12.1",
+      "source_line": 1518,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "27234887398545a78e6b9c3aa7fb587b9f3b21f55c3f7bafe7e91b7c4498490b",
+      "requirement_summary": "Erasure, missing approval or invalid-input fencing prevents semantic execution/fallback: effective_mode MUST be none and results empty.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1530-1",
+      "section": "12.1",
+      "source_line": 1530,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "8a15c3fbd3e40df37622efecfcb2ecb736683172f6047301996044fb23b6bda1",
+      "requirement_summary": "Only when this predicate is true and the selected semantic status is neither qualified nor partial MUST the explicitly requested literal fallback run.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1533-1",
+      "section": "12.1",
+      "source_line": 1533,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "8a9219df862920d77bf8ad19ea4e38c27fa67349956b15bc9bc8b3a065eccf68",
+      "requirement_summary": "Before any query-context/token-limit shortcut, embedding-endpoint contact or literal switch, every semantic request MUST finish a local safety preflight.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1542-1",
+      "section": "12.1",
+      "source_line": 1542,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "5fd41d8a1664e074cd9a050947e17c1a354926525054fe8e7263a164600d8e28",
+      "requirement_summary": "An earlier authority failure MUST NOT cause foreign reads merely to finish the list.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1545-1",
+      "section": "12.1",
+      "source_line": 1545,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "3750e947e8e4ac6f5c2729b0452d23d5ba1020f46751a873a95a6b4cf49e7094",
+      "requirement_summary": "If any required preflight check cannot be completed safely, fallback permission is false and no embedding-endpoint contact is permitted; an unobserved blocking condition MUST NOT be treated as absent.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1550-1",
+      "section": "12.1",
+      "source_line": 1550,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "8935dd01d57fbe61abf1ef3db0d281736ecece272836e4fa4982fafe4b97149a",
+      "requirement_summary": "Whole-request fences (invalid input, erasure, authority refusal, missing approval, requested similarity whose provider is unavailable (including absent, unqualified or stopped), or an incomplete required preflight check) MUST return the mapped local failure without contacting the embedding endpoint or taking a literal shortcut.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1552-1",
+      "section": "12.1",
+      "source_line": 1552,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "37ee44b2750ae1a9feacea9f06cb622a72799876413ccfc6b3a3ef0d7b06be36",
+      "requirement_summary": "Per-source withheld/clarification instead MUST exclude the affected atomic source, retain its generic outcome/exclusion, and forbid literal fallback or shortcuts; they MUST NOT prevent semantic execution for other freshly qualified safe primaries.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1554-1",
+      "section": "12.1",
+      "source_line": 1554,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "4e11ea30988b276d9043b8d87f9503dfe32ba388319236f7d98ff5fa551f843e",
+      "requirement_summary": "Per-source withheld/clarification instead MUST exclude the affected atomic source, retain its generic outcome/exclusion, and forbid literal fallback or shortcuts; they MUST NOT prevent semantic execution for other freshly qualified safe primaries.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1558-1",
+      "section": "12.1",
+      "source_line": 1558,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "3f674e077202354e37bf655f84ad1375e079d2db322116751f348568fcea45dd",
+      "requirement_summary": "Their failures MUST retain the observed per-source exclusions and independent fallback prohibition.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1566-1",
+      "section": "12.1",
+      "source_line": 1566,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "6d1b70007eb1ed468a8eecd1c49424582f450dbac9feb0c6269074d0c8ce0e91",
+      "requirement_summary": "Per-source withheld/clarification outcomes also forbid literal fallback, but MUST NOT change the mode merely because fallback was requested.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.1-L1568-1",
+      "section": "12.1",
+      "source_line": 1568,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "ef28d6190a7edf1fe0a440ba32e5a690c0772e22ce22976510da5cf95087bcf5",
+      "requirement_summary": "When semantic execution ran, effective_mode remains semantic and other freshly qualified safe primaries MUST be returned subject to the same mandatory-group and result packing rules; the withheld or incomplete atomic source is omitted without hidden metadata.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.2-L1661-1",
+      "section": "12.2",
+      "source_line": 1661,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "11a33bf1cb5df00b9f75e590c5e28d14babe148601c890d935c7a631ccfa0e33",
+      "requirement_summary": "An explicitly requested literal fallback can exit 0 with `effective_mode:literal` and `semantic_status:unavailable`; it MUST NOT call itself semantic success.",
+      "design_sections": [
+        "9.3",
+        "10.2",
+        "12"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-12.2-L1668-1",
+      "section": "12.2",
+      "source_line": 1668,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "c86c36d47d3984170c7b99aee6dc3f57bead79e6f5af37ad0461c7849592f868",
+      "requirement_summary": "Shared records lacking valid #57 admission provenance MUST remain unqualified.",
+      "design_sections": [
+        "9.3",
+        "10.2",
+        "12"
+      ],
+      "disposition": "out-of-scope:#57"
+    },
+    {
+      "id": "C-12.2-L1669-1",
+      "section": "12.2",
+      "source_line": 1669,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "eb1f1c5546044746966f7de703c68a81a9e581c3dd374e22fc0ad2e9a8c0a6a0",
+      "requirement_summary": "Export approval belongs to #57 and MUST NOT be inferred from read access, configuration, a terminal/PTY, or an agent answer.",
+      "design_sections": [
+        "9.3",
+        "10.2",
+        "12"
+      ],
+      "disposition": "out-of-scope:#57"
+    },
+    {
+      "id": "C-13-L1674-1",
+      "section": "13",
+      "source_line": 1674,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "b9782857b1230fa3e7b505b55000b47f89342ec05e5315a7d142a0908dd812e7",
+      "requirement_summary": "G1 MUST retain the independently authored, originally frozen paraphrase and typed-relationship suite.",
+      "design_sections": [
+        "2",
+        "13",
+        "15"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13-L1693-1",
+      "section": "13",
+      "source_line": 1693,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "51bd2dab706343c0326f3fc911dbd2a1740455d638b3c5e202b25791a9f37d2f",
+      "requirement_summary": "The operator [adopted the presented latency gates](../research/data/g1-latency-target-disposition-20261109.json) on 2026-11-09: warm end-to-end semantic recall p95 MUST be at most 2/3/5 seconds at 1k/10k/50k records; eligible exact-cosine p95 MUST be at most 100/400 ms at 10k/50k.",
+      "design_sections": [
+        "2",
+        "13",
+        "15"
+      ],
+      "disposition": "out-of-scope:#256/#252"
+    },
+    {
+      "id": "C-13-L1694-1",
+      "section": "13",
+      "source_line": 1694,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "4463df45d1974c36b196a6c3e9a2ad064f70e2801eeafa7cfc3b8883e6ddc2dc",
+      "requirement_summary": "The operator [adopted the presented latency gates](../research/data/g1-latency-target-disposition-20261109.json) on 2026-11-09: warm end-to-end semantic recall p95 MUST be at most 2/3/5 seconds at 1k/10k/50k records; eligible exact-cosine p95 MUST be at most 100/400 ms at 10k/50k.",
+      "design_sections": [
+        "2",
+        "13",
+        "15"
+      ],
+      "disposition": "out-of-scope:#256/#252"
+    },
+    {
+      "id": "C-13-L1696-1",
+      "section": "13",
+      "source_line": 1696,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "cea7f97fcc31692f40e262796ab0c20e139273266306387fec2ae09120f468ad",
+      "requirement_summary": "Gates apply only to the matching measured operation/profile/size; component-only timing MUST NOT qualify end-to-end recall.",
+      "design_sections": [
+        "2",
+        "13",
+        "15"
+      ],
+      "disposition": "out-of-scope:#256/#252"
+    },
+    {
+      "id": "C-13-L1778-1",
+      "section": "13",
+      "source_line": 1778,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "7665e909274a19ceda5ce382ce9aa2a79e415b7c3bb6b6d9770fb07327e87493",
+      "requirement_summary": "Corrections informed by these outcomes MUST disclose that influence; the exposed set cannot be reused as fresh held-out validation or to qualify a newly tuned cutoff.",
+      "design_sections": [
+        "2",
+        "13",
+        "15"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13-L1812-1",
+      "section": "13",
+      "source_line": 1812,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "fc2bd399f3e28e2a443786160df59b8ec5a18455d540818b56785603e40d5bab",
+      "requirement_summary": "The engine reported capacity64 for requested capacity32; requested capacity MUST NOT be presented as measured effective capacity or index footprint.",
+      "design_sections": [
+        "2",
+        "13",
+        "15"
+      ],
+      "disposition": "out-of-scope:#255"
+    },
+    {
+      "id": "C-13.1-L1892-1",
+      "section": "13.1",
+      "source_line": 1892,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "3246ace33ccf3c11232f8def8c4c5978206f1be81233002e3af2ea66fe24108d",
+      "requirement_summary": "The original independently authored 101-case suite, its 16 calibration/85 held-out split, labels, raw negatives, 567-cell intended denominator and historical scorer MUST remain available unchanged.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1894-1",
+      "section": "13.1",
+      "source_line": 1894,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "6b020ba1174538b951887f73d8cb005a848f96e97f1b5513bae1dfb3b1dcd04d",
+      "requirement_summary": "The opened held-out set MUST be treated as an exposed regression set in G2/G3/P1, not fresh held-out validation.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1896-1",
+      "section": "13.1",
+      "source_line": 1896,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "baa9f742664cde4e27d972aac2056a2f6dbbfa1c7ac4c54ce0b5bd665fca1661",
+      "requirement_summary": "Corrections and new protocols MUST declare this influence before another run.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1898-1",
+      "section": "13.1",
+      "source_line": 1898,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "7bb3806655819fe1223584e6a3bb0b5640bb8b487ce3e5b2c03c0b6202609b52",
+      "requirement_summary": "A new source-bound protocol MUST separate (a) native primary retrieval and mandatory assembly; (b) explicit seed selection/requalification; (c) related template paths; (d) qualified graph-assertion audit; and (e) native navigation.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1901-1",
+      "section": "13.1",
+      "source_line": 1901,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "0d50cd0ccc89fecc84c9298ee4be2843fe33eedfa0204fd1f77af35ad64f6f53",
+      "requirement_summary": "Each cell MUST name its actual surface, generation, context, template digest, arguments, exact seed source/hash, output limit and qualification domain.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1903-1",
+      "section": "13.1",
+      "source_line": 1903,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "5fcd25d9ab9be49fa704dcfd9b7444819d6deedb6d494a9fc59068c960d2a08f",
+      "requirement_summary": "Semantic seed selection MUST be measured separately from a supplied-seed graph mechanism control.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1906-1",
+      "section": "13.1",
+      "source_line": 1906,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "f73c4595535a52affa72980a9b5ca446f9e7c98569760c91598961581f950aae",
+      "requirement_summary": "A mechanism control MAY obtain a selection reference through an explicit semantic-mode request with exact `ids` selectors, freshly qualified then; it MUST NOT count supplied-seed selection as paraphrase retrieval.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1908-1",
+      "section": "13.1",
+      "source_line": 1908,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "e949835336551ca1c7666322ecf216d263f4304d6a85934d01e28e70b526106d",
+      "requirement_summary": "It MUST NOT use the seed-excluding related target set to score required primary guidance.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1909-1",
+      "section": "13.1",
+      "source_line": 1909,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "64f5784033b21b2105f0e2a459dd5ff104e38400d3cae137a4d468c2c077b5d2",
+      "requirement_summary": "Unknown/out-of-contract labels MUST be reported as unqualified protocol mismatches with their original misses retained, not passing cells.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1912-1",
+      "section": "13.1",
+      "source_line": 1912,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "bb6802497afbbaa7821fd9cd9449efc38f0a9f054c5dce64c68e61d0d5bd4ef3",
+      "requirement_summary": "Historical fixture labels MUST map to graph assertions by canonical field only: `scope` → `IN_SCOPE`, `condition` → `HAS_CONDITION`, `evidence` → `SUPPORTED_BY`, `derived-from` → `DERIVED_FROM`, and `corrects` → `CORRECTS` (similarly the exact supersession fields in §5).",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1917-1",
+      "section": "13.1",
+      "source_line": 1917,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "d886505ff318b5115e9f2f0069ab99f5c4aa0b41730641997c268140f742b273",
+      "requirement_summary": "This mapper MUST NOT invent a record at a metadata endpoint, infer an unrecorded inverse, turn shared evidence into derivation, or make co-routing/shared origin into relevance.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1919-1",
+      "section": "13.1",
+      "source_line": 1919,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "bfac7a9b511e59a0afe1838968708ed4af4458762b1cf69a0e097fd723e19261",
+      "requirement_summary": "It MUST check each original asserting source and every endpoint before disclosure.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1927-1",
+      "section": "13.1",
+      "source_line": 1927,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "02a235c7e5d86e9da4d40af4086baae4e177d3ed0c4bfb2519b241833d43264b",
+      "requirement_summary": "It MUST NOT disclose bodies, infer related lessons from routing hubs, bypass qualification, or contribute primary-recall scores.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1934-1",
+      "section": "13.1",
+      "source_line": 1934,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "231656757f501a0a677d7b9934e1a96f6ce948d3f252835bf56007f6c45ee198",
+      "requirement_summary": "`component-attempts` retains its episodic-attempt/project-decision/result target filter; zero qualified attempt pointers MUST NOT become “no lessons”.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1936-1",
+      "section": "13.1",
+      "source_line": 1936,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "d107662b178b4c2b43d8fcdf8b7426ebd2e1c909786a409acde18ee0a3bb7676",
+      "requirement_summary": "The record→evidence rows retain their stored directions, and shared evidence MUST NOT manufacture `DERIVED_FROM`. |",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1943-1",
+      "section": "13.1",
+      "source_line": 1943,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "67a0fd76f40d81ff3ca07afa61070ee7859c7b14bd916e07430686a8c04057d1",
+      "requirement_summary": "G2/G3/P1 MUST retain the exposed regression results and separately frozen fresh, independently authored qualification before any new held-out quality or calibrated-abstention claim; they MUST NOT silently replace the original suite.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.1-L1945-1",
+      "section": "13.1",
+      "source_line": 1945,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "e6c31c07a4a4f41cf3d8dda6f35a563e3b4a7cca83863a7ceb250c20acb31421",
+      "requirement_summary": "G2/G3/P1 MUST retain the exposed regression results and separately frozen fresh, independently authored qualification before any new held-out quality or calibrated-abstention claim; they MUST NOT silently replace the original suite.",
+      "design_sections": [
+        "6",
+        "13.3"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.2-L1952-1",
+      "section": "13.2",
+      "source_line": 1952,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "41f00063bf99cc45ba5a93dd9f8d0f1d2255fc92a7698c5b955a28722f476360",
+      "requirement_summary": "Settled operator choices MUST NOT be reopened as new research gates.",
+      "design_sections": [
+        "1",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.2-L1959-1",
+      "section": "13.2",
+      "source_line": 1959,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "64ae6b217181dca1d9796c38405652cecfec69dc9285da8c0b0c2c42c4e85c0b",
+      "requirement_summary": "Weak suppression remains disabled pending source-bound QE qualification.",
+      "design_sections": [
+        "1",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-13.2-L1959-2",
+      "section": "13.2",
+      "source_line": 1959,
+      "keyword_ordinal": 2,
+      "keyword": "MUST",
+      "source_line_sha256": "64ae6b217181dca1d9796c38405652cecfec69dc9285da8c0b0c2c42c4e85c0b",
+      "requirement_summary": "#252/#200 human v1 ranking output says uncalibrated, without a new schema field or semantic-absence claim.",
+      "design_sections": [
+        "1",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "out-of-scope:#252/#200"
+    },
+    {
+      "id": "C-13.2-L1961-1",
+      "section": "13.2",
+      "source_line": 1961,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "b84a04e38b6f18ea32a095fafe28c74c56e3c082697ad5af951c74c36803c2ea",
+      "requirement_summary": "Engineering MUST propose bounded installation defaults for query admission and maintenance, inherited by URL/key profiles with narrower project constraints where required. | No approved numeric/default policy is inferred; missing query ceilings remain pending/resource-limit or permitted explicit literal fallback, and missing maintenance ceilings leave work pending.",
+      "design_sections": [
+        "8.3",
+        "15",
+        "16"
+      ],
+      "disposition": "covered",
+      "coverage_note": "Engineering now proposes exact bounded cap set plus source-bound measurement/proposal/approval procedure; operator approval of amounts remains OD-02, not an omitted proposal."
+    },
+    {
+      "id": "C-13.2-L1965-1",
+      "section": "13.2",
+      "source_line": 1965,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "2b8530cba92b90683d00da9d82d22b7adb2c73914087de2585af0da9f2861d96",
+      "requirement_summary": "Independent review of this merged amendment MUST bind its exact contract/schema and evidence bytes, retaining the original **eight** G1 criteria and ADR-0027 additions.",
+      "design_sections": [
+        "1",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "out-of-scope:#255",
+      "owner_note": "Already discharged amended G1 research-contract review obligation; preserved historical authority, not a new G3 operator decision or reopened research gate."
+    },
+    {
+      "id": "C-13.2-L1967-1",
+      "section": "13.2",
+      "source_line": 1967,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "26ebb5412ffce7ddcbfd967f9711c74b4cfa8f583720c53c99af380350598661",
+      "requirement_summary": "It MUST assess compatibility of the combined design and preserve historical research acceptance, negatives and missing prerequisites—not invent new positive-only G1 gates or claim this candidate inherits the historical freeze.",
+      "design_sections": [
+        "1",
+        "13.3",
+        "15",
+        "16"
+      ],
+      "disposition": "out-of-scope:#255",
+      "owner_note": "Already discharged amended G1 research-contract review obligation; preserved historical authority, not a new G3 operator decision or reopened research gate."
+    },
+    {
+      "id": "C-1-N01",
+      "section": "1",
+      "source_line_range": [
+        57,
+        64
+      ],
+      "requirement_summary": "Separate selected managed core, historical reference, BYO graph and embedding profile identities; no profile pass transferred.",
+      "design_sections": [
+        "1",
+        "2",
+        "4",
+        "13.3"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-2-N02",
+      "section": "2",
+      "source_line_range": [
+        159,
+        170
+      ],
+      "requirement_summary": "Current private-build disposition removes further licensing gate while explicit acquisition and technical/disclosure qualification remain.",
+      "design_sections": [
+        "1",
+        "4",
+        "16"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-4-N03",
+      "section": "4",
+      "source_line_range": [
+        208,
+        213
+      ],
+      "requirement_summary": "Namespace binds full UUID, normalized bank, resolved checkout/common-Git and owner receipt; private port reservation and loopback default.",
+      "design_sections": [
+        "4"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-4-N04",
+      "section": "4",
+      "source_line_range": [
+        215,
+        226
+      ],
+      "requirement_summary": "Bank-state key uses exact observation/frontier/authority/settings/validator/profile/epoch; Git context re-observed; strict complete equality before use/output and any canonical-write invalidation.",
+      "design_sections": [
+        "4",
+        "7",
+        "11"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-4-N05",
+      "section": "4",
+      "source_line_range": [
+        230,
+        241
+      ],
+      "requirement_summary": "Newly bound profile fill and independent authorized immutable cross-clone copy only; no shared instance, erasure ownership or applicability assertion.",
+      "design_sections": [
+        "4",
+        "7"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-5-N06",
+      "section": "5",
+      "source_line_range": [
+        245,
+        259
+      ],
+      "requirement_summary": "Tagged node identities, exact canonical source/framing/type fields for all eight schema node types.",
+      "design_sections": [
+        "5.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-5-N07",
+      "section": "5",
+      "source_line_range": [
+        261,
+        275
+      ],
+      "requirement_summary": "Only permitted active/inactive metadata; exclude candidate/quarantine/hidden/unsafe/deleted, omit unresolved endpoints; recorded assertion source/provenance binding.",
+      "design_sections": [
+        "5"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-5-N08",
+      "section": "5",
+      "source_line_range": [
+        277,
+        289
+      ],
+      "requirement_summary": "Project typed directed canonical containment/routing/scope/condition/evidence/origin/correction/supersession/derivation relationships; inference separate.",
+      "design_sections": [
+        "5.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-6-N09",
+      "section": "6",
+      "source_line_range": [
+        349,
+        363
+      ],
+      "requirement_summary": "Complete freshly qualified current/history source key/hash domains with native gates, all kinds/reviewed/context for related; unavailable required history never partial path.",
+      "design_sections": [
+        "6.1",
+        "6.2"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-6-N10",
+      "section": "6",
+      "source_line_range": [
+        380,
+        399
+      ],
+      "requirement_summary": "On-demand outward exact current-domain k_s32 similarity; no cutoff/all-pairs/reverse membership; partial seed/no-vector exclusions and vector-integrity distinction.",
+      "design_sections": [
+        "6.3",
+        "12"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-6-N11",
+      "section": "6",
+      "source_line_range": [
+        400,
+        412
+      ],
+      "requirement_summary": "Exact sealed RFC8785 inference provenance keys/domain/rank/source/profile/vector bindings; request-local lifetime and final fence.",
+      "design_sections": [
+        "6.3",
+        "9",
+        "12"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-6-N12",
+      "section": "6",
+      "source_line_range": [
+        446,
+        453
+      ],
+      "requirement_summary": "Canonical target/edge-tuple path ordering, dedup, postqualification cap+1, authenticated keyset/no offset pagination; stale mismatch refused.",
+      "design_sections": [
+        "6.2",
+        "6.4"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-6-N13",
+      "section": "6",
+      "source_line_range": [
+        456,
+        456
+      ],
+      "requirement_summary": "Replacement-evidence closed historical argument and 1–4 hop/64 path/250ms bounds over exact correction/evidence edge set.",
+      "design_sections": [
+        "6.2"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-6-N14",
+      "section": "6",
+      "source_line_range": [
+        458,
+        458
+      ],
+      "requirement_summary": "Recorded-related closed relation enum, outward inference and guarded component joins; 1–2 hop/32 path/250ms bounds, not route/origin relevance.",
+      "design_sections": [
+        "6.2",
+        "6.3"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-6-N15",
+      "section": "6",
+      "source_line_range": [
+        466,
+        496
+      ],
+      "requirement_summary": "Closed typed related query/request/argument shapes, native context validators/task/security limits, authenticated native requalified seed not caller path authority.",
+      "design_sections": [
+        "6.2",
+        "6.4",
+        "10.3",
+        "13.4",
+        "15",
+        "16"
+      ],
+      "disposition": "open-decision:OD-04",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry",
+      "coverage_note": "Closed request/reference validation is specified; graph-only first public reference issuance is absent from frozen C/S and proposed in the separate unapproved amendment. Public acceptance is dependent, not covered by a private mint."
+    },
+    {
+      "id": "C-8.1-N16",
+      "section": "8.1",
+      "source_line_range": [
+        839,
+        847
+      ],
+      "requirement_summary": "Generation-owned immutable f32le matrix/row-map exact source/rendered/profile identities, counts and explicit eligible exclusions; no duplicate/missing/unexpected rows.",
+      "design_sections": [
+        "7.1",
+        "12"
+      ],
+      "disposition": "out-of-scope:#256",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-8.1-N17",
+      "section": "8.1",
+      "source_line_range": [
+        867,
+        877
+      ],
+      "requirement_summary": "Audited resident exact-cosine implementation over persisted float32 with float64 accumulation/norms, no full f64 matrix per query; current domain not worker map grants request authority.",
+      "design_sections": [
+        "6.3",
+        "12",
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#256",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-8.1-N18",
+      "section": "8.1",
+      "source_line_range": [
+        887,
+        892
+      ],
+      "requirement_summary": "Production ANN disabled; historical exact-versus-ANN negatives retained, no silent profile/engine substitution.",
+      "design_sections": [
+        "5",
+        "13.3"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-8.1-N19",
+      "section": "8.1",
+      "source_line_range": [
+        920,
+        922
+      ],
+      "requirement_summary": "Future ANN selection requires independent eligible recall/resource qualification and reviewed profile/contract revision.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry",
+      "owner_note": "Future product-profile qualification/non-adoption rule retained explicitly, consistent with the conditional ANN policy; not assigned to closed #255 research and not enabling ANN."
+    },
+    {
+      "id": "C-9-N20",
+      "section": "9",
+      "source_line_range": [
+        929,
+        938
+      ],
+      "requirement_summary": "Complete manifest binds source/framing/frontier/Git/policy/engine/template/ownership/profile/renderer/artifact/coverage/capability/journal evidence.",
+      "design_sections": [
+        "7.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-9-N21",
+      "section": "9",
+      "source_line_range": [
+        940,
+        959
+      ],
+      "requirement_summary": "Exact generation state enum/transitions, interruption same-pin resume, changed-pin discard and verified disposal; namespace pending/stale are not generation states.",
+      "design_sections": [
+        "7",
+        "11"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-9-N22",
+      "section": "9",
+      "source_line_range": [
+        961,
+        967
+      ],
+      "requirement_summary": "Durable journal/planned ownership before candidate content, exact allocated resource record, safe snapshot then release bank lock, complete batches and original-pin validation.",
+      "design_sections": [
+        "7.2",
+        "7.3"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-9-N23",
+      "section": "9",
+      "source_line_range": [
+        981,
+        987
+      ],
+      "requirement_summary": "Null approval digest for actual local/verified-loopback/synthetic permission binds real policy/destination evidence; remote sends require real verified grant.",
+      "design_sections": [
+        "9.2",
+        "12"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-9-N24",
+      "section": "9",
+      "source_line_range": [
+        998,
+        1006
+      ],
+      "requirement_summary": "Common-lock digest+epoch publication CAS after fsync and original-pin recheck, CAS loser disposal and one-generation reader pin/final checks.",
+      "design_sections": [
+        "7.2",
+        "7.3",
+        "9",
+        "15"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry",
+      "contract_owner_acceptance_required": "I-PIN-01: full native pin hash outside publication, fresh witnesses/inhibit/epoch/pointer under it; fail-open hint loss never authorizes stale disclosure. Technical interpretation must be explicitly accepted before Ready."
+    },
+    {
+      "id": "C-10-N25",
+      "section": "10",
+      "source_line_range": [
+        1012,
+        1016
+      ],
+      "requirement_summary": "Explicit setup/start/approval establishes bounded installation envelope and maximum one active/one candidate; detached owned worker only inside envelope.",
+      "design_sections": [
+        "8",
+        "10.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-10-N26",
+      "section": "10",
+      "source_line_range": [
+        1019,
+        1043
+      ],
+      "requirement_summary": "Stop disables/fences first, bounded verified-owned termination, no unknown kill; content-free write hints; synchronous privacy fence; safe resumable maintenance/native eligibility and endpoint single flight.",
+      "design_sections": [
+        "8",
+        "9",
+        "10.1",
+        "7.2",
+        "9.2",
+        "11",
+        "13.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-10-N27",
+      "section": "10",
+      "source_line_range": [
+        1047,
+        1053
+      ],
+      "requirement_summary": "Resource inheritance, explicit remote ceiling, exhaustion pending and research batch limits not numeric production defaults.",
+      "design_sections": [
+        "8.3",
+        "8.4",
+        "16"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-11-N28",
+      "section": "11",
+      "source_line_range": [
+        1070,
+        1077
+      ],
+      "requirement_summary": "Monotonic privacy epoch and exact global lock order; atomic endpoint slot/full cost reservation without waiting under earlier locks.",
+      "design_sections": [
+        "8",
+        "9.1",
+        "12"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-11-N29",
+      "section": "11",
+      "source_line_range": [
+        1079,
+        1106
+      ],
+      "requirement_summary": "No bank/publication/budget locks over model/network work; ownership leaf restrictions; durable precommit inhibit/postcommit epoch fence; exact reconciliation; all journalled copies fenced without leases.",
+      "design_sections": [
+        "7",
+        "9"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-11-N30",
+      "section": "11",
+      "source_line_range": [
+        1115,
+        1116
+      ],
+      "requirement_summary": "Canonical deletion receipt and derived-erasure completion are separate until all owned persistent copies verified erased.",
+      "design_sections": [
+        "9.2"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-11.1-N31",
+      "section": "11.1",
+      "source_line_range": [
+        1147,
+        1161
+      ],
+      "requirement_summary": "Whole-owned-generation removal, no DETACH DELETE compaction claim; qualified dedicated delegated BYO ownership and no shared/SSG store adoption/wipe.",
+      "design_sections": [
+        "4",
+        "9.2",
+        "9.3"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-11.1-N32",
+      "section": "11.1",
+      "source_line_range": [
+        1162,
+        1168
+      ],
+      "requirement_summary": "Purge current checkout namespace exact set/epoch/operation token, recheck on apply, resource absence plus release proof, unrelated IDs untouched.",
+      "design_sections": [
+        "9.3",
+        "10.1",
+        "9.5"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12-N33",
+      "section": "12",
+      "source_line_range": [
+        1177,
+        1204
+      ],
+      "requirement_summary": "Exact public lifecycle/structured related syntax, explicit technical acquisition/start approval, key references/private secret protection, preview/apply distinction.",
+      "design_sections": [
+        "4",
+        "9.3",
+        "10.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12-N34",
+      "section": "12",
+      "source_line_range": [
+        1257,
+        1281
+      ],
+      "requirement_summary": "Ranking-key selector preserves literal parser/errors; all recognizable lifecycle/related produce one closed schema object, safe stderr and purge-invalid operation/object defaults.",
+      "design_sections": [
+        "3.1",
+        "10",
+        "9.5",
+        "10.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12-N35",
+      "section": "12",
+      "source_line_range": [
+        1283,
+        1303
+      ],
+      "requirement_summary": "Private per-installation HMAC key and purpose-separated selection/page tokens with key IDs/exact bindings, source requalification, foreign/invalid/stale refusal.",
+      "design_sections": [
+        "6.4",
+        "12"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12-N36",
+      "section": "12",
+      "source_line_range": [
+        1305,
+        1320
+      ],
+      "requirement_summary": "Body-free current/historical pointer payloads; native guidance unchanged, context orientation-only, primary/caveat/pointer separation and no automatic historical body fetch.",
+      "design_sections": [
+        "5",
+        "6",
+        "10.2",
+        "12"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12-N37",
+      "section": "12",
+      "source_line_range": [
+        1328,
+        1351
+      ],
+      "requirement_summary": "Native coverage mapped unchanged and independently retained; source equality, recovery/held/capped distinctions never infer complete semantics.",
+      "design_sections": [
+        "10.2",
+        "11"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12-N38",
+      "section": "12",
+      "source_line_range": [
+        1373,
+        1389
+      ],
+      "requirement_summary": "Per-operation status/exit mapping, inspection/resource separation and no complete absence from unavailable/capped/withheld coverage.",
+      "design_sections": [
+        "10.1",
+        "10.2"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12.1-N39",
+      "section": "12.1",
+      "source_line_range": [
+        1395,
+        1424
+      ],
+      "requirement_summary": "All observed applicable status precedence and table tie-break, real assurance/coverage limitations, no null/phase-invention trigger.",
+      "design_sections": [
+        "10.2",
+        "11"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12.1-N40",
+      "section": "12.1",
+      "source_line_range": [
+        1429,
+        1475
+      ],
+      "requirement_summary": "Complete closed reason trigger table including provider fences, stopped read versus maintenance, storage/budget, integrity, ownership, references and no-op success.",
+      "design_sections": [
+        "6.3",
+        "10.2",
+        "11"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12.1-N41",
+      "section": "12.1",
+      "source_line_range": [
+        1495,
+        1506
+      ],
+      "requirement_summary": "Status inspection and exact purge preview can succeed while reporting erasure-pending/stopped resource facts; unknown ownership refuses/no token.",
+      "design_sections": [
+        "9.3",
+        "10",
+        "9.5",
+        "10.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-12.2-N42",
+      "section": "12.2",
+      "source_line_range": [
+        1598,
+        1660
+      ],
+      "requirement_summary": "Required field defaults/lifecycle versus related versus semantic modes, actual source/native coverage, independent capabilities/mutation/resources and exact purge object.",
+      "design_sections": [
+        "10.2",
+        "9.5",
+        "10.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-13-N43",
+      "section": "13",
+      "source_line_range": [
+        1699,
+        1728
+      ],
+      "requirement_summary": "Named 1k/10k/50k real source/profile quality/cost and checkpoint time-to-fresh observations; missing platforms remain prerequisites; report-only resources with preserved latency gates.",
+      "design_sections": [
+        "13.3",
+        "16"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-13.1-N44",
+      "section": "13.1",
+      "source_line_range": [
+        1921,
+        1926
+      ],
+      "requirement_summary": "Private qualified assertion audit is not public template/recall API, no body/routing-primary or source/epoch/eligibility bypass.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "out-of-scope:#255",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-13.1-N45",
+      "section": "13.1",
+      "source_line_range": [
+        1931,
+        1941
+      ],
+      "requirement_summary": "Retain historical case-specific native-primary/template/audit/navigation distinction and misses; no relabelled passing wrong relation/hidden endpoint/route.",
+      "design_sections": [
+        "13.3"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-13.2-N46",
+      "section": "13.2",
+      "source_line_range": [
+        1956,
+        1968
+      ],
+      "requirement_summary": "Settled dispositions preserved; exact model/profile and new scoped defaults/technical receipt implementation remain explicit engineering/product prerequisites, not assumed approvals.",
+      "design_sections": [
+        "8.3",
+        "9.4",
+        "15",
+        "16"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-14-N47",
+      "section": "14",
+      "source_line_range": [
+        1990,
+        2011
+      ],
+      "requirement_summary": "Retain SSG lessons: substantive typed graph/source digests, complete generation strengthening, no all-pairs default, transient code context/critic advisory only and no second-model prerequisite.",
+      "design_sections": [
+        "1",
+        "5",
+        "7",
+        "13.3"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; normative-keyword occurrences are traced only by their C-<section>-L<line>-<ordinal> entry"
+    },
+    {
+      "id": "C-8-L712-1",
+      "section": "8",
+      "source_line": 712,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "0249371a0da9d94bf800aa6a3a1848ee915659c5a12c16c74face8c3c7799c40",
+      "requirement_summary": "Embedded related page_token is null; each freshly qualified primary supplies its own seed, and its cursor continues via standalone related.",
+      "design_sections": [
+        "6.4",
+        "12",
+        "13.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-8-L733-1",
+      "section": "8",
+      "source_line": 733,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "b625dfb6426d08883173004693f26785186eb13bcf8e6b6980cd9019bad90d81",
+      "requirement_summary": "Optional related references fit the remaining native MAX_RESULT after primary guidance and mandatory caveats; neither is displaced.",
+      "design_sections": [
+        "6.4",
+        "10.2",
+        "12",
+        "13.1"
+      ],
+      "disposition": "covered"
+    },
+    {
+      "id": "C-8-L742-1",
+      "section": "8",
+      "source_line": 742,
+      "keyword_ordinal": 1,
+      "keyword": "MUST",
+      "source_line_sha256": "8b7b552f7a410416f61b7af071385d74bdf9c18d29be1f63a56efd72325746ae",
+      "requirement_summary": "#252/#200 explain exit-1 partial still contains independently qualified safe primary guidance; no false related absence.",
+      "design_sections": [
+        "6.4",
+        "12",
+        "13.1"
+      ],
+      "disposition": "out-of-scope:#252/#200"
+    },
+    {
+      "id": "C-8-N48",
+      "section": "8",
+      "source_line_range": [
+        711,
+        723
+      ],
+      "requirement_summary": "Embedded related uses the closed query object only with ranking; absent related leaves arrays empty/cursors null; all-kinds/reviewed/context policy is shared, outer filters do not narrow related authority.",
+      "design_sections": [
+        "6.2",
+        "6.4",
+        "12"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; MUST/SHALL occurrences are counted only in unique C-<section>-L<line>-<ordinal> records"
+    },
+    {
+      "id": "C-8-N49",
+      "section": "8",
+      "source_line_range": [
+        724,
+        729
+      ],
+      "requirement_summary": "Orientation-only results cannot seed; selected absent/unqualified similarity provider fences the whole request before primaries, rather than silently omitting exploration.",
+      "design_sections": [
+        "6.2",
+        "6.3",
+        "6.4",
+        "10.2"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; MUST/SHALL occurrences are counted only in unique C-<section>-L<line>-<ordinal> records"
+    },
+    {
+      "id": "C-8-N50",
+      "section": "8",
+      "source_line_range": [
+        731,
+        741
+      ],
+      "requirement_summary": "All embedded exploration shares 250ms and 16KiB budget; exhaustion preserves qualified primaries, graph partial and real per-seed start/resume cursors, no incomplete paths, vector coverage independent.",
+      "design_sections": [
+        "6.4",
+        "12",
+        "13.1"
+      ],
+      "disposition": "covered",
+      "trace_kind": "non-keyword contract obligation; MUST/SHALL occurrences are counted only in unique C-<section>-L<line>-<ordinal> records"
+    }
+  ],
+  "relied_existing_symbols": [
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "symbol": "MEMORY_ROUTES",
+      "used_for": "Literal installed graph/related route attachment; existing search/get/explain routes unchanged.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/installation.py",
+      "source_sha256": "c1bb78d51badc3b9291442ebb8b8d90045edccb46ab3500e18e276559bd2f56b",
+      "source_git_blob": "e3f6123bcfe22a96df599d81f8804320fb2dfe56",
+      "source_bytes": 88716,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/cli.py",
+      "symbol": "arguments",
+      "used_for": "Existing redundant --json stripping; helper never depends on it.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/cli.py",
+      "source_sha256": "88a33c5600ab9e31b67d7fbf64d92b21ca8f2170b9acbbe0ee517ebeaddd2283",
+      "source_git_blob": "4115fa01380a9968ecd74cc9a75d74aeabcb5a6b",
+      "source_bytes": 1532,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/cli.py",
+      "symbol": "execute",
+      "used_for": "Fixed literal helper launcher delegation; no source-selected executable.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/cli.py",
+      "source_sha256": "88a33c5600ab9e31b67d7fbf64d92b21ca8f2170b9acbbe0ee517ebeaddd2283",
+      "source_git_blob": "4115fa01380a9968ecd74cc9a75d74aeabcb5a6b",
+      "source_bytes": 1532,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/source_startup.py",
+      "symbol": "isolate",
+      "used_for": "Existing safe packaged launcher startup/bytecode isolation pattern.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/source_startup.py",
+      "source_sha256": "54de0fcf9385bdbf19d28e1d6d18987a38baf90f7ec811cc7d511b0b951e007c",
+      "source_git_blob": "9921ee89f5ed92a5a2906ddec13a18095f5f581b",
+      "source_bytes": 2626,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "symbol": "bank_path",
+      "used_for": "Canonical configured bank/root resolution.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "source_sha256": "f00886af373bf70bd92b5cf66799fece237c0dd87598b27c636352162d8ff5f2",
+      "source_git_blob": "29eb8fd696bff73017936580c9cc14c85603cb88",
+      "source_bytes": 16857,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "symbol": "state_root",
+      "used_for": "Private installation-owned state root outside checkout/bank.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "source_sha256": "f00886af373bf70bd92b5cf66799fece237c0dd87598b27c636352162d8ff5f2",
+      "source_git_blob": "29eb8fd696bff73017936580c9cc14c85603cb88",
+      "source_bytes": 16857,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "symbol": "_apply",
+      "used_for": "Single-file canonical write receipt and hint/privacy integration boundary.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "source_sha256": "f00886af373bf70bd92b5cf66799fece237c0dd87598b27c636352162d8ff5f2",
+      "source_git_blob": "29eb8fd696bff73017936580c9cc14c85603cb88",
+      "source_bytes": 16857,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_observation.py",
+      "symbol": "observe",
+      "used_for": "Exact validated canonical source/topology observation.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_observation.py",
+      "source_sha256": "c508237b4e6586434128d2dbebd45995e696af2a091622be71d17430e97e3195",
+      "source_git_blob": "992ac5529aecd21edc26f858f57ad0fda361097f",
+      "source_bytes": 11885,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_observation.py",
+      "symbol": "Observation.recheck",
+      "used_for": "Complete final canonical bytes/topology/location/frontier recheck.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_observation.py",
+      "source_sha256": "c508237b4e6586434128d2dbebd45995e696af2a091622be71d17430e97e3195",
+      "source_git_blob": "992ac5529aecd21edc26f858f57ad0fda361097f",
+      "source_bytes": 11885,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recovery_frontier.py",
+      "symbol": "observe",
+      "used_for": "Independent complete private hold/frontier token even if Markdown unchanged.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recovery_frontier.py",
+      "source_sha256": "fcff218fa242713a8c4943880832bcd682ba6b806d26a43e694f212ac4514c10",
+      "source_git_blob": "0029ffe8c6237c8d7a8956dd35a065d64062d214",
+      "source_bytes": 58732,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recovery_frontier.py",
+      "symbol": "check",
+      "used_for": "Fresh equality of full private frontier/hold.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recovery_frontier.py",
+      "source_sha256": "fcff218fa242713a8c4943880832bcd682ba6b806d26a43e694f212ac4514c10",
+      "source_git_blob": "0029ffe8c6237c8d7a8956dd35a065d64062d214",
+      "source_bytes": 58732,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recovery_frontier.py",
+      "symbol": "require_scope",
+      "used_for": "Scope resolution with actual current retained recovery authority.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recovery_frontier.py",
+      "source_sha256": "fcff218fa242713a8c4943880832bcd682ba6b806d26a43e694f212ac4514c10",
+      "source_git_blob": "0029ffe8c6237c8d7a8956dd35a065d64062d214",
+      "source_bytes": 58732,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recovery_frontier.py",
+      "symbol": "public_coverage",
+      "used_for": "Preserve real native recovery coverage/counts/actions without semantic-completeness inference.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recovery_frontier.py",
+      "source_sha256": "fcff218fa242713a8c4943880832bcd682ba6b806d26a43e694f212ac4514c10",
+      "source_git_blob": "0029ffe8c6237c8d7a8956dd35a065d64062d214",
+      "source_bytes": 58732,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/scope_binding.py",
+      "symbol": "require",
+      "used_for": "Existing resolved identity/project/settings guard, not trusted operator-origin proof.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/scope_binding.py",
+      "source_sha256": "803fe427dfa86554d527339db37087e018d8d10445c5231eb732e9986cc323f7",
+      "source_git_blob": "1f4d3b36b2a66831e8f377ac6f07cdd012377826",
+      "source_bytes": 27952,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/repository_config.py",
+      "symbol": "settings",
+      "used_for": "Exact current repository authority/settings digest binding.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/repository_config.py",
+      "source_sha256": "105da825cd60ff190c94c454d927605813ffc8c41da354597d3346eb85f9ae79",
+      "source_git_blob": "48a55db146b992e3b5eb1c78cc0811144207b3ee",
+      "source_bytes": 17950,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "symbol": "binding",
+      "used_for": "Reuse exact repository/bank/project/settings binding semantics, not catalog key scope.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "source_sha256": "06fefa5b8aad8a90c77cd2ca46d59d74545aa578cc29c960b6b9d342d3cf171d",
+      "source_git_blob": "5b85e2b37632a1c4f608d5cd10ff63f55750475b",
+      "source_bytes": 30326,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "symbol": "generation",
+      "used_for": "Authenticated actual native engine/validator closure identity.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "source_sha256": "06fefa5b8aad8a90c77cd2ca46d59d74545aa578cc29c960b6b9d342d3cf171d",
+      "source_git_blob": "5b85e2b37632a1c4f608d5cd10ff63f55750475b",
+      "source_bytes": 30326,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "symbol": "coherent",
+      "used_for": "Recheck loaded engine/source consistency for derived reuse/serving.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "source_sha256": "06fefa5b8aad8a90c77cd2ca46d59d74545aa578cc29c960b6b9d342d3cf171d",
+      "source_git_blob": "5b85e2b37632a1c4f608d5cd10ff63f55750475b",
+      "source_bytes": 30326,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/records.py",
+      "symbol": "parse",
+      "used_for": "Canonical record schema/metadata/body parsing.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/records.py",
+      "source_sha256": "04bf692fa98337b9ee8e3fe6072d115106592c03fbdc1b237a867fa97369fb96",
+      "source_git_blob": "1da95764f4c50421c070f44cedcf5691d11c46f4",
+      "source_bytes": 12430,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/records.py",
+      "symbol": "applicability",
+      "used_for": "Canonical scope/conditions/unknown applicability; not lifecycle-currentness/admission authority.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/records.py",
+      "source_sha256": "04bf692fa98337b9ee8e3fe6072d115106592c03fbdc1b237a867fa97369fb96",
+      "source_git_blob": "1da95764f4c50421c070f44cedcf5691d11c46f4",
+      "source_bytes": 12430,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "symbol": "observed_context",
+      "used_for": "Actual Git branch/revision observation and refusal of supplied differing context.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "source_sha256": "031fae17ff534a63f26b0c5bd71fca24a37d88b67f2fc095f858eaa6d125e262",
+      "source_git_blob": "62cb6295d6fdb9c4daab7ee7f71105adc4456855",
+      "source_bytes": 18520,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "symbol": "scope_reasons",
+      "used_for": "Actual inherited route scope applicability.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "source_sha256": "031fae17ff534a63f26b0c5bd71fca24a37d88b67f2fc095f858eaa6d125e262",
+      "source_git_blob": "62cb6295d6fdb9c4daab7ee7f71105adc4456855",
+      "source_bytes": 18520,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "symbol": "evaluate_sources",
+      "used_for": "Native active/orientation/security/supersession gate and prebudget ordering reference; not reused as capped complete domain inventory.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "source_sha256": "031fae17ff534a63f26b0c5bd71fca24a37d88b67f2fc095f858eaa6d125e262",
+      "source_git_blob": "62cb6295d6fdb9c4daab7ee7f71105adc4456855",
+      "source_bytes": 18520,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "symbol": "current",
+      "used_for": "Existing active current-guidance gates; never used to promote inactive historical metadata.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "source_sha256": "0bbf1aa4ff91e89dda010ab9a24ff92f9ffd8e1d730e3c83bc4f6d3de122b54b",
+      "source_git_blob": "5c8f946fce417055c3839407df1b13e89a5281cb",
+      "source_bytes": 11456,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/scopes.py",
+      "symbol": "condition_value",
+      "used_for": "Native context/condition syntax/type validation including component.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/scopes.py",
+      "source_sha256": "db04b8a90103d45731a02e2da4a0bbfc940b5745bf5b9d72d8b1d6ee08fbad61",
+      "source_git_blob": "d6e622e61f8815a5b38d0e72101caa324cf676b3",
+      "source_bytes": 4561,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/scopes.py",
+      "symbol": "decide",
+      "used_for": "Native scope/component ancestor and condition applicability decisions.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/scopes.py",
+      "source_sha256": "db04b8a90103d45731a02e2da4a0bbfc940b5745bf5b9d72d8b1d6ee08fbad61",
+      "source_git_blob": "d6e622e61f8815a5b38d0e72101caa324cf676b3",
+      "source_bytes": 4561,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/security.py",
+      "symbol": "scan",
+      "used_for": "Bounded source/query/metadata security eligibility screening; not universal redaction proof.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/security.py",
+      "source_sha256": "768a91fad491ed3996defae434a41b983c2aa42dacc4aede5ab3009226a5c5d8",
+      "source_git_blob": "4cd0805d04730541329aaf8beb880cf619530ed9",
+      "source_bytes": 17008,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/discovery.py",
+      "symbol": "start",
+      "used_for": "Actual canonical navigation observation; not semantic primary guidance.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/discovery.py",
+      "source_sha256": "fb322ef6ea1c37a197c0021616f9bedc2bb8a7143a0f830f8ca2a0a46da7931b",
+      "source_git_blob": "e3e00271ed00e491eb556a8a783faa72b45e9af9",
+      "source_bytes": 21214,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/discovery.py",
+      "symbol": "node",
+      "used_for": "Actual visited parent/child route observations.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/discovery.py",
+      "source_sha256": "fb322ef6ea1c37a197c0021616f9bedc2bb8a7143a0f830f8ca2a0a46da7931b",
+      "source_git_blob": "e3e00271ed00e491eb556a8a783faa72b45e9af9",
+      "source_bytes": 21214,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/discovery.py",
+      "symbol": "check_trace",
+      "used_for": "Fresh canonical index/hash/parent-chain/context/frontier validation.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/discovery.py",
+      "source_sha256": "fb322ef6ea1c37a197c0021616f9bedc2bb8a7143a0f830f8ca2a0a46da7931b",
+      "source_git_blob": "e3e00271ed00e491eb556a8a783faa72b45e9af9",
+      "source_bytes": 21214,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "symbol": "private_mkdir",
+      "used_for": "Descriptor/ancestor private state directory pattern.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "source_sha256": "1fb44f5a8b0edc978d491b07ba3085c561d7b6ae817f17924a0b310088d66a79",
+      "source_git_blob": "54a90fcc4c8d3b353f52ff5e961b0d1cdf43f395",
+      "source_bytes": 16689,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "symbol": "exclusive",
+      "used_for": "Existing canonical/metadata exclusive ownership pattern; semantic publication lock is new.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "source_sha256": "1fb44f5a8b0edc978d491b07ba3085c561d7b6ae817f17924a0b310088d66a79",
+      "source_git_blob": "54a90fcc4c8d3b353f52ff5e961b0d1cdf43f395",
+      "source_bytes": 16689,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "symbol": "replace",
+      "used_for": "Observed-byte atomic replace/fsync/readback primitive used only under correct common-lock protocol.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "source_sha256": "1fb44f5a8b0edc978d491b07ba3085c561d7b6ae817f17924a0b310088d66a79",
+      "source_git_blob": "54a90fcc4c8d3b353f52ff5e961b0d1cdf43f395",
+      "source_bytes": 16689,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/turn_sources.py",
+      "symbol": "canonical_writer_barrier",
+      "used_for": "Existing cooperative source-authority barrier around canonical bank-slot ownership.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/turn_sources.py",
+      "source_sha256": "ab68728b5cdf545b88c8b242f138079a2cfc150bb03b8e5cbbc3c9baf43adf35",
+      "source_git_blob": "0faff21b2d282149fb335a1b9bc09805cfc7c16b",
+      "source_bytes": 54984,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "symbol": "converge",
+      "used_for": "Verified multi-file canonical commit/marker removal/recovery convergence hook boundary.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "source_sha256": "24f3a8d16424738f8db1f302ea8413293c91211284819091449494539138c5f8",
+      "source_git_blob": "56a58212136d7b684c00681aef794d61f4282393",
+      "source_bytes": 37873,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "symbol": "invalidate_optional_indexes",
+      "used_for": "Existing best-effort cache invalidation; explicitly not sufficient for mandatory privacy fencing.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "source_sha256": "24f3a8d16424738f8db1f302ea8413293c91211284819091449494539138c5f8",
+      "source_git_blob": "56a58212136d7b684c00681aef794d61f4282393",
+      "source_bytes": 37873,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "symbol": "history",
+      "used_for": "Complete canonical deletion-history authority for all versions, not request subset.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "source_sha256": "3c001ac52d4830340372e143a02cbb723644e1a22978f1606ee0c495e605cd0a",
+      "source_git_blob": "04faaa51e9c443224aa88a3fdbbeceeba5b754a5",
+      "source_bytes": 7600,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "symbol": "filter_projection",
+      "used_for": "Existing exact canonical project/tombstone filtering and final history recheck.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "source_sha256": "3c001ac52d4830340372e143a02cbb723644e1a22978f1606ee0c495e605cd0a",
+      "source_git_blob": "04faaa51e9c443224aa88a3fdbbeceeba5b754a5",
+      "source_bytes": 7600,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/private_state.py",
+      "symbol": "required_private_state_capabilities",
+      "used_for": "Discover retained private semantic-state reader obligations using current lifecycle capability mechanism.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/private_state.py",
+      "source_sha256": "6e498e5c1cba17b05747c13c8151a78d43fe2d98390b8cdc2078f8efcdcbc310",
+      "source_git_blob": "84fd690d3fed2635cb33f262d136dab052069df6",
+      "source_bytes": 21773,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/private_state.py",
+      "symbol": "require_compatible",
+      "used_for": "Refuse incapable target update/rollback/uninstall; retain evidence/capable reader.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/private_state.py",
+      "source_sha256": "6e498e5c1cba17b05747c13c8151a78d43fe2d98390b8cdc2078f8efcdcbc310",
+      "source_git_blob": "84fd690d3fed2635cb33f262d136dab052069df6",
+      "source_bytes": 21773,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/private_state.py",
+      "symbol": "activation_guard",
+      "used_for": "Hold/recheck lifecycle source barriers through activation/rollback.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/private_state.py",
+      "source_sha256": "6e498e5c1cba17b05747c13c8151a78d43fe2d98390b8cdc2078f8efcdcbc310",
+      "source_git_blob": "84fd690d3fed2635cb33f262d136dab052069df6",
+      "source_bytes": 21773,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/uninstallation.py",
+      "symbol": "prepare",
+      "used_for": "Existing explicit owned uninstall action/preservation plan.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/uninstallation.py",
+      "source_sha256": "fe63a4ad6db4cb1ce6a14ee275576afd368e57939de99d351c2b2eab6ff09326",
+      "source_git_blob": "0c2f9ba713dd1f5e20de8efca1407f52bb79c57f",
+      "source_bytes": 15858,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/uninstallation.py",
+      "symbol": "run",
+      "used_for": "Existing public uninstall lifecycle execution/compatibility integration.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/uninstallation.py",
+      "source_sha256": "fe63a4ad6db4cb1ce6a14ee275576afd368e57939de99d351c2b2eab6ff09326",
+      "source_git_blob": "0c2f9ba713dd1f5e20de8efca1407f52bb79c57f",
+      "source_bytes": 15858,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "symbol": "main",
+      "used_for": "Existing literal search/get/explain helper parser/output behavior is preserved while G2 owns ranking-selector migration.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "source_sha256": "031fae17ff534a63f26b0c5bd71fca24a37d88b67f2fc095f858eaa6d125e262",
+      "source_git_blob": "62cb6295d6fdb9c4daab7ee7f71105adc4456855",
+      "source_bytes": 18520,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "symbol": "MAX_RESULT",
+      "used_for": "Existing 65536-byte native result budget retained after primary/mandatory payloads; optional graph references use only remaining budget.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "source_sha256": "031fae17ff534a63f26b0c5bd71fca24a37d88b67f2fc095f858eaa6d125e262",
+      "source_git_blob": "62cb6295d6fdb9c4daab7ee7f71105adc4456855",
+      "source_bytes": 18520,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "symbol": "locked",
+      "used_for": "Existing stable runtime lifecycle flock; prefix lock order and no graph stop/disposal under it.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/installation.py",
+      "source_sha256": "c1bb78d51badc3b9291442ebb8b8d90045edccb46ab3500e18e276559bd2f56b",
+      "source_git_blob": "e3f6123bcfe22a96df599d81f8804320fb2dfe56",
+      "source_bytes": 88716,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "symbol": "native_rename",
+      "used_for": "Existing native purge-data bank-detachment linearization point; pre-inhibit/post-rename epoch integration.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/installation.py",
+      "source_sha256": "c1bb78d51badc3b9291442ebb8b8d90045edccb46ab3500e18e276559bd2f56b",
+      "source_git_blob": "e3f6123bcfe22a96df599d81f8804320fb2dfe56",
+      "source_bytes": 88716,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/turn_sources.py",
+      "symbol": "source_barrier",
+      "used_for": "Existing kernel-flock source barrier; short shared worker commit guard and native writer EX ordering.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/turn_sources.py",
+      "source_sha256": "ab68728b5cdf545b88c8b242f138079a2cfc150bb03b8e5cbbc3c9baf43adf35",
+      "source_git_blob": "0faff21b2d282149fb335a1b9bc09805cfc7c16b",
+      "source_bytes": 54984,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/turn_sources.py",
+      "symbol": "private_lock",
+      "used_for": "Existing nonblocking no-follow stable inode SH/EX flock/descriptor identity semantics.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/turn_sources.py",
+      "source_sha256": "ab68728b5cdf545b88c8b242f138079a2cfc150bb03b8e5cbbc3c9baf43adf35",
+      "source_git_blob": "0faff21b2d282149fb335a1b9bc09805cfc7c16b",
+      "source_bytes": 54984,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "symbol": "recover",
+      "used_for": "Existing native marker recovery entry; never invoked to clear a detached-worker marker, because no worker marker is created.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "source_sha256": "f00886af373bf70bd92b5cf66799fece237c0dd87598b27c636352162d8ff5f2",
+      "source_git_blob": "29eb8fd696bff73017936580c9cc14c85603cb88",
+      "source_bytes": 16857,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "symbol": "recover",
+      "used_for": "Existing exact proposal/owner-death/native-marker recovery; unchanged and not automatic graph-worker stale cleanup.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "source_sha256": "1fb44f5a8b0edc978d491b07ba3085c561d7b6ae817f17924a0b310088d66a79",
+      "source_git_blob": "54a90fcc4c8d3b353f52ff5e961b0d1cdf43f395",
+      "source_bytes": 16689,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "symbol": "replace_file",
+      "used_for": "Actual canonical replacement/unlink primitive used by held/nested checkpoints and rollback outside converge; enclosing content-free commit hook.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "source_sha256": "24f3a8d16424738f8db1f302ea8413293c91211284819091449494539138c5f8",
+      "source_git_blob": "56a58212136d7b684c00681aef794d61f4282393",
+      "source_bytes": 37873,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recovery_transactions.py",
+      "symbol": "apply_checkpoint",
+      "used_for": "Actual recovery-hold checkpoint route; sequence/hint and frontier-bound completion integration.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recovery_transactions.py",
+      "source_sha256": "07bb9e6c7d24401e8d1669dd6b0427f4e85c7c62f20a5373ca465ebd6b8be37c",
+      "source_git_blob": "a54dee5ab19d670af4f45c10bd8f371b6cb5ba76",
+      "source_bytes": 33244,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/recovery_transactions.py",
+      "symbol": "terminalize",
+      "used_for": "Nested held-checkpoint exact receipt/frontier terminal boundary; not assumed to reach converge.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/recovery_transactions.py",
+      "source_sha256": "07bb9e6c7d24401e8d1669dd6b0427f4e85c7c62f20a5373ca465ebd6b8be37c",
+      "source_git_blob": "a54dee5ab19d670af4f45c10bd8f371b6cb5ba76",
+      "source_bytes": 33244,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/purging.py",
+      "symbol": "run",
+      "used_for": "Existing whole-bank purge-data native preview/confirmed detach entry; precommit inhibit/postdetach epoch and journal linkage.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/purging.py",
+      "source_sha256": "2af81e186e74a285af73535f9c5fcf08468cd98d6feab59d06b3dd9fa6b373ac",
+      "source_git_blob": "8708892f07a23382c47123dea1d81459fbf4b6c7",
+      "source_bytes": 19961,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/purging.py",
+      "symbol": "finish",
+      "used_for": "Actual resumed quarantine deletion/completion; reconcile privacy fence before removal/native success.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/purging.py",
+      "source_sha256": "2af81e186e74a285af73535f9c5fcf08468cd98d6feab59d06b3dd9fa6b373ac",
+      "source_git_blob": "8708892f07a23382c47123dea1d81459fbf4b6c7",
+      "source_bytes": 19961,
+      "recheck_required_against_implementation_base": true
+    },
+    {
+      "module": "skills/agent-memory/scripts/agent_memory/purging.py",
+      "symbol": "bank_lock",
+      "used_for": "Existing native purge journal-bound owner/death/flock recovery; distinct from graph worker ownership.",
+      "source_path": "/private/tmp/am-v15-delivery/answer-first-66bac21-committed-canonical-source-20261112/skills/agent-memory/scripts/agent_memory/purging.py",
+      "source_sha256": "2af81e186e74a285af73535f9c5fcf08468cd98d6feab59d06b3dd9fa6b373ac",
+      "source_git_blob": "8708892f07a23382c47123dea1d81459fbf4b6c7",
+      "source_bytes": 19961,
+      "recheck_required_against_implementation_base": true
+    }
+  ],
+  "open_decisions": [
+    {
+      "id": "OD-01",
+      "question": "Which individually qualified computers/platform profiles should the initial managed graph release enable?",
+      "options": [
+        "Enable all three planned macOS arm64/Linux arm64/Linux amd64 cells only after all qualify.",
+        "Enable each individually qualified cell and mark others unavailable/unqualified.",
+        "Commission another reviewed carrier profile while retaining core."
+      ],
+      "recommendation": "Enable only each independently qualified platform cell; no historical parity/profile pass is inherited."
+    },
+    {
+      "id": "OD-02",
+      "question": "First authorize bounded M0 measurement, then decide the measured namespace-scaled operating budget?",
+      "approval_steps": [
+        {
+          "stage": 1,
+          "question": "May the exact M0 candidate profile run the one-namespace, two-instance, 4-GiB graph, 8-GiB state plus 4-GiB explicit staging, 2-hour, zero-provider-send study?"
+        },
+        {
+          "stage": 2,
+          "question": "After measurement, approve N=2 started projects with active+candidate headroom (4 slots, 8-GiB graph, 16-GiB generated state), a lower explicit N, or no automatic work?"
+        }
+      ],
+      "options": [
+        "Approve the exact bounded M0 proposal, then separately approve a measured operating policy.",
+        "Approve a lower explicitly costed measurement/operating scope and fewer concurrently started namespaces.",
+        "Defer measurement/automatic enablement. Permanent deferral or permanently unenabled automatic work means #257 cannot be delivered under T:39/40/73."
+      ],
+      "recommendation": "Authorize M0 only after exact profile/safety review and the accepted OD-07 workflow; then approve the measured N=2 envelope if acceptable. Provider transport values are joint G2/G3 proposals, not binding #256 design; no unapproved measurement or runtime allocation. OD-07 must first establish the accepted grant path for M0; neither permanently deferring measurement nor permanently disabling upkeep is a completed #257 scope."
+    },
+    {
+      "id": "OD-04",
+      "question": "Adopt the separate reviewed/refrozen graph-only source-selection command?",
+      "options": [
+        "Review/refreeze and approve graph.select with the corrected trigger/precedence, operation-mode restriction and after-§6.1 insertion.",
+        "Review an explicit native exact-read/literal-contract opt-in alternative.",
+        "Keep public graph-only acceptance blocked pending another complete approved alternative."
+      ],
+      "recommendation": "Adopt the separate graph.select amendment only after independent contract-owner/schema review and operator disposition; no private mint or invalid-reference pseudo-pass."
+    },
+    {
+      "id": "OD-06",
+      "question": "How long should closed dependency-free content-free audit receipts remain?",
+      "options": [
+        "Retain for this cut unless a later explicit policy purges safe closed audit receipts.",
+        "Approve finite expiry only after safety/ownership/erasure/recovery/exact-retry dependencies are absent."
+      ],
+      "recommendation": "Retain audit receipts for this cut. This does not defer automatic epoch-intent compaction to one authenticated maximum watermark plus unresolved suffix; unresolved safety evidence never expires by age."
+    },
+    {
+      "id": "OD-07",
+      "question": "Accept admin enrollment and explicit hardware-verified approvals, prefer a later qualified native-permission flow, or leave managed enablement off?",
+      "options": [
+        "Accept the specified administrator-enrolled hardware workflow after source-confirmed OpenSSH cryptographic verification plus AM authenticated UP/UV-flag qualification.",
+        "Prefer the contract-permitted native-permission channel: its adapter is new G3 design not specified here, reopening design review/Ready and delaying delivery until that new design is independently reviewed, operator-approved and qualified.",
+        "Keep managed capability disabled while literal memory remains usable; if permanent, #257 cannot be delivered under T:39/40/73."
+      ],
+      "recommendation": "Use the specified hardware workflow only with explicit acceptance and source-confirmed/qualified two-stage verification; no unsupported allowed-signers options, software-key fallback or signing prompt for reads/checkpoints. Answer before OD-02 M0. The native alternative requires new G3 design/review and delays delivery; permanent disable cannot deliver #257."
+    },
+    {
+      "id": "OD-08",
+      "question": "Wait for real stopped-provider evidence before G3 delivery, or formally transfer the exact unexercised cells to #256 joint acceptance?",
+      "options": [
+        "Retain frozen T:45/47 allocation and wait for actual qualified-but-stopped/hook-release evidence.",
+        "With explicit operator/contract-owner task/acceptance refinement, deliver independently qualified G3 and transfer the named unexercised stopped/hook-release cells to #256 joint acceptance, retaining their denominator/owner/eventual real-evidence obligation."
+      ],
+      "recommendation": "Make the explicit transfer to avoid reverse #256 delivery coupling under T:47. Until the authoritative refinement is accepted the frozen default still waits; no fake, pass claim, silent waiver or transfer is approved here."
+    }
+  ]
+}
