@@ -593,10 +593,8 @@ def all_segments(repo, errors=None, *, enrollment_context=None):
     return result
 
 
-def registration(repo, directory, cursor, enrollment, *, perform=False, enrollment_context=None):
-    if perform and not source_bound_origin(directory, cursor):
-        raise ContractError('Cannot register an unbound native root family')
-    state = _shared_inventory(repo, cursor, enrollment_context)
+def _registration_lookup(state, enrollment):
+    """Resolve one reference without observing or mutating its namespace."""
     matches = [s for s in state['sources'] if s['source_reference'] == enrollment['source_reference']]
     if matches:
         if len(matches) != 1 or matches[0]['source_sha256'] != enrollment['source_sha256']:
@@ -604,6 +602,16 @@ def registration(repo, directory, cursor, enrollment, *, perform=False, enrollme
         return matches[0], state['faults']
     if state['faults'] and state['faults'] != ['source-missing']:
         return None, state['faults']
+    return None, []
+
+
+def registration(repo, directory, cursor, enrollment, *, perform=False, enrollment_context=None):
+    if perform and not source_bound_origin(directory, cursor):
+        raise ContractError('Cannot register an unbound native root family')
+    state = _shared_inventory(repo, cursor, enrollment_context)
+    observation, faults = _registration_lookup(state, enrollment)
+    if observation is not None or faults:
+        return observation, faults
     attempt_path = directory / 'registration-attempts' / (digest(enrollment['source_reference']) + '.json')
     attempt = {'schema': 'agent-memory/omp-registration-attempt-v1', 'session': cursor['session'],
                'lifecycle': cursor['lifecycle'], 'source_reference': enrollment['source_reference'],
@@ -767,7 +775,24 @@ def historical_completed_family(repo, directory, cursor, *, enrollment_context=N
 
 
 
+def _segment_enrollments(directory, cursor, admission_path):
+    for path in _files(directory, 'enrollments', r'[0-9a-f]{64}\.json'):
+        enrollment = read(path, 4096)
+        exact(enrollment, {'schema', 'session', 'lifecycle', 'source_reference', 'source_sha256', 'snapshot_ref', 'kind', 'native_source_id'})
+        if (enrollment['schema'] != 'agent-memory/omp-enrollment-v1' or enrollment['session'] != cursor['session']
+                or enrollment['lifecycle'] != cursor['lifecycle'] or enrollment['kind'] not in {'admission', 'segment'}):
+            raise ContractError('Foreign native enrollment')
+        if enrollment['kind'] == 'admission' and not os.path.lexists(admission_path):
+            raise ContractError('Native source admission metadata remains unenrolled')
+        target = directory / 'segment.json' if enrollment['kind'] == 'segment' else _snapshot_path(directory, enrollment['snapshot_ref'])
+        if digest(read(target)) != enrollment['source_sha256']:
+            raise ContractError('Native enrollment source digest differs')
+        yield enrollment
+
+
 def segment_inventory(repo, directory, cursor, *, enrollment_context=None):
+    if enrollment_context is not None:
+        scope_binding._enrollment_read_context(repo, enrollment_context)
     rows = []
     if not source_bound_origin(directory, cursor) and not historical_completed_family(repo, directory, cursor, enrollment_context=enrollment_context):
         return [{'session': cursor['session'], 'lifecycle': cursor['lifecycle'],
@@ -849,6 +874,7 @@ def segment_inventory(repo, directory, cursor, *, enrollment_context=None):
             rows.append({'session': cursor['session'], 'lifecycle': cursor['lifecycle'], 'human_root': cursor['origin']['human_root'],
                          'status': 'legacy-unverified-notification', 'source_reference': 'omp:event:' + meta['capture_id'],
                          'actionable': False})
+    sampled_attempts = {}
     for path in _files(directory, 'registration-attempts', r'[0-9a-f]{64}\.json'):
         attempt = read(path, 4096)
         exact(attempt, {'schema', 'session', 'lifecycle', 'source_reference', 'source_sha256'})
@@ -859,19 +885,35 @@ def segment_inventory(repo, directory, cursor, *, enrollment_context=None):
         enrolled = read(directory / 'enrollments' / path.name, 4096)
         if any(attempt[key] != enrolled[key] for key in ('session', 'lifecycle', 'source_reference', 'source_sha256')):
             raise ContractError('Native registration attempt lost its enrollment identity')
-    for path in _files(directory, 'enrollments', r'[0-9a-f]{64}\.json'):
-        enrollment = read(path, 4096)
-        exact(enrollment, {'schema', 'session', 'lifecycle', 'source_reference', 'source_sha256', 'snapshot_ref', 'kind', 'native_source_id'})
-        if (enrollment['schema'] != 'agent-memory/omp-enrollment-v1' or enrollment['session'] != cursor['session']
-                or enrollment['lifecycle'] != cursor['lifecycle'] or enrollment['kind'] not in {'admission', 'segment'}):
-            raise ContractError('Foreign native enrollment')
-        if enrollment['kind'] == 'admission' and not os.path.lexists(admission_path):
-            raise ContractError('Native source admission metadata remains unenrolled')
-        target = directory / 'segment.json' if enrollment['kind'] == 'segment' else _snapshot_path(directory, enrollment['snapshot_ref'])
-        if digest(read(target)) != enrollment['source_sha256']:
-            raise ContractError('Native enrollment source digest differs')
+        if enrollment_context is not None:
+            sampled_attempts[attempt['source_reference']] = (path, attempt)
+    enrollments = _segment_enrollments(directory, cursor, admission_path)
+    if enrollment_context is not None:
+        # Validate every retained input before observing the shared namespace.
+        enrollments = list(enrollments)
+    state = None
+    inventory_failed = False
+    for enrollment in enrollments:
         try:
-            observation, errors = registration(repo, directory, cursor, enrollment, enrollment_context=enrollment_context)
+            if enrollment_context is None:
+                observation, errors = registration(repo, directory, cursor, enrollment, enrollment_context=enrollment_context)
+            else:
+                if state is None and not inventory_failed:
+                    try:
+                        state = _shared_inventory(repo, cursor, enrollment_context)
+                    except (OSError, ValueError):
+                        inventory_failed = True
+                if inventory_failed:
+                    observation, errors = None, ['source-unavailable']
+                else:
+                    sampled = sampled_attempts.get(enrollment['source_reference'])
+                    if sampled is not None and read(sampled[0], 4096) != sampled[1]:
+                        raise ContractError('Native registration attempt identity changed')
+                    observation, errors = _registration_lookup(state, enrollment)
+                    if observation is None and not errors and sampled is not None:
+                        errors = ['registration-fault-retained']
+                    # Rows must not share mutable fault lists, including state faults.
+                    errors = list(errors)
         except (OSError, ValueError):
             observation, errors = None, ['source-unavailable']
         status = 'registration-fault' if errors else ('completed' if observation and observation['completed'] else 'pending-assessment' if observation else 'enrollment-pending')
@@ -1070,7 +1112,7 @@ def complete(repo, value):
         return turn_sources.complete(repo, 'omp', value['session'], value['lifecycle'], value['observation_id'], value['source_sha256'], receipt)
 
 
-def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_context=None):
+def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_context=None, source_completion=None):
     exact(payload, {'observation_ids', 'enrollment_refs'})
     for key in payload:
         if not isinstance(payload[key], list) or payload[key] != sorted(set(payload[key])):
@@ -1109,15 +1151,16 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
             omitted = True; continue
         inline.append(row)
     import json
-    guidance = ('[agent-memory omp request ' + value['request_id'] + '] Agent-attributed advisory, not human input. '
-                'Your substantive answer is already delivered; never repeat or replace it. Read skill://agent-memory and use ordinary approved tools only. '
-                'Inspect each exact source using am omp-boundary --repo ' + json.dumps(str(Path(repo).resolve())) +
-                ' --source ID --session SESSION --lifecycle LIFECYCLE. Re-observe/search current memory before governed capture or publication. '
-                'Assess sources individually using am omp-boundary --repo PATH --stdin --quiet --refresh with exactly '
-                '{session,lifecycle,observation_id,source_sha256,outcome,assessment} and publication_request only for published. '
-                'Admission assessment requires its segment enrolled; unresolved gaps cannot be waived. '
-                'A refusal, cancellation, unavailable authority or omitted work stays pending; do not bypass permission or force a tool. '
-                'Full joined backlog: am omp-boundary --repo PATH --list-pending --offset 0; follow next_offset until exhausted. '
+    guidance = ('[agent-memory omp request ' + value['request_id'] + '] Agent advisory, not human input. '
+                'Answer delivered; never repeat/replace it. Governed maintenance now; never defer. Read skill://agent-memory; approved tools only. '
+                'Inspect exact source: am omp-boundary --repo ' + json.dumps(str(Path(repo).resolve())) +
+                ' --source ID_OR_REFERENCE --session SESSION --lifecycle LIFECYCLE. Use raw unregistered refs; assess registered IDs/digests only. '
+                'Re-observe/search current memory before governed capture/publication. '
+                'Assess each source: am omp-boundary --repo PATH --stdin --quiet --refresh; exact keys: '
+                '{session,lifecycle,observation_id,source_sha256,outcome,assessment}; publication_request only for published. '
+                'Admission: assess enrolled segments only; never waive unresolved gaps. '
+                'Busy/refused/cancelled/unavailable/omitted stays pending: stop; no auto-retry, permission bypass or forced tools. '
+                'Joined backlog: am omp-boundary --repo PATH --list-pending --offset 0; follow next_offset to exhaustion. '
                 'inventory_complete:' + str(not omitted and not faults).lower() + '. Sources: ' + json.dumps(inline, separators=(',', ':')) +
                 ' Faults:' + json.dumps(faults) + ' [/agent-memory omp request]')
     if len(guidance.encode()) > 8192:
@@ -1125,8 +1168,10 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
     if enrollment_context is not None:
         scope_binding._enrollment_read_context(repo, enrollment_context)
         scope_binding.recheck_private_enrollment(enrollment_context)
-    from .omp_stream import VerifiedNativeDeliveryWindow
-    if type(delivery_window) is not VerifiedNativeDeliveryWindow or not delivery_window.reserve():
+    if source_completion is not None:
+        source_completion.before_reserve(enrollment_context)
+    from .omp_stream import VerifiedNativeDeliveryWindow, _LateNativeDeliveryWindow
+    if type(delivery_window) not in {VerifiedNativeDeliveryWindow, _LateNativeDeliveryWindow} or not delivery_window.reserve():
         return {'continue': False, 'status': 'pending-undeliverable-window', 'canonical_writes_performed': False}
     try:
         retain(target, value, 4096)
@@ -1134,12 +1179,17 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
         control['generated_guidance'] = guidance
         root_cursor['control_interval'] = control
         replace_cursor(session_dir(repo, session, enrollment_context=enrollment_context) / root / 'cursor.json', root_cursor)
-    except Exception:
+    except Exception as error:
+        if source_completion is not None and isinstance(error, (MemoryError, RecursionError)):
+            raise
         # Reservation may have reached durable storage. Never retry this attempt.
         return {'continue': False, 'status': 'pending-wake-unknown-after-reservation',
                 'canonical_writes_performed': False}
-    return {'continue': True, 'additionalContext': guidance, 'request_id': value['request_id'],
-            'inventory_complete': not omitted and not faults, 'canonical_writes_performed': False}
+    offered = {'continue': True, 'additionalContext': guidance, 'request_id': value['request_id'],
+               'inventory_complete': not omitted and not faults, 'canonical_writes_performed': False}
+    if source_completion is not None:
+        source_completion.offered_root_wake_path = target
+    return offered
 
 
 def resolve_tool_result(current, owner, captured, invocations):
@@ -1219,17 +1269,33 @@ def _checked_payload_coverage(current, payload, rows, faults):
     return sorted(qualified & native_ids), references, complete
 
 
-def _verify_observer_receipt(receipt, *, repo=None, verified_binding=None):
+def _verify_observer_receipt(receipt, *, repo=None, verified_binding=None, held_source=None):
     from . import omp_installation
     if not isinstance(receipt, dict):
         raise ContractError('Native observation requires a current installed binding')
     if repo is None:
         return omp_installation.verified_observer_binding(receipt['source']['artifact_digest'],
             receipt['omp_binding']['agent_dir'], receipt=receipt)
-    return omp_installation._observe_observer_binding(repo, receipt, verified_binding)
+    return omp_installation._observe_observer_binding(repo, receipt, verified_binding, held_source=held_source)
 
 
-def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None, verified_binding=None):
+def _drain_after_response(repo, receipt, verified_binding):
+    """One oldest-eight batch with its own fresh guard, never a finite retry."""
+    from .omp_boundary import source_barrier, private_lock, _base
+    try:
+        with scope_binding._fresh_enrollment_locations():
+            with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
+                with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context:
+                    with scope_binding._observe_enrollment_locations(context):
+                        drain_enrollments(repo, enrollment_context=context)
+    except (MemoryError, RecursionError):
+        raise
+    except Exception:
+        # Durable enrollments/attempts/faults stay pending. No retry or outcome.
+        pass
+
+
+def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None, verified_binding=None, source_completion=None, held_source=None):
     from .omp_boundary import source_barrier, private_lock, _base
     exact(value, {'schema', 'action', 'session', 'lifecycle', 'payload'})
     if value['schema'] != 'agent-memory/omp-observer-request-v2' or value['action'] not in {'ingest', 'seal', 'wake'}:
@@ -1244,7 +1310,7 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
         if (type(payload['event_ordinal']) is not int or payload['event_ordinal'] < 0
                 or type(payload['terminal']) is not bool or payload['trigger'] not in TRIGGERS):
             raise ContractError('Native stored sweep exceeds bound')
-        view = omp_projection.checked_view(repo, session, payload)
+        view, pre_guard_root = omp_projection.checked_view(repo, session, payload)
         for key in ('branch_ids', 'inherited_ids'):
             if not isinstance(payload[key], list) or len(payload[key]) > MAX_CAPTURES or len(set(payload[key])) != len(payload[key]):
                 raise ContractError('Invalid native branch inventory')
@@ -1254,14 +1320,29 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
             raise ContractError('Inherited native source identity unavailable')
     if verified_binding is None:
         verified_binding = _verify_observer_receipt(receipt)
-    with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
-        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context, ExitStack() as locations:
+    guard = (turn_sources._borrowed_source_barrier(held_source) if held_source is not None
+             else source_barrier(repo))
+    with guard as source_lock, private_lock(
+            (held_source._path.parent if held_source is not None else _base(repo)) / 'omp-transport.lock') as transport_lock:
+        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding,
+                                      held_source=held_source) as context, ExitStack() as locations:
+            if value['action'] != 'wake':
+                scope_binding._enrollment_read_context(repo, context)
+                if pre_guard_root != context.root:
+                    raise ContractError('Checked native source belongs to another bank scope')
+                with scope_binding._observe_enrollment_locations(context):
+                    scope_binding._observe_enrollment_location(repo, context)
             fences = []
             if value['action'] == 'ingest':
                 from . import omp_stream
                 fences = omp_stream.retire_for_recovery(repo, session, exclude_instance=getattr(on_started, 'instance_id', None))
             if on_started is not None:
                 on_started()
+            if source_completion is not None:
+                from .omp_stream import _SourceCompletion
+                if type(source_completion) is not _SourceCompletion:
+                    raise ContractError('Invalid internal source completion')
+                source_completion.validate(value, view)
             locations.enter_context(scope_binding._observe_enrollment_locations(context))
             if value['action'] == 'wake':
                 return {'verified': True, **wake(repo, session, value['lifecycle'], payload, delivery_window=delivery_window,
@@ -1591,7 +1672,14 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                         if source_bound_origin(old_d, old_c) and not (old_d / 'segment.json').exists():
                             seal(old_d, old_c)
             scope_binding.recheck_private_enrollment(context)
-            drain_enrollments(repo, enrollment_context=context)
+            if source_completion is not None:
+                # Same checks as the actual successful context exits, against
+                # the actual executor-held source barrier and this transport FD.
+                turn_sources.check_source_compatibility(source_lock._path.parent)
+                source_lock.recheck()
+                transport_lock.recheck()
+            else:
+                drain_enrollments(repo, enrollment_context=context)
             current = segments(repo, session, enrollment_context=context)
             rows, faults = pending_inventory(repo, enrollment_context=context)
             chosen = active_segment(current, payload.get('branch_ids'))
@@ -1619,11 +1707,29 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                       'faults': faults, 'held': context.held, 'canonical_writes_performed': False}
             result['source_references'] = source_refs
             result['source_coverage_complete'] = view['source_kind'] == 'retired-file' and source_complete
+            if source_completion is not None:
+                source_completion.commit_source(context, result)
+                # The historical result is not current wake authority. Shared
+                # sources may change under another harness's shared barrier.
+                rows, faults = pending_inventory(repo, enrollment_context=context)
+                root_rows = [r for r in rows if latest and r['session'] == session
+                             and r.get('human_root') == latest['origin']['human_root']
+                             and r['status'] != 'completed']
+                wake_payload = {
+                    'observation_ids': sorted(r['observation_id'] for r in root_rows if 'observation_id' in r),
+                    'enrollment_refs': sorted(r['source_reference'] for r in root_rows
+                        if 'observation_id' not in r and r['source_reference'].startswith(('omp:capture:', 'omp:seal:')))}
+            else:
+                wake_payload = result['wake_payload']
             if value['action'] == 'seal' and payload['request_wake'] and latest:
-                try:
-                    result.update(wake(repo, session, latest['lifecycle'], result['wake_payload'], delivery_window=delivery_window,
-                                       enrollment_context=context))
-                except Exception:
-                    # The source transaction is verified independently of wake preparation.
-                    result.update({'continue': False, 'status': 'pending-wake-unavailable'})
+                if source_completion is not None:
+                    result = {**result, **wake(repo, session, latest['lifecycle'], wake_payload,
+                        delivery_window=delivery_window, enrollment_context=context, source_completion=source_completion)}
+                else:
+                    try:
+                        result.update(wake(repo, session, latest['lifecycle'], wake_payload, delivery_window=delivery_window,
+                                           enrollment_context=context))
+                    except Exception:
+                        # The source transaction is verified independently of wake preparation.
+                        result.update({'continue': False, 'status': 'pending-wake-unavailable'})
             return result

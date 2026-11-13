@@ -11,7 +11,7 @@ from unittest import mock
 import uuid
 
 from world import World
-from contracts import test_checkpoint
+from contracts import test_checkpoint, test_omp_boundary
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'skills/agent-memory/scripts'))
 from agent_memory import omp_stream as stream, turn_sources
 from agent_memory import bank_transactions, bank_writes, local_registry, omp_boundary, omp_installation, scope_binding
@@ -130,7 +130,7 @@ class Framing(unittest.TestCase):
 
     def test_oversize_response_becomes_fixed_notice_and_later_delivery_stays_live(self):
         writer = self.response_writer()
-        self.assertTrue(writer.send('OBSERVED', 1, result={'text': 'x' * stream.MAX_RESPONSE}))
+        self.assertEqual(writer.send('OBSERVED', 1, result={'text': 'x' * stream.MAX_RESPONSE}), 'substituted')
         self.assertTrue(writer.live)
         raw = writer.queue[-1][1]
         self.assertLessEqual(len(raw), stream.MAX_RESPONSE)
@@ -138,7 +138,7 @@ class Framing(unittest.TestCase):
         notice = stream.load(raw.split(b'\n', 1)[1])
         self.assertEqual(notice['code'], 'result-oversized')
         self.assertNotIn('result', notice)
-        self.assertTrue(writer.send('OBSERVED', 2, result={'verified': True}))
+        self.assertIs(writer.send('OBSERVED', 2, result={'verified': True}), True)
 
     def test_actual_descriptor_failure_revokes_recipient(self):
         writer = self.response_writer()
@@ -165,6 +165,9 @@ class CoverageFixture(unittest.TestCase):
             'initial_lifecycle': self.lifecycle}
         self.addCleanup(mock.patch.stopall)
         mock.patch.object(stream, '_base', return_value=self.base).start()
+        # These in-process coverage controls do not qualify a Linux image.
+        # Avoid a real hashing thread overlapping the image controls' OS mocks.
+        mock.patch.object(stream, '_LinuxNativeImage', return_value=None).start()
         mock.patch.object(turn_sources, 'source_barrier', side_effect=lambda *a, **kw: nullcontext()).start()
         self.binding_verifier = mock.patch.object(stream, '_verify_binding', return_value=nullcontext()).start()
         self.full_binding_verifier = mock.patch.object(stream, '_attest_binding', return_value=object()).start()
@@ -920,6 +923,86 @@ class CoverageFixture(unittest.TestCase):
         self.assertTrue((directory / 'closed.json').exists())
 
 
+class MetadataBarrierBoundaries(unittest.TestCase):
+    """Real installed bindings and physical final-close source-barrier faults."""
+
+    def setUp(self):
+        self.stack = ExitStack()
+        self.addCleanup(self.stack.close)
+        self.world = self.stack.enter_context(World())
+        self.stack.enter_context(mock.patch.dict(os.environ, self.world.env, clear=True))
+        self.helper = test_omp_boundary.NativeSources()
+        self.repo, self.session, self.lifecycle = self.helper.fixture(self.world)
+        root = Path(__file__).resolve().parents[2]
+        agent = self.world.inside('metadata-boundary-agent')
+        agent.mkdir()
+        self.receipt = stream.load(self.world.run([
+            sys.executable, '-I', '-B', root / 'skills/agent-memory/scripts/installer.py',
+            'install', '--development-source', root, '--presets', 'omp', '--omp-agent-dir', agent,
+            '--omp-peers-upgraded'], timeout=60).stdout)['receipt']
+        self.instance = uid()
+        self.binding = omp_boundary.stream_startup(self.repo, self.session, self.instance,
+            self.lifecycle, receipt=self.receipt)
+        self.base = stream._base(self.repo)
+        self.directory = stream._directory(self.base, self.session, self.instance)
+        self.barrier = self.base / 'source-barrier.lock'
+
+    @staticmethod
+    def final(count=0):
+        return {'last_attempt_seq': count, 'refused_count': 0, 'last_event_ordinal': count,
+                'transition': None}
+
+    def test_run_final_close_rejects_barrier_inode_replacement_after_metadata_write(self):
+        entries = [
+            self.helper.entry('metadata-human', 'user', 'Ephemeral metadata boundary request',
+                              attribution='user'),
+            self.helper.entry('metadata-answer', 'assistant', 'The substantive answer is delivered.')]
+        payload = test_omp_boundary.observer_payload(self.repo, self.session, entries)
+        value = {'request': {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'ingest',
+            'session': self.session, 'lifecycle': self.lifecycle, 'payload': payload},
+            'event_ordinal': 1, 'identity': {'view_id': uid(), 'leaf_id': payload['view']['leaf_id'],
+                'native_ids': sorted(item['id'] for item in payload['view']['native_parents']),
+                'tool_ids': []}}
+        data = (stream.encode_frame('REQUEST', 1, value)
+                + stream.encode_frame('FINAL', 2, self.final(1)))
+        closed = self.directory / 'closed.json'
+        displaced = self.world.inside('displaced-final-source-barrier')
+        retain = stream._retain
+
+        def replace_barrier(path, *args, **kwargs):
+            result = retain(path, *args, **kwargs)
+            if path == closed:
+                self.barrier.rename(displaced)
+                fd = os.open(self.barrier, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                os.close(fd)
+            return result
+
+        with mock.patch.object(stream, 'preload'), \
+                mock.patch.object(stream, '_retain', side_effect=replace_barrier):
+            result = stream.run(self.repo, self.session, self.instance, self.lifecycle,
+                startup=lambda *args: self.binding, receipt=self.receipt,
+                input=io.BytesIO(data), output=io.BytesIO())
+        self.assertEqual(turn_sources.read(self.directory / 'outcomes/1.json',
+                                          stream.MAX_METADATA)['outcome'], 'verified')
+        self.assertTrue(closed.exists())  # The body wrote; only its guarded exit can reject the close.
+        self.assertNotEqual((displaced.stat().st_dev, displaced.stat().st_ino),
+                            (self.barrier.stat().st_dev, self.barrier.stat().st_ino))
+        self.assertEqual(result, 1)
+
+    def test_exclusively_held_barrier_refuses_close_without_metadata_write(self):
+        from runtime_update_fixtures import snapshot
+        coverage = stream.Coverage(self.repo, self.session, self.instance, self.lifecycle,
+                                   self.binding, receipt=self.receipt)
+        self.stack.callback(coverage.close_live)
+        before = snapshot(self.base)
+        with turn_sources.private_lock(self.barrier, existing_only=True):
+            with self.assertRaises(turn_sources.SourceTransportBusy):
+                coverage.close(self.final())
+            self.assertEqual(snapshot(self.base), before)
+        self.assertFalse((self.directory / 'closed.json').exists())
+        self.assertTrue(coverage.close(self.final()))
+
+
 class FrozenImports(unittest.TestCase):
     def test_unpreloaded_late_packed_module_is_refused_without_blocking_stdlib(self):
         guard = stream._FrozenPackedImports()
@@ -948,7 +1031,8 @@ class CanonicalWriterContention(unittest.TestCase):
         # bank marker, source barrier, scope mint/rechecks and metadata locks.
         self.stack.enter_context(mock.patch.object(stream, '_attest_binding', return_value=object()))
         self.stack.enter_context(mock.patch.object(omp_installation, '_observe_observer_binding',
-            side_effect=lambda repo, receipt, proof: omp_boundary._observe_marker(repo)))
+            side_effect=lambda repo, receipt, proof, *, held_source=None:
+                omp_boundary._observe_marker(repo, held_source=held_source)))
         self.coverage = stream.Coverage(str(self.repo), self.session, self.instance,
                                        self.lifecycle, self.binding)
         self.stack.callback(self.coverage.close_live)
@@ -1957,12 +2041,13 @@ class LinuxImageControls(unittest.TestCase):
     def test_valid_rechecks_process_namespaces_and_image(self):
         image, _, info = self.observe()
         self.assertIsNotNone(image.ready)
-        cases = ('ok', 'exited', 'start', 'own-ns', 'parent-ns', 'image')
+        cases = ('ok', 'exited', 'reparented', 'start', 'own-ns', 'parent-ns', 'image')
         for case in cases:
             with self.subTest(case=case), ExitStack() as stack:
                 stack.enter_context(mock.patch.object(stream.select, 'select',
                     return_value=([102], [], []) if case == 'exited' else ([], [], [])))
-                stack.enter_context(mock.patch.object(stream.os, 'getppid', return_value=44))
+                stack.enter_context(mock.patch.object(stream.os, 'getppid',
+                    return_value=43 if case == 'reparented' else 44))
                 stack.enter_context(mock.patch.object(stream.os, 'getpid', return_value=45))
                 stack.enter_context(mock.patch.object(stream, '_linux_process_start', return_value=100 if case == 'start' else 99))
                 namespaces = [('time', 1, 2), ('time', 1, 3)]
@@ -2021,6 +2106,8 @@ class DeadlineWindows(unittest.TestCase):
     def test_cancel_eof_broken_output_and_recipient_revoke_window(self):
         window = self.calibrated()
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+            with mock.patch.object(self.clocks, 'eligible', return_value=False):
+                self.assertFalse(window.reserve())
             self.responses.live = False
             self.assertFalse(window.reserve())
             self.responses.live = True
@@ -2036,6 +2123,7 @@ class DeadlineWindows(unittest.TestCase):
 
     def test_unverified_linux_image_cannot_reserve(self):
         window = self.calibrated()
+        # An unverified Linux image cannot borrow the provisional Darwin bound.
         window._platform = 'linux'
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
             self.assertFalse(window.reserve())
@@ -2055,7 +2143,12 @@ class DeadlineWindows(unittest.TestCase):
             self.assertFalse(window.reserve())
 
     def test_same_clock_causal_envelope_never_overstates_remaining_time(self):
-        # Integer schedules include identical reads, offsets and adverse delays.
+        # Drive every original integer schedule through the real clock/window.
+        # The image stand-in qualifies arithmetic only, not Linux provenance.
+        image = mock.Mock()
+        image.observed.return_value = image.valid.return_value = True
+        unit = stream.MARGIN_NS
+        epoch = 10 * unit
         for offset in range(-3, 4):
             for j0 in range(4):
                 for p1_at in range(j0, 5):
@@ -2068,13 +2161,37 @@ class DeadlineWindows(unittest.TestCase):
                                 for deadline in range(j3, 7):
                                     if now + offset + 1 < deadline + lower:
                                         self.assertLess(now + 1, deadline)
+                                    with self.subTest(offset=offset, j0=j0, p1=p1_at,
+                                                      p2=p2_at, j3=j3, now=now, deadline=deadline):
+                                        owner = stream.ClockWindows(self.instance, lambda: True,
+                                                                    platform='darwin')
+                                        owner.platform, owner.native_image = 'linux', image
+                                        with mock.patch.object(stream.time, 'monotonic_ns',
+                                                side_effect=[epoch + (p1_at + offset) * unit,
+                                                             epoch + (p2_at + offset) * unit]):
+                                            owner.control('CLOCK', {'nonce': self.nonce,
+                                                'j0': str(j0 * unit),
+                                                'j_deadline': str(deadline * unit)}, self.responses)
+                                        owner.control('CLOCK-ACK', {'nonce': self.nonce,
+                                            'j0': str(j0 * unit), 'j3': str(j3 * unit)}, self.responses)
+                                        window = owner.window(self.nonce)
+                                        self.assertIsNotNone(window)
+                                        with mock.patch.object(stream.time, 'monotonic_ns',
+                                                return_value=epoch + (now + offset) * unit):
+                                            reserved = window.reserve()
+                                        self.assertEqual(reserved,
+                                            now + offset + 1 < deadline + lower)
+                                        if reserved:
+                                            self.assertLess(now + 1, deadline)
 
     def test_replayed_old_nonce_cannot_remint_after_new_clock(self):
-        self.calibrated()
+        window = self.calibrated()
         with mock.patch.object(stream.time, 'monotonic_ns', side_effect=[1000, 1010, 1020]):
             self.clocks.control('CLOCK', {'nonce': uid(), 'j0': '100', 'j_deadline': '950000100'}, self.responses)
             with self.assertRaises(ContractError):
                 self.clocks.control('CLOCK', {'nonce': self.nonce, 'j0': '100', 'j_deadline': '950000100'}, self.responses)
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+            self.assertFalse(window.reserve())
 
     def test_linux_hash_in_progress_does_not_block_clock_reply(self):
         started, release = threading.Event(), threading.Event()
@@ -2093,6 +2210,94 @@ class DeadlineWindows(unittest.TestCase):
             finally:
                 release.set()
                 clocks.end()
+
+    def test_cancel_replacement_revoke_and_end_before_reservation_refuse(self):
+        for control in ('CANCEL', 'CLOCK', 'revoke', 'end'):
+            with self.subTest(control=control):
+                self.nonce = uid()
+                self.clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='darwin')
+                window = self.calibrated()
+                with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+                    if control == 'CANCEL':
+                        self.clocks.control('CANCEL', {'nonce': self.nonce}, self.responses)
+                    elif control == 'CLOCK':
+                        replacement = uid()
+                        self.clocks.control('CLOCK', {'nonce': replacement, 'j0': '100',
+                            'j_deadline': '950000100'}, self.responses)
+                        self.clocks.control('CLOCK-ACK', {'nonce': replacement, 'j0': '100',
+                            'j3': '200'}, self.responses)
+                    else:
+                        getattr(self.clocks, control)()
+                    self.assertFalse(window.reserve())
+                    if control == 'CLOCK':
+                        self.assertTrue(self.clocks.window(replacement).reserve())
+
+    def test_cancel_replacement_revoke_and_end_after_reservation_do_not_reopen(self):
+        for control in ('CANCEL', 'CLOCK', 'revoke', 'end'):
+            with self.subTest(control=control):
+                self.nonce = uid()
+                self.clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='darwin')
+                window = self.calibrated()
+                with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+                    self.assertTrue(window.reserve())
+                    if control == 'CANCEL':
+                        self.clocks.control('CANCEL', {'nonce': self.nonce}, self.responses)
+                    elif control == 'CLOCK':
+                        replacement = uid()
+                        self.clocks.control('CLOCK', {'nonce': replacement, 'j0': '100',
+                            'j_deadline': '950000100'}, self.responses)
+                        self.clocks.control('CLOCK-ACK', {'nonce': replacement, 'j0': '100',
+                            'j3': '200'}, self.responses)
+                    else:
+                        getattr(self.clocks, control)()
+                    self.assertFalse(window.reserve())
+                    if control == 'CLOCK':
+                        self.assertTrue(self.clocks.window(replacement).reserve())
+
+    def test_concurrent_reservations_spend_window_once(self):
+        window = self.calibrated()
+        ready = threading.Barrier(3)
+        results, failures = [], []
+        def reserve():
+            try:
+                ready.wait(10)
+                results.append(window.reserve())
+            except BaseException as error:
+                failures.append(error)
+        workers = [threading.Thread(target=reserve) for _ in range(2)]
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+            try:
+                for worker in workers:
+                    worker.start()
+                ready.wait(10)
+            except BaseException:
+                ready.abort()
+                raise
+            finally:
+                for worker in workers:
+                    if worker.ident is not None:
+                        worker.join(10)
+            self.assertTrue(all(not worker.is_alive() for worker in workers))
+            self.assertEqual(failures, [])
+            self.assertEqual(sorted(results), [False, True])
+
+    def test_nonce_cannot_be_replayed_after_cancel_or_reservation(self):
+        for action in ('cancel', 'reserve', 'revoke'):
+            with self.subTest(action=action):
+                self.nonce = uid()
+                self.clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='darwin')
+                window = self.calibrated()
+                with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+                    if action == 'cancel':
+                        self.clocks.control('CANCEL', {'nonce': self.nonce}, self.responses)
+                    elif action == 'reserve':
+                        self.assertTrue(window.reserve())
+                    else:
+                        self.clocks.revoke()
+                    with self.assertRaises(ContractError):
+                        self.clocks.control('CLOCK', {'nonce': self.nonce, 'j0': '100',
+                            'j_deadline': '950000100'}, self.responses)
+                    self.assertFalse(window.reserve())
 
     def test_windows_cannot_be_minted_or_serialized_by_json(self):
         with self.assertRaises(TypeError):

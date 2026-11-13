@@ -250,6 +250,7 @@ def _probe_pin(bank, node):
         fd = os.open(Path(node['path']).name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
                      dir_fd=descriptors[-1])
         info = os.fstat(fd)
+        flags = raw.inode_flags(fd)
         if ((node['type'] == 'file' and (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size != 32))
                 or (node['type'] == 'directory' and not stat.S_ISDIR(info.st_mode))):
             raise ProbeOwnershipError(node['path'])
@@ -259,11 +260,12 @@ def _probe_pin(bank, node):
         attrs = _probe_xattrs(fd, node['path'])
         named = os.stat(Path(node['path']).name, dir_fd=descriptors[-1], follow_symlinks=False)
         _probe_bound(bank, node['path'], descriptors)
-        if raw.signature(named) != raw.signature(info) or raw.signature(os.fstat(fd)) != raw.signature(info):
+        if (raw.signature(named) != raw.signature(info) or raw.signature(os.fstat(fd)) != raw.signature(info)
+                or raw.inode_flags(fd) != flags):
             raise ProbeOwnershipError(node['path'])
         parent = os.fstat(descriptors[-1])
         return {'path': node['path'], 'type': node['type'], 'facts': raw.signature(info),
-                'flags': getattr(info, 'st_flags', 0), 'xattrs': attrs,
+                'flags': flags, 'xattrs': attrs,
                 'parent': {'dev': parent.st_dev, 'ino': parent.st_ino},
                 'nonce_sha256': digest(nonce) if nonce is not None else None}
     finally:

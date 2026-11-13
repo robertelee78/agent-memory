@@ -7,7 +7,7 @@ domain: capture
 
 ## Use when
 
-At a natural turn boundary, a session MUST consider durable discoveries, verified
+At a [natural turn boundary](../SKILL.md#natural-turn-boundary), a session MUST consider durable discoveries, verified
 fixes, useful failed approaches, user corrections and confirmed project decisions.
 It MUST automatically capture qualifying learning without seeking approval for
 each routine record. It MUST keep the unit small enough to change a future

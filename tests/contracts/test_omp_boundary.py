@@ -55,7 +55,8 @@ def LiveDeliveryWindow(*, expired=False):
     return owner.verified
 
 
-def observe_installed(world, command, repo, receipt, request, *, launcher=None, timeout=60):
+def observe_installed(world, command, repo, receipt, request, *, launcher=None, timeout=60,
+                      before_readback=None):
     """Exercise the real finite installed pipe; return only its actual verified result."""
     from agent_memory import omp_stream
     instance = str(uuid.uuid4())
@@ -110,6 +111,8 @@ def observe_installed(world, command, repo, receipt, request, *, launcher=None, 
             result = body['result']
     if not ready or not result or result.get('verified') is not True:
         raise AssertionError('No actual verified finite observer result: ' + stdout + stderr)
+    if before_readback is not None:
+        before_readback()
     with patch.dict(os.environ, world.env, clear=True):
         streams = omp_stream.inventory(repo)['streams']
         actual = next(row for row in streams if row['instance_id'] == instance)
@@ -241,6 +244,34 @@ class NativeSources(unittest.TestCase):
                 self.assertTrue(wake['continue'])
                 self.assertTrue(all(identifier in wake['additionalContext'] for identifier in old_ids))
                 self.assertLessEqual(len(wake['additionalContext'].encode()), 8192)
+
+    def test_full_backlog_and_long_unicode_repo_still_offer_one_bounded_wake(self):
+        with World() as world:
+            repository = world.repository
+            name = Path(*(['界' * 68] * 3), 'x' * 16)
+            world.repository = lambda: repository(name)
+            repo, session, lifecycle = self.fixture(world)
+            with patch.dict(os.environ, world.env, clear=True):
+                entries = []
+                for number in range(15):
+                    entries.append(self.entry('human-' + str(number), 'user',
+                                              'Another bounded source', attribution='user'))
+                    result = self.observe(repo, session, lifecycle, entries)
+                    lifecycle = result['lifecycle']
+                rows, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                references = {row['source_reference'] for row in rows}
+                request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'wake',
+                           'session': session, 'lifecycle': lifecycle, 'payload': result['wake_payload']}
+                wake = self.observe_request(repo, request, delivery_window=LiveDeliveryWindow())
+                self.assertTrue(wake['continue'], wake)
+                self.assertFalse(wake['inventory_complete'])
+                self.assertLessEqual(len(wake['additionalContext'].encode()), 8192)
+                self.assertFalse(wake['canonical_writes_performed'])
+                self.assertFalse(self.observe_request(repo, request, delivery_window=LiveDeliveryWindow())['continue'])
+                after, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                self.assertEqual({row['source_reference'] for row in after}, references)
 
     def test_completed_snapshots_require_bound_drain_proof_after_marker_removal(self):
         with World() as world:

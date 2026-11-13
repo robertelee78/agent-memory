@@ -26,6 +26,30 @@ UNIDENTIFIED_SCHEMA='agent-memory/unidentified-private-input-v1'
 MAX_RETAINED_INPUT=131072
 _barriers=ContextVar('agent_memory_source_barriers',default={})
 _read_only_locks=ContextVar('agent_memory_read_only_source_locks',default=False)
+_barrier_locks=ContextVar('agent_memory_held_source_barrier_locks',default={})
+_LOCK_OBSERVATION_MINT=object()
+
+
+class _HeldPrivateLock:
+    """Live observation of the descriptor actually locked by private_lock."""
+    __slots__=('_path','_info','_parent_info','_live')
+
+    def __init__(self,token,path,info,parent_info):
+        if token is not _LOCK_OBSERVATION_MINT:raise TypeError('Private lock observation is internal')
+        self._path,self._info,self._parent_info,self._live=path,info,parent_info,True
+
+    def __reduce__(self):
+        raise TypeError('Held private locks cannot be serialized')
+
+    def recheck(self):
+        if not self._live:raise ContractError('Private source lock observation has ended')
+        named=self._path.lstat()
+        if (self._info.st_dev,self._info.st_ino)!=(named.st_dev,named.st_ino):
+            raise ContractError('Private source lock changed; retain pending evidence')
+        if self._parent_info is not None:
+            named_parent=self._path.parent.lstat()
+            if (self._parent_info.st_dev,self._parent_info.st_ino)!=(named_parent.st_dev,named_parent.st_ino):
+                raise ContractError('Private source lock parent changed; retain pending evidence')
 
 
 @contextmanager
@@ -101,14 +125,11 @@ def private_lock(path, *, shared=False, existing_only=False):
             named_parent=path.parent.lstat()
             if (parent_info.st_dev,parent_info.st_ino)!=(named_parent.st_dev,named_parent.st_ino):
                 raise ContractError('Private source lock parent changed; retain pending evidence')
-        yield
-        named=path.lstat()
-        if (info.st_dev,info.st_ino)!=(named.st_dev,named.st_ino):
-            raise ContractError('Private source lock changed; retain pending evidence')
-        if parent_fd is not None:
-            named_parent=path.parent.lstat()
-            if (parent_info.st_dev,parent_info.st_ino)!=(named_parent.st_dev,named_parent.st_ino):
-                raise ContractError('Private source lock parent changed; retain pending evidence')
+        held=_HeldPrivateLock(_LOCK_OBSERVATION_MINT,path,info,parent_info if parent_fd is not None else None)
+        try:
+            yield held
+            held.recheck()
+        finally:held._live=False
     finally:
         os.close(fd)
         if parent_fd is not None:os.close(parent_fd)
@@ -141,16 +162,39 @@ def source_barrier(repo, *, exclusive=False, existing_only=False, ordinary_bank=
     known=_barriers.get()
     if str(base) in known:
         if exclusive and not known[str(base)]:raise ContractError('Cannot upgrade an active shared source barrier')
-        yield
+        yield _barrier_locks.get()[str(base)]
         check_source_compatibility(base)
         return
-    with private_lock(base/'source-barrier.lock',shared=not exclusive,existing_only=existing_only):
+    with private_lock(base/'source-barrier.lock',shared=not exclusive,existing_only=existing_only) as held:
         check_source_compatibility(base)
         token=_barriers.set({**known,str(base):exclusive})
+        lock_token=_barrier_locks.set({**_barrier_locks.get(),str(base):held})
         try:
-            yield
+            yield held
             check_source_compatibility(base)
-        finally:_barriers.reset(token)
+        finally:
+            _barrier_locks.reset(lock_token)
+            _barriers.reset(token)
+
+
+@contextmanager
+def _borrowed_source_barrier(held):
+    """Observe the current owner's source descriptor without acquiring it."""
+    if type(held) is not _HeldPrivateLock or not held._live:
+        raise ContractError('Borrowed source barrier requires a live private lock observation')
+    if held._path.name != 'source-barrier.lock':
+        raise ContractError('Borrowed source barrier requires the source lock')
+    base=held._path.parent
+    key=str(base)
+    if _barrier_locks.get().get(key) is not held or key not in _barriers.get():
+        raise ContractError('Borrowed source barrier is not owned by this context')
+    held.recheck()
+    check_source_compatibility(base)
+    yield held
+    check_source_compatibility(base)
+    held.recheck()
+    if _barrier_locks.get().get(key) is not held or key not in _barriers.get():
+        raise ContractError('Borrowed source barrier ownership changed')
 
 @contextmanager
 def canonical_writer_barrier(repo, *, ordinary_bank=None):

@@ -82,7 +82,7 @@ applicability; importing memory does not advance working code.
 
 ## Outcomes
 
-At natural turn boundaries the session MUST follow the ADR-0012 memory-only
+At [natural turn boundaries](../SKILL.md#natural-turn-boundary) the session MUST follow the ADR-0012 memory-only
 refresh workflow, check for landed memory, and load only changed knowledge that
 qualifies for its current task. Refresh MUST NOT interrupt a turn, change code,
 the index or feature ancestry, or assume that this branch contains remembered

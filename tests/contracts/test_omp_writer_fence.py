@@ -101,10 +101,17 @@ class InstalledCanonicalFence(unittest.TestCase):
                            'session': session, 'lifecycle': lifecycle,
                            'payload': test_omp_boundary.observer_payload(repo, session, [human])}
                 observed, errors = [], []
+                writer_finished = threading.Event()
+                def before_readback():
+                    # The child has exited with its verified finite result.
+                    # Its supplementary CLOSED inventory is a new observation,
+                    # so wait for the deliberately overlapping writer to exit.
+                    self.assertTrue(writer_finished.wait(35), 'Writer did not finish before CLOSED readback')
                 def observe():
                     try:
                         observed.append(test_omp_boundary.observe_installed(world, am, repo, receipt, request,
-                            launcher=[sys.executable, '-I', '-B', observer_script, installer, am, 'omp-boundary'], timeout=60))
+                            launcher=[sys.executable, '-I', '-B', observer_script, installer, am, 'omp-boundary'],
+                            timeout=60, before_readback=before_readback))
                     except BaseException as exc:
                         errors.append(exc)
                 observer = threading.Thread(target=observe, daemon=True)
@@ -135,6 +142,7 @@ class InstalledCanonicalFence(unittest.TestCase):
                     out, err = writer.communicate(timeout=35)
                     self.assertEqual(writer.returncode, 0, err.decode(errors='replace'))
                     self.assertTrue(json.loads(out)['admission_verified'])
+                    writer_finished.set()
                     observer.join(35)
                     self.assertFalse(observer.is_alive(), 'Finite observer did not terminate')
                     self.assertEqual(errors, [])
@@ -147,6 +155,7 @@ class InstalledCanonicalFence(unittest.TestCase):
                         try: writer.communicate(timeout=35)
                         except subprocess.TimeoutExpired:
                             writer.kill(); writer.communicate()
+                    writer_finished.set()
                     if observer.ident is not None:
                         observer.join(35)
 

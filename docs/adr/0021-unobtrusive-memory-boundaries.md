@@ -28,6 +28,13 @@ The #249 [native delivery-window contract](../design/v0.0.15-omp-integration.md#
 is a client-specific clock and reservation detail; it does not change this ADR's
 T2/T3 outcomes or wake policy.
 
+The approved #249 [answer-first omp boundary](0004-client-independent-integration.md#v0015-answer-first-omp-boundaries)
+places automatic maintenance in its governed continuation after the business
+answer. It does not change Codex/Claude same-turn timing, the OpenCode exception
+below, source/permission rules or the requirement to retain uncompleted work.
+Installed activation ownership and an offered continuation do not establish
+native loading, observed delivery or successful completion.
+
 ## Decision
 
 ### T1: Consistent state trust and specific refresh diagnostics
