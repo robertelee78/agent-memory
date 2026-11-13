@@ -9957,14 +9957,14 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_bootstrap_is_read_only_until_explicit_local_registration_and_bank_initialization",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_canonical_remote_does_not_merge_different_bank_ids",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9985,84 +9985,84 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_copied_bank_requires_explicit_link_or_fork",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_copied_pack_spaces_non_git_project_and_unrelated_registry_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_device_change_recovers_readonly_and_explicit_link_persists_alias",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_explicit_authority_is_retained_and_conflicting_push_url_refuses",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_fork_on_fresh_machine_is_caught_by_shared_authority_evidence",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_historical_candidates_are_deterministic_and_conflicts_refused",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_historical_fork_and_rebind_require_explicit_alias_link",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_historical_recovery_preserves_explicit_authority",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_historical_recovery_requires_bank_authority_location_and_inode",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_linked_worktrees_join_via_the_real_common_git_directory",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_multiple_remotes_require_authority_and_configured_selection_wins",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_no_remote_move_keeps_id_and_preserves_location_history",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -10076,21 +10076,21 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_observed_alias_registered_after_preview_refuses_and_retains_history",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_old_pending_proposal_evidence_requires_fresh_preview",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_parallel_registrations_preserve_winner_and_replay_is_idempotent",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -10104,21 +10104,21 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_rebound_aliases_after_later_device_change_require_explicit_selection",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_remote_change_stops_until_explicit_rebind_and_retains_alias_history",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_same_remote_on_fresh_machine_binds_stable_bank_id",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -10132,7 +10132,7 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_unknown_bank_symlinks_and_busy_state_refuse_without_mutation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -11021,7 +11021,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_branch_validation_remains_after_competing_router_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11035,7 +11035,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_coalesced_observation_ignores_ambient_authority_and_fsmonitor",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11049,7 +11049,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_corrupt_missing_and_dangling_head_never_establish_empty_repository",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11063,7 +11063,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_grouped_discovery_keeps_effective_includes_rewrites_and_remote_conflicts",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11091,7 +11091,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_invalid_config_refuses_before_speculative_real_git_inventory_acceptance",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11112,14 +11112,14 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_malformed_successful_observation_never_resolves_existing_identity",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_non_git_directory_remains_readable_without_inventing_identity",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11168,14 +11168,14 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_sha256_head_retains_committed_locator_after_staged_deletion",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_signaled_or_incomplete_failed_observation_never_adopts_partial_root",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11203,7 +11203,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_unavailable_commit_or_locator_blob_never_becomes_absent_memory",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11217,7 +11217,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_unreadable_or_malformed_metadata_preserves_refusal_and_original_bank",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 87,
-   "ported": 32,
-   "unported": 1743
+   "partial": 98,
+   "ported": 53,
+   "unported": 1711
   }
  }
 }

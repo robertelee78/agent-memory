@@ -26,6 +26,10 @@ pub enum Kind {
     LocalRegistryBound { limit: usize, observed: u64 },
     /// A value required as textual metadata is not UTF-8.
     NonUtf8 { what: String },
+    /// A held canonical bank writer permits only bounded unwind-and-rediscover.
+    CanonicalWriterBusy,
+    /// An unpublished canonical writer owner permits bounded retry without authority.
+    CanonicalWriterInitializing,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -80,6 +84,22 @@ impl ContractError {
             message: format!(
                 "Non-UTF-8 {what} cannot be recorded; rename it or configure a UTF-8 value"
             ),
+        }
+    }
+
+    pub(crate) fn canonical_writer_busy() -> Self {
+        Self {
+            kind: Kind::CanonicalWriterBusy,
+            message: "Canonical writer busy; unwind and rediscover before private source work"
+                .into(),
+        }
+    }
+
+    pub(crate) fn canonical_writer_initializing() -> Self {
+        Self {
+            kind: Kind::CanonicalWriterInitializing,
+            message: "Canonical writer owner is unpublished; bounded retry without authority"
+                .into(),
         }
     }
 

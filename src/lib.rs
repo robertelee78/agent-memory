@@ -27,6 +27,7 @@ pub mod model_reference;
 pub mod omp_installation;
 pub mod pack_validation;
 pub mod process;
+pub mod project_identity;
 pub mod records;
 pub mod remote_identity;
 pub mod repository_config;
