@@ -1,8 +1,9 @@
 ---
 id: ADR-0004
 status: accepted
-approval-scope: v0.0.1; v0.0.4 turn-boundary hooks; v0.0.15 receipt-owned instruction-context and stock-harness source-authority clarifications for task 249
+approval-scope: v0.0.1; v0.0.4 turn-boundary hooks; v0.0.15 receipt-owned instruction-context, stock-harness source-authority, queued-guidance controls and answer-first omp timing for task 249
 date: 2026-10-21
+amended: 2026-11-12
 depends-on: [ADR-0001, ADR-0002]
 ---
 
@@ -130,6 +131,48 @@ a pending reference is not delivered guidance. Stock-source limitations are not
 runtime passes. This amendment changes no other #249 acceptance, permissions,
 platforms, modes, deadlines, provenance or recovery obligations, and requires
 independent review, operator approval and actual native qualification.
+
+### v0.0.15: answer-first omp boundaries
+
+On 2026-11-12 the operator explicitly selected
+[answer first, automatic maintenance afterward](https://github.com/robertelee78/agent-memory/issues/249#issuecomment-6814276233).
+The bounded activation and diagnostic design received
+[independent engineering review](https://github.com/robertelee78/agent-memory/issues/249#issuecomment-6814719830);
+implementation, native qualification and delivery remain separate gates.
+
+An ordinary omp foreground turn MUST use and refresh memory needed to answer
+correctly, then deliver its substantive answer once. Automatic capture,
+comparison, consolidation, pruning and publication SHALL run in the governed
+Agent Memory continuation after that answer. An explicit operator request for a
+memory operation remains foreground work; merely confirming a project decision
+MUST NOT be treated as such a request. This follows
+[ADR-0005](0005-admission-consolidation-retrieval.md)'s separation of consolidation
+from foreground work and [ADR-0021](0021-unobtrusive-memory-boundaries.md)'s
+truthful, unobtrusive completion policy. Other harnesses' approved timing is
+unchanged.
+
+The omp continuation MUST assess its actual sources and perform the governed
+boundary work before ending that continuation, or retain pending state. It MUST
+NOT defer itself, repeat or replace the business answer, or fabricate completion.
+An unavailable continuation MUST NOT move automatic maintenance into the next
+ordinary foreground turn or reset a wake budget.
+
+The receipt-owned omp activation SHALL identify this timing through the saved
+binding, independently of runtime-advisory readiness. Missing or unqualified
+activation MUST be reported honestly; installation ownership alone MUST NOT
+claim native loading. Other clients' activation, unrelated user text, permissions
+and lifecycle ownership rules MUST remain unchanged.
+
+Optional wake-decision diagnostics SHALL retain only bounded fixed codes and
+checked immutable source bindings after the response writer accepts the original,
+unsubstituted OBSERVED frame into its queue. Queue acceptance is not proof that
+the frame was written or received. Diagnostics MUST NOT become source,
+assessment, delivery or completion authority, alter source or drain inventories,
+rewrite historical evidence, or change callback deadlines.
+An offered continuation is not observed delivery. The
+[task design](../design/v0.0.15-omp-integration.md#foreground-answer-and-governed-maintenance)
+specifies the activation, private diagnostic and native acceptance contract.
+
 
 ### v0.0.15: verified installed instructions are operating context
 

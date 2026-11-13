@@ -4,7 +4,7 @@ import hashlib
 import os
 import unittest
 import uuid
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from world import World
 from contracts import test_omp_boundary as fixtures
@@ -30,6 +30,15 @@ class NativeStoredAuthorityV2(unittest.TestCase):
         result = fixtures.observe_installed(world, fixtures.Path(receipt['bin_dir']) / 'am', repo, receipt, value)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return fixtures.json.loads(result.stdout), receipt
+
+    def retirable_instance(self, world, repo, session, lifecycle):
+        from agent_memory import omp_stream
+        receipt, _ = fixtures.OwnedInstructionBoundary().installed(world)
+        instance = str(uuid.uuid4())
+        binding = boundary.stream_startup(repo, session, instance, lifecycle, receipt=receipt)
+        coverage = omp_stream.Coverage(repo, session, instance, lifecycle, binding, receipt=receipt)
+        coverage.close_live()
+        return coverage.directory
 
     def test_notification_without_stored_human_has_no_origin_or_source_gap(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
@@ -113,6 +122,86 @@ class NativeStoredAuthorityV2(unittest.TestCase):
                 self.assertEqual(started, [])
             self.assertEqual(transport.segments(repo, session), [])
 
+    def test_invalid_views_refuse_before_real_transport_contention_and_bad_receipt(self):
+        from agent_memory import turn_sources
+        from agent_memory.frontmatter import ContractError
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            foreign = world.repository('foreign-view-root')
+            original = self.request(repo, session, lifecycle,
+                [helper.entry('human', 'user', 'Source must remain unretained.', attribution='user')])
+            base = boundary._base(repo)
+            retirable = self.retirable_instance(world, repo, session, lifecycle)
+            with turn_sources.private_lock(base / 'omp-transport.lock'):
+                before = {str(path.relative_to(world.root)): path.read_bytes()
+                          for path in world.root.rglob('*') if path.is_file()}
+                for invalid in ('shape', 'foreign-root'):
+                    with self.subTest(invalid=invalid):
+                        value = copy.deepcopy(original)
+                        if invalid == 'shape':
+                            value['payload']['view']['header']['version'] = 2
+                        else:
+                            value['payload']['view']['cwd'] = str(foreign)
+                            value['payload']['view']['header']['cwd'] = str(foreign)
+                        started = []
+                        with self.assertRaises(ContractError) as caught:
+                            transport.observe(repo, value, receipt={},
+                                on_started=lambda: started.append(True))
+                        self.assertNotIsInstance(caught.exception, turn_sources.SourceTransportBusy)
+                        self.assertEqual(started, [])
+                        self.assertEqual({str(path.relative_to(world.root)): path.read_bytes()
+                                          for path in world.root.rglob('*') if path.is_file()}, before)
+            self.assertFalse((retirable / 'retirement.json').exists())
+            self.assertEqual(transport.segments(repo, session), [])
+            from agent_memory import omp_stream
+            fences = omp_stream.retire_for_recovery(repo, session)
+            self.assertEqual([row['directory'] for row in fences], [str(retirable)])
+            self.assertTrue((retirable / 'retirement.json').is_file())
+
+    def test_checkout_retarget_after_view_validation_refuses_before_started_or_source(self):
+        from contracts.test_scope_binding import ScopeBindingContract
+        from identity_fixtures import bind
+        from agent_memory import turn_sources
+        from agent_memory.frontmatter import ContractError
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            other = world.repository('retargeted-checkout')
+            ScopeBindingContract().bank(world, other)
+            bind(world, other)
+            boundary._activate_marker(other)
+            retirable = self.retirable_instance(world, other, session, lifecycle)
+            for root in (repo, other):
+                with turn_sources.private_lock(boundary._base(root) / 'omp-transport.lock'):
+                    pass
+            alias = world.inside('selected-checkout')
+            alias.symlink_to(repo, target_is_directory=True)
+            value = self.request(repo, session, lifecycle,
+                [helper.entry('human', 'user', 'Source belongs only to the first checkout.', attribution='user')])
+            roots = (repo, other, world.paths['config'], world.paths['state'])
+            before = {str(path.relative_to(world.root)): path.read_bytes()
+                      for root in roots for path in root.rglob('*') if path.is_file()}
+            checked = projection.checked_view
+            def retarget(*args, **kwargs):
+                result = checked(*args, **kwargs)
+                alias.unlink()
+                alias.symlink_to(other, target_is_directory=True)
+                return result
+            started = []
+            with patch.object(projection, 'checked_view', side_effect=retarget):
+                with self.assertRaises(ContractError):
+                    helper.observe_request(alias, value, on_started=lambda: started.append(True))
+            self.assertEqual(alias.resolve(), other.resolve())
+            self.assertEqual(started, [])
+            self.assertEqual({str(path.relative_to(world.root)): path.read_bytes()
+                              for root in roots for path in root.rglob('*') if path.is_file()}, before)
+            for root in (repo, other):
+                self.assertEqual(transport.segments(root, session), [])
+            self.assertFalse((retirable / 'retirement.json').exists())
+            from agent_memory import omp_stream
+            fences = omp_stream.retire_for_recovery(other, session)
+            self.assertEqual([row['directory'] for row in fences], [str(retirable)])
+            self.assertTrue((retirable / 'retirement.json').is_file())
+
     def test_legacy_notification_only_cursor_is_neither_reused_mutated_nor_sealed(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             helper = fixtures.NativeSources(); repo, session, phantom = helper.fixture(world)
@@ -188,6 +277,7 @@ class NativeStoredAuthorityV2(unittest.TestCase):
             cancelled = fixtures.LiveDeliveryWindow()
             cancelled._owner.revoke()
             refused = helper.observe_request(repo, value, delivery_window=cancelled)
+            self.assertTrue(refused['verified'])
             self.assertFalse(refused['continue'])
             self.assertEqual(refused['status'], 'pending-undeliverable-window')
             self.assertFalse((transport.session_dir(repo, session) / 'root-wakes').exists())
@@ -202,7 +292,44 @@ class NativeStoredAuthorityV2(unittest.TestCase):
                 accepted = helper.observe_request(repo, value, delivery_window=window)
             self.assertTrue(accepted['verified'])
             self.assertTrue(accepted['continue'])
-            self.assertEqual(len(list((transport.session_dir(repo, session) / 'root-wakes').glob('*.json'))), 1)
+            wakes = transport.session_dir(repo, session) / 'root-wakes'
+            self.assertEqual(len(list(wakes.glob('*.json'))), 1)
+            repeated = helper.observe_request(repo, value, delivery_window=fixtures.LiveDeliveryWindow())
+            self.assertTrue(repeated['verified'])
+            self.assertFalse(repeated['continue'])
+            self.assertEqual(len(list(wakes.glob('*.json'))), 1)
+
+    def test_replacement_and_end_after_start_preserve_result(self):
+        for control in ('replacement', 'end'):
+            with self.subTest(control=control), World() as world, patch.dict(os.environ, world.env, clear=True):
+                helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+                result = helper.observe(repo, session, lifecycle,
+                    [helper.entry('human', 'user', 'Actual source.', attribution='user')])
+                value = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'wake',
+                         'session': session, 'lifecycle': result['lifecycle'], 'payload': result['wake_payload']}
+                window = fixtures.LiveDeliveryWindow()
+                retain = transport.retain
+                applied = []
+                def control_after_start(path, payload, bound):
+                    if path.parent.name == 'root-wakes':
+                        applied.append(control)
+                        if control == 'end':
+                            window._owner.end()
+                        else:
+                            window._owner.control('CLOCK', {'nonce': str(uuid.uuid4()),
+                                'j0': '100', 'j_deadline': '950000100'}, Mock())
+                    return retain(path, payload, bound)
+                with patch.object(transport, 'retain', side_effect=control_after_start):
+                    accepted = helper.observe_request(repo, value, delivery_window=window)
+                self.assertEqual(applied, [control])
+                self.assertTrue(accepted['verified'])
+                self.assertTrue(accepted['continue'])
+                wakes = transport.session_dir(repo, session) / 'root-wakes'
+                self.assertEqual(len(list(wakes.glob('*.json'))), 1)
+                repeated = helper.observe_request(repo, value, delivery_window=fixtures.LiveDeliveryWindow())
+                self.assertTrue(repeated['verified'])
+                self.assertFalse(repeated['continue'])
+                self.assertEqual(len(list(wakes.glob('*.json'))), 1)
 
     def test_reparented_linux_window_cannot_reserve(self):
         import threading
@@ -222,6 +349,7 @@ class NativeStoredAuthorityV2(unittest.TestCase):
             window._owner.native_image = image
             with patch.object(omp_stream.select, 'select', return_value=([], [], [])):
                 refused = helper.observe_request(repo, value, delivery_window=window)
+            self.assertTrue(refused['verified'])
             self.assertFalse(refused['continue'])
             self.assertEqual(refused['status'], 'pending-undeliverable-window')
             self.assertFalse((transport.session_dir(repo, session) / 'root-wakes').exists())

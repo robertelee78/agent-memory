@@ -7,7 +7,7 @@ domain: sharing
 
 ## Use when
 
-At a natural turn boundary after durable capture or maintained memory changes,
+At a [natural turn boundary](../../SKILL.md#natural-turn-boundary) after durable capture or maintained memory changes,
 a session MUST automatically prepare and attempt publication of the admitted,
 independently useful delta. It MUST preserve conditions and evidence for learning
 from unfinished code, and MUST NOT imply that the code itself has landed.

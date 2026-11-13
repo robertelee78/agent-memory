@@ -163,6 +163,7 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
         helper, command, repo, bank, _, _, _, git, _, operation, _, _, _, directory, _, _ = fixture
         target = bank / path
         self.assertTrue(target.exists())
+        flags = exact_metadata.inode_flags(target) if target.is_file() else None
         marker = bank / '.agent-memory-transaction.md'
         self.assertFalse(marker.exists())
         def metadata():
@@ -202,6 +203,8 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
         self.assertFalse(output.exists())
         self.assertEqual((snapshot(bank), snapshot(attempt), (directory / 'journal.json').read_bytes(), metadata()), before)
         self.assertFalse(marker.exists())
+        if flags is not None:
+            self.assertEqual(exact_metadata.inode_flags(target), flags)
         helper.assert_fault_work_unchanged(world, repo, git)
         # Simulated operator inspection/removal in this disposable fixture only.
         if target.is_dir():
@@ -296,7 +299,17 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
                 return
             self.assertTrue(target.exists())
             recovery.unlock(world, command, repo)
-            if foreign:
+            if foreign == 'flags':
+                required = stat.UF_NODUMP if sys.platform == 'darwin' else 0x40
+                flags = exact_metadata.inode_flags(target, exact_metadata.inode_flags(target) | required)
+                self.assertEqual(flags & required, required)
+            elif foreign == 'pin-flags':
+                before = target.stat()
+                observed = json.loads(pin.read_bytes())
+                observed['flags'] ^= stat.UF_NODUMP if sys.platform == 'darwin' else 0x40
+                pin.write_bytes((json.dumps(observed, sort_keys=True, ensure_ascii=False, indent=2) + '\n').encode())
+                self.assertEqual(target.stat(), before)
+            elif foreign:
                 original_inode = target.stat().st_ino
                 if foreign == 'inode':
                     saved = world.inside('independently-inspected-original-probe')
@@ -326,6 +339,12 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
 
     def test_changed_nonce_after_pin_remains_pending(self):
         self.ambiguity_case('file', foreign='nonce')
+
+    def test_changed_inode_flags_after_pin_remain_pending(self):
+        self.ambiguity_case('file', foreign='flags')
+
+    def test_changed_pin_flags_with_unchanged_inode_remain_pending(self):
+        self.ambiguity_case('file', foreign='pin-flags')
 
     def late_probe_case(self, kind, index, mode, *, expected_labels=None):
         with World() as world:

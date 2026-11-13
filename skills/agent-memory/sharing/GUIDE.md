@@ -22,6 +22,8 @@ recovering from cursor loss or planning deletion-aware merges, a session MUST
 read [recovery/GUIDE.md](recovery/GUIDE.md).
 These recovery primitives do not themselves publish or refresh canonical memory.
 
+Natural boundary timing follows the [shared skill definition](../SKILL.md#natural-turn-boundary).
+
 A session MUST follow [publication/GUIDE.md](publication/GUIDE.md) at a natural
 boundary to prepare and land admitted memory-only changes through actual
 repository rules. Publication does not refresh local memory or feature code.

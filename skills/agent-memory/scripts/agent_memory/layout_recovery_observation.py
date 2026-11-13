@@ -63,6 +63,14 @@ def valid_xattrs(value):
     return True
 
 
+def inode_flags(descriptor):
+    """Inspect filesystem flags on the pinned inode, including Linux ioctl flags."""
+    if sys.platform == 'linux':
+        request = (2 << 30) | (ctypes.sizeof(ctypes.c_long) << 16) | (ord('f') << 8) | 1
+        return int.from_bytes(fcntl.ioctl(descriptor, request, bytes(4)), sys.byteorder)
+    return getattr(os.fstat(descriptor), 'st_flags', 0)
+
+
 def metadata_supported(path):
     """Return exact reproducible metadata, refusing every unsupported attribute."""
     descriptor = None
@@ -74,14 +82,14 @@ def metadata_supported(path):
         if signature(os.fstat(descriptor)) != signature(before):
             raise ContractError('pending-metadata-preservation')
         attributes = {}
-        linux_flags = None
+        flags = inode_flags(descriptor)
         if sys.platform == 'linux':
-            request = (2 << 30) | (ctypes.sizeof(ctypes.c_long) << 16) | (ord('f') << 8) | 1
-            linux_flags = fcntl.ioctl(descriptor, request, bytes(4))
             # EXTENT and INDEX describe kernel-managed storage, not mutable
             # backup, access, inheritance or write semantics.
-            if int.from_bytes(linux_flags, sys.byteorder) & ~(0x00080000 | 0x00001000):
+            if flags & ~(0x00080000 | 0x00001000):
                 raise ContractError('pending-metadata-preservation')
+        elif flags:
+            raise ContractError('pending-metadata-preservation')
         if sys.platform == 'darwin':
             libc = ctypes.CDLL(None, use_errno=True)
             libc.flistxattr.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_int]
@@ -128,7 +136,7 @@ def metadata_supported(path):
                     libc.acl_free(acl)
         elif not hasattr(os, 'listxattr') or os.listxattr(descriptor):
             raise ContractError('pending-metadata-preservation')
-        if linux_flags is not None and fcntl.ioctl(descriptor, request, bytes(4)) != linux_flags:
+        if inode_flags(descriptor) != flags:
             raise ContractError('pending-metadata-preservation')
         if signature(os.fstat(descriptor)) != signature(before) or signature(path.lstat()) != signature(before):
             raise ContractError('pending-metadata-preservation')

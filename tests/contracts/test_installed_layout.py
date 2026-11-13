@@ -65,6 +65,17 @@ class InstalledLayoutContract(unittest.TestCase):
                     self.assertEqual(path.resolve(), code / 'skills/agent-memory')
                 else:
                     self.assertFalse(path.is_symlink())
+            elif target['kind'] == 'activation':
+                binding = receipt.get('omp_binding')
+                template = ('activation-omp-markdown.example.txt'
+                            if binding and target['path'] == binding['activation_target']
+                            else 'activation-markdown.example.txt')
+                block = (Path(receipt['source']['pack']) / 'templates' / template).read_bytes()
+                self.assertEqual(target['block_hash'], hashlib.sha256(block).hexdigest())
+                raw = path.read_bytes()
+                begin = b'<!-- agent-memory:activation:begin -->'
+                end = b'<!-- agent-memory:activation:end -->'
+                self.assertEqual(raw[raw.index(begin):raw.index(end) + len(end)], block)
         for backup in receipt['backups']:
             path = Path(backup['path'])
             self.assertFalse(path.is_relative_to(code)); self.assertTrue(path.exists())

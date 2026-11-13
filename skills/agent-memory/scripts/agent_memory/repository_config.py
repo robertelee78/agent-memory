@@ -7,13 +7,18 @@ import re
 import unicodedata
 
 from .frontmatter import ContractError, read
-from .identity_git import git
+from .identity_git import _git_group, git, root_head
 
 MAX_ROUTERS = 64
 MAX_DISCOVERY_ENTRIES = 1000000
 ROUTER_FIELDS = {'schema', 'project-id', 'router-updated', 'canonical-remote'}
 
 _settings_reads = ContextVar('agent_memory_repository_settings_observation', default=None)
+_HEAD_UNOBSERVED = object()
+_LOCAL_SETTINGS = ('config', '--local', '--null', '--get-regexp',
+                   r'^agent-memory\.(bankroot|authoritybranch)$')
+_LISTED_NAMES = ('ls-files', '--cached', '--others', '--exclude-standard', '-t', '-z',
+                 '--', ':(icase,glob)**/MEMORY.md')
 
 
 def local_value(root, key):
@@ -31,8 +36,10 @@ def local_value(root, key):
 def local_settings(root):
     # One local-config read keeps these two fields coherent. Git normalizes
     # section/key spelling in --get-regexp output; values remain verbatim.
-    raw = git(root, 'config', '--local', '--null', '--get-regexp',
-              r'^agent-memory\.(bankroot|authoritybranch)$', optional=True)
+    return _parse_local_settings(git(root, *_LOCAL_SETTINGS, optional=True))
+
+
+def _parse_local_settings(raw):
     if raw is None:
         return {}
     if not raw.endswith('\0'):
@@ -134,10 +141,7 @@ def object_router_bytes(root, expression, cache):
     return raw
 
 
-def _router_inventory(root):
-    """One complete Git name inventory, shared by ordinary and raw readers."""
-    listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-t', '-z',
-                 '--', ':(icase,glob)**/MEMORY.md', optional=True, glob_pathspecs=True)
+def _listed_paths(listed):
     if listed is None or (listed and not listed.endswith('\0')):
         raise ContractError('Repository memory inventory is unavailable; do not infer absence')
     listed_paths, indexed_paths = set(), set()
@@ -150,10 +154,22 @@ def _router_inventory(root):
         listed_paths.add(path)
         if entry[0] != '?':
             indexed_paths.add(path)
-    head = git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
+    return listed_paths, indexed_paths
+
+
+def _checked_head(head):
+    if head is not None and not re.fullmatch('[0-9a-f]{40}|[0-9a-f]{64}', head):
+        raise ContractError('Repository HEAD observation is incomplete; do not infer absence')
+    return head
+
+
+def _router_inventory(root, *, observed_head=_HEAD_UNOBSERVED):
+    """One complete Git name inventory, shared by ordinary and raw readers."""
+    listed_paths, indexed_paths = _listed_paths(git(root, *_LISTED_NAMES, optional=True, glob_pathspecs=True))
+    head = _checked_head(git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
+                         if observed_head is _HEAD_UNOBSERVED else observed_head)
     committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
-    committed_paths = set(committed.split('\0'))
-    return listed_paths, indexed_paths, head, committed_paths
+    return listed_paths, indexed_paths, head, set(committed.split('\0'))
 
 
 def git_roots(root, *, router_reader=None, raw_locations=False):
@@ -249,15 +265,30 @@ def settings(repo, *, router_reader=None, raw_locations=False):
 
 
 def _settings_inputs(root):
-    top = git(root, 'rev-parse', '--show-toplevel', optional=True)
+    # HEAD is sampled beside the root, before config/index enumeration. This
+    # is not an atomic snapshot; each enrollment entry/exit observes it anew.
+    top, head = root_head(root)
     if top is None and (root / '.git').exists():
         raise ContractError('Existing Git metadata/configuration cannot be inspected; do not guess the bank root')
     if top is not None and Path(top).resolve() != root:
         raise ContractError('Select the actual repository root for its one memory bank')
-    configured = local_settings(root)
-    if configured.get('agent-memory.bankroot') is not None:
-        validate_root(configured['agent-memory.bankroot'])
-    return top, configured, _router_inventory(root) if top is not None else None
+    if top is None:
+        configured = local_settings(root)
+        if configured.get('agent-memory.bankroot') is not None:
+            validate_root(configured['agent-memory.bankroot'])
+        return top, configured, None
+    specs = [(_LOCAL_SETTINGS, False), (_LISTED_NAMES, True)]
+    if head:
+        specs.append((('ls-tree', '-r', '--name-only', '-z', head), False))
+    with _git_group(root, tuple(specs)) as group:
+        configured = _parse_local_settings(group.value(0, optional=True))
+        if configured.get('agent-memory.bankroot') is not None:
+            validate_root(configured['agent-memory.bankroot'])
+        listed_paths, indexed_paths = _listed_paths(group.value(1, optional=True))
+        head = _checked_head(head)
+        committed = group.value(2) if head else ''
+        inventory = listed_paths, indexed_paths, head, set(committed.split('\0'))
+    return top, configured, inventory
 
 
 def _settings_at(root, top, configured, inventory, *, router_reader=None, raw_locations=False):

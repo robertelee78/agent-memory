@@ -114,6 +114,8 @@ Reading that bundle does not rebuild the frontier or authorize a stale judgment.
 
 ### Natural turn boundaries
 
+Timing follows the [shared skill definition](../../SKILL.md#natural-turn-boundary).
+
 A session MUST use the [sharing domain](../../sharing/GUIDE.md) at natural turn
 boundaries to refresh landed memory before admitting new learning. The `boundary`
 group is an invocation alias for the same inspect/prepare/apply refresh protocol;

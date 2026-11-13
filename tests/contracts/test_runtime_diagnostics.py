@@ -27,7 +27,7 @@ def call(world, operation, *options, receipt=None, expected=0):
 def component(value, name):
     return [v for v in value['checks'] if v['component'] == name]
 
-def native_fixture(world, mode):
+def native_fixture(world, mode, *, no_guidance=False):
     channel = world.repository('native diagnostic channel')
     shutil.copytree(PACK, channel / 'skills/agent-memory')
     world.git('add', '.', cwd=channel)
@@ -37,7 +37,8 @@ def native_fixture(world, mode):
     installed = world.run([sys.executable, '-I', '-B', ROOT / 'scripts/installer.py',
         'install', '--remote', channel, '--ref', 'main', '--mode', mode,
         '--presets', 'omp', '--omp-agent-dir', root, '--omp-peers-upgraded',
-        '--bin-dir', world.inside('owned bin')], timeout=120)
+        '--bin-dir', world.inside('owned bin'),
+        *(['--no-guidance'] if no_guidance else [])], timeout=120)
     bank(world, world.paths['repo'])
     return json.loads(installed.stdout)['receipt']
 
@@ -69,6 +70,12 @@ class RuntimeDiagnosticsContract(unittest.TestCase):
                 self.assertEqual({check['path'] for check in wrappers},
                     {str(extension), str(launcher), str(launcher.with_name('agent-memory'))})
                 self.assertTrue(all(check['state'] == 'pass' for check in wrappers))
+                for value in (healthy, call(world, 'status', '--repo', world.paths['repo'], receipt=receipt)):
+                    self.assertEqual(value['omp']['answer_first'],
+                        {'activation': 'receipt-owned', 'automation': 'unqualified',
+                         'native_loading': 'not-observed'})
+                    self.assertEqual(value['omp']['supported_version_target'], '18.16.0')
+                    self.assertEqual(value['omp']['native_loading'], 'not-live-verified')
                 for path, change in ((extension, 'bytes'), (extension, 'mode'),
                                      (launcher, 'bytes'), (launcher, 'mode')):
                     with self.subTest(target=path.name, change=change):
@@ -85,6 +92,18 @@ class RuntimeDiagnosticsContract(unittest.TestCase):
                         path.write_bytes(original)
                         path.chmod(mode_bits)
                 inspect()
+
+    def test_native_answer_first_no_guidance_is_healthy_but_unqualified(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world:
+                receipt = native_fixture(world, mode, no_guidance=True)
+                before = snapshot(world.root)
+                for operation in ('status', 'doctor'):
+                    value = call(world, operation, '--repo', world.paths['repo'], receipt=receipt)
+                    self.assertEqual(value['omp']['answer_first'],
+                        {'activation': 'no_guidance', 'automation': 'unqualified',
+                         'native_loading': 'not-observed'})
+                self.assertEqual(snapshot(world.root), before)
 
     def test_native_doctor_rejects_rebound_wrapper_bytes_modes_and_roles(self):
         for mode in ('copy', 'link'):

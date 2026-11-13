@@ -7,7 +7,7 @@ domain: govern
 
 ## Use when
 
-At natural turn boundaries the session MUST automatically prune incorrect or
+At [natural turn boundaries](../SKILL.md#natural-turn-boundary) the session MUST automatically prune incorrect or
 irrelevant guidance when stronger evidence establishes the correction or loss
 of applicability. Age alone MUST NOT justify pruning. The session MUST use the
 [source authority rules](../authority/GUIDE.md), [security](../security/GUIDE.md)

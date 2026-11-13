@@ -7,7 +7,7 @@ domain: sharing
 
 ## Use when
 
-At a natural boundary, a session MUST inspect both current local memory and the
+At a [natural boundary](../../SKILL.md#natural-turn-boundary), a session MUST inspect both current local memory and the
 actual landed authority bank before publishing or refreshing. It MUST follow
 this guide even if Git can merge the files cleanly: contradictory claims can
 live in separate paths, and different words can express duplicate learning.
