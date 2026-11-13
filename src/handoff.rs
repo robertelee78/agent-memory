@@ -25,12 +25,12 @@ pub trait Checkpoint: Send + Sync {
 }
 static CHECKPOINT: RwLock<Option<Arc<dyn Checkpoint>>> = RwLock::new(None);
 pub fn register_checkpoint(provider: Option<Arc<dyn Checkpoint>>) {
-    *CHECKPOINT.write().unwrap() = provider;
+    *CHECKPOINT.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
 fn checkpoint() -> Result<Arc<dyn Checkpoint>> {
     CHECKPOINT
         .read()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .clone()
         .ok_or_else(|| ContractError::new("Checkpoint dependency is not registered"))
 }
@@ -48,12 +48,11 @@ fn invalid_authority(url: &str) -> bool {
         return true;
     }
     if let (Some(l), Some(r)) = (left, right) {
-        if r < l {
+        let Some(host) = authority.get(l + 1..r) else {
             return true;
-        }
-        let host = &authority[l + 1..r];
-        if host.starts_with('v') {
-            let Some((version, rest)) = host[1..].split_once('.') else {
+        };
+        if let Some(literal) = host.strip_prefix('v') {
+            let Some((version, rest)) = literal.split_once('.') else {
                 return true;
             };
             if version.is_empty()
@@ -88,8 +87,7 @@ pub fn reference_path(reference: &str) -> (Option<String>, Option<&'static str>)
     let mut value = reference;
     if let Some(rest) = reference.strip_prefix('[') {
         if let Some((label, target)) = rest.split_once("](") {
-            if !label.contains(['\n', ']']) && target.ends_with(')') {
-                let inner = &target[..target.len() - 1];
+            if let (false, Some(inner)) = (label.contains(['\n', ']']), target.strip_suffix(')')) {
                 if let Some(angle) = inner.strip_prefix('<').and_then(|s| s.strip_suffix('>')) {
                     if !angle.is_empty() && !angle.contains(['<', '>']) {
                         value = angle;
@@ -109,20 +107,19 @@ pub fn reference_path(reference: &str) -> (Option<String>, Option<&'static str>)
     }
     // urlsplit strips leading C0 controls/spaces, and removes ASCII tab/newline (already refused).
     let url = value.trim_start_matches(|c: char| c <= ' ');
-    let scheme = url.find(':').filter(|&i| {
-        i > 0
-            && url.as_bytes()[0].is_ascii_alphabetic()
-            && url[..i]
+    let scheme = url.split_once(':').and_then(|(name, rest)| {
+        let valid = name.as_bytes().first().is_some_and(u8::is_ascii_alphabetic)
+            && name
                 .bytes()
-                .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'+' | b'-' | b'.'))
-            && !url[..i].contains(['/', '?', '#'])
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'+' | b'-' | b'.'));
+        valid.then_some((name, rest))
     });
-    let remainder = scheme.map_or(url, |i| &url[i + 1..]);
+    let remainder = scheme.map_or(url, |(_, rest)| rest);
     if invalid_authority(remainder) {
         return (None, Some("unavailable"));
     }
-    if let Some(i) = scheme {
-        let s = url[..i].to_ascii_lowercase();
+    if let Some((name, _)) = scheme {
+        let s = name.to_ascii_lowercase();
         return (
             None,
             Some(if s == "http" || s == "https" {
@@ -214,7 +211,10 @@ pub fn read_inside(
         }
         let final_part = index + 1 == count;
         if !final_part {
-            match dirs.last().unwrap().open_directory_at(&part) {
+            let Some(parent) = dirs.last() else {
+                return Ok(unavailable());
+            };
+            match parent.open_directory_at(&part) {
                 Ok(d) => {
                     dirs.push(d);
                     names.push(part);
@@ -251,15 +251,13 @@ pub fn read_inside(
         }) {
             return Ok(unavailable());
         }
-        let mut file =
-            match dirs
-                .last()
-                .unwrap()
-                .open_at(&part, libc::O_RDONLY | libc::O_NONBLOCK, 0)
-            {
-                Ok(d) => d,
-                Err(_) => return Ok(unavailable()),
-            };
+        let Some(parent) = dirs.last() else {
+            return Ok(unavailable());
+        };
+        let mut file = match parent.open_at(&part, libc::O_RDONLY | libc::O_NONBLOCK, 0) {
+            Ok(d) => d,
+            Err(_) => return Ok(unavailable()),
+        };
         let before = match file.stat() {
             Ok(v) => v,
             Err(_) => return Ok(unavailable()),
@@ -462,7 +460,7 @@ pub fn validate_observation(value: &Value) -> Result<&Value> {
     {
         return Err(err("Invalid observed checkpoint checkout"));
     }
-    for row in get(value, "references").as_array().unwrap() {
+    for row in get(value, "references").as_array().into_iter().flatten() {
         if !fields(row, &["ref", "kind", "sha256", "bytes", "commit", "blob"])
             || !get(row, "ref").as_str().is_some_and(|s| s.len() <= 1024)
             || !matches!(
@@ -530,6 +528,8 @@ pub fn managed_cues(body: &str, names: &[String]) -> BTreeSet<usize> {
     let mut cues = BTreeSet::new();
     let mut fence: Option<(u8, usize)> = None;
     let mut start = 0;
+    // Slicing invariant: `start` and `end` are always char boundaries (0, the
+    // end of a matched line-break char from `char_indices`, plus one ASCII LF).
     while start < body.len() {
         let mut end = body.len();
         for (i, c) in body[start..].char_indices() {
@@ -558,6 +558,7 @@ pub fn managed_cues(body: &str, names: &[String]) -> BTreeSet<usize> {
             if let Some(marker) = trimmed.bytes().next().filter(|c| *c == b'`' || *c == b'~') {
                 let n = trimmed.bytes().take_while(|c| *c == marker).count();
                 if n >= 3 {
+                    // `n` counts leading ASCII marker bytes: a char boundary.
                     let rest = &trimmed[n..];
                     if let Some((c, m)) = fence {
                         if marker == c && n >= m && rest.trim().is_empty() {
@@ -585,6 +586,8 @@ pub fn managed_cues(body: &str, names: &[String]) -> BTreeSet<usize> {
             if col < 4 {
                 let mut title = String::new();
                 let mut tail = raw;
+                // Slicing invariant: `pos`/`close` come from `find` of the ASCII
+                // bytes `<`/`>` in `tail`, so every bound is a char boundary.
                 while let Some(pos) = tail.find('<') {
                     title.push_str(&tail[..pos]);
                     if let Some(close) = tail[pos + 1..].find('>') {
@@ -777,10 +780,10 @@ pub fn assess_with(
     let evidence = (|| -> Result<Vec<Value>> {
         let stored = json_section(found.get(SECTION).map(String::as_str).unwrap_or(""))?;
         validate_observation(&stored)?;
-        let rows = get(&stored, "references").as_array().unwrap();
+        let rows = get(&stored, "references").as_array().unwrap_or_default();
         let refs: Vec<String> = rows
             .iter()
-            .map(|r| get(r, "ref").as_str().unwrap().to_owned())
+            .filter_map(|r| get(r, "ref").as_str().map(str::to_owned))
             .collect();
         if refs.iter().collect::<HashSet<_>>().len() != refs.len()
             || found.get("Checkpoint evidence").map(String::as_str)
@@ -793,7 +796,7 @@ pub fn assess_with(
         let current = observe(repo, bank, &refs)?;
         Ok(rows
             .iter()
-            .zip(get(&current, "references").as_array().unwrap())
+            .zip(get(&current, "references").as_array().unwrap_or_default())
             .map(|(old, new)| {
                 let a = get(old, "sha256");
                 let b = get(new, "sha256");
@@ -817,7 +820,7 @@ pub fn assess_with(
     })();
     match evidence {
         Ok(rows) => {
-            pairs[5].1 = string("qualified-observations");
+            set_pair(&mut pairs, "evidence_status", "qualified-observations");
             let matches = rows
                 .iter()
                 .all(|r| get(r, "qualification").as_str() == Some("matching-local-bytes"));
@@ -825,9 +828,18 @@ pub fn assess_with(
             pairs.push(("evidence_bytes_match".into(), Value::Bool(matches)));
         }
         Err(e) if e.message().starts_with("Non-UTF-8 checkpoint ") => return Err(e),
-        Err(_) => pairs[5].1 = string("historical-or-unqualified-evidence"),
+        Err(_) => set_pair(
+            &mut pairs,
+            "evidence_status",
+            "historical-or-unqualified-evidence",
+        ),
     }
     Ok(Value::Object(pairs))
+}
+fn set_pair(pairs: &mut [(String, Value)], key: &str, value: &str) {
+    if let Some((_, slot)) = pairs.iter_mut().find(|(k, _)| k == key) {
+        *slot = string(value);
+    }
 }
 pub fn assess(
     body: &str,

@@ -78,6 +78,14 @@ fn whitespace(c: char) -> bool {
 pub(crate) fn strip(s: &str) -> &str {
     s.trim_matches(whitespace)
 }
+// Slicing invariant for the Markdown/shell scanners in this file (splitlines,
+// fence, reference_spans, attr, inline_mask, link_occurrences, strip_tags,
+// anchors, url_parts, words, remove_inline, sentences, marker_ranges,
+// link_token, mandatory_targets, command_argv, normative, inline_python,
+// declared_assets): every bound is either a `char_indices` position or a
+// `find`/byte-scan position of an ASCII delimiter in the same string (or in its
+// byte-for-byte equal-length mask), so it is in range and on a char boundary.
+// tests/t1_a2.rs `malformed_input_contract` exercises them with generated text.
 pub(crate) fn splitlines(s: &str) -> Vec<&str> {
     let mut lines = Vec::new();
     let mut start = 0;
@@ -97,8 +105,10 @@ pub(crate) fn splitlines(s: &str) -> Vec<&str> {
         ) {
             lines.push(&s[start..i]);
             start = i + c.len_utf8();
-            if c == '\r' && iter.peek().is_some_and(|(_, c)| *c == '\n') {
-                start = iter.next().unwrap().0 + 1;
+            if c == '\r' {
+                if let Some((lf, _)) = iter.next_if(|(_, c)| *c == '\n') {
+                    start = lf + 1;
+                }
             }
         }
     }
@@ -533,7 +543,8 @@ fn inline_mask(body: &str) -> String {
             i += n;
         }
     }
-    String::from_utf8(masked).expect("mask preserves UTF-8")
+    // Masked spans run between ASCII backticks, so whole UTF-8 sequences are replaced.
+    String::from_utf8(masked).unwrap_or_default()
 }
 pub fn link_occurrences(
     body: &str,
@@ -1267,7 +1278,7 @@ pub fn git_operation(argv: &[String], path: &str) -> Result<String> {
         path,
         "Unsupported external Git operation",
     )?;
-    Ok(argv[index].clone())
+    Ok("config".to_owned())
 }
 pub fn command_argv(line: &str, path: &str) -> Result<Vec<String>> {
     require(
@@ -1398,7 +1409,7 @@ pub fn command_argv(line: &str, path: &str) -> Result<Vec<String>> {
         require(
             argv.iter().filter(|s| s.as_str() == ">").count() == 1
                 && argv.len() >= 3
-                && argv[argv.len() - 2] == ">",
+                && argv.iter().rev().nth(1).is_some_and(|v| v == ">"),
             "dispatch",
             path,
             "Only a trailing stdout-file redirection is supported",
@@ -1578,15 +1589,24 @@ fn check_dispatch(
         argv.remove(1);
     }
     require(
-        argv.len() >= 3
-            && argv[0] == "python3"
-            && argv[1] == "-I"
-            && argv[2].starts_with("$SKILL_DIR/scripts/"),
+        matches!(
+            argv.as_slice(),
+            [program, isolated, script, ..]
+                if program == "python3"
+                    && isolated == "-I"
+                    && script.starts_with("$SKILL_DIR/scripts/")
+        ),
         "dispatch",
         prose_path,
         "Undeclared shell command form",
     )?;
-    let script = argv[2].strip_prefix("$SKILL_DIR/").unwrap();
+    let Some(script) = argv.get(2).and_then(|v| v.strip_prefix("$SKILL_DIR/")) else {
+        return Err(Invalid::new(
+            "dispatch",
+            prose_path,
+            "Undeclared shell command form",
+        ));
+    };
     require(
         files.contains_key(script),
         "dispatch",
@@ -1603,9 +1623,16 @@ fn check_dispatch(
         })?;
         dispatches.insert(script.into(), provider.dispatch(script, files)?);
     }
-    let declared = &dispatches[script];
+    let declared = dispatches.get(script).ok_or_else(|| {
+        Invalid::new(
+            "command-surface-unregistered",
+            script,
+            "Signed command surface provider is not registered; command validation refuses",
+        )
+    })?;
     let verb = argv.get(3).filter(|v| !v.starts_with('-'));
-    let help_only = argv[3..] == ["--help"] || argv[3..] == ["-h"];
+    let operands = argv.get(3..).unwrap_or_default();
+    let help_only = operands == ["--help"] || operands == ["-h"];
     require(
         help_only
             || if declared.commands.is_empty() {
@@ -1617,7 +1644,7 @@ fn check_dispatch(
         prose_path,
         &format!("Unknown documented operation for {script}"),
     )?;
-    let mut tail = argv[3..].to_vec();
+    let mut tail = operands.to_vec();
     let mut flags = declared.flags.clone();
     let mut module = declared.module.clone();
     if let Some(route) = verb.and_then(|v| declared.routes.get(v)) {
@@ -1631,7 +1658,7 @@ fn check_dispatch(
         })?;
         let child = provider.dispatch(&child, files)?;
         let mut delegated = route.prefix.clone();
-        delegated.extend_from_slice(&argv[4..]);
+        delegated.extend_from_slice(argv.get(4..).unwrap_or_default());
         let child_verb = delegated.first().filter(|v| !v.starts_with('-'));
         let help = delegated == ["--help"] || delegated == ["-h"];
         require(
@@ -1652,7 +1679,7 @@ fn check_dispatch(
     require(
         tail.iter()
             .filter(|v| v.starts_with("--"))
-            .all(|v| flags.contains(v.split('=').next().unwrap())),
+            .all(|v| flags.contains(v.split_once('=').map_or(v.as_str(), |(flag, _)| flag))),
         "dispatch",
         prose_path,
         &format!("Unknown documented option for {script}"),
@@ -1773,7 +1800,9 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
             let (dest, anchor) = destination(path, &link.target, files)?;
             if let Some(dest) = dest {
                 if graph.contains_key(&dest) && !link.image {
-                    graph.get_mut(path).unwrap().insert(dest.clone());
+                    if let Some(edges) = graph.get_mut(path) {
+                        edges.insert(dest.clone());
+                    }
                 }
                 require(
                     anchor.is_empty()
@@ -1785,7 +1814,9 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
             }
         }
     }
-    let root = documents.get("SKILL.md").unwrap();
+    let root = documents.get("SKILL.md").ok_or_else(|| {
+        Invalid::new("registration", ".", "Exactly one root SKILL.md is required")
+    })?;
     let (_, route) = root.split_once("## Route\n").ok_or_else(|| {
         Invalid::new(
             "route",
@@ -1793,7 +1824,7 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
             "Root needs its intent/domain/operation route table",
         )
     })?;
-    let route = route.split("\n## ").next().unwrap();
+    let route = route.split("\n## ").next().unwrap_or_default();
     let references = reference_definitions(root)?;
     for line in splitlines(route).into_iter().filter(|s| s.starts_with('|')) {
         let targets = links(line, Some(&references))?
@@ -1830,6 +1861,7 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
                 &format!("Missing declared schema/template: {asset}"),
             )?;
         }
+        // `metadata`, `bodies` and `shells` hold exactly the `documents` keys.
         let meta = &metadata[path];
         let operation = text(meta, "kind") == Some("operation");
         if operation {
@@ -1851,21 +1883,27 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
             let original = splitlines(&bodies[path]);
             for (i, heading) in SECTIONS.iter().enumerate() {
                 let end = positions.get(i + 1).copied().unwrap_or(original.len());
+                // Python slicing: an out-of-range or reversed span is empty.
+                let section = positions
+                    .get(i)
+                    .and_then(|start| original.get(start + 1..end))
+                    .unwrap_or_default();
                 require(
-                    !strip(&original[positions[i] + 1..end].join("\n")).is_empty(),
+                    !strip(&section.join("\n")).is_empty(),
                     "leaf-contract",
                     path,
                     &format!("Empty required section: {heading}"),
                 )?;
             }
-            let domain = text(meta, "domain");
-            require(
-                domain.is_some_and(identifier),
-                "domain",
-                path,
-                "Operation needs one owning domain",
-            )?;
-            let parent = format!("{}/GUIDE.md", domain.unwrap());
+            let domain = text(meta, "domain").filter(|d| identifier(d));
+            let Some(domain) = domain else {
+                return Err(Invalid::new(
+                    "domain",
+                    path,
+                    "Operation needs one owning domain",
+                ));
+            };
+            let parent = format!("{domain}/GUIDE.md");
             require(
                 metadata
                     .get(&parent)
@@ -1876,11 +1914,14 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
             )?;
             let context = prose
                 .split_once("## Required context\n")
-                .unwrap()
-                .1
-                .split("\n## ")
-                .next()
-                .unwrap();
+                .map(|(_, rest)| rest.split("\n## ").next().unwrap_or_default())
+                .ok_or_else(|| {
+                    Invalid::new(
+                        "leaf-contract",
+                        path,
+                        "Operation needs the eleven required sections in order",
+                    )
+                })?;
             require(
                 mandatory_targets(context, path, files, Some(&reference_definitions(prose)?))?
                     .contains(&parent),
@@ -1889,12 +1930,14 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
                 "Required context must positively and unconditionally require its owning domain",
             )?;
             require(
-                graph[&parent].contains(path),
+                graph.get(&parent).is_some_and(|edges| edges.contains(path)),
                 "domain",
                 path,
                 "Owning domain must route to its operation",
             )?;
-            mandatory.get_mut(path).unwrap().insert(parent);
+            if let Some(loads) = mandatory.get_mut(path) {
+                loads.insert(parent);
+            }
         }
         if let Some(ops) = meta.get("file-operations") {
             let array = ops.as_array();
@@ -1914,7 +1957,9 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
         let targets = mandatory_targets(prose, path, files, None)?;
         for target in targets {
             if mandatory.contains_key(&target) {
-                mandatory.get_mut(path).unwrap().insert(target);
+                if let Some(loads) = mandatory.get_mut(path) {
+                    loads.insert(target);
+                }
             }
         }
         token_count += normative(prose, path)?;
@@ -1926,7 +1971,7 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
                     continue;
                 }
                 let argv = command_argv(line, path)?;
-                if argv[0] == "git" {
+                if argv.first().is_some_and(|program| program == "git") {
                     mappings.push(object([
                         ("guide", string(path)),
                         ("external", string("git")),
@@ -1955,7 +2000,7 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
     let mut pending = vec!["SKILL.md".to_string()];
     while let Some(path) = pending.pop() {
         if reached.insert(path.clone()) {
-            pending.extend(graph[&path].iter().cloned());
+            pending.extend(graph.get(&path).into_iter().flatten().cloned());
         }
     }
     let missing = documents
@@ -1985,7 +2030,7 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
             return Ok(());
         }
         visiting.insert(path.into());
-        for child in &graph[path] {
+        for child in graph.get(path).into_iter().flatten() {
             visit(child, graph, visiting, complete)?;
         }
         visiting.remove(path);
@@ -2130,14 +2175,5 @@ pub fn command(pack: &Path) -> crate::lifecycle::CommandResult {
     } else {
         1
     };
-    let stdout = format!(
-        "{}\n",
-        json::encode(&value, json::INDENT2_ASCII).expect("pack result is JSON")
-    );
-    crate::lifecycle::CommandResult {
-        value: Some(value),
-        exit_code,
-        stdout,
-        stderr: String::new(),
-    }
+    crate::lifecycle::CommandResult::json(value, exit_code, json::INDENT2_ASCII)
 }

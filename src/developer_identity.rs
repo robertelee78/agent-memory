@@ -1065,21 +1065,5 @@ pub fn command_result(operation: &str, outcome: Result<Value>) -> crate::lifecyc
             json::DEFAULT,
         ),
     };
-    let stdout = match json::encode(&value, style) {
-        Ok(text) => text + "\n",
-        Err(error) => {
-            return crate::lifecycle::CommandResult {
-                value: Some(value),
-                exit_code: 1,
-                stdout: String::new(),
-                stderr: format!("{error}\n"),
-            };
-        }
-    };
-    crate::lifecycle::CommandResult {
-        value: Some(value),
-        exit_code,
-        stdout,
-        stderr: String::new(),
-    }
+    crate::lifecycle::CommandResult::json(value, exit_code, style)
 }

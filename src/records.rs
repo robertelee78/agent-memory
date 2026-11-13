@@ -10,6 +10,7 @@ use crate::scopes;
 use std::sync::{Arc, LazyLock, RwLock};
 
 fn schema(s: &str) -> Value {
+    // Invariant: every caller passes a schema compiled in from the pack (decoded by tests).
     json::decode(
         s,
         DecodePolicy {
@@ -69,17 +70,23 @@ pub fn fields(value: &Value, required: &[&str], allowed: &[&str]) -> Result<()> 
 fn schema_fields(value: &Value, spec: &Value) -> Result<()> {
     let required: Vec<&str> = get(spec, "required")
         .as_array()
-        .unwrap()
-        .iter()
-        .map(|v| v.as_str().unwrap())
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
         .collect();
     let allowed: Vec<&str> = get(spec, "properties")
         .as_object()
-        .unwrap()
-        .iter()
+        .into_iter()
+        .flatten()
         .map(|(k, _)| k.as_str())
         .collect();
     fields(value, &required, &allowed)
+}
+/// Text of a value already accepted by `identity`, `text` or `reference`.
+fn accepted_text(value: &Value) -> Result<&str> {
+    value
+        .as_str()
+        .ok_or_else(|| err("A nonempty explicit metadata string is required"))
 }
 fn member(array: &Value, item: &Value) -> bool {
     array.as_array().is_some_and(|a| a.contains(item))
@@ -110,18 +117,16 @@ pub fn captured_source_path(capture_id: &Value, source_id: &Value) -> Result<Str
     identity(source_id)?;
     Ok(format!(
         "history/sources/{}/{}.md",
-        capture_id.as_str().unwrap(),
-        source_id.as_str().unwrap()
+        accepted_text(capture_id)?,
+        accepted_text(source_id)?
     ))
 }
 pub fn source_capture_id(path: &str, metadata: &Value) -> Option<String> {
-    let p: Vec<_> = path.split('/').collect();
-    if p.len() != 4
-        || p[0] != "history"
-        || p[1] != "sources"
-        || !uuid_valid(&string(p[2]))
-        || p[3] != format!("{}.md", get(metadata, "id").as_str()?)
-    {
+    let parts: Vec<_> = path.split('/').collect();
+    let ["history", "sources", capture, leaf] = parts.as_slice() else {
+        return None;
+    };
+    if !uuid_valid(&string(*capture)) || *leaf != format!("{}.md", get(metadata, "id").as_str()?) {
         return None;
     }
     let found = get(metadata, "derived-from")
@@ -129,7 +134,7 @@ pub fn source_capture_id(path: &str, metadata: &Value) -> Option<String> {
         .is_some_and(|items| {
             items.iter().any(|item| {
                 item.as_object().is_some_and(|o| o.len() == 2)
-                    && get(item, "id").as_str() == Some(p[2])
+                    && get(item, "id").as_str() == Some(*capture)
                     && match get(item, "version") {
                         Value::Int(n) => n.as_str() == "1",
                         Value::Float(n) => *n == 1.0,
@@ -138,11 +143,16 @@ pub fn source_capture_id(path: &str, metadata: &Value) -> Option<String> {
                     }
             })
         });
-    if found { Some(p[2].into()) } else { None }
+    if found { Some((*capture).into()) } else { None }
 }
-fn int_cmp(a: &Value, b: &Value) -> std::cmp::Ordering {
-    let a = a.as_int().unwrap().as_str();
-    let b = b.as_int().unwrap().as_str();
+fn version_digits(value: &Value) -> Result<&str> {
+    value
+        .as_int()
+        .map(|v| v.as_str())
+        .ok_or_else(|| err("An exact positive record version is required"))
+}
+/// Compares two positive canonical JSON integers (no sign, no leading zeros).
+fn int_cmp(a: &str, b: &str) -> std::cmp::Ordering {
     a.len().cmp(&b.len()).then_with(|| a.cmp(b))
 }
 pub fn references(
@@ -157,14 +167,19 @@ pub fn references(
     let mut seen = std::collections::HashSet::new();
     for item in items {
         reference(item)?;
-        let id = get(item, "id").as_str().unwrap();
-        let ver = get(item, "version").as_int().unwrap().as_str();
+        let id = accepted_text(get(item, "id"))?;
+        let ver = version_digits(get(item, "version"))?;
         if !seen.insert((id, ver)) {
             return Err(err("Duplicate version link"));
         }
         let same = get(item, "id") == get(record, "id");
-        if same {
-            let cmp = int_cmp(get(item, "version"), get(record, "version"));
+        // Python compares versions only for a link to the same record.
+        let order = if same {
+            Some(int_cmp(ver, version_digits(get(record, "version"))?))
+        } else {
+            None
+        };
+        if let Some(cmp) = order {
             if (replacement && cmp != std::cmp::Ordering::Greater)
                 || (!replacement && cmp != std::cmp::Ordering::Less)
             {
@@ -173,11 +188,7 @@ pub fn references(
                 ));
             }
         }
-        if correction
-            && (!same
-                || int_cmp(get(item, "version"), get(record, "version"))
-                    != std::cmp::Ordering::Less)
-        {
+        if correction && order != Some(std::cmp::Ordering::Less) {
             return Err(err(
                 "A correction must retain the record ID and name an earlier version",
             ));
@@ -195,7 +206,7 @@ pub fn evidence(values: &Value) -> Result<()> {
     }
     let mut seen = std::collections::HashSet::new();
     for value in values {
-        if !seen.insert(value.as_str().unwrap()) {
+        if !seen.insert(accepted_text(value)?) {
             return Err(err("Duplicate evidence reference"));
         }
     }
@@ -239,8 +250,8 @@ pub fn record<'a>(metadata: &'a Value, required_metadata: &[&str]) -> Result<&'a
     let unknown = get(metadata, "applicability").as_str() == Some("unknown")
         || conditions
             .as_object()
-            .unwrap()
-            .iter()
+            .into_iter()
+            .flatten()
             .any(|(_, v)| *v == Value::Null);
     if get(origin, "code-state").as_str() == Some("unmerged") && !conditional && !unknown {
         return Err(err(
@@ -295,7 +306,7 @@ pub fn record<'a>(metadata: &'a Value, required_metadata: &[&str]) -> Result<&'a
     if let Some(v) = metadata.get("confidence") {
         let valid = match v {
             Value::Null => true,
-            Value::Int(i) => matches!(i.as_str(), "0" | "1"),
+            Value::Int(i) => matches!(i.as_str(), "0" | "-0" | "1"),
             Value::Float(f) => f.is_finite() && *f >= 0.0 && *f <= 1.0,
             _ => false,
         };
@@ -305,22 +316,14 @@ pub fn record<'a>(metadata: &'a Value, required_metadata: &[&str]) -> Result<&'a
             ));
         }
     }
-    let status = get(metadata, "status").as_str().unwrap();
+    let status = get(metadata, "status").as_str().unwrap_or_default();
     if ["quarantined", "superseded", "revoked", "expired"].contains(&status)
         && metadata.get("state-reason").is_none()
     {
         return Err(err("Non-current lifecycle needs a visible reason"));
     }
     let replacement = metadata.get("superseded-by");
-    let truthy = |v: &Value| match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Int(i) => i.as_str() != "0",
-        Value::Float(f) => *f != 0.0,
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(o) => !o.is_empty(),
-    };
+    let truthy = crate::sharing_limits::truthy;
     if status == "superseded" && !replacement.is_some_and(truthy) {
         return Err(err("Superseded records must name the replacement"));
     }
@@ -358,12 +361,13 @@ pub fn validate_with_parser(
     let entries = metadata
         .as_object()
         .ok_or_else(|| err("Explicit metadata and Markdown body are required"))?;
-    let keys = get(&TOMBSTONE, "required").as_array().unwrap();
-    if entries.len() == keys.len()
-        && keys
-            .iter()
-            .all(|k| metadata.get(k.as_str().unwrap()).is_some())
-    {
+    let keys: Vec<&str> = get(&TOMBSTONE, "required")
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .collect();
+    if entries.len() == keys.len() && keys.iter().all(|k| metadata.get(k).is_some()) {
         if !required_metadata.is_empty() {
             return Err(err(
                 "Tombstones must not retain policy or provenance fields",
@@ -407,14 +411,14 @@ pub fn validate(
 pub fn parse(content: &str, required_metadata: &[&str]) -> Result<(String, Value, String)> {
     let mut allowed = Vec::new();
     for spec in [&*MODEL, &*EVENT] {
-        for (k, _) in get(spec, "properties").as_object().unwrap() {
+        for (k, _) in get(spec, "properties").as_object().into_iter().flatten() {
             if !allowed.contains(&k.as_str()) {
                 allowed.push(k.as_str());
             }
         }
     }
-    for k in get(&TOMBSTONE, "required").as_array().unwrap() {
-        let k = k.as_str().unwrap();
+    let tombstone = get(&TOMBSTONE, "required").as_array().into_iter().flatten();
+    for k in tombstone.filter_map(Value::as_str) {
         if !allowed.contains(&k) {
             allowed.push(k);
         }
@@ -438,13 +442,16 @@ pub fn applicability(metadata: &Value, request: &Value) -> Result<Value> {
         ("context", get(request, "context").clone()),
     ]))?;
     if get(metadata, "applicability").as_str() == Some("unknown") {
-        *result.get_mut("applicable").unwrap() = Value::Bool(false);
+        set(&mut result, "applicable", Value::Bool(false));
         if let Some(Value::Array(a)) = result.get_mut("reasons") {
             a.push(string("unknown-applicability"));
         }
     }
-    *result.get_mut("validation_scope").unwrap() =
-        string("record-applicability-only; not lifecycle-currentness-or-admission");
+    set(
+        &mut result,
+        "validation_scope",
+        string("record-applicability-only; not lifecycle-currentness-or-admission"),
+    );
     Ok(result)
 }
 pub fn definition() -> Value {
@@ -512,36 +519,40 @@ pub fn command(
             ("admission_verified".into(), Value::Bool(false)),
         ];
         if operation == "render" {
+            let entries = metadata
+                .as_object()
+                .ok_or_else(|| err("Explicit metadata and Markdown body are required"))?;
             out.push((
                 "content".into(),
-                string(frontmatter::write(metadata.as_object().unwrap())? + &body),
+                string(frontmatter::write(entries)? + &body),
             ));
         }
         Ok(Value::Object(out))
     })();
-    let (value, exit_code, style) = match result {
-        Ok(v) => (v, 0, json::INDENT2_UTF8_FINITE),
-        Err(_) => (
-            object([
-                ("schema", string("agent-memory/record-result-v1")),
-                ("valid", Value::Bool(false)),
-                ("writes_performed", Value::Bool(false)),
-                (
-                    "error",
-                    string(
-                        "Invalid record, history event, tombstone or applicability request; inspect the original input",
-                    ),
+    let failure = || {
+        object([
+            ("schema", string("agent-memory/record-result-v1")),
+            ("valid", Value::Bool(false)),
+            ("writes_performed", Value::Bool(false)),
+            (
+                "error",
+                string(
+                    "Invalid record, history event, tombstone or applicability request; inspect the original input",
                 ),
-            ]),
-            1,
-            json::DEFAULT,
-        ),
+            ),
+        ])
     };
-    let stdout = json::encode(&value, style).expect("record result encoding") + "\n";
-    crate::lifecycle::CommandResult {
-        value: Some(value),
-        exit_code,
-        stdout,
-        stderr: String::new(),
+    // Python encodes inside its try block: an unencodable success document
+    // (non-finite float, depth) takes the same fixed refusal.
+    match result {
+        Ok(value) if json::encode(&value, json::INDENT2_UTF8_FINITE).is_ok() => {
+            crate::lifecycle::CommandResult::json(value, 0, json::INDENT2_UTF8_FINITE)
+        }
+        _ => crate::lifecycle::CommandResult::json(failure(), 1, json::DEFAULT),
+    }
+}
+fn set(result: &mut Value, key: &str, value: Value) {
+    if let Some(slot) = result.get_mut(key) {
+        *slot = value;
     }
 }

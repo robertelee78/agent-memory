@@ -486,6 +486,27 @@ pub struct CommandResult {
     pub stdout: String,
     pub stderr: String,
 }
+impl CommandResult {
+    /// One JSON document line on stdout. An unencodable document (depth bound,
+    /// or a non-finite float under a finite style) is exit 1 with the refusal on
+    /// stderr and nothing on stdout, never a panic.
+    pub(crate) fn json(value: Value, exit_code: i32, style: json::Style) -> Self {
+        match json::encode(&value, style) {
+            Ok(text) => Self {
+                value: Some(value),
+                exit_code,
+                stdout: text + "\n",
+                stderr: String::new(),
+            },
+            Err(error) => Self {
+                value: Some(value),
+                exit_code: 1,
+                stdout: String::new(),
+                stderr: format!("{error}\n"),
+            },
+        }
+    }
+}
 pub fn definition() -> Value {
     MODEL.clone()
 }

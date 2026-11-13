@@ -102,7 +102,10 @@ fn pinned_output_parent(target: &Path) -> Result<crate::fs::DirectoryChain> {
     });
     for (index, descriptor) in chain.descriptors().iter().enumerate() {
         if index > 0 {
-            path.push(parts.next().expect("directory chain matches path"));
+            let name = parts
+                .next()
+                .ok_or_else(|| ContractError::new("Invalid private output"))?;
+            path.push(name);
         }
         let identity = descriptor
             .stat()

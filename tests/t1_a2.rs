@@ -1,5 +1,167 @@
 // Tier 1 A2 baseline contract ports. Integration verification belongs to Main.
 
+// Lane rule "no panic on input": the parsers below receive repository, pack
+// and proposal text. Deterministic generated inputs mix every delimiter the
+// parsers slice on with multibyte scalars and Python line separators; any
+// panic fails the test, refusals are expected.
+mod malformed_input_contract {
+    use agent_memory::codec::json::{self, DecodePolicy, Value};
+    use agent_memory::{handoff, pack_validation as pack, records, repository_config, scopes};
+
+    const ALPHABET: &[&str] = &[
+        "[",
+        "]",
+        "(",
+        ")",
+        "<",
+        ">",
+        "`",
+        "``",
+        "```",
+        "~~~",
+        "#",
+        "## ",
+        "!",
+        "\n",
+        "\r",
+        "\r\n",
+        " ",
+        "    ",
+        "\t",
+        "a",
+        "é",
+        "𝄞",
+        "\u{2028}",
+        "\u{85}",
+        "\u{1c}",
+        "\"",
+        "'",
+        ":",
+        "/",
+        "../",
+        ".",
+        "*",
+        "MUST",
+        " read ",
+        "&",
+        ";",
+        "&#",
+        "x",
+        "\\",
+        "|",
+        "-",
+        "=",
+        "$",
+        "<a href=\"",
+        "</a>",
+        "http://",
+        "[x]:",
+        "GUIDE.md",
+        "%",
+        "?",
+        "@",
+        "v1.",
+        "{",
+        "}",
+        ",",
+        "0",
+        "9",
+    ];
+
+    struct Generator(u64);
+    impl Generator {
+        fn next(&mut self) -> u64 {
+            self.0 = self
+                .0
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            self.0 >> 33
+        }
+        fn text(&mut self) -> String {
+            let length = (self.next() % 40) as usize;
+            (0..length)
+                .map(|_| ALPHABET[(self.next() as usize) % ALPHABET.len()])
+                .collect()
+        }
+    }
+
+    fn files() -> pack::Inventory {
+        ["SKILL.md", "bank/GUIDE.md", "x/GUIDE.md"]
+            .into_iter()
+            .map(|s| (s.to_string(), (Vec::new(), 0o600)))
+            .collect()
+    }
+
+    #[test]
+    fn generated_markdown_and_reference_text_never_panics() {
+        let files = files();
+        let mut generator = Generator(0x5eed_a2f1);
+        for _ in 0..100_000 {
+            let text = generator.text();
+            let _ = pack::markdown(&text);
+            let _ = pack::anchors(&text);
+            let references = pack::reference_definitions(&text).ok();
+            let _ = pack::link_occurrences(&text, references.as_ref());
+            let _ = pack::links(&text, None);
+            let _ = pack::mandatory_targets(&text, "bank/GUIDE.md", &files, references.as_ref());
+            let _ = pack::destination("bank/GUIDE.md", &text, &files);
+            let _ = pack::command_argv(&text, "SKILL.md");
+            let _ = pack::semantic_version(&Value::String(text.clone()));
+            let _ = handoff::reference_path(&text);
+            let _ = handoff::managed_cues(&text, &["Checkpoint evidence".to_string()]);
+            let _ = handoff::json_section(&text);
+            let _ = repository_config::router_kind(text.as_bytes());
+            let _ = repository_config::validate_branch(&text);
+            let _ = records::parse(&text, &[]);
+            let _ = scopes::parse_scope(&Value::String(text));
+        }
+    }
+
+    #[test]
+    fn malformed_json_documents_refuse_without_panicking() {
+        let mut generator = Generator(0x00a2_f1c5);
+        let decode = |text: &str| json::decode(text, DecodePolicy::default());
+        let shapes = [
+            r#"{"bank_project_id":"123e4567-e89b-42d3-a456-426614174000","project_id":"123e4567-e89b-42d3-a456-426614174000","scope":S,"conditions":C,"context":C}"#,
+            r#"{"fact":S,"fact_key":S,"project_id":S,"memory":C,"sources":[C],"detecting_developer_id":S}"#,
+            r#"{"schema":"agent-memory/checkpoint-evidence-v1","references":[C],"observed_checkout":C,"publication_verified":false,"identity_authenticated":false}"#,
+        ];
+        let values = [
+            "null",
+            "1",
+            "-0",
+            "1e999",
+            "\"\"",
+            "\"x\"",
+            "[]",
+            "{}",
+            "[[[]]]",
+            r#"{"component":"a/b"}"#,
+            r#"{"branch":null}"#,
+            "true",
+        ];
+        for _ in 0..3_000 {
+            for shape in shapes {
+                let pick = |g: &mut Generator| values[(g.next() as usize) % values.len()];
+                let text = shape
+                    .replacen('S', pick(&mut generator), 1)
+                    .replacen('C', pick(&mut generator), 1)
+                    .replacen('C', pick(&mut generator), 1)
+                    .replace('S', "\"s\"")
+                    .replace('C', "{}");
+                let Ok(value) = decode(&text) else {
+                    continue;
+                };
+                let _ = scopes::decide(&value);
+                let _ = agent_memory::authority::assess(&value);
+                let _ = handoff::validate_observation(&value);
+                let _ = scopes::command_decide(Ok(value.clone()));
+                let _ = agent_memory::authority::command_assess(Ok(value));
+            }
+        }
+    }
+}
+
 mod pack_contract {
     use agent_memory::{artifact, codec::json::Value, pack_validation as pack};
     use std::os::unix::fs::{DirBuilderExt, PermissionsExt};

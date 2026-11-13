@@ -418,21 +418,5 @@ pub fn command(pack: &Path) -> crate::lifecycle::CommandResult {
     } else {
         1
     };
-    let stdout = match json::encode(&value, json::INDENT2_ASCII) {
-        Ok(text) => format!("{text}\n"),
-        Err(error) => {
-            return crate::lifecycle::CommandResult {
-                value: Some(value),
-                exit_code: 1,
-                stdout: String::new(),
-                stderr: format!("{error}\n"),
-            };
-        }
-    };
-    crate::lifecycle::CommandResult {
-        value: Some(value),
-        exit_code,
-        stdout,
-        stderr: String::new(),
-    }
+    crate::lifecycle::CommandResult::json(value, exit_code, json::INDENT2_ASCII)
 }

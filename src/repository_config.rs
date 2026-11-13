@@ -84,16 +84,16 @@ pub fn validate_branch(branch: &str) -> Result<&str> {
     Ok(branch)
 }
 pub fn router_kind(raw: &[u8]) -> Result<Option<bool>> {
-    let prefix = &raw[..raw.len().min(16384)];
+    let prefix = raw.get(..16384).unwrap_or(raw);
     let marker = prefix.split(|b| *b == b'\n').any(|line| {
         let Some(mut rest) = line.strip_prefix(b"schema:") else {
             return false;
         };
-        while rest.first().is_some_and(|b| *b == b' ' || *b == b'\t') {
-            rest = &rest[1..];
+        while let Some((b' ' | b'\t', tail)) = rest.split_first() {
+            rest = tail;
         }
-        if matches!(rest.first(), Some(b'"' | b'\'')) {
-            rest = &rest[1..];
+        if let Some((b'"' | b'\'', tail)) = rest.split_first() {
+            rest = tail;
         }
         rest.starts_with(b"agent-memory/")
     });
@@ -197,23 +197,28 @@ pub fn local_value(root: &Path, key: &str) -> Result<Option<String>> {
     if values.last() == Some(&"") {
         values.pop();
     }
-    if values.len() != 1 || values[0].is_empty() {
+    let [value] = values.as_slice() else {
+        return Err(err(
+            "Repository memory configuration needs one explicit value per key",
+        ));
+    };
+    if value.is_empty() {
         return Err(err(
             "Repository memory configuration needs one explicit value per key",
         ));
     }
-    Ok(Some(values[0].to_owned()))
+    Ok(Some((*value).to_owned()))
 }
 fn parse_local(raw: Option<OsString>) -> Result<Config> {
     let mut result = Config::new();
     let Some(raw) = raw else { return Ok(result) };
     let raw = crate::host::text(&raw, "repository configuration")?.to_owned();
-    if !raw.ends_with('\0') {
+    let Some(entries) = raw.strip_suffix('\0') else {
         return Err(err(
             "Repository memory configuration inventory is incomplete",
         ));
-    }
-    for entry in raw[..raw.len() - 1].split('\0') {
+    };
+    for entry in entries.split('\0') {
         let (key, value) = entry.split_once('\n').ok_or_else(|| {
             err("Repository memory configuration needs one explicit value per key")
         })?;
@@ -245,16 +250,21 @@ fn listed_paths(raw: Option<OsString>) -> Result<(Paths, Paths)> {
     let mut listed = Paths::new();
     let mut indexed = Paths::new();
     for entry in raw.split(|b| *b == 0).filter(|s| !s.is_empty()) {
-        if entry.len() < 3 || entry[1] != b' ' || !b"HSMRCK?U".contains(&entry[0]) {
+        let [status, b' ', path @ ..] = entry else {
+            return Err(err(
+                "Repository memory inventory has an unknown status; do not infer absence",
+            ));
+        };
+        if path.is_empty() || !b"HSMRCK?U".contains(status) {
             return Err(err(
                 "Repository memory inventory has an unknown status; do not infer absence",
             ));
         }
-        if !possible_name(&entry[2..]) {
+        if !possible_name(path) {
             continue;
         }
-        let path = OsString::from_vec(entry[2..].to_vec());
-        if entry[0] != b'?' {
+        let path = OsString::from_vec(path.to_vec());
+        if *status != b'?' {
             indexed.insert(path.clone());
         }
         listed.insert(path);
@@ -591,6 +601,9 @@ fn contexts() -> Result<Names> {
 fn discovery_error() -> ContractError {
     err("Repository discovery is incomplete; do not create a bank from an unreadable inventory")
 }
+fn discovery_bound() -> ContractError {
+    err("Physical memory discovery exceeds its bound; absence remains unknown")
+}
 pub fn physical_others(
     root: &Path,
     selected: &Path,
@@ -610,15 +623,12 @@ pub fn physical_others(
                 Err(_) => return Err(discovery_error()),
             }
         }
-        let entries = dir.entries().map_err(|_| discovery_error())?;
-        examined = examined.checked_add(entries.len()).ok_or_else(|| {
-            err("Physical memory discovery exceeds its bound; absence remains unknown")
-        })?;
-        if examined > MAX_DISCOVERY_ENTRIES {
-            return Err(err(
-                "Physical memory discovery exceeds its bound; absence remains unknown",
-            ));
-        }
+        let remaining = MAX_DISCOVERY_ENTRIES.saturating_sub(examined);
+        let entries = dir
+            .entries_bounded(remaining)
+            .map_err(|_| discovery_error())?
+            .ok_or_else(discovery_bound)?;
+        examined += entries.len();
         let mut files = Vec::new();
         let mut subdirs = Vec::new();
         for name in entries {
@@ -747,7 +757,11 @@ fn settings_at(
     for part in relative.split('/') {
         if let Some(parent) = dir.take() {
             let key = crate::unicode::nfc_casefold(part);
-            for name in parent.entries().map_err(|e| err(&e.to_string()))? {
+            let names = parent
+                .entries_bounded(MAX_DISCOVERY_ENTRIES)
+                .map_err(|e| err(&e.to_string()))?
+                .ok_or_else(discovery_bound)?;
+            for name in names {
                 if name
                     .to_str()
                     .is_some_and(|s| s != part && crate::unicode::nfc_casefold(s) == key)

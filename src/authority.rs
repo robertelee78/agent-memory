@@ -6,6 +6,7 @@ use crate::lifecycle::{get, object, string};
 use crate::scopes;
 use std::sync::LazyLock;
 pub static MODEL: LazyLock<Value> = LazyLock::new(|| {
+    // Invariant: the policy is compiled in from the pack and decoded by a test.
     json::decode(
         include_str!("../skills/agent-memory/schemas/authority-policy.json"),
         DecodePolicy {
@@ -66,10 +67,7 @@ pub fn assess(request: &Value) -> Result<Value> {
     {
         return Err(bad());
     }
-    let domain = get(&MODEL, "domains")
-        .as_array()
-        .unwrap()
-        .iter()
+    let domain = domains()
         .find(|d| get(d, "fact") == get(request, "fact"))
         .ok_or_else(bad)?;
     let memory = get(request, "memory");
@@ -110,12 +108,8 @@ pub fn assess(request: &Value) -> Result<Value> {
     let mut seen = std::collections::HashSet::new();
     for source in sources {
         let kind = get(source, "kind");
-        let known = kind.as_str() == Some("memory")
-            || get(&MODEL, "domains")
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|d| get(d, "source-kinds").as_array().unwrap().contains(kind));
+        let known =
+            kind.as_str() == Some("memory") || domains().any(|d| source_kinds(d).contains(kind));
         let r = get(source, "ref");
         if !exact(
             source,
@@ -131,7 +125,7 @@ pub fn assess(request: &Value) -> Result<Value> {
             ],
         ) || !known
             || !text(r)
-            || !seen.insert(r.as_str().unwrap())
+            || !r.as_str().is_some_and(|reference| seen.insert(reference))
             || get(source, "project_id") != get(request, "project_id")
             || get(source, "fact_key") != get(request, "fact_key")
             || ["current", "applicable", "qualified"]
@@ -144,10 +138,7 @@ pub fn assess(request: &Value) -> Result<Value> {
         }
         comparable(get(source, "value"))?;
         observed.push(r.clone());
-        if get(domain, "source-kinds")
-            .as_array()
-            .unwrap()
-            .contains(kind)
+        if source_kinds(domain).contains(kind)
             && ["current", "applicable", "qualified"]
                 .iter()
                 .all(|k| get(source, k).as_bool() == Some(true))
@@ -170,65 +161,64 @@ pub fn assess(request: &Value) -> Result<Value> {
         ("correction_candidate", Value::Null),
         ("clarification", Value::Null),
     ]);
-    let action = if selected.is_empty() {
-        "inspect-current-authority".to_owned()
-    } else {
-        let first = comparable(get(selected[0], "value"))?;
-        if selected
-            .iter()
-            .skip(1)
-            .any(|s| comparable(get(s, "value")).map_or(true, |v| v != first))
-        {
-            *result.get_mut("clarification").unwrap() = object([
-                (
-                    "detecting_developer_id",
-                    get(request, "detecting_developer_id").clone(),
-                ),
-                (
-                    "known_other_developer_ids",
-                    Value::Array(
-                        if get(memory, "developer_id") == get(request, "detecting_developer_id") {
-                            vec![]
-                        } else {
-                            vec![get(memory, "developer_id").clone()]
-                        },
-                    ),
-                ),
-                (
-                    "question",
-                    string("Which applicable current source resolves this project fact?"),
-                ),
-            ]);
-            "clarify".to_owned()
-        } else if remembered == first {
-            "use-current-authority".to_owned()
-        } else {
-            let remedy = request
-                .get("remedy")
-                .and_then(Value::as_str)
-                .unwrap_or("correct");
-            let mut candidate = object([
-                ("operation", string(remedy)),
-                ("target", memory.clone()),
-                ("project_id", get(request, "project_id").clone()),
-                ("fact_key", get(request, "fact_key").clone()),
-                ("evidence", refs),
-                (
-                    "detected_by",
-                    get(request, "detecting_developer_id").clone(),
-                ),
-                (
-                    "reason",
-                    string("Remembered claim disagrees with applicable current authority"),
-                ),
-            ]);
-            if remedy == "correct" {
-                if let Value::Object(pairs) = &mut candidate {
-                    pairs.push(("proposed_value".into(), get(selected[0], "value").clone()));
-                }
+    let action = match selected.split_first() {
+        None => "inspect-current-authority".to_owned(),
+        Some((leader, others)) => {
+            let first = comparable(get(leader, "value"))?;
+            let mut differing = false;
+            for other in others {
+                differing |= comparable(get(other, "value"))? != first;
             }
-            *result.get_mut("correction_candidate").unwrap() = candidate;
-            format!("propose-{remedy}")
+            if differing {
+                let detector = get(request, "detecting_developer_id");
+                let author = get(memory, "developer_id");
+                let known_others = if author == detector {
+                    vec![]
+                } else {
+                    vec![author.clone()]
+                };
+                let clarification = object([
+                    ("detecting_developer_id", detector.clone()),
+                    ("known_other_developer_ids", Value::Array(known_others)),
+                    (
+                        "question",
+                        string("Which applicable current source resolves this project fact?"),
+                    ),
+                ]);
+                replace(&mut result, "clarification", clarification);
+                "clarify".to_owned()
+            } else if remembered == first {
+                "use-current-authority".to_owned()
+            } else {
+                let remedy = request
+                    .get("remedy")
+                    .and_then(Value::as_str)
+                    .unwrap_or("correct");
+                let mut candidate = vec![
+                    ("operation".to_string(), string(remedy)),
+                    ("target".to_string(), memory.clone()),
+                    ("project_id".to_string(), get(request, "project_id").clone()),
+                    ("fact_key".to_string(), get(request, "fact_key").clone()),
+                    ("evidence".to_string(), refs),
+                    (
+                        "detected_by".to_string(),
+                        get(request, "detecting_developer_id").clone(),
+                    ),
+                    (
+                        "reason".to_string(),
+                        string("Remembered claim disagrees with applicable current authority"),
+                    ),
+                ];
+                if remedy == "correct" {
+                    candidate.push(("proposed_value".into(), get(leader, "value").clone()));
+                }
+                replace(
+                    &mut result,
+                    "correction_candidate",
+                    Value::Object(candidate),
+                );
+                format!("propose-{remedy}")
+            }
         }
     };
     if let Value::Object(pairs) = &mut result {
@@ -263,11 +253,21 @@ fn command_result(result: Result<Value>) -> crate::lifecycle::CommandResult {
             json::DEFAULT,
         ),
     };
-    let stdout = json::encode(&value, style).expect("authority result encoding") + "\n";
-    crate::lifecycle::CommandResult {
-        value: Some(value),
-        exit_code,
-        stdout,
-        stderr: String::new(),
+    crate::lifecycle::CommandResult::json(value, exit_code, style)
+}
+fn domains() -> impl Iterator<Item = &'static Value> {
+    let model: &'static Value = &MODEL;
+    model
+        .get("domains")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+}
+fn source_kinds(domain: &Value) -> &[Value] {
+    get(domain, "source-kinds").as_array().unwrap_or_default()
+}
+fn replace(result: &mut Value, key: &str, value: Value) {
+    if let Some(slot) = result.get_mut(key) {
+        *slot = value;
     }
 }

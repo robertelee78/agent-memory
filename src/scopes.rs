@@ -6,6 +6,7 @@ use crate::lifecycle::{get, object, string};
 use std::sync::LazyLock;
 
 pub static MODEL: LazyLock<Value> = LazyLock::new(|| {
+    // Invariant: the policy is compiled in from the pack and decoded by a test.
     json::decode(
         include_str!("../skills/agent-memory/schemas/scope-policy.json"),
         DecodePolicy {
@@ -20,8 +21,8 @@ pub static MODEL: LazyLock<Value> = LazyLock::new(|| {
 fn member(key: &str, value: &str) -> bool {
     get(&MODEL, key)
         .as_array()
-        .unwrap()
-        .iter()
+        .into_iter()
+        .flatten()
         .any(|v| v.as_str() == Some(value))
 }
 fn trim(s: &str) -> &str {
@@ -114,10 +115,8 @@ pub fn decide(request: &Value) -> Result<Value> {
     let scope = request.get("scope").unwrap_or(get(&MODEL, "default-scope"));
     let parsed = parse_scope(scope)?;
     let empty = object(Vec::<(String, Value)>::new());
-    let mut requirements = conditions(request.get("conditions").unwrap_or(&empty), true)?
-        .as_object()
-        .unwrap()
-        .to_vec();
+    let requested = conditions(request.get("conditions").unwrap_or(&empty), true)?;
+    let mut requirements = requested.as_object().map(<[_]>::to_vec).unwrap_or_default();
     if let Some(pair) = parsed {
         requirements.insert(0, pair);
     }
@@ -129,24 +128,22 @@ pub fn decide(request: &Value) -> Result<Value> {
     }
     for (kind, expected) in requirements {
         let actual = context.get(&kind);
-        let reason = if expected == Value::Null {
-            Some("unknown-condition")
-        } else if actual.is_none() {
-            Some("missing-context")
-        } else {
-            let wanted = expected.as_str().unwrap();
-            let observed = actual.unwrap().as_str().unwrap();
-            if (kind == "component"
-                && observed != wanted
-                && !observed
+        let reason = match (expected.as_str(), actual.and_then(Value::as_str)) {
+            _ if expected == Value::Null => Some("unknown-condition"),
+            (_, None) => Some("missing-context"),
+            (Some(wanted), Some(observed)) => {
+                let inside = observed
                     .strip_prefix(wanted)
-                    .is_some_and(|s| s.starts_with('/')))
-                || (kind != "component" && observed != wanted)
-            {
-                Some("different-context")
-            } else {
-                None
+                    .is_some_and(|s| s.starts_with('/'));
+                let differs = if kind == "component" {
+                    observed != wanted && !inside
+                } else {
+                    observed != wanted
+                };
+                differs.then_some("different-context")
             }
+            // condition_value admits only strings or (unknown) null.
+            (None, Some(_)) => Some("different-context"),
         };
         if let Some(reason) = reason {
             let item = format!("{reason}:{kind}");
@@ -196,11 +193,5 @@ fn command_result(result: Result<Value>) -> crate::lifecycle::CommandResult {
             json::DEFAULT,
         ),
     };
-    let stdout = json::encode(&value, style).expect("scope result encoding") + "\n";
-    crate::lifecycle::CommandResult {
-        value: Some(value),
-        exit_code,
-        stdout,
-        stderr: String::new(),
-    }
+    crate::lifecycle::CommandResult::json(value, exit_code, style)
 }
