@@ -2,6 +2,7 @@ use super::descriptor::{Descriptor, DirectoryChain, Identity, contract_io, read_
 use crate::error::{ContractError, Kind, Result};
 use std::io;
 use std::path::{Component, Path, PathBuf};
+use std::ffi::OsString;
 
 fn trust_result<T>(path: &Path, result: Result<T>) -> Result<T> {
     result.map_err(|error| {
@@ -61,7 +62,7 @@ pub fn inspect(path: &Path, options: InspectOptions) -> Result<Inspection> {
     }
     let normalized: PathBuf = path.components().collect();
     let mut node = PathBuf::from("/");
-    let root = Descriptor::open_directory(Path::new("/")).map_err(contract_io)?;
+    let root = Descriptor::pin_directory(Path::new("/")).map_err(contract_io)?;
     let mut protected = false;
     let root_info = root.stat().map_err(contract_io)?;
     protected = inspect_entry(&node, &root_info, protected, node == normalized, options.allow_final_link)?.0;
@@ -83,14 +84,15 @@ pub fn inspect(path: &Path, options: InspectOptions) -> Result<Inspection> {
         observations.push((parents.len() - 1, name.to_os_string(), value));
         if final_entry { leaf = Some(value); break; }
         if link { break; }
-        let child = parent.open_directory_at(name).map_err(contract_io)?;
+        let child = parent.pin_directory_at(name).map_err(contract_io)?;
         if !child.stat().map_err(contract_io)?.same_binding(value) {
             return refuse(&node, "path changed during trust inspection");
         }
         parents.push(child);
     }
     for (index, name, value) in observations {
-        if !parents[index].stat_at(&name).map_err(contract_io)?.same_binding(value) {
+        let named = parents[index].stat_at(&name).map_err(contract_io)?;
+        if !named.same_binding(value) || (value.is_regular() && named.nlink != value.nlink) {
             return refuse(&normalized, "path changed during trust inspection");
         }
         if let Some(opened) = parents.get(index + 1) {
@@ -120,7 +122,7 @@ pub fn record(path: &Path) -> Result<Inspection> {
 }
 
 pub(crate) fn named_stat(path: &Path) -> io::Result<Identity> {
-    if path == Path::new("/") { return Descriptor::open_directory(path)?.stat(); }
+    if path == Path::new("/") { return Descriptor::pin_directory(path)?.stat(); }
     let parent = path.parent().ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Path has no parent"))?;
     let name = path.file_name().ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Path has no filename"))?;
     let parents = DirectoryChain::open(parent)?;
@@ -137,42 +139,94 @@ fn optional_stat(path: &Path) -> Result<Option<Identity>> {
     }
 }
 
-pub fn tree(path: &Path, git_metadata: bool) -> Result<()> {
-    trust_result(path, (|| {
-    let inspection = inspect(path, InspectOptions { allow_final_link: true, ..InspectOptions::default() })?;
-    if !inspection.present { return Ok(()); }
-    let info = named_stat(path).map_err(contract_io)?;
-    if !info.is_directory() { return Ok(()); }
-    let chain = DirectoryChain::open(path).map_err(contract_io)?;
-    fn visit(directory: &Descriptor, path: &Path, git_metadata: bool) -> Result<()> {
-        let before = directory.stat().map_err(contract_io)?;
-        for name in directory.entries().map_err(contract_io)? {
-            let node = path.join(&name);
-            let git_metadata = git_metadata || name == ".git";
-            inspect(&node, InspectOptions { allow_final_link: !git_metadata, ..InspectOptions::default() })?;
-            let info = directory.stat_at(&name).map_err(contract_io)?;
-            if info.is_directory() {
-                let child = directory.open_directory_at(&name).map_err(contract_io)?;
-                if !child.stat().map_err(contract_io)?.same_binding(info) { return refuse(&node, "path changed during trust inspection"); }
-                visit(&child, &node, git_metadata)?;
-            }
-            if !directory.stat_at(&name).map_err(contract_io)?.same_binding(info) { return refuse(&node, "path changed during trust inspection"); }
-        }
-        if !before.same_binding(directory.stat().map_err(contract_io)?) { return refuse(path, "path changed during trust inspection"); }
-        Ok(())
+#[derive(Debug)]
+pub struct TreeInspection {
+    path: PathBuf,
+    git_metadata: bool,
+    root: Option<(DirectoryChain, Identity, Vec<OsString>)>,
+}
+
+impl TreeInspection {
+    pub fn open(path: &Path, git_metadata: bool) -> Result<Self> {
+        trust_result(path, (|| {
+            let inspection = inspect(path, InspectOptions { allow_final_link: true, ..InspectOptions::default() })?;
+            let root = if !inspection.present {
+                None
+            } else {
+                let info = named_stat(path).map_err(contract_io)?;
+                if info.is_directory() {
+                    let chain = DirectoryChain::open(path).map_err(contract_io)?;
+                    if !chain.directory().stat().map_err(contract_io)?.same_binding(info) {
+                        return refuse(path, "path changed during trust inspection");
+                    }
+                    let entries = chain.directory().entries().map_err(contract_io)?;
+                    Some((chain, info, entries))
+                } else { None }
+            };
+            Ok(Self { path: path.to_path_buf(), git_metadata, root })
+        })())
     }
-    visit(chain.directory(), path, git_metadata)?;
-    chain.recheck().map_err(contract_io)
-    })())
+
+    pub fn finish(self) -> Result<()> {
+        trust_result(&self.path, (|| {
+            if let Some((chain, before, names)) = self.root {
+                chain.recheck().map_err(contract_io)?;
+                visit_tree(chain.directory(), &self.path, self.git_metadata, before, names)?;
+                chain.recheck().map_err(contract_io)?;
+            }
+            Ok(())
+        })())
+    }
+}
+
+fn visit_tree(directory: &Descriptor, path: &Path, git_metadata: bool, before: Identity, names: Vec<OsString>) -> Result<()> {
+    for name in names {
+        let node = path.join(&name);
+        let info = match directory.stat_at(&name) {
+            Ok(info) => info,
+            Err(error) if error.raw_os_error() == Some(libc::ENOENT) => continue,
+            Err(error) => return Err(contract_io(error)),
+        };
+        let metadata_entry = git_metadata || name == ".git";
+        let observed = inspect(&node, InspectOptions { allow_final_link: !metadata_entry, ..InspectOptions::default() })?;
+        if !observed.present { continue; }
+        if info.is_directory() {
+            let child = directory.open_directory_at(&name).map_err(contract_io)?;
+            let opened = child.stat().map_err(contract_io)?;
+            if !opened.same_binding(info) { return refuse(&node, "path changed during trust inspection"); }
+            let names = child.entries().map_err(contract_io)?;
+            visit_tree(&child, &node, metadata_entry, opened, names)?;
+            if !directory.stat_at(&name).map_err(contract_io)?.same_binding(opened) {
+                return refuse(&node, "path changed during trust inspection");
+            }
+        }
+    }
+    if !before.same_binding(directory.stat().map_err(contract_io)?) {
+        return refuse(path, "path changed during trust inspection");
+    }
+    Ok(())
+}
+
+pub fn tree(path: &Path, git_metadata: bool) -> Result<()> {
+    TreeInspection::open(path, git_metadata)?.finish()
 }
 
 fn pointer_text(path: &Path, bound_reason: &str) -> Result<String> {
     let info = named_stat(path).map_err(contract_io)?;
     if info.size > 4096 { return refuse(path, bound_reason); }
-    let observed = read_source(path.parent().expect("pointer has a parent"), Path::new(path.file_name().expect("pointer has a name")), 4096)?;
+    let observed = read_source(path.parent().expect("pointer has a parent"), Path::new(path.file_name().expect("pointer has a name")), 4096)
+        .map_err(|error| ContractError::trust_path(path, error.to_string()))?;
     let text = String::from_utf8(observed.bytes).map_err(|_| ContractError::new("Git directory pointer is not UTF-8"))?;
     // Python text mode translates CRLF and bare CR before Git's trailing CR/LF stripping.
     Ok(text.replace("\r\n", "\n").replace('\r', "\n").trim_end_matches(['\r', '\n']).to_owned())
+}
+
+fn follows_type(path: &Path, directory: bool) -> Result<bool> {
+    match std::fs::metadata(path) {
+        Ok(info) => Ok(if directory { info.is_dir() } else { info.is_file() }),
+        Err(error) if matches!(error.raw_os_error(), Some(libc::ENOENT) | Some(libc::ENOTDIR) | Some(libc::ELOOP)) => Ok(false),
+        Err(error) => Err(contract_io(error)),
+    }
 }
 
 pub fn source(path: &Path) -> Result<()> {
@@ -189,8 +243,8 @@ pub fn source(path: &Path) -> Result<()> {
         }
         Some(info) if info.is_directory() => marker,
         _ => {
-            if optional_stat(&path.join("HEAD"))?.is_some_and(Identity::is_regular)
-                && optional_stat(&path.join("objects"))?.is_some_and(Identity::is_directory) { path.to_path_buf() }
+            if follows_type(&path.join("HEAD"), false)?
+                && follows_type(&path.join("objects"), true)? { path.to_path_buf() }
             else { return Ok(()); }
         }
     };

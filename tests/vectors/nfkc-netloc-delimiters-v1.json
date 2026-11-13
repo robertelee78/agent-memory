@@ -1,0 +1,122 @@
+{
+ "schema": "agent-memory/test-vectors-nfkc-netloc-delimiters-v1",
+ "python": "3.13.12",
+ "unicode": "15.1.0",
+ "rule": "urllib.parse._checknetloc: code points whose NFKC form contains / ? # @ or :",
+ "codepoints": [
+  {
+   "cp": 8263,
+   "hex": "2047",
+   "nfkc": "??",
+   "introduces": "?"
+  },
+  {
+   "cp": 8264,
+   "hex": "2048",
+   "nfkc": "?!",
+   "introduces": "?"
+  },
+  {
+   "cp": 8265,
+   "hex": "2049",
+   "nfkc": "!?",
+   "introduces": "?"
+  },
+  {
+   "cp": 8448,
+   "hex": "2100",
+   "nfkc": "a/c",
+   "introduces": "/"
+  },
+  {
+   "cp": 8449,
+   "hex": "2101",
+   "nfkc": "a/s",
+   "introduces": "/"
+  },
+  {
+   "cp": 8453,
+   "hex": "2105",
+   "nfkc": "c/o",
+   "introduces": "/"
+  },
+  {
+   "cp": 8454,
+   "hex": "2106",
+   "nfkc": "c/u",
+   "introduces": "/"
+  },
+  {
+   "cp": 10868,
+   "hex": "2A74",
+   "nfkc": "::=",
+   "introduces": ":"
+  },
+  {
+   "cp": 65043,
+   "hex": "FE13",
+   "nfkc": ":",
+   "introduces": ":"
+  },
+  {
+   "cp": 65046,
+   "hex": "FE16",
+   "nfkc": "?",
+   "introduces": "?"
+  },
+  {
+   "cp": 65109,
+   "hex": "FE55",
+   "nfkc": ":",
+   "introduces": ":"
+  },
+  {
+   "cp": 65110,
+   "hex": "FE56",
+   "nfkc": "?",
+   "introduces": "?"
+  },
+  {
+   "cp": 65119,
+   "hex": "FE5F",
+   "nfkc": "#",
+   "introduces": "#"
+  },
+  {
+   "cp": 65131,
+   "hex": "FE6B",
+   "nfkc": "@",
+   "introduces": "@"
+  },
+  {
+   "cp": 65283,
+   "hex": "FF03",
+   "nfkc": "#",
+   "introduces": "#"
+  },
+  {
+   "cp": 65295,
+   "hex": "FF0F",
+   "nfkc": "/",
+   "introduces": "/"
+  },
+  {
+   "cp": 65306,
+   "hex": "FF1A",
+   "nfkc": ":",
+   "introduces": ":"
+  },
+  {
+   "cp": 65311,
+   "hex": "FF1F",
+   "nfkc": "?",
+   "introduces": "?"
+  },
+  {
+   "cp": 65312,
+   "hex": "FF20",
+   "nfkc": "@",
+   "introduces": "@"
+  }
+ ]
+}

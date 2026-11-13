@@ -1,5 +1,5 @@
 use super::descriptor::{Descriptor, DirectoryChain, Identity, contract_io};
-use crate::codec::json::{Value, SORTED_COMPACT_UTF8, encode};
+use crate::codec::json::{Value, SORTED_INDENT2_ASCII, encode};
 use crate::error::{ContractError, Result};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -95,6 +95,9 @@ pub fn fingerprint(path: &Path) -> Result<Option<Fingerprint>> {
                 let relative = if relative.is_empty() { name_text.to_owned() } else { format!("{relative}/{name_text}") };
                 let path = path.join(&name);
                 let info = directory.stat_at(&name).map_err(contract_io)?;
+                if info.is_regular() && (info.size < 0 || info.size > 64 * 1024 * 1024) {
+                    return Err(ContractError::new(format!("Oversized managed file: {}", path.display())));
+                }
                 if entries.len() >= 40000 { return Err(ContractError::new("Managed directory inventory exceeds its bound")); }
                 if info.is_directory() {
                     entries.insert(relative.clone(), object(vec![("kind", Value::String("directory".into())), ("mode", Value::Int((info.mode & 0o7777).into()))]));
@@ -114,7 +117,8 @@ pub fn fingerprint(path: &Path) -> Result<Option<Fingerprint>> {
             Ok(())
         }
         walk(&directory, path, "", &mut entries, &mut size)?;
-        let encoded = encode(&Value::Object(entries.into_iter().collect()), SORTED_COMPACT_UTF8)?;
+        let mut encoded = encode(&Value::Object(entries.into_iter().collect()), SORTED_INDENT2_ASCII)?;
+        encoded.push('\n');
         Fingerprint::Directory { hash: digest_hex(&Sha256::digest(encoded.as_bytes())), mode: before.mode & 0o7777 }
     } else { leaf(parents.directory(), name, before, path)? };
     if parents.directory().stat_at(name).map_err(contract_io)? != before { return Err(changed()); }

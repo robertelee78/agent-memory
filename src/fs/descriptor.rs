@@ -61,7 +61,54 @@ pub(crate) fn status(result: libc::c_int) -> io::Result<()> {
 pub(crate) fn contract_io(error: io::Error) -> ContractError { ContractError::new(error.to_string()) }
 
 #[derive(Debug)]
-pub struct Descriptor(OwnedFd);
+pub enum ReadError {
+    Io(io::Error),
+    InvalidPath,
+    NotRegular,
+    MultipleLinks,
+    InvalidSize,
+    LimitOverflow,
+    SourceChanged,
+    ParentChanged,
+    SizeLimit { limit: usize, observed: u64, exact: bool },
+}
+
+impl std::fmt::Display for ReadError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io(error) => std::fmt::Display::fmt(error, f),
+            Self::InvalidPath => f.write_str("Read paths must remain relative to their exact root"),
+            Self::NotRegular => f.write_str("Source is no longer an ordinary file"),
+            Self::MultipleLinks => f.write_str("Source must be single-link"),
+            Self::InvalidSize => f.write_str("Source has an invalid size"),
+            Self::LimitOverflow => f.write_str("Read limit overflow"),
+            Self::SourceChanged => f.write_str("Canonical source changed during bounded observation"),
+            Self::ParentChanged => f.write_str("Canonical source parent changed during bounded observation"),
+            Self::SizeLimit { .. } => f.write_str("Ordinary file exceeds its read bound"),
+        }
+    }
+}
+impl std::error::Error for ReadError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self { Self::Io(error) => Some(error), _ => None }
+    }
+}
+impl From<io::Error> for ReadError { fn from(error: io::Error) -> Self { Self::Io(error) } }
+
+#[derive(Debug, Default, Clone, Copy)]
+pub struct ReadOptions {
+    pub require_single_link: bool,
+    pub full_parent_signature: bool,
+}
+
+#[cfg(target_os = "linux")]
+const SEARCH_ACCESS: i32 = libc::O_PATH;
+#[cfg(target_os = "macos")]
+const SEARCH_ACCESS: i32 = libc::O_SEARCH;
+const SEARCH_DIRECTORY: i32 = SEARCH_ACCESS | libc::O_DIRECTORY;
+
+#[derive(Debug)]
+pub struct Descriptor(OwnedFd, bool);
 
 impl AsRawFd for Descriptor { fn as_raw_fd(&self) -> RawFd { self.0.as_raw_fd() } }
 impl AsFd for Descriptor { fn as_fd(&self) -> BorrowedFd<'_> { self.0.as_fd() } }
@@ -73,11 +120,38 @@ impl Descriptor {
         }
         let fd = unsafe { libc::openat(parent, path.as_ptr(), flags | libc::O_NOFOLLOW | libc::O_CLOEXEC, mode as libc::c_uint) };
         if fd == -1 { return Err(io::Error::last_os_error()); }
-        Ok(Self(unsafe { OwnedFd::from_raw_fd(fd) }))
+        Ok(Self(unsafe { OwnedFd::from_raw_fd(fd) }, flags & SEARCH_ACCESS == SEARCH_ACCESS))
     }
 
     pub fn open_directory(path: &Path) -> io::Result<Self> {
+        let chain = DirectoryChain::open(path)?;
+        let directory = chain.directory().reopen_directory()?;
+        chain.recheck()?;
+        Ok(directory)
+    }
+
+    pub fn pin_directory(path: &Path) -> io::Result<Self> {
         Ok(DirectoryChain::open(path)?.into_directory())
+    }
+
+    pub fn pin_directory_at(&self, name: &OsStr) -> io::Result<Self> {
+        self.open_at(name, SEARCH_DIRECTORY, 0)
+    }
+
+    pub fn reopen_directory(&self) -> io::Result<Self> {
+        let readable = Self::open_raw_at(self.as_raw_fd(), c".", libc::O_RDONLY | libc::O_DIRECTORY, 0)?;
+        if !readable.stat()?.same_binding(self.stat()?) {
+            return Err(io::Error::other("Directory binding changed while reopening"));
+        }
+        Ok(readable)
+    }
+
+    pub fn is_search_only(&self) -> bool { self.1 }
+
+    pub(crate) fn require_io(&self) -> io::Result<()> {
+        if self.is_search_only() {
+            Err(io::Error::new(io::ErrorKind::InvalidInput, "Search-only directory descriptor cannot perform data I/O"))
+        } else { Ok(()) }
     }
 
     pub fn open_at(&self, name: &OsStr, flags: i32, mode: u32) -> io::Result<Self> {
@@ -89,6 +163,9 @@ impl Descriptor {
     }
 
     pub fn create_exclusive(&self, name: &OsStr, flags: i32, mode: u32) -> io::Result<Self> {
+        if flags & SEARCH_ACCESS == SEARCH_ACCESS {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Exclusive creation requires a data descriptor"));
+        }
         let opened = self.open_at(name, flags | libc::O_CREAT | libc::O_EXCL, mode)?;
         status(unsafe { libc::fchmod(opened.as_raw_fd(), mode as libc::mode_t) })?;
         Ok(opened)
@@ -122,6 +199,7 @@ impl Descriptor {
     }
 
     pub fn fsync(&self) -> io::Result<()> {
+        self.require_io()?;
         loop {
             match status(unsafe { libc::fsync(self.as_raw_fd()) }) {
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
@@ -132,10 +210,11 @@ impl Descriptor {
 
     pub fn fsync_directory(&self) -> io::Result<()> {
         if !self.stat()?.is_directory() { return Err(io::Error::new(io::ErrorKind::InvalidInput, "Directory fsync requires a directory")); }
-        self.fsync()
+        if self.is_search_only() { self.reopen_directory()?.fsync() } else { self.fsync() }
     }
 
     pub fn write_all(&mut self, mut bytes: &[u8]) -> io::Result<()> {
+        self.require_io()?;
         while !bytes.is_empty() {
             let written = unsafe { libc::write(self.as_raw_fd(), bytes.as_ptr().cast(), bytes.len().min(isize::MAX as usize)) };
             if written == -1 {
@@ -149,9 +228,9 @@ impl Descriptor {
         Ok(())
     }
 
-    /// Reads from the current descriptor offset, consuming at most limit + 1 bytes.
-    pub fn read_bounded(&mut self, limit: usize) -> io::Result<Vec<u8>> {
-        let maximum = limit.checked_add(1).ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Read limit overflow"))?;
+    fn read_up_to(&mut self, limit: usize) -> std::result::Result<Vec<u8>, ReadError> {
+        self.require_io()?;
+        let maximum = limit.checked_add(1).ok_or(ReadError::LimitOverflow)?;
         let mut bytes = Vec::new();
         let mut block = [0u8; 8192];
         while bytes.len() < maximum {
@@ -160,12 +239,26 @@ impl Descriptor {
             if read == -1 {
                 let error = io::Error::last_os_error();
                 if error.kind() == io::ErrorKind::Interrupted { continue; }
-                return Err(error);
+                return Err(ReadError::Io(error));
             }
             if read == 0 { break; }
             bytes.extend_from_slice(&block[..read as usize]);
         }
-        if bytes.len() > limit { return Err(io::Error::new(io::ErrorKind::InvalidData, "Ordinary file exceeds its read bound")); }
+        Ok(bytes)
+    }
+
+    /// Reads from the current offset; a size error measures the consumed range, not the whole file.
+    pub fn read_bounded(&mut self, limit: usize) -> std::result::Result<Vec<u8>, ReadError> {
+        let before = self.stat()?;
+        let bytes = self.read_up_to(limit)?;
+        let after = self.stat()?;
+        let over_limit = bytes.len() > limit;
+        if !read_identity_matches(before, after, over_limit.then_some(bytes.len())) {
+            return Err(ReadError::SourceChanged);
+        }
+        if over_limit {
+            return Err(ReadError::SizeLimit { limit, observed: bytes.len() as u64, exact: false });
+        }
         Ok(bytes)
     }
 
@@ -219,23 +312,30 @@ impl Descriptor {
 pub struct DirectoryChain {
     names: Vec<OsString>,
     descriptors: Vec<Descriptor>,
+    observed: Vec<Identity>,
+    absolute: bool,
 }
 
 impl DirectoryChain {
-    pub fn open(path: &Path) -> io::Result<Self> { Self::walk(path, false) }
+    pub fn open(path: &Path) -> io::Result<Self> { Self::walk(path, false, false) }
 
-    fn walk(path: &Path, create: bool) -> io::Result<Self> {
+    pub fn create(path: &Path, sync_created: bool) -> io::Result<Self> {
+        Self::walk(path, true, sync_created)
+    }
+
+    fn walk(path: &Path, create: bool, sync_created: bool) -> io::Result<Self> {
         let absolute = path.is_absolute();
         if path.components().any(|part| matches!(part, Component::ParentDir | Component::Prefix(_))) {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "Parent traversal is not permitted"));
         }
         let anchor = if absolute { c"/" } else { c"." };
-        let root = Descriptor::open_raw_at(libc::AT_FDCWD, anchor, libc::O_RDONLY | libc::O_DIRECTORY, 0)?;
-        let mut chain = Self { names: Vec::new(), descriptors: vec![root] };
+        let root = Descriptor::open_raw_at(libc::AT_FDCWD, anchor, SEARCH_DIRECTORY, 0)?;
+        let observed = vec![root.stat()?];
+        let mut chain = Self { names: Vec::new(), descriptors: vec![root], observed, absolute };
         for part in path.components() {
             let Component::Normal(name) = part else { continue; };
             let parent = chain.directory();
-            let child = match parent.open_directory_at(name) {
+            let child = match parent.pin_directory_at(name) {
                 Ok(child) => child,
                 Err(error) if create && error.raw_os_error() == Some(libc::ENOENT) => {
                     let created = match status(unsafe { libc::mkdirat(parent.as_raw_fd(), child_name(name)?.as_ptr(), 0o700) }) {
@@ -243,21 +343,26 @@ impl DirectoryChain {
                         Err(error) if error.raw_os_error() == Some(libc::EEXIST) => false,
                         Err(error) => return Err(error),
                     };
-                    let child = parent.open_directory_at(name)?;
+                    let child = parent.pin_directory_at(name)?;
                     if created {
                         let before = child.stat()?;
                         let named = parent.stat_at(name)?;
                         if !before.same_inode(named) || !before.is_directory() {
                             return Err(io::Error::other("Private state path changed while creating directories"));
                         }
-                        if before.mode & 0o7777 != 0o700 {
+                        if before.mode & 0o777 != 0o700 {
                             return Err(io::Error::other("Cannot safely create private state directories; preserve existing paths"));
+                        }
+                        if sync_created {
+                            parent.fsync_directory()?;
+                            child.fsync_directory()?;
                         }
                     }
                     child
                 }
                 Err(error) => return Err(error),
             };
+            chain.observed.push(child.stat()?);
             chain.names.push(name.to_os_string());
             chain.descriptors.push(child);
         }
@@ -277,16 +382,47 @@ impl DirectoryChain {
         }
         Ok(())
     }
+
+    /// Full signatures are compared only at root and below, never on shared ancestors above it.
+    pub fn recheck_full_from(&self, root: &Path) -> io::Result<()> {
+        if root.is_absolute() != self.absolute || root.components().any(|part| matches!(part, Component::ParentDir | Component::Prefix(_))) {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Full-signature root is outside the pinned chain"));
+        }
+        let parts: Vec<_> = root.components().filter_map(|part| match part { Component::Normal(name) => Some(name), _ => None }).collect();
+        if parts.len() > self.names.len() || parts.iter().zip(&self.names).any(|(left, right)| *left != right.as_os_str()) {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Full-signature root is outside the pinned chain"));
+        }
+        self.recheck()?;
+        for index in parts.len()..self.descriptors.len() {
+            let named = if index == 0 {
+                Descriptor::open_raw_at(libc::AT_FDCWD, if self.absolute { c"/" } else { c"." }, SEARCH_DIRECTORY, 0)?.stat()?
+            } else { self.descriptors[index - 1].stat_at(&self.names[index - 1])? };
+            if named != self.observed[index] || self.descriptors[index].stat()? != self.observed[index] {
+                return Err(io::Error::other("Raw source parent changed during observation"));
+            }
+        }
+        Ok(())
+    }
+
     fn into_directory(mut self) -> Descriptor { self.descriptors.pop().expect("directory chain always includes its anchor") }
 }
 
-pub fn private_mkdir(path: &Path) -> Result<()> {
+pub fn private_mkdir(path: &Path) -> Result<()> { private_mkdir_with_sync(path, false) }
+
+pub fn private_mkdir_with_sync(path: &Path, sync_created: bool) -> Result<()> {
     if !path.is_absolute() || path.components().any(|part| part == Component::ParentDir) {
         return Err(ContractError::new("Private state directory must be an absolute canonical path"));
     }
-    DirectoryChain::walk(path, true).map(|_| ()).map_err(|error| {
+    DirectoryChain::create(path, sync_created).map(|_| ()).map_err(|error| {
         if error.to_string() == "Private state path changed while creating directories" { contract_io(error) }
         else { ContractError::new("Cannot safely create private state directories; preserve existing paths") }
+    })
+}
+
+fn read_identity_matches(before: Identity, after: Identity, growing_measurement: Option<usize>) -> bool {
+    before == after || growing_measurement.is_some_and(|measured| {
+        before.same_binding(after) && before.nlink == after.nlink
+            && after.size > before.size && after.size >= 0 && after.size as u128 >= measured as u128
     })
 }
 
@@ -297,53 +433,76 @@ pub struct ReadObservation { pub bytes: Vec<u8>, pub identity: Identity }
 #[derive(Debug)]
 pub struct PinnedRead {
     parents: DirectoryChain,
+    root: PathBuf,
     file: Descriptor,
     name: OsString,
     before: Identity,
     limit: usize,
+    options: ReadOptions,
 }
 
 impl PinnedRead {
-    pub fn open(directory: &Path, relative: &Path, limit: usize) -> Result<Self> {
+    pub fn open(directory: &Path, relative: &Path, limit: usize) -> std::result::Result<Self, ReadError> {
+        Self::open_with_options(directory, relative, limit, ReadOptions::default())
+    }
+
+    pub fn open_with_options(directory: &Path, relative: &Path, limit: usize, options: ReadOptions) -> std::result::Result<Self, ReadError> {
         if relative.is_absolute() || relative.as_os_str().is_empty() || relative.components().any(|part| !matches!(part, Component::Normal(_))) {
-            return Err(ContractError::new("Migration paths must remain relative to their exact root"));
+            return Err(ReadError::InvalidPath);
         }
-        let name = relative.file_name().ok_or_else(|| ContractError::new("Migration paths must remain relative to their exact root"))?.to_os_string();
+        limit.checked_add(1).ok_or(ReadError::LimitOverflow)?;
+        let name = relative.file_name().ok_or(ReadError::InvalidPath)?.to_os_string();
         let parent = relative.parent().unwrap_or_else(|| Path::new(""));
-        let parents = DirectoryChain::open(&directory.join(parent)).map_err(contract_io)?;
-        let file = parents.directory().open_at(&name, libc::O_RDONLY | libc::O_NONBLOCK, 0).map_err(contract_io)?;
-        let before = file.stat().map_err(contract_io)?;
-        if !before.is_regular() || before.nlink != 1 || before.size < 0 || before.size as u128 > limit as u128 {
-            return Err(ContractError::new("Migration reads bounded ordinary single-link files only"));
-        }
-        Ok(Self { parents, file, name, before, limit })
+        let parents = DirectoryChain::open(&directory.join(parent))?;
+        let file = parents.directory().open_at(&name, libc::O_RDONLY | libc::O_NONBLOCK, 0)?;
+        let before = file.stat()?;
+        if !before.is_regular() { return Err(ReadError::NotRegular); }
+        if options.require_single_link && before.nlink != 1 { return Err(ReadError::MultipleLinks); }
+        if before.size < 0 { return Err(ReadError::InvalidSize); }
+        Ok(Self { parents, root: directory.to_path_buf(), file, name, before, limit, options })
     }
 
     pub fn identity(&self) -> Identity { self.before }
-    pub fn recheck(&self) -> Result<()> {
-        let after = self.file.stat().map_err(contract_io)?;
-        let named = self.parents.directory().stat_at(&self.name).map_err(contract_io)?;
-        if self.before != after || after != named {
-            return Err(ContractError::new("Canonical source changed during bounded observation"));
+    fn verify(&self, growing_measurement: Option<usize>) -> std::result::Result<(), ReadError> {
+        let after = self.file.stat()?;
+        let named = self.parents.directory().stat_at(&self.name).map_err(|error| {
+            if error.raw_os_error() == Some(libc::ENOENT) { ReadError::SourceChanged } else { ReadError::Io(error) }
+        })?;
+        if !read_identity_matches(self.before, after, growing_measurement) || after != named {
+            return Err(ReadError::SourceChanged);
         }
-        self.parents.recheck().map_err(|_| ContractError::new("Canonical source parent changed during bounded observation"))
+        if self.options.full_parent_signature {
+            self.parents.recheck_full_from(&self.root).map_err(|_| ReadError::ParentChanged)
+        } else { self.parents.recheck().map_err(|_| ReadError::ParentChanged) }
     }
 
-    pub fn read(mut self) -> Result<ReadObservation> {
-        let bytes = self.file.read_bounded(self.limit).map_err(contract_io)?;
-        if bytes.len() as u128 != self.before.size as u128 {
-            return Err(ContractError::new("Migration source changed during its bounded read"));
+    pub fn recheck(&self) -> std::result::Result<(), ReadError> { self.verify(None) }
+
+    pub fn read(mut self) -> std::result::Result<ReadObservation, ReadError> {
+        if self.before.size as u128 > self.limit as u128 {
+            self.recheck()?;
+            return Err(ReadError::SizeLimit { limit: self.limit, observed: self.before.size as u64, exact: true });
         }
-        self.recheck()?;
+        let bytes = self.file.read_up_to(self.limit)?;
+        let over_limit = bytes.len() > self.limit;
+        self.verify(over_limit.then_some(bytes.len()))?;
+        if over_limit {
+            return Err(ReadError::SizeLimit { limit: self.limit, observed: bytes.len() as u64, exact: false });
+        }
+        if bytes.len() as u128 != self.before.size as u128 { return Err(ReadError::SourceChanged); }
         Ok(ReadObservation { bytes, identity: self.before })
     }
 }
 
-pub fn read_source(directory: &Path, relative: &Path, limit: usize) -> Result<ReadObservation> {
+pub fn read_source(directory: &Path, relative: &Path, limit: usize) -> std::result::Result<ReadObservation, ReadError> {
     PinnedRead::open(directory, relative, limit)?.read()
 }
 
-pub fn read_regular(directory: &Path, relative: &Path, limit: usize) -> Result<(Vec<u8>, u32)> {
-    let observation = read_source(directory, relative, limit)?;
+pub fn read_source_with_options(directory: &Path, relative: &Path, limit: usize, options: ReadOptions) -> std::result::Result<ReadObservation, ReadError> {
+    PinnedRead::open_with_options(directory, relative, limit, options)?.read()
+}
+
+pub fn read_regular(directory: &Path, relative: &Path, limit: usize) -> std::result::Result<(Vec<u8>, u32), ReadError> {
+    let observation = read_source_with_options(directory, relative, limit, ReadOptions { require_single_link: true, full_parent_signature: false })?;
     Ok((observation.bytes, observation.identity.mode & 0o777))
 }

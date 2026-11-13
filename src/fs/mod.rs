@@ -7,7 +7,7 @@ pub mod metadata;
 pub mod rename;
 pub mod trust;
 pub mod inventory;
-pub use descriptor::{Descriptor, DirectoryChain, Identity, PinnedRead, ReadObservation, private_mkdir, read_regular, read_source, signature};
+pub use descriptor::{Descriptor, DirectoryChain, Identity, PinnedRead, ReadError, ReadObservation, ReadOptions, private_mkdir, private_mkdir_with_sync, read_regular, read_source, read_source_with_options, signature};
 pub use lock::{FlockGuard, LockError, LockMode, PrivateLock, discard_created_empty_slot};
 pub use metadata::{inode_flags, list_xattrs, metadata_supported, read_xattr};
 pub use rename::{RenameMode, native_rename, rename_at};

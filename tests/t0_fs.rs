@@ -332,11 +332,11 @@ fn managed_fingerprints_match_canonical_inventory_bytes() {
     let root = PrivateDirectory::new(); amfs::private_mkdir(&root.join("managed")).unwrap();
     assert_eq!(amfs::fingerprint(&root.join("absent")).unwrap(), None);
     let empty = amfs::fingerprint(&root.join("managed")).unwrap().unwrap();
-    assert_eq!(empty, Fingerprint::Directory { hash: "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a".into(), mode: 0o700 });
+    assert_eq!(empty, Fingerprint::Directory { hash: hex(&Sha256::digest(b"{}\n")), mode: 0o700 });
     file(&root.join("managed/f"), b"abc"); mode(&root.join("managed/f"), 0o640);
     amfs::private_mkdir(&root.join("managed/nested")).unwrap(); symlink("f", root.join("managed/soft")).unwrap();
     assert_eq!(amfs::fingerprint(&root.join("managed/f")).unwrap().unwrap(), Fingerprint::File { hash: "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad".into(), mode: 0o640 });
-    let expected = br#"{"f":{"hash":"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad","kind":"file","mode":416},"nested":{"kind":"directory","mode":448},"soft":{"kind":"link","target":"f"}}"#;
+    let expected = b"{\n  \"f\": {\n    \"hash\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\",\n    \"kind\": \"file\",\n    \"mode\": 416\n  },\n  \"nested\": {\n    \"kind\": \"directory\",\n    \"mode\": 448\n  },\n  \"soft\": {\n    \"kind\": \"link\",\n    \"target\": \"f\"\n  }\n}\n";
     assert_eq!(amfs::fingerprint(&root.join("managed")).unwrap().unwrap(), Fingerprint::Directory { hash: hex(&Sha256::digest(expected)), mode: 0o700 });
     assert_eq!(amfs::fingerprint(&root.join("managed/soft")).unwrap().unwrap(), Fingerprint::Link { target: "f".into() });
 }
@@ -348,7 +348,7 @@ fn bounded_descriptor_read_and_fifo_refusal_are_nonblocking() {
     file(&root.join("file"), b"abcdef");
     let directory = Descriptor::open_directory(root.path()).unwrap();
     let mut descriptor = directory.open_at(OsStr::new("file"), libc::O_RDONLY, 0).unwrap();
-    assert!(descriptor.read_bounded(5).is_err());
+    assert!(matches!(descriptor.read_bounded(5), Err(amfs::ReadError::SizeLimit { limit: 5, observed: 6, exact: false })));
     let mut descriptor = directory.open_at(OsStr::new("file"), libc::O_RDONLY, 0).unwrap();
     assert_eq!(descriptor.read_bounded(6).unwrap(), b"abcdef");
     let fifo = std::ffi::CString::new(root.join("fifo").as_os_str().as_bytes()).unwrap();
@@ -384,4 +384,183 @@ fn nonempty_darwin_acl_is_refused_without_repair() {
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     assert_eq!(amfs::metadata_supported(&root.join("file")).unwrap_err().to_string(), "pending-metadata-preservation");
     assert_eq!(fs::read(root.join("file")).unwrap(), b"preserve");
+}
+
+#[test]
+fn size_refusals_are_typed_and_follow_binding_checks() {
+    use amfs::ReadError;
+    let root = PrivateDirectory::new();
+    file(&root.join("source"), b"oversize");
+    assert!(matches!(amfs::read_source(root.path(), Path::new("source"), 4),
+        Err(ReadError::SizeLimit { limit: 4, observed: 8, exact: true })));
+    let pinned = PinnedRead::open(root.path(), Path::new("source"), 4).unwrap();
+    fs::rename(root.join("source"), root.join("old-source")).unwrap();
+    file(&root.join("source"), b"replaced");
+    assert!(matches!(pinned.read(), Err(ReadError::SourceChanged)));
+    fs::write(root.join("source"), b"abc").unwrap();
+    let pinned = PinnedRead::open(root.path(), Path::new("source"), 4).unwrap();
+    fs::write(root.join("source"), b"abcdefghi").unwrap();
+    assert!(matches!(pinned.read(), Err(ReadError::SizeLimit { limit: 4, observed: 5, exact: false })));
+    amfs::private_mkdir(&root.join("parent")).unwrap();
+    file(&root.join("parent/file"), b"oversize");
+    let pinned = PinnedRead::open(root.path(), Path::new("parent/file"), 4).unwrap();
+    fs::rename(root.join("parent"), root.join("old-parent")).unwrap();
+    amfs::private_mkdir(&root.join("parent")).unwrap();
+    assert!(matches!(pinned.read(), Err(ReadError::ParentChanged)));
+}
+
+#[test]
+fn single_link_policy_is_selected_by_the_consumer() {
+    use amfs::{ReadError, ReadOptions};
+    let root = PrivateDirectory::new(); file(&root.join("source"), b"shared");
+    fs::hard_link(root.join("source"), root.join("alias")).unwrap();
+    assert_eq!(amfs::read_source(root.path(), Path::new("source"), 100).unwrap().bytes, b"shared");
+    assert!(matches!(amfs::read_regular(root.path(), Path::new("source"), 100), Err(ReadError::MultipleLinks)));
+    assert!(matches!(amfs::read_source_with_options(root.path(), Path::new("source"), 100,
+        ReadOptions { require_single_link: true, full_parent_signature: true }), Err(ReadError::MultipleLinks)));
+}
+
+#[test]
+fn full_parent_signatures_stop_at_the_requested_root() {
+    use amfs::{ReadError, ReadOptions};
+    let root = PrivateDirectory::new();
+    amfs::private_mkdir(&root.join("ancestor/bank/nested")).unwrap();
+    file(&root.join("ancestor/bank/nested/file"), b"exact");
+    let bank = root.join("ancestor/bank");
+    let options = ReadOptions { require_single_link: true, full_parent_signature: true };
+    let pinned = PinnedRead::open_with_options(&bank, Path::new("nested/file"), 100, options).unwrap();
+    fs::File::open(root.join("ancestor")).unwrap().set_modified(UNIX_EPOCH + std::time::Duration::from_secs(2)).unwrap();
+    assert_eq!(pinned.read().unwrap().bytes, b"exact");
+    let pinned = PinnedRead::open_with_options(&bank, Path::new("nested/file"), 100, options).unwrap();
+    fs::File::open(&bank).unwrap().set_modified(UNIX_EPOCH + std::time::Duration::from_secs(3)).unwrap();
+    assert!(matches!(pinned.read(), Err(ReadError::ParentChanged)));
+    let pinned = PinnedRead::open_with_options(&bank, Path::new("nested/file"), 100, options).unwrap();
+    fs::File::open(bank.join("nested")).unwrap().set_modified(UNIX_EPOCH + std::time::Duration::from_secs(4)).unwrap();
+    assert!(matches!(pinned.read(), Err(ReadError::ParentChanged)));
+    let pinned = PinnedRead::open(&bank, Path::new("nested/file"), 100).unwrap();
+    fs::File::open(bank.join("nested")).unwrap().set_modified(UNIX_EPOCH + std::time::Duration::from_secs(5)).unwrap();
+    assert_eq!(pinned.read().unwrap().bytes, b"exact");
+}
+
+#[test]
+fn tree_walk_tolerates_shared_parent_mtime_changes_and_vanished_entries() {
+    let root = PrivateDirectory::new();
+    amfs::private_mkdir(&root.join("shared/bank/vanished-directory")).unwrap();
+    mode(&root.join("shared"), 0o755);
+    let bank = root.join("shared/bank");
+    file(&bank.join("vanished-file"), b"old");
+    file(&bank.join("index"), b"old");
+    let observed = trust::TreeInspection::open(&bank, true).unwrap();
+    fs::remove_file(bank.join("vanished-file")).unwrap();
+    fs::remove_dir(bank.join("vanished-directory")).unwrap();
+    file(&bank.join("new-index"), b"new");
+    fs::rename(bank.join("new-index"), bank.join("index")).unwrap();
+    fs::File::open(root.join("shared")).unwrap().set_modified(UNIX_EPOCH + std::time::Duration::from_secs(2)).unwrap();
+    fs::File::open(&bank).unwrap().set_modified(UNIX_EPOCH + std::time::Duration::from_secs(3)).unwrap();
+    observed.finish().unwrap();
+    assert_eq!(fs::read(bank.join("index")).unwrap(), b"new");
+}
+
+#[test]
+fn tree_walk_refuses_an_ancestor_rebound_between_observation_phases() {
+    let root = PrivateDirectory::new();
+    amfs::private_mkdir(&root.join("parent/bank")).unwrap();
+    file(&root.join("parent/bank/file"), b"old");
+    let observed = trust::TreeInspection::open(&root.join("parent/bank"), false).unwrap();
+    fs::rename(root.join("parent"), root.join("retained-parent")).unwrap();
+    amfs::private_mkdir(&root.join("parent/bank")).unwrap();
+    file(&root.join("parent/bank/file"), b"new");
+    assert!(observed.finish().is_err());
+    assert_eq!(fs::read(root.join("retained-parent/bank/file")).unwrap(), b"old");
+    assert_eq!(fs::read(root.join("parent/bank/file")).unwrap(), b"new");
+}
+
+#[test]
+fn bare_repository_symlink_probes_trigger_strict_metadata_walk() {
+    for redirected in ["HEAD", "objects"] {
+        let root = PrivateDirectory::new();
+        amfs::private_mkdir(&root.join("repository")).unwrap();
+        amfs::private_mkdir(&root.join("objects")).unwrap();
+        file(&root.join("HEAD"), b"ref: refs/heads/main\n");
+        let repo = root.join("repository");
+        if redirected == "HEAD" {
+            symlink("../HEAD", repo.join("HEAD")).unwrap();
+            amfs::private_mkdir(&repo.join("objects")).unwrap();
+        } else {
+            file(&repo.join("HEAD"), b"ref: refs/heads/main\n");
+            symlink("../objects", repo.join("objects")).unwrap();
+        }
+        trust::tree(&repo, false).unwrap();
+        assert_eq!(reason(&trust::source(&repo).unwrap_err()),
+            "a trusted ordinary path must not be redirected by a symlink");
+    }
+}
+
+#[test]
+fn search_only_parent_pins_do_not_require_directory_read_permission() {
+    let root = PrivateDirectory::new();
+    amfs::private_mkdir(&root.join("execute/nested")).unwrap();
+    file(&root.join("execute/nested/file"), b"exact");
+    struct Restore(PathBuf);
+    impl Drop for Restore { fn drop(&mut self) { mode(&self.0, 0o700); } }
+    let _restore = Restore(root.join("execute"));
+    mode(&root.join("execute"), 0o111);
+    let mut pinned = Descriptor::pin_directory(&root.join("execute")).unwrap();
+    assert!(pinned.is_search_only());
+    assert!(pinned.stat().unwrap().is_directory());
+    assert!(pinned.stat_at(OsStr::new("nested")).unwrap().is_directory());
+    assert_eq!(amfs::read_regular(root.path(), Path::new("execute/nested/file"), 100).unwrap().0, b"exact");
+    trust::inspect(&root.join("execute/nested/file"), InspectOptions::default()).unwrap();
+    assert!(!Descriptor::open_directory(&root.join("execute/nested")).unwrap().is_search_only());
+    assert_eq!(pinned.fsync().unwrap_err().kind(), std::io::ErrorKind::InvalidInput);
+    assert!(matches!(pinned.read_bounded(10), Err(amfs::ReadError::Io(error)) if error.kind() == std::io::ErrorKind::InvalidInput));
+    assert_eq!(pinned.write_all(b"x").unwrap_err().kind(), std::io::ErrorKind::InvalidInput);
+    assert!(matches!(FlockGuard::try_acquire(pinned, LockMode::Shared),
+        Err(LockError::Io(error)) if error.kind() == std::io::ErrorKind::InvalidInput));
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn private_mkdir_accepts_inherited_setgid_without_chmod() {
+    let root = PrivateDirectory::new();
+    let parent = root.join("setgid"); fs::create_dir(&parent).unwrap(); mode(&parent, 0o2700);
+    amfs::private_mkdir(&parent.join("new/nested")).unwrap();
+    assert_eq!(fs::metadata(&parent).unwrap().mode() & 0o7777, 0o2700);
+    assert_eq!(fs::metadata(parent.join("new")).unwrap().mode() & 0o7777, 0o2700);
+    assert_eq!(fs::metadata(parent.join("new/nested")).unwrap().mode() & 0o7777, 0o2700);
+}
+
+#[test]
+fn sync_created_walk_produces_usable_private_lock_directories() {
+    let root = PrivateDirectory::new();
+    let chain = DirectoryChain::create(&root.join("parent/child"), true).unwrap();
+    chain.recheck().unwrap();
+    assert!(chain.descriptors().iter().all(Descriptor::is_search_only));
+    chain.directory().fsync_directory().unwrap();
+    let held = PrivateLock::acquire(&root.join("other/nested/lock"), false, false).unwrap();
+    held.finish().unwrap();
+    assert_eq!(fs::metadata(root.join("other/nested")).unwrap().mode() & 0o777, 0o700);
+}
+
+#[test]
+fn managed_inventory_uses_ascii_pretty_json_and_file_bound_precedence() {
+    let root = PrivateDirectory::new();
+    amfs::private_mkdir(&root.join("managed")).unwrap();
+    symlink("é/😀", root.join("managed/café")).unwrap();
+    let expected = b"{\n  \"caf\\u00e9\": {\n    \"kind\": \"link\",\n    \"target\": \"\\u00e9/\\ud83d\\ude00\"\n  }\n}\n";
+    assert_eq!(amfs::fingerprint(&root.join("managed")).unwrap().unwrap(),
+        Fingerprint::Directory { hash: hex(&Sha256::digest(expected)), mode: 0o700 });
+    fs::File::create(root.join("managed/oversized")).unwrap().set_len(513 * 1024 * 1024).unwrap();
+    assert!(amfs::fingerprint(&root.join("managed")).unwrap_err().to_string().starts_with("Oversized managed file: "));
+}
+
+#[test]
+fn read_failure_kinds_do_not_require_message_parsing() {
+    use amfs::ReadError;
+    let root = PrivateDirectory::new(); file(&root.join("source"), b"x");
+    assert!(matches!(amfs::read_source(root.path(), Path::new("../source"), 10), Err(ReadError::InvalidPath)));
+    assert!(matches!(amfs::read_source(root.path(), Path::new("source"), usize::MAX), Err(ReadError::LimitOverflow)));
+    assert!(matches!(amfs::read_source(root.path(), Path::new("missing"), 10), Err(ReadError::Io(_))));
+    amfs::private_mkdir(&root.join("directory")).unwrap();
+    assert!(matches!(amfs::read_source(root.path(), Path::new("directory"), 10), Err(ReadError::NotRegular)));
 }

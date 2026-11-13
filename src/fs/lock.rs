@@ -1,4 +1,4 @@
-use super::descriptor::{Descriptor, DirectoryChain, Identity, contract_io, private_mkdir};
+use super::descriptor::{Descriptor, DirectoryChain, Identity, contract_io, private_mkdir_with_sync};
 use super::trust;
 use crate::error::{ContractError, Result};
 use std::fmt;
@@ -28,6 +28,7 @@ impl From<ContractError> for LockError { fn from(error: ContractError) -> Self {
 pub struct FlockGuard { descriptor: Descriptor }
 impl FlockGuard {
     pub fn try_acquire(descriptor: Descriptor, mode: LockMode) -> std::result::Result<Self, LockError> {
+        descriptor.require_io()?;
         let operation = match mode { LockMode::Shared => libc::LOCK_SH, LockMode::Exclusive => libc::LOCK_EX } | libc::LOCK_NB;
         loop {
             if unsafe { libc::flock(descriptor.as_raw_fd(), operation) } == 0 { return Ok(Self { descriptor }); }
@@ -62,7 +63,7 @@ impl PrivateLock {
         let name = path.file_name().ok_or_else(|| ContractError::new("Unsafe private source lock"))?;
         if !existing_only {
             trust::inspect(parent, trust::InspectOptions::default())?;
-            private_mkdir(parent)?;
+            private_mkdir_with_sync(parent, true)?;
         }
         trust::state(parent)?;
         let parents = DirectoryChain::open(parent)?;
