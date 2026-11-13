@@ -1,11 +1,13 @@
 use crate::clock::{Deadline, monotonic_ns};
-use std::ffi::OsString;
+use std::ffi::{CString, OsStr, OsString};
 use std::fmt;
 use std::io::{self, Read, Write};
-use std::os::fd::{AsRawFd, BorrowedFd};
+use std::os::fd::{AsRawFd, BorrowedFd, IntoRawFd};
 use std::os::unix::process::{CommandExt, ExitStatusExt};
+use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
-use std::process::{Child, Command, ExitStatus, Stdio};
+use std::time::Duration;
+use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, ExitStatus, Stdio};
 
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
 compile_error!("agent-memory process supervision requires Linux or macOS");
@@ -21,8 +23,17 @@ pub enum Target<'a> {
     Descriptor(BorrowedFd<'a>),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FileSize {
+    /// Release downloads may raise the inherited soft limit, never the hard limit.
+    SoftCap(u64),
+    /// Raw readers preserve every finite inherited bound and pin both limits.
+    Pinned(u64),
+}
+
 pub struct Spec<'a> {
     pub argv: &'a [OsString],
+    pub search_path: bool,
     pub env: &'a [(OsString, OsString)],
     pub cwd: &'a Path,
     pub stdin: Input<'a>,
@@ -30,8 +41,7 @@ pub struct Spec<'a> {
     pub stderr: Target<'a>,
     pub deadline: Deadline,
     pub new_session: bool,
-    /// Soft limit is min(bound, inherited hard); the hard limit is unchanged.
-    pub file_size_limit: Option<u64>,
+    pub file_size_limit: Option<FileSize>,
     pub umask: Option<u32>,
     /// These descriptors retain their numbers, as with Python's pass_fds.
     pub pass_fds: &'a [BorrowedFd<'a>],
@@ -59,6 +69,8 @@ pub struct Output {
     pub stdout: Vec<u8>,
     pub stderr: Vec<u8>,
     pub elapsed_ns: u64,
+    pub launch_elapsed_ns: u64,
+    pub poll_wakeups: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,7 +85,7 @@ pub enum Refusal {
     Spawn,
     Deadline,
     CaptureLimit { stream: Stream, limit: usize },
-    Io,
+    Infrastructure,
 }
 
 #[derive(Debug)]
@@ -81,11 +93,13 @@ pub struct Evidence {
     pub argv0: OsString,
     pub pid: u32,
     pub elapsed_ns: u64,
+    pub launch_elapsed_ns: u64,
     pub stdout: Vec<u8>,
     pub stderr: Vec<u8>,
     pub killed: bool,
     pub reaped: bool,
     pub status: Option<Status>,
+    pub poll_wakeups: u64,
 }
 
 #[derive(Debug)]
@@ -94,6 +108,7 @@ pub struct ProcessError {
     pub evidence: Option<Evidence>,
     pub source: Option<io::Error>,
     pub cleanup_error: Option<io::Error>,
+    pub incomplete: bool,
 }
 
 impl fmt::Display for ProcessError {
@@ -110,6 +125,9 @@ impl fmt::Display for ProcessError {
         if let Some(error) = &self.cleanup_error {
             write!(f, "; cleanup: {error}")?;
         }
+        if self.incomplete {
+            write!(f, "; Incomplete ordered child query observation")?;
+        }
         Ok(())
     }
 }
@@ -121,7 +139,7 @@ impl std::error::Error for ProcessError {
 }
 
 fn early_error(reason: Refusal, error: io::Error) -> ProcessError {
-    ProcessError { reason, evidence: None, source: Some(error), cleanup_error: None }
+    ProcessError { reason, evidence: None, source: Some(error), cleanup_error: None, incomplete: false }
 }
 
 fn invalid(message: &'static str) -> ProcessError {
@@ -136,33 +154,45 @@ struct Owner {
 
 impl Owner {
     fn observe(&mut self) -> io::Result<()> {
-        if self.status.is_none() {
-            self.status = self.child.try_wait()?;
-        }
-        Ok(())
-    }
-
-    fn stop(&mut self) -> io::Result<()> {
-        self.observe()?;
-        if self.status.is_some() {
-            return Ok(());
-        }
-        // Until waitpid has reaped it, this owned PID cannot be reused.
-        let kill_error = match self.child.kill() {
-            Ok(()) => { self.killed = true; None }
-            Err(error) => Some(error),
-        };
-        loop {
-            match self.child.wait() {
-                Ok(status) => { self.status = Some(status); break; }
+        while self.status.is_none() {
+            match self.child.try_wait() {
+                Ok(status) => { self.status = status; break; }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
                 Err(error) => return Err(error),
             }
         }
-        match kill_error {
-            Some(error) if error.raw_os_error() != Some(libc::ESRCH) => Err(error),
-            _ => Ok(()),
+        Ok(())
+    }
+
+    fn cancel(&mut self) -> io::Result<()> {
+        self.observe()?;
+        if self.status.is_some() || self.killed {
+            return Ok(());
         }
+        // Until waitpid has reaped it, this owned PID cannot be reused.
+        match self.child.kill() {
+            Ok(()) => { self.killed = true; Ok(()) }
+            Err(error) if error.raw_os_error() == Some(libc::ESRCH) => Ok(()),
+            Err(error) => Err(error),
+        }
+    }
+
+    fn reap(&mut self) -> io::Result<()> {
+        if self.status.is_some() {
+            return Ok(());
+        }
+        loop {
+            match self.child.wait() {
+                Ok(status) => { self.status = Some(status); return Ok(()); }
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                Err(error) => return Err(error),
+            }
+        }
+    }
+
+    fn stop(&mut self) -> io::Result<()> {
+        let cancellation = self.cancel();
+        self.reap().and(cancellation)
     }
 }
 
@@ -205,14 +235,87 @@ fn descriptor_buffer() -> io::Result<Vec<libc::proc_fdinfo>> {
 }
 
 #[cfg(target_os = "linux")]
-unsafe fn cloexec_all() -> io::Result<()> {
+unsafe fn cloexec_all(passed: &[i32]) -> io::Result<()> {
     let code = unsafe {
         libc::syscall(libc::SYS_close_range, 3u32, u32::MAX, libc::CLOSE_RANGE_CLOEXEC)
     };
-    if code != 0 {
+    if code == 0 {
+        return Ok(());
+    }
+    let error = io::Error::last_os_error();
+    match error.raw_os_error() {
+        Some(libc::ENOSYS | libc::EINVAL | libc::EPERM) => unsafe { cloexec_proc_fds(passed) },
+        _ => Err(error),
+    }
+}
+
+#[cfg(target_os = "linux")]
+unsafe fn cloexec_proc_fds(passed: &[i32]) -> io::Result<()> {
+    let directory = unsafe {
+        libc::open(c"/proc/self/fd".as_ptr(), libc::O_RDONLY | libc::O_DIRECTORY | libc::O_CLOEXEC)
+    };
+    if directory < 0 {
         return Err(io::Error::last_os_error());
     }
-    Ok(())
+    let result = (|| {
+        let mut buffer = [0u8; 4096];
+        loop {
+            let count = unsafe {
+                libc::syscall(libc::SYS_getdents64, directory, buffer.as_mut_ptr(), buffer.len())
+            };
+            if count < 0 {
+                let error = io::Error::last_os_error();
+                if error.kind() == io::ErrorKind::Interrupted {
+                    continue;
+                }
+                return Err(error);
+            }
+            if count == 0 {
+                return Ok(());
+            }
+            let count = count as usize;
+            if count > buffer.len() {
+                return Err(io::Error::from_raw_os_error(libc::EIO));
+            }
+            let mut offset = 0;
+            while offset < count {
+                // linux_dirent64 has a 19-byte fixed header on both supported
+                // architectures; d_reclen at byte 16 includes the trailing NUL.
+                if count - offset < 20 {
+                    return Err(io::Error::from_raw_os_error(libc::EIO));
+                }
+                let length = u16::from_ne_bytes([buffer[offset + 16], buffer[offset + 17]]) as usize;
+                if length < 20 || length > count - offset {
+                    return Err(io::Error::from_raw_os_error(libc::EIO));
+                }
+                let name = &buffer[offset + 19..offset + length];
+                let Some(end) = name.iter().position(|&byte| byte == 0) else {
+                    return Err(io::Error::from_raw_os_error(libc::EIO));
+                };
+                let name = &name[..end];
+                offset += length;
+                if name.is_empty() || !name.iter().all(u8::is_ascii_digit) {
+                    continue;
+                }
+                let mut fd = 0i32;
+                for &digit in name {
+                    fd = fd.checked_mul(10).and_then(|value| value.checked_add(i32::from(digit - b'0')))
+                        .ok_or_else(|| io::Error::from_raw_os_error(libc::EOVERFLOW))?;
+                }
+                if fd >= 3 && fd != directory && !passed.contains(&fd) {
+                    let flags = unsafe { libc::fcntl(fd, libc::F_GETFD) };
+                    if flags < 0 || unsafe { libc::fcntl(fd, libc::F_SETFD, flags | libc::FD_CLOEXEC) } < 0 {
+                        return Err(io::Error::last_os_error());
+                    }
+                }
+            }
+        }
+    })();
+    let closed = unsafe { libc::close(directory) };
+    if result.is_ok() && closed != 0 {
+        return Err(io::Error::last_os_error());
+    }
+    result
 }
 
 #[cfg(target_os = "macos")]
@@ -238,13 +341,22 @@ unsafe fn cloexec_all(buffer: &mut [libc::proc_fdinfo]) -> io::Result<()> {
     Ok(())
 }
 
-fn drain<R: Read>(pipe: &mut Option<R>, bytes: &mut Vec<u8>, limit: usize, stream: Stream)
+fn close_pipe<T: IntoRawFd>(pipe: Option<T>) -> io::Result<()> {
+    if let Some(pipe) = pipe {
+        if unsafe { libc::close(pipe.into_raw_fd()) } != 0 {
+            return Err(io::Error::last_os_error());
+        }
+    }
+    Ok(())
+}
+
+fn drain<R: Read + IntoRawFd>(pipe: &mut Option<R>, bytes: &mut Vec<u8>, limit: usize, stream: Stream)
     -> std::result::Result<(), (Refusal, Option<io::Error>)>
 {
     let Some(reader) = pipe.as_mut() else { return Ok(()); };
     let mut buffer = [0u8; 16_384];
     match reader.read(&mut buffer) {
-        Ok(0) => { *pipe = None; Ok(()) }
+        Ok(0) => close_pipe(pipe.take()).map_err(|error| (Refusal::Infrastructure, Some(error))),
         Ok(count) => {
             let keep = count.min(limit.saturating_sub(bytes.len()));
             bytes.extend_from_slice(&buffer[..keep]);
@@ -255,16 +367,95 @@ fn drain<R: Read>(pipe: &mut Option<R>, bytes: &mut Vec<u8>, limit: usize, strea
             }
         }
         Err(error) if matches!(error.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => Ok(()),
-        Err(error) => Err((Refusal::Io, Some(error))),
+        Err(error) => Err((Refusal::Infrastructure, Some(error))),
     }
 }
 
-/// Runs exactly one direct child. No process group is ever signalled and no
-/// worker threads are created. All three pipe directions share one poll loop.
-pub fn run(spec: &Spec<'_>) -> std::result::Result<Output, ProcessError> {
+struct CStringArray {
+    strings: Vec<CString>,
+    pointers: Vec<*const libc::c_char>,
+}
+
+// Every pointer refers to immutable heap storage owned by strings. Neither
+// vector is modified after construction; moving the owner does not move bytes.
+unsafe impl Send for CStringArray {}
+unsafe impl Sync for CStringArray {}
+
+impl CStringArray {
+    fn new(strings: Vec<CString>) -> Self {
+        let mut pointers = Vec::with_capacity(strings.len() + 1);
+        pointers.extend(strings.iter().map(|value| value.as_ptr()));
+        pointers.push(std::ptr::null());
+        Self { strings, pointers }
+    }
+}
+
+struct PreparedExec {
+    argv: CStringArray,
+    env: CStringArray,
+    // Empty means the absolute executable is argv[0], without another copy.
+    candidates: Vec<CString>,
+}
+
+fn nul_error(_: std::ffi::NulError) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidInput, "NUL byte in process argv or environment")
+}
+
+impl PreparedExec {
+    fn new(spec: &Spec<'_>, argv0: &OsStr) -> io::Result<Self> {
+        let argv = spec.argv.iter().map(|arg| CString::new(arg.as_bytes()).map_err(nul_error))
+            .collect::<io::Result<Vec<_>>>()?;
+        let env = spec.env.iter().map(|(key, value)| {
+            let mut bytes = Vec::with_capacity(key.len() + 1 + value.len());
+            bytes.extend_from_slice(key.as_bytes());
+            bytes.push(b'=');
+            bytes.extend_from_slice(value.as_bytes());
+            CString::new(bytes).map_err(nul_error)
+        }).collect::<io::Result<Vec<_>>>()?;
+        let candidates = if Path::new(argv0).is_absolute() {
+            Vec::new()
+        } else {
+            let path = spec.env.iter().find(|(key, _)| key == "PATH")
+                .map_or(b"/bin:/usr/bin".as_slice(), |(_, value)| value.as_bytes());
+            path.split(|&byte| byte == b':').map(|directory| {
+                let candidate = Path::new(OsStr::from_bytes(directory)).join(argv0);
+                CString::new(candidate.as_os_str().as_bytes()).map_err(nul_error)
+            }).collect::<io::Result<Vec<_>>>()?
+        };
+        Ok(Self { argv: CStringArray::new(argv), env: CStringArray::new(env), candidates })
+    }
+
+    unsafe fn execute(&self) -> io::Error {
+        if self.candidates.is_empty() {
+            unsafe { libc::execve(self.argv.strings[0].as_ptr(), self.argv.pointers.as_ptr(), self.env.pointers.as_ptr()); }
+            return io::Error::last_os_error();
+        }
+        let mut first_error = None;
+        let mut last_error = libc::ENOENT;
+        for candidate in &self.candidates {
+            unsafe { libc::execve(candidate.as_ptr(), self.argv.pointers.as_ptr(), self.env.pointers.as_ptr()); }
+            let errno = io::Error::last_os_error().raw_os_error().unwrap_or(libc::EIO);
+            last_error = errno;
+            if errno != libc::ENOENT && errno != libc::ENOTDIR && first_error.is_none() {
+                first_error = Some(errno);
+            }
+        }
+        io::Error::from_raw_os_error(first_error.unwrap_or(last_error))
+    }
+}
+
+#[derive(Clone, Copy)]
+enum Timing {
+    Absolute,
+    FromLaunch(Duration),
+}
+
+fn spawn<'a>(spec: &Spec<'a>, timing: Timing) -> std::result::Result<Active<'a>, ProcessError> {
     let Some(argv0) = spec.argv.first() else { return Err(invalid("Empty argv")); };
-    if argv0.is_empty() || !Path::new(argv0).is_absolute() || !spec.cwd.is_absolute() {
-        return Err(invalid("Executable and cwd must be explicit absolute paths"));
+    if argv0.is_empty() || !spec.cwd.is_absolute()
+        || (!Path::new(argv0).is_absolute() && (!spec.search_path || argv0.as_bytes().contains(&b'/')))
+    {
+        return Err(invalid("Cwd and slash-containing executables must be absolute; bare names require search_path"));
     }
     if spec.umask.is_some_and(|mask| mask > 0o777) {
         return Err(invalid("Umask exceeds permission bits"));
@@ -275,17 +466,20 @@ pub fn run(spec: &Spec<'_>) -> std::result::Result<Output, ProcessError> {
         }
     }
     for (index, (key, _)) in spec.env.iter().enumerate() {
-        if key.is_empty() || spec.env[..index].iter().any(|(other, _)| other == key) {
-            return Err(invalid("Environment keys must be nonempty and distinct"));
+        if key.is_empty() || key.as_bytes().iter().any(|&byte| byte == b'=' || byte == 0) {
+            return Err(invalid("illegal environment variable name"));
+        }
+        if spec.env[..index].iter().any(|(other, _)| other == key) {
+            return Err(invalid("Environment keys must be distinct"));
         }
     }
-    if spec.deadline.expired() {
+    if matches!(timing, Timing::Absolute) && spec.deadline.expired() {
         return Err(early_error(Refusal::Deadline, io::Error::new(io::ErrorKind::TimedOut, "Deadline elapsed before spawn; no child created")));
     }
     let start = monotonic_ns();
+    let executable = PreparedExec::new(spec, argv0).map_err(|error| early_error(Refusal::Spawn, error))?;
     let mut command = Command::new(argv0);
-    command.args(&spec.argv[1..]).env_clear().envs(spec.env.iter().map(|(key, value)| (key, value)))
-        .current_dir(spec.cwd);
+    command.env_clear().current_dir(spec.cwd);
     let stdin = match &spec.stdin {
         Input::Null => Stdio::null(),
         Input::Bytes(_) => Stdio::piped(),
@@ -303,7 +497,7 @@ pub fn run(spec: &Spec<'_>) -> std::result::Result<Output, ProcessError> {
     unsafe {
         command.pre_exec(move || {
             #[cfg(target_os = "linux")]
-            cloexec_all()?;
+            cloexec_all(&passed)?;
             #[cfg(target_os = "macos")]
             cloexec_all(&mut fd_buffer)?;
             for &raw in &passed {
@@ -311,6 +505,9 @@ pub fn run(spec: &Spec<'_>) -> std::result::Result<Output, ProcessError> {
                 if flags < 0 || libc::fcntl(raw, libc::F_SETFD, flags & !libc::FD_CLOEXEC) < 0 {
                     return Err(io::Error::last_os_error());
                 }
+            }
+            if libc::signal(libc::SIGXFSZ, libc::SIG_DFL) == libc::SIG_ERR {
+                return Err(io::Error::last_os_error());
             }
             if new_session && libc::setsid() < 0 {
                 return Err(io::Error::last_os_error());
@@ -320,7 +517,25 @@ pub fn run(spec: &Spec<'_>) -> std::result::Result<Output, ProcessError> {
                 if libc::getrlimit(libc::RLIMIT_FSIZE, &mut limit) != 0 {
                     return Err(io::Error::last_os_error());
                 }
-                limit.rlim_cur = bound.min(limit.rlim_max);
+                match bound {
+                    FileSize::SoftCap(bound) => {
+                        limit.rlim_cur = if limit.rlim_max == libc::RLIM_INFINITY {
+                            bound
+                        } else {
+                            bound.min(limit.rlim_max)
+                        };
+                    }
+                    FileSize::Pinned(bound) => {
+                        let mut cap = bound;
+                        for previous in [limit.rlim_cur, limit.rlim_max] {
+                            if previous != libc::RLIM_INFINITY {
+                                cap = cap.min(previous);
+                            }
+                        }
+                        limit.rlim_cur = cap;
+                        limit.rlim_max = cap;
+                    }
+                }
                 if libc::setrlimit(libc::RLIMIT_FSIZE, &limit) != 0 {
                     return Err(io::Error::last_os_error());
                 }
@@ -328,84 +543,435 @@ pub fn run(spec: &Spec<'_>) -> std::result::Result<Output, ProcessError> {
             if let Some(mask) = mask {
                 libc::umask(mask as libc::mode_t);
             }
-            Ok(())
+            Err(executable.execute())
         });
     }
     let child = command.spawn().map_err(|error| early_error(Refusal::Spawn, error))?;
+    let launch_elapsed_ns = monotonic_ns().saturating_sub(start);
     let mut owner = Owner { child, status: None, killed: false };
-    let pid = owner.child.id();
-    let mut input = owner.child.stdin.take();
-    let mut stdout = owner.child.stdout.take();
-    let mut stderr = owner.child.stderr.take();
-    let mut out = Vec::new();
-    let mut err = Vec::new();
-    let payload = match &spec.stdin { Input::Bytes(bytes) => *bytes, _ => &[] };
-    let mut sent = 0;
-    let stdout_limit = match spec.stdout { Target::Capture { limit } => limit, _ => 0 };
-    let stderr_limit = match spec.stderr { Target::Capture { limit } => limit, _ => 0 };
-    let operation = (|| -> std::result::Result<(), (Refusal, Option<io::Error>)> {
-        for fd in [input.as_ref().map(AsRawFd::as_raw_fd), stdout.as_ref().map(AsRawFd::as_raw_fd), stderr.as_ref().map(AsRawFd::as_raw_fd)].into_iter().flatten() {
-            nonblocking(fd).map_err(|error| (Refusal::Io, Some(error)))?;
+    let input = owner.child.stdin.take();
+    let stdout = owner.child.stdout.take();
+    let stderr = owner.child.stderr.take();
+    let mut active = Active {
+        owner, input, stdout, stderr, start, launch_elapsed_ns, deadline: spec.deadline,
+        payload: match &spec.stdin { Input::Bytes(bytes) => *bytes, _ => &[] },
+        sent: 0, out: Vec::new(), err: Vec::new(), poll_wakeups: 0,
+        stdout_limit: match spec.stdout { Target::Capture { limit } => limit, _ => 0 },
+        stderr_limit: match spec.stderr { Target::Capture { limit } => limit, _ => 0 },
+    };
+    if let Timing::FromLaunch(timeout) = timing {
+        match Deadline::after(timeout) {
+            Ok(deadline) => active.deadline = deadline,
+            Err(_) => return Err(active.refuse(argv0.clone(), Refusal::InvalidInput,
+                Some(io::Error::new(io::ErrorKind::InvalidInput, "Child deadline overflows")), None)),
+        }
+    }
+    for fd in active.fds() {
+        if fd.fd >= 0 {
+            if let Err(error) = nonblocking(fd.fd) {
+                return Err(active.refuse(argv0.clone(), Refusal::Infrastructure, Some(error), None));
+            }
+        }
+    }
+    Ok(active)
+}
+
+struct Active<'a> {
+    owner: Owner,
+    input: Option<ChildStdin>,
+    stdout: Option<ChildStdout>,
+    stderr: Option<ChildStderr>,
+    payload: &'a [u8],
+    sent: usize,
+    out: Vec<u8>,
+    err: Vec<u8>,
+    stdout_limit: usize,
+    stderr_limit: usize,
+    start: u64,
+    launch_elapsed_ns: u64,
+    deadline: Deadline,
+    poll_wakeups: u64,
+}
+
+impl Active<'_> {
+    fn complete(&self) -> bool {
+        self.owner.status.is_some() && self.stdout.is_none() && self.stderr.is_none()
+    }
+
+    fn advance(&mut self) -> std::result::Result<bool, (Refusal, Option<io::Error>)> {
+        self.owner.observe().map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+        if self.complete() {
+            return Ok(true);
+        }
+        if self.deadline.expired() {
+            return Err((Refusal::Deadline, None));
+        }
+        drain(&mut self.stdout, &mut self.out, self.stdout_limit, Stream::Stdout)?;
+        drain(&mut self.stderr, &mut self.err, self.stderr_limit, Stream::Stderr)?;
+        if self.sent == self.payload.len() || self.owner.status.is_some() {
+            close_pipe(self.input.take()).map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+        } else if let Some(writer) = self.input.as_mut() {
+            let end = self.payload.len().min(self.sent.saturating_add(16_384));
+            match writer.write(&self.payload[self.sent..end]) {
+                Ok(0) => return Err((Refusal::Infrastructure, Some(io::Error::new(
+                    io::ErrorKind::WriteZero, "Child stdin write returned zero")))),
+                Ok(count) => self.sent += count,
+                Err(error) if error.kind() == io::ErrorKind::BrokenPipe => {
+                    close_pipe(self.input.take()).map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+                }
+                Err(error) if matches!(error.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => {}
+                Err(error) => return Err((Refusal::Infrastructure, Some(error))),
+            }
+        }
+        if self.sent == self.payload.len() {
+            close_pipe(self.input.take()).map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+        }
+        Ok(self.complete())
+    }
+
+    fn fds(&self) -> [libc::pollfd; 3] {
+        [
+            libc::pollfd { fd: self.stdout.as_ref().map_or(-1, AsRawFd::as_raw_fd), events: libc::POLLIN, revents: 0 },
+            libc::pollfd { fd: self.stderr.as_ref().map_or(-1, AsRawFd::as_raw_fd), events: libc::POLLIN, revents: 0 },
+            libc::pollfd { fd: self.input.as_ref().map_or(-1, AsRawFd::as_raw_fd), events: libc::POLLOUT, revents: 0 },
+        ]
+    }
+
+    fn close_pipes(&mut self) -> io::Result<()> {
+        let input = close_pipe(self.input.take());
+        let stdout = close_pipe(self.stdout.take());
+        let stderr = close_pipe(self.stderr.take());
+        input.and(stdout).and(stderr)
+    }
+
+    fn finish(mut self, argv0: &OsStr) -> std::result::Result<Output, ProcessError> {
+        if let Err(error) = self.close_pipes() {
+            return Err(self.refuse(argv0.to_os_string(), Refusal::Infrastructure, Some(error), None));
+        }
+        Ok(Output {
+            pid: self.owner.child.id(),
+            status: Status::from(self.owner.status.expect("Completed supervision reaps the child")),
+            stdout: std::mem::take(&mut self.out),
+            stderr: std::mem::take(&mut self.err),
+            elapsed_ns: monotonic_ns().saturating_sub(self.start),
+            launch_elapsed_ns: self.launch_elapsed_ns,
+            poll_wakeups: self.poll_wakeups,
+        })
+    }
+
+    fn refuse(mut self, argv0: OsString, reason: Refusal, source: Option<io::Error>,
+        prior_cleanup: Option<io::Error>) -> ProcessError
+    {
+        let input_error = close_pipe(self.input.take()).err();
+        let cancellation_error = self.owner.stop().err();
+        let close_error = self.close_pipes().err();
+        ProcessError {
+            reason, source, cleanup_error: prior_cleanup.or(input_error).or(cancellation_error).or(close_error),
+            incomplete: false,
+            evidence: Some(Evidence {
+                argv0, pid: self.owner.child.id(), elapsed_ns: monotonic_ns().saturating_sub(self.start),
+                launch_elapsed_ns: self.launch_elapsed_ns,
+                stdout: std::mem::take(&mut self.out), stderr: std::mem::take(&mut self.err),
+                killed: self.owner.killed, reaped: self.owner.status.is_some(),
+                status: self.owner.status.map(Status::from),
+                poll_wakeups: self.poll_wakeups,
+            }),
+        }
+    }
+}
+
+struct Query<'a> {
+    argv0: &'a OsStr,
+    active: Option<Active<'a>>,
+    outcome: Option<std::result::Result<Output, ProcessError>>,
+    cleanup_error: Option<io::Error>,
+}
+
+const MAX_CHILDREN: usize = 3;
+
+pub const DEFAULT_EXIT_POLL_INTERVAL: Duration = Duration::from_millis(50);
+
+/// One invoking owner supervises one to three children. `launch` replaces each
+/// Spec's absolute deadline with the supplied interval starting at its own
+/// successful spawn return; `run` retains the Spec's absolute deadline.
+/// No live PID or descriptor accessor is exposed.
+pub struct Group<'a> {
+    queries: [Query<'a>; MAX_CHILDREN],
+    len: usize,
+    next: usize,
+    failed: bool,
+    failure: Option<io::Error>,
+    exit_poll_interval: Duration,
+    closed: bool,
+}
+
+fn copy_io_error(error: &io::Error) -> io::Error {
+    match error.raw_os_error() {
+        Some(errno) => io::Error::from_raw_os_error(errno),
+        None => io::Error::new(error.kind(), error.to_string()),
+    }
+}
+
+impl<'a> Group<'a> {
+    pub fn launch(specs: &[Spec<'a>], timeout: Duration) -> std::result::Result<Self, ProcessError> {
+        if Deadline::after(timeout).is_err() {
+            return Err(invalid("Group timeout overflows monotonic nanoseconds"));
+        }
+        Self::launch_with(specs, Timing::FromLaunch(timeout))
+    }
+
+    fn launch_with(specs: &[Spec<'a>], timing: Timing) -> std::result::Result<Self, ProcessError> {
+        if specs.is_empty() || specs.len() > MAX_CHILDREN {
+            return Err(invalid("A child group requires one to three commands"));
+        }
+        let queries = std::array::from_fn(|index| Query {
+            argv0: specs.get(index).and_then(|spec| spec.argv.first())
+                .map_or(OsStr::new(""), |arg| arg.as_os_str()),
+            active: None, outcome: None, cleanup_error: None,
+        });
+        let mut group = Self {
+            queries, len: specs.len(), next: 0, failed: false, failure: None,
+            exit_poll_interval: DEFAULT_EXIT_POLL_INTERVAL, closed: false,
+        };
+        for (index, spec) in specs.iter().enumerate() {
+            group.sweep();
+            if group.failed {
+                break;
+            }
+            match spawn(spec, timing) {
+                Ok(active) => group.queries[index].active = Some(active),
+                Err(error) => {
+                    let fault = if error.reason == Refusal::Infrastructure {
+                        Some(error.source.as_ref().map(copy_io_error).unwrap_or_else(||
+                            io::Error::other("Child pipe setup failed")))
+                    } else { None };
+                    group.queries[index].outcome = Some(Err(error));
+                    if let Some(fault) = fault {
+                        group.fail(fault, Some(index));
+                        break;
+                    }
+                }
+            }
+            group.sweep();
+        }
+        Ok(group)
+    }
+
+    fn cancel_all(&mut self) {
+        // Cancel every child before waiting for any one of them.
+        for query in &mut self.queries {
+            if let Some(active) = &mut query.active {
+                let error = active.owner.cancel().err();
+                if query.cleanup_error.is_none() {
+                    query.cleanup_error = error;
+                }
+            }
+        }
+        for query in &mut self.queries {
+            if let Some(active) = &mut query.active {
+                let error = active.close_pipes().err();
+                if query.cleanup_error.is_none() {
+                    query.cleanup_error = error;
+                }
+            }
+        }
+    }
+
+    fn fail(&mut self, fault: io::Error, pending: Option<usize>) {
+        self.failed = true;
+        let barrier = (self.next..self.len)
+            .find(|&index| self.queries[index].outcome.is_none() || pending == Some(index)).unwrap_or(self.len);
+        self.failure = Some(copy_io_error(&fault));
+        self.cancel_all();
+        for query in &mut self.queries[barrier..self.len] {
+            let source = Some(copy_io_error(&fault));
+            let error = if let Some(active) = query.active.take() {
+                active.refuse(query.argv0.to_os_string(), Refusal::Infrastructure, source, query.cleanup_error.take())
+            } else {
+                let evidence = match query.outcome.take() {
+                    Some(Ok(output)) => Some(Evidence {
+                        argv0: query.argv0.to_os_string(), pid: output.pid, elapsed_ns: output.elapsed_ns,
+                        launch_elapsed_ns: output.launch_elapsed_ns,
+                        stdout: output.stdout, stderr: output.stderr,
+                        killed: false, reaped: true, status: Some(output.status),
+                        poll_wakeups: output.poll_wakeups,
+                    }),
+                    Some(Err(mut error)) => {
+                        query.cleanup_error = error.cleanup_error.take();
+                        error.evidence
+                    }
+                    None => None,
+                };
+                ProcessError {
+                    reason: Refusal::Infrastructure, evidence, source,
+                    cleanup_error: query.cleanup_error.take(),
+                    incomplete: false,
+                }
+            };
+            query.outcome = Some(Err(error));
+        }
+    }
+
+    fn sweep(&mut self) {
+        if self.failed {
+            return;
+        }
+        for index in self.next..self.len {
+            let query = &mut self.queries[index];
+            let Some(active) = query.active.as_mut() else { continue; };
+            match active.advance() {
+                Ok(false) => {}
+                Ok(true) => {
+                    let active = query.active.take().expect("Active query was just observed");
+                    let outcome = active.finish(query.argv0);
+                    let fault = outcome.as_ref().err().and_then(|error| error.source.as_ref()).map(copy_io_error);
+                    query.outcome = Some(outcome);
+                    if let Some(fault) = fault {
+                        self.fail(fault, Some(index));
+                        return;
+                    }
+                }
+                Err((Refusal::Infrastructure, source)) => {
+                    self.fail(source.unwrap_or_else(|| io::Error::other("Child supervision failed")), Some(index));
+                    return;
+                }
+                Err((reason, source)) => {
+                    let active = query.active.take().expect("Active query was just observed");
+                    let error = active.refuse(query.argv0.to_os_string(), reason, source, query.cleanup_error.take());
+                    let fault = error.cleanup_error.as_ref().map(copy_io_error);
+                    query.outcome = Some(Err(error));
+                    if let Some(fault) = fault {
+                        self.fail(fault, Some(index));
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    fn poll(&mut self) {
+        let mut fds: [libc::pollfd; 3 * MAX_CHILDREN] = std::array::from_fn(|_|
+            libc::pollfd { fd: -1, events: 0, revents: 0 });
+        let mut count = 0;
+        let mut remaining = Duration::MAX;
+        let mut pending = false;
+        for query in &mut self.queries[self.next..self.len] {
+            if let Some(active) = &mut query.active {
+                pending = true;
+                remaining = remaining.min(active.deadline.remaining());
+                if active.stdout.is_none() && active.stderr.is_none() && active.owner.status.is_none() {
+                    remaining = remaining.min(self.exit_poll_interval);
+                }
+                active.poll_wakeups = active.poll_wakeups.saturating_add(1);
+                for fd in active.fds() {
+                    if fd.fd >= 0 {
+                        fds[count] = fd;
+                        count += 1;
+                    }
+                }
+            }
+        }
+        if !pending {
+            return;
+        }
+        // A closed-pipe child still needs bounded waitpid sweeps; round positive
+        // intervals up to a millisecond instead of spinning below 1ms.
+        let millis = remaining.as_nanos().div_ceil(1_000_000).min(i32::MAX as u128) as i32;
+        let code = unsafe { libc::poll(fds.as_mut_ptr(), count as libc::nfds_t, millis) };
+        if code < 0 {
+            let error = io::Error::last_os_error();
+            if error.kind() != io::ErrorKind::Interrupted {
+                self.fail(error, None);
+            }
+        } else if fds[..count].iter().any(|fd| fd.revents & libc::POLLNVAL != 0) {
+            self.fail(io::Error::from_raw_os_error(libc::EBADF), None);
+        }
+    }
+
+    /// Each outcome is consumed exactly once, in launch order. Command errors
+    /// do not cancel siblings. Supervision faults preserve the terminal prefix
+    /// before the first pending query and invalidate that query and its suffix.
+    pub fn value(&mut self, index: usize) -> std::result::Result<Output, ProcessError> {
+        if index != self.next || index >= self.len {
+            return Err(invalid("Child outcomes must be consumed once in original order"));
         }
         loop {
-            owner.observe().map_err(|error| (Refusal::Io, Some(error)))?;
-            if owner.status.is_some() && stdout.is_none() && stderr.is_none() {
-                return Ok(());
+            self.sweep();
+            if let Some(outcome) = self.queries[index].outcome.take() {
+                self.next += 1;
+                return outcome;
             }
-            if spec.deadline.expired() {
-                return Err((Refusal::Deadline, None));
-            }
-            drain(&mut stdout, &mut out, stdout_limit, Stream::Stdout)?;
-            drain(&mut stderr, &mut err, stderr_limit, Stream::Stderr)?;
-            if sent == payload.len() || owner.status.is_some() {
-                input = None;
-            } else if let Some(writer) = input.as_mut() {
-                let end = payload.len().min(sent.saturating_add(16_384));
-                match writer.write(&payload[sent..end]) {
-                    Ok(0) => return Err((Refusal::Io, Some(io::Error::new(io::ErrorKind::WriteZero, "Child stdin write returned zero")))),
-                    Ok(count) => { sent += count; }
-                    Err(error) if error.kind() == io::ErrorKind::BrokenPipe => { input = None; }
-                    Err(error) if matches!(error.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => {}
-                    Err(error) => return Err((Refusal::Io, Some(error))),
+            self.poll();
+        }
+    }
+
+    pub fn set_exit_poll_interval(&mut self, interval: Duration) -> std::result::Result<(), ProcessError> {
+        if interval.is_zero() {
+            return Err(invalid("Exit poll interval must be positive"));
+        }
+        self.exit_poll_interval = interval;
+        Ok(())
+    }
+
+    fn cleanup(&mut self) -> Option<io::Error> {
+        self.cancel_all();
+        let mut first = None;
+        for query in &mut self.queries {
+            if let Some(active) = &mut query.active {
+                let error = active.owner.reap().err();
+                if query.cleanup_error.is_none() {
+                    query.cleanup_error = error;
                 }
             }
-            if sent == payload.len() {
-                input = None;
-            }
-            let mut fds = [
-                libc::pollfd { fd: stdout.as_ref().map_or(-1, AsRawFd::as_raw_fd), events: libc::POLLIN, revents: 0 },
-                libc::pollfd { fd: stderr.as_ref().map_or(-1, AsRawFd::as_raw_fd), events: libc::POLLIN, revents: 0 },
-                libc::pollfd { fd: input.as_ref().map_or(-1, AsRawFd::as_raw_fd), events: libc::POLLOUT, revents: 0 },
-            ];
-            // Periodic waitpid polling also observes children that close both
-            // output pipes before exit. Rounding up never busy-spins below 1ms.
-            let ns = spec.deadline.remaining().as_nanos();
-            let millis = ns.div_ceil(1_000_000).min(10) as i32;
-            let code = unsafe { libc::poll(fds.as_mut_ptr(), fds.len() as libc::nfds_t, millis) };
-            if code < 0 {
-                let error = io::Error::last_os_error();
-                if error.kind() != io::ErrorKind::Interrupted {
-                    return Err((Refusal::Io, Some(error)));
+            if let Some(error) = query.cleanup_error.take() {
+                if first.is_none() {
+                    first = Some(error);
                 }
             }
         }
-    })();
-    if let Err((reason, source)) = operation {
-        drop(input.take());
-        let cleanup_error = owner.stop().err();
-        return Err(ProcessError {
-            reason, source, cleanup_error,
-            evidence: Some(Evidence {
-                argv0: argv0.clone(), pid, elapsed_ns: monotonic_ns().saturating_sub(start),
-                stdout: out, stderr: err, killed: owner.killed, reaped: owner.status.is_some(),
-                status: owner.status.map(Status::from),
-            }),
-        });
+        self.closed = true;
+        first
     }
-    Ok(Output {
-        pid, status: Status::from(owner.status.expect("Successful supervision reaps the child")),
-        stdout: out, stderr: err, elapsed_ns: monotonic_ns().saturating_sub(start),
-    })
+
+    pub fn finish(mut self) -> std::result::Result<(), ProcessError> {
+        let cleanup_error = self.cleanup();
+        let incomplete = self.next != self.len;
+        if self.failure.is_some() || cleanup_error.is_some() || incomplete {
+            let source = self.failure.take().or_else(|| {
+                if incomplete { Some(io::Error::other("Incomplete ordered child query observation")) } else { None }
+            });
+            return Err(ProcessError {
+                reason: Refusal::Infrastructure, evidence: None, source, cleanup_error, incomplete,
+            });
+        }
+        Ok(())
+    }
+}
+
+impl Drop for Group<'_> {
+    fn drop(&mut self) {
+        if !self.closed {
+            let _ = self.cleanup();
+        }
+    }
+}
+
+/// Runs one direct child with exactly the same supervision machinery as Group,
+/// retaining the caller's absolute monotonic deadline.
+pub fn run(spec: &Spec<'_>) -> std::result::Result<Output, ProcessError> {
+    consume_one(Group::launch_with(std::slice::from_ref(spec), Timing::Absolute)?)
+}
+
+/// Starts the timeout at this child's successful spawn return, as communicate
+/// does in the baseline. Launch time is still included in elapsed_ns.
+pub fn run_for(spec: &Spec<'_>, timeout: Duration) -> std::result::Result<Output, ProcessError> {
+    consume_one(Group::launch(std::slice::from_ref(spec), timeout)?)
+}
+
+fn consume_one(mut group: Group<'_>) -> std::result::Result<Output, ProcessError> {
+    let outcome = group.value(0);
+    group.finish()?;
+    outcome
 }
 
 /// Signal zero observes liveness only; EPERM is not evidence of a dead owner.
