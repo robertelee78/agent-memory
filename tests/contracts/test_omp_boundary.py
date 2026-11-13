@@ -55,7 +55,8 @@ def LiveDeliveryWindow(*, expired=False):
     return owner.verified
 
 
-def observe_installed(world, command, repo, receipt, request, *, launcher=None, timeout=60):
+def observe_installed(world, command, repo, receipt, request, *, launcher=None, timeout=60,
+                      before_readback=None):
     """Exercise the real finite installed pipe; return only its actual verified result."""
     from agent_memory import omp_stream
     instance = str(uuid.uuid4())
@@ -110,6 +111,8 @@ def observe_installed(world, command, repo, receipt, request, *, launcher=None, 
             result = body['result']
     if not ready or not result or result.get('verified') is not True:
         raise AssertionError('No actual verified finite observer result: ' + stdout + stderr)
+    if before_readback is not None:
+        before_readback()
     with patch.dict(os.environ, world.env, clear=True):
         streams = omp_stream.inventory(repo)['streams']
         actual = next(row for row in streams if row['instance_id'] == instance)

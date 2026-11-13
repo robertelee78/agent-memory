@@ -7,7 +7,7 @@ domain: maintain
 
 ## Use when
 
-At a natural turn boundary, after foreground work, the session MUST automatically
+At a [natural turn boundary](../SKILL.md#natural-turn-boundary), after foreground work, the session MUST automatically
 combine equivalent learning and tighten wording when current evidence supports
 preserving its meaning. This needs no daemon or per-record approval. The session
 MUST follow the [comparison guide](../comparison/GUIDE.md), inspect all plausible

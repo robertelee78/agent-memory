@@ -130,6 +130,168 @@ class DeveloperIdentityContract(unittest.TestCase):
             self.assertFalse(status["identity_authenticated"])
             self.assertEqual(self.registry(world).read_bytes(), before)
 
+    def test_effective_git_config_preserves_duplicates_includes_and_mixed_case_precedence(self):
+        with World() as world:
+            repo = world.repository()
+            name = "  Déveloper Effective  "
+            (world.paths["home"] / "attribution.inc").write_text(
+                f'[UsEr]\n\tNaMe = Included Earlier\n\tNaMe = "{name}"\n\tEmAiL = included@example.invalid\n')
+            (world.paths["home"] / ".gitconfig").write_text(
+                "[UsEr]\n\tNaMe = Global Earlier\n\tEmAiL = global@example.invalid\n"
+                "[include]\n\tpath = attribution.inc\n"
+                "[USER]\n\tEMAIL = global-last@example.invalid\n")
+            world.git("config", "--add", "user.email", "earlier@example.invalid", cwd=repo)
+            world.git("config", "--add", "USER.EMAIL", "effective@example.invalid", cwd=repo)
+            other, _ = self.create(world, "--alias", "git-author-email=earlier@example.invalid",
+                                   "--alias", "git-author-name=Other Developer")
+            selected, _ = self.create(world, "--alias", "git-author-email=effective@example.invalid",
+                                      "--alias", f"git-author-name={name}", "--alias", "github-login=effective",
+                                      "--alias", "os-user=local-user")
+            world.env["USER"] = "local-user"
+            before = self.registry(world).read_bytes()
+            lock_bytes = json.dumps(self.lock_data(os.getpid())).encode()
+            self.lock(world).write_bytes(lock_bytes)
+            result, status = self.command(world, "status", "--observe", "github-login=effective")
+            self.assertEqual(result.returncode, 0, status)
+            self.assertEqual(status["developer_id"], selected)
+            self.assertEqual(
+                [(item["kind"], item["value"], item["state"]) for item in status["observations"]],
+                [("github-login", "effective", "matches-selected"),
+                 ("git-author-email", "effective@example.invalid", "matches-selected"),
+                 ("git-author-name", name, "matches-selected"),
+                 ("os-user", "local-user", "matches-selected")])
+            self.assertEqual(status["attribution_conflicts"], [])
+            self.assertTrue(status["lock_present"])
+            self.assertFalse(status["identity_authenticated"])
+            self.assertFalse(status["writes_performed"])
+            self.assertEqual(self.registry(world).read_bytes(), before)
+            self.assertEqual(self.lock(world).read_bytes(), lock_bytes)
+            world.git("config", "--add", "user.email", "earlier@example.invalid", cwd=repo)
+            world.git("config", "--add", "user.name", "Other Developer", cwd=repo)
+            result, changed = self.command(world, "status", "--observe", "github-login=effective")
+            self.assertEqual(result.returncode, 0, changed)
+            self.assertEqual(changed["developer_id"], selected)
+            self.assertEqual(changed["observed_sha256"], status["observed_sha256"])
+            self.assertEqual(
+                [(item["kind"], item["value"], item["matching_developer_ids"])
+                 for item in changed["attribution_conflicts"]],
+                [("git-author-email", "earlier@example.invalid", [other]),
+                 ("git-author-name", "Other Developer", [other])])
+            self.assertTrue(changed["lock_present"])
+            self.assertFalse(changed["identity_authenticated"])
+            self.assertEqual(self.registry(world).read_bytes(), before)
+            self.assertEqual(self.lock(world).read_bytes(), lock_bytes)
+
+    def test_effective_git_config_valueless_and_empty_values_override_earlier_aliases(self):
+        for email, name in ((None, ""), ("", None)):
+            with self.subTest(email=email, name=name), World() as world:
+                repo = world.repository()
+                (world.paths["home"] / ".gitconfig").write_text(
+                    "[user]\n\temail = earlier@example.invalid\n\tname = Earlier Developer\n")
+                selected, _ = self.create(world, "--alias", "git-author-email=earlier@example.invalid",
+                                          "--alias", "git-author-name=Earlier Developer")
+                config = repo / ".git" / "config"
+                original = config.read_text()
+                config.write_text(original + "[UsEr]\n"
+                                  + "\tEmAiL" + ("" if email is None else ' = ""') + "\n"
+                                  + "\tNaMe" + ("" if name is None else ' = ""') + "\n")
+                before = self.registry(world).read_bytes()
+                config_before = config.read_bytes()
+                result, status = self.command(world, "status")
+                self.assertEqual(result.returncode, 0, status)
+                self.assertEqual(status["developer_id"], selected)
+                self.assertEqual(status["observations"], [])
+                self.assertEqual(status["attribution_conflicts"], [])
+                self.assertFalse(status["identity_authenticated"])
+                self.assertEqual(config.read_bytes(), config_before)
+                self.assertEqual(self.registry(world).read_bytes(), before)
+                world.git("config", "--replace-all", "user.email", "earlier@example.invalid", cwd=repo)
+                world.git("config", "--replace-all", "user.name", "Earlier Developer", cwd=repo)
+                result, restored = self.command(world, "status")
+                self.assertEqual(result.returncode, 0, restored)
+                self.assertEqual(
+                    [(item["kind"], item["value"], item["state"]) for item in restored["observations"]],
+                    [("git-author-email", "earlier@example.invalid", "matches-selected"),
+                     ("git-author-name", "Earlier Developer", "matches-selected")])
+                self.assertEqual(self.registry(world).read_bytes(), before)
+
+    def test_effective_git_config_no_match_preserves_caller_observations(self):
+        with World() as world:
+            repo = world.repository()
+            world.git("config", "user.email-extra", "ignored@example.invalid", cwd=repo)
+            world.git("config", "user.nameSuffix", "Ignored Developer", cwd=repo)
+            world.git("config", "user.other.email", "subsection@example.invalid", cwd=repo)
+            selected, _ = self.create(world, "--alias", "git-author-email=caller@example.invalid",
+                                      "--alias", "os-user=local-user")
+            world.env["USER"] = "local-user"
+            before = self.registry(world).read_bytes()
+            result, status = self.command(world, "status", "--observe", "git-author-email=caller@example.invalid")
+            self.assertEqual(result.returncode, 0, status)
+            self.assertEqual(status["developer_id"], selected)
+            self.assertEqual(
+                [(item["kind"], item["value"], item["state"]) for item in status["observations"]],
+                [("git-author-email", "caller@example.invalid", "matches-selected"),
+                 ("os-user", "local-user", "matches-selected")])
+            self.assertEqual(status["attribution_conflicts"], [])
+            self.assertFalse(status["identity_authenticated"])
+            self.assertEqual(self.registry(world).read_bytes(), before)
+
+    def test_effective_git_config_failure_contributes_neither_alias_and_recovers_freshly(self):
+        with World() as world:
+            repo = world.repository()
+            world.git("config", "user.email", "configured@example.invalid", cwd=repo)
+            world.git("config", "user.name", "Configured Developer", cwd=repo)
+            selected, _ = self.create(world, "--alias", "git-author-email=configured@example.invalid",
+                                      "--alias", "git-author-name=Configured Developer",
+                                      "--alias", "github-login=caller", "--alias", "os-user=local-user")
+            world.env["USER"] = "local-user"
+            before = self.registry(world).read_bytes()
+            config = repo / ".git" / "config"
+            valid = config.read_bytes()
+            invalid = valid + b"[broken\n"
+            config.write_bytes(invalid)
+            result, status = self.command(world, "status", "--observe", "github-login=caller")
+            self.assertEqual(result.returncode, 0, status)
+            self.assertEqual(status["developer_id"], selected)
+            self.assertEqual(
+                [(item["kind"], item["value"], item["state"]) for item in status["observations"]],
+                [("github-login", "caller", "matches-selected"),
+                 ("os-user", "local-user", "matches-selected")])
+            self.assertEqual(status["attribution_conflicts"], [])
+            self.assertFalse(status["identity_authenticated"])
+            self.assertEqual(config.read_bytes(), invalid)
+            self.assertEqual(self.registry(world).read_bytes(), before)
+            config.write_bytes(valid)
+            result, recovered = self.command(world, "status", "--observe", "github-login=caller")
+            self.assertEqual(result.returncode, 0, recovered)
+            self.assertEqual(
+                [(item["kind"], item["value"], item["state"]) for item in recovered["observations"]],
+                [("github-login", "caller", "matches-selected"),
+                 ("git-author-email", "configured@example.invalid", "matches-selected"),
+                 ("git-author-name", "Configured Developer", "matches-selected"),
+                 ("os-user", "local-user", "matches-selected")])
+            self.assertEqual(self.registry(world).read_bytes(), before)
+
+    def test_effective_git_config_rejects_genuine_embedded_and_trailing_lf_values(self):
+        with World() as world:
+            repo = world.repository()
+            self.create(world, "--alias", "git-author-email=configured@example.invalid",
+                        "--alias", "git-author-name=Configured Developer")
+            before = self.registry(world).read_bytes()
+            for key in ("user.email", "user.name"):
+                for value in ("First\nSecond", "Trailing\n", "Trailing\n\n"):
+                    with self.subTest(key=key, value=value):
+                        world.git("config", "--replace-all", "user.email", "configured@example.invalid", cwd=repo)
+                        world.git("config", "--replace-all", "user.name", "Configured Developer", cwd=repo)
+                        world.git("config", "--replace-all", key, value, cwd=repo)
+                        config_before = (repo / ".git" / "config").read_bytes()
+                        result, refusal = self.command(world, "status")
+                        self.assertEqual(result.returncode, 1, refusal)
+                        self.assertFalse(refusal["verified"])
+                        self.assertEqual(refusal["changed_memory_paths"], [])
+                        self.assertEqual((repo / ".git" / "config").read_bytes(), config_before)
+                        self.assertEqual(self.registry(world).read_bytes(), before)
+
     def test_replay_is_idempotent_without_reselecting_an_old_identity(self):
         with World() as world:
             first, proposal = self.create(world)

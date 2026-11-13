@@ -185,11 +185,13 @@ def _directory(base, session, instance):
     return Path(base) / 'omp-stream-v1' / hashlib.sha256(session.encode()).hexdigest() / instance
 
 
-def _entries(path, pattern, *, directories=False):
+def _entries(path, pattern, *, directories=False, maximum=None):
     trust_paths.state(path)
     result = []
     with os.scandir(path) as scan:
         for entry in scan:
+            if maximum is not None and len(result) >= maximum:
+                raise ContractError('Finite stream inventory exceeds bound')
             if not re.fullmatch(pattern, entry.name) or (entry.is_dir(follow_symlinks=False) != directories):
                 raise ContractError('Unknown finite stream inventory entry')
             if entry.is_symlink():
@@ -375,6 +377,7 @@ class ResponseWriter:
         self.thread.start()
 
     def send(self, kind, sequence=0, **value):
+        """Return True for the original frame, 'substituted' for a fixed notice, or False."""
         with self.condition:
             if not self.live or self.finishing:
                 return False
@@ -392,7 +395,8 @@ class ResponseWriter:
                 raw = encode_frame(kind, sequence, {'instance_id': self.instance_id, **value})
             except (ValueError, TypeError, UnicodeError):
                 raw = None
-            if raw is None or len(raw) > MAX_RESPONSE:
+            substituted = raw is None or len(raw) > MAX_RESPONSE
+            if substituted:
                 if kind == 'RECEIVED':
                     return False
                 kind = 'OBSERVED' if kind == 'OBSERVED' else 'REFUSED'
@@ -401,7 +405,7 @@ class ResponseWriter:
                     'outcome': 'unknown', 'status': 'pending'})
             self.queue.append((kind, raw))
             self.condition.notify_all()
-            return True
+            return 'substituted' if substituted else True
 
     def _loss_notice(self):
         if self.loss_pending and len(self.queue) + int(self.inflight) < MAX_RESPONSES:
@@ -529,6 +533,9 @@ class _LinuxNativeImage:
             digest = hashlib.sha256()
             total = 0
             while total < image.st_size:
+                with self.lock:
+                    if self.closed:
+                        return
                 block = os.read(fd, min(1024 * 1024, image.st_size - total))
                 if not block:
                     return
@@ -678,6 +685,10 @@ class ClockWindows:
             else:
                 _exact(value, {'nonce'})
                 nonce = _uuid(value['nonce'])
+                if nonce not in self.used_nonces:
+                    if len(self.used_nonces) >= MAX_FRAMES:
+                        raise ContractError('Callback clock nonce capacity reached')
+                    self.used_nonces.add(nonce)
                 if self.pending is not None and self.pending[0] == nonce:
                     self.pending = None
                 if self.verified is not None and self.verified.nonce == nonce:
@@ -703,6 +714,116 @@ class ClockWindows:
         if self.native_image is not None:
             self.native_image.close()
 
+
+
+class _LateNativeDeliveryWindow:
+    """One nonce-bound lookup, never a calibration or caller-supplied deadline."""
+    __slots__ = ('_owner', '_nonce', '_window', '_live', '_resolved', '_reservation_started')
+
+    def __init__(self, token, owner, nonce):
+        if token is not _WINDOW_MINT:
+            raise TypeError('Late delivery observations are executor internal')
+        self._owner, self._nonce = owner, _uuid(nonce)
+        self._window, self._live, self._resolved = None, True, False
+        self._reservation_started = False
+
+    def __reduce__(self):
+        raise TypeError('Late delivery observations cannot be serialized')
+
+    def reserve(self):
+        if not self._live or self._resolved:
+            return False
+        self._resolved = True
+        self._window = self._owner.window(self._nonce)
+        self._reservation_started = self._window is not None and self._window.reserve()
+        return self._reservation_started
+
+    @property
+    def reservation_started(self):
+        return self._reservation_started
+
+    def close(self):
+        self._live = False
+
+
+_SOURCE_COMPLETION_MINT = object()
+
+
+class _SourceCompletion:
+    """One finite attempt's historical source result, not reusable authority."""
+    __slots__ = ('executor', 'sequence', 'digest', 'request', 'window', 'started',
+                 'attempted', 'source_committed', '_source_bytes', '_live', 'offered_root_wake_path')
+
+    def __init__(self, token, executor, sequence, digest, request, window):
+        if token is not _SOURCE_COMPLETION_MINT:
+            raise TypeError('Source completions are executor internal')
+        self.executor, self.sequence, self.digest = executor, sequence, digest
+        self.request, self.window = request, window
+        self.started = self.attempted = self.source_committed = False
+        self._source_bytes, self._live = None, True
+        self.offered_root_wake_path = None
+
+    def __reduce__(self):
+        raise TypeError('Source completions cannot be serialized')
+
+    def validate(self, value, view):
+        if (not self._live or value is not self.request or not self.started
+                or value['action'] != 'seal' or value['payload']['request_wake'] is not True
+                or view['source_kind'] != 'session-manager'
+                or type(self.window) is not _LateNativeDeliveryWindow):
+            raise ContractError('Source completion requires the exact armed live finite seal')
+
+    def source_result(self):
+        if self._source_bytes is None:
+            raise ContractError('Source result has not completed')
+        return load(self._source_bytes.decode('utf-8'))
+
+    def commit_source(self, context, result):
+        if not self._live or not self.started or self.attempted or result.get('verified') is not True:
+            raise ContractError('Invalid finite source completion')
+        raw = turn_sources.encoded(result)
+        if len(raw) > MAX_RETAINED:
+            raise ContractError('Finite source completion exceeds retained-memory bound')
+        self._source_bytes, self.attempted = raw, True
+        from . import scope_binding
+        with scope_binding._fresh_enrollment_locations():
+            self._write_outcome()
+        self.source_committed = True
+
+    def _write_outcome(self):
+        self.executor.coverage.outcome(self.sequence, self.digest, 'verified', 'verified',
+                                       _returned_refs(self.source_result()))
+
+    def retry_busy_outcome(self):
+        # Only called after the observer and transport have completely unwound.
+        self.executor.metadata(self._write_outcome)
+        self.source_committed = True
+
+    def before_reserve(self, context):
+        coverage = self.executor.coverage
+        if not self._live or not self.source_committed:
+            raise ContractError('Wake requires a committed finite source')
+        binding = coverage.binding
+        with turn_sources.private_lock(coverage.lock_path):
+            if (turn_sources.read(coverage.directory / 'open.json', MAX_METADATA) != coverage.open
+                    or os.path.lexists(coverage.directory / 'retirement.json')
+                    or context.project_id != binding['project_id']
+                    or str(context.root) != binding['repo_root']
+                    or str(context.bank) != binding['bank_path']
+                    or context.scope['checkout_key'] != binding['checkout_key']):
+                raise ContractError('Finite stream binding changed before reservation')
+
+    def wake_failure(self, error):
+        result = self.source_result()
+        status = ('pending-wake-unknown-after-reservation' if self.window.reservation_started else
+                  'pending-wake-busy' if isinstance(error, turn_sources.SourceTransportBusy) else
+                  'pending-wake-unavailable')
+        result.update({'continue': False, 'status': status})
+        return result
+
+    def close(self):
+        self._live = False
+        self.window.close()
 
 def _binding(value, repo, session, instance, lifecycle):
     fields = {'project_id', 'repo_root', 'bank_path', 'checkout_key', 'artifact_digest',
@@ -735,10 +856,10 @@ def _attest_binding(binding, receipt):
 
 
 @contextmanager
-def _verify_binding(repo, binding, receipt, proof):
+def _verify_binding(repo, binding, receipt, proof, *, held_source=None):
     """Fast same-frame executable, marker and scope check under the source barrier."""
     from . import omp_installation
-    with omp_installation._observe_observer_binding(repo, receipt, proof) as context:
+    with omp_installation._observe_observer_binding(repo, receipt, proof, held_source=held_source) as context:
         if (context.project_id != binding['project_id'] or str(context.root) != binding['repo_root']
                 or str(context.bank) != binding['bank_path'] or context.scope['checkout_key'] != binding['checkout_key']):
             raise ContractError('Finite stream project/bank/checkout binding changed')
@@ -757,6 +878,7 @@ class Coverage:
         self.directory = _directory(self.base, session, instance)
         self.lock_path = self.directory / 'stream.lock'
         self._live_guard = None
+        self._frame_source = None
         self.previous_identity = None
         self.last_checked_identity = None
         self.last_sequence = 0
@@ -799,7 +921,8 @@ class Coverage:
 
     @contextmanager
     def control(self):
-        with turn_sources.source_barrier(self.repo), _verify_binding(self.repo, self.binding, self.receipt, self.frame_proof), turn_sources.private_lock(self.lock_path):
+        with _verify_binding(self.repo, self.binding, self.receipt, self.frame_proof,
+                             held_source=self._frame_source), turn_sources.private_lock(self.lock_path):
             if turn_sources.read(self.directory / 'open.json', MAX_METADATA) != self.open:
                 raise ContractError('Finite stream OPEN binding changed')
             yield
@@ -896,7 +1019,8 @@ class Coverage:
 
     def started(self, sequence, attempt_digest):
         # Called inside source barrier -> omp-transport lock, never acquires transport.
-        with _verify_binding(self.repo, self.binding, self.receipt, self.frame_proof), turn_sources.private_lock(self.lock_path):
+        with _verify_binding(self.repo, self.binding, self.receipt, self.frame_proof,
+                             held_source=self._frame_source), turn_sources.private_lock(self.lock_path):
             if os.path.lexists(self.directory / 'retirement.json'):
                 raise ContractError('Finite stream retirement fence prevents execution')
             _retain(self.directory / 'started' / f'{sequence}.json', {
@@ -1048,10 +1172,17 @@ class FiniteExecutor:
         with ExitStack() as stack:
             def enter():
                 gate = turn_sources.source_barrier(self.coverage.repo)
-                gate.__enter__()
+                held = gate.__enter__()
                 stack.push(gate.__exit__)
-            self.metadata(enter)
-            self._execute(kind, sequence, nonce, raw)
+                return held
+            held = self.metadata(enter)
+            if self.coverage._frame_source is not None:
+                raise ContractError('Finite source frame already owns a source barrier observation')
+            self.coverage._frame_source = held
+            try:
+                self._execute(kind, sequence, nonce, raw)
+            finally:
+                self.coverage._frame_source = None
 
     def _execute(self, kind, sequence, nonce, raw):
         if kind not in {'REQUEST', 'REFUSED-ATTEMPT'}:
@@ -1109,6 +1240,11 @@ class FiniteExecutor:
             return
         self.writer.send('RECEIVED', sequence)
         started = False
+        completion = None
+        if (action == 'seal' and nonce is not None and source_kind == 'session-manager'
+                and request['payload'].get('request_wake') is True):
+            completion = _SourceCompletion(_SOURCE_COMPLETION_MINT, self, sequence, digest, request,
+                _LateNativeDeliveryWindow(_WINDOW_MINT, self.clocks, nonce))
 
         def on_started():
             nonlocal started
@@ -1116,43 +1252,256 @@ class FiniteExecutor:
                 raise ContractError('Finite source attempt started twice')
             self.coverage.started(sequence, digest)
             started = True
+            if completion is not None:
+                completion.started = True
         on_started.instance_id = self.coverage.instance
         on_started.identity = identity(value['identity'])
         deadline = time.monotonic() + BUSY_SECONDS
         result = None
-        while True:
+        try:
+            while True:
+                try:
+                    result = self.observer(self.coverage.repo, request, receipt=self.receipt,
+                        on_started=on_started,
+                        delivery_window=completion.window if completion is not None else self.clocks.window(nonce) if nonce else None,
+                        verified_binding=self.coverage.frame_proof, source_completion=completion,
+                        held_source=self.coverage._frame_source)
+                except Exception as error:
+                    if completion is not None and completion.attempted and isinstance(error, (MemoryError, RecursionError)):
+                        raise
+                    if completion is not None and completion.source_committed:
+                        result = completion.wake_failure(error)
+                        outcome, code = 'verified', 'verified'
+                    elif completion is not None and completion.attempted:
+                        if not isinstance(error, turn_sources.SourceTransportBusy):
+                            raise
+                        completion.retry_busy_outcome()
+                        result = completion.wake_failure(error)
+                        outcome, code = 'verified', 'verified'
+                    elif isinstance(error, turn_sources.SourceTransportBusy):
+                        if started:
+                            outcome, code = 'unknown', 'unknown-after-start'
+                        elif time.monotonic() >= deadline:
+                            outcome, code = 'unknown', 'busy-exhausted'
+                        else:
+                            time.sleep(min(BUSY_BACKOFF, max(0, deadline - time.monotonic())))
+                            continue
+                    elif isinstance(error, ContractError):
+                        outcome, code = ('unknown', 'unknown-after-start') if started else ('durable-refusal', 'observer-refused')
+                    else:
+                        outcome, code = 'unknown', 'unknown-after-start' if started else 'unknown-outcome'
+                else:
+                    if isinstance(result, dict) and result.get('verified') is True and started:
+                        outcome, code = 'verified', 'verified'
+                    elif isinstance(result, dict) and result.get('verified') is True:
+                        outcome, code = 'unknown', 'unknown-outcome'
+                    else:
+                        outcome, code = ('unknown', 'unknown-after-start') if started else ('durable-refusal', 'observer-refused')
+                break
+            # Never overwrite a possibly retained source outcome after a failed exit.
+            if completion is None or not completion.source_committed:
+                if completion is not None and completion.attempted:
+                    raise ContractError('Finite source completion did not commit')
+                refs = _returned_refs(result) if outcome == 'verified' else []
+                self.metadata(self.coverage.outcome, sequence, digest, outcome, code, refs)
             try:
-                result = self.observer(self.coverage.repo, request, receipt=self.receipt,
-                    on_started=on_started, delivery_window=self.clocks.window(nonce) if nonce else None,
-                    verified_binding=self.coverage.frame_proof)
-            except turn_sources.SourceTransportBusy:
-                if started:
-                    outcome, code = 'unknown', 'unknown-after-start'
-                elif time.monotonic() >= deadline:
-                    outcome, code = 'unknown', 'busy-exhausted'
+                if outcome == 'verified':
+                    sent = self.writer.send('OBSERVED', sequence, result=result)
+                    if (sent is True and started and action == 'seal'
+                            and source_kind == 'session-manager'):
+                        try:
+                            _retain_wake_decision(self.coverage, sequence, digest, request, result, completion)
+                        except (MemoryError, RecursionError):
+                            raise
+                        except Exception:
+                            # Optional evidence cannot change the committed source or retry its wake.
+                            pass
                 else:
-                    time.sleep(min(BUSY_BACKOFF, max(0, deadline - time.monotonic())))
-                    continue
-            except ContractError:
-                outcome, code = ('unknown', 'unknown-after-start') if started else ('durable-refusal', 'observer-refused')
-            except Exception:
-                outcome, code = 'unknown', 'unknown-after-start' if started else 'unknown-outcome'
-            else:
-                if isinstance(result, dict) and result.get('verified') is True and started:
-                    outcome, code = 'verified', 'verified'
-                elif isinstance(result, dict) and result.get('verified') is True:
-                    outcome, code = 'unknown', 'unknown-outcome'
-                else:
-                    outcome, code = ('unknown', 'unknown-after-start') if started else ('durable-refusal', 'observer-refused')
-            break
-        # Persistence/output failures cannot re-enter or replay source execution.
-        refs = _returned_refs(result) if outcome == 'verified' else []
-        self.metadata(self.coverage.outcome, sequence, digest, outcome, code, refs)
-        if outcome == 'verified':
-            self.writer.send('OBSERVED', sequence, result=result)
-        else:
-            self.writer.send('OBSERVED', sequence, outcome=outcome, code=code)
+                    self.writer.send('OBSERVED', sequence, outcome=outcome, code=code)
+            finally:
+                if completion is not None and completion.source_committed:
+                    from .omp_transport import _drain_after_response
+                    _drain_after_response(self.coverage.repo, self.receipt, self.coverage.frame_proof)
+        finally:
+            if completion is not None:
+                completion.close()
 
+
+_WAKE_DECISION_SCHEMA = 'agent-memory/omp-wake-decision-v1'
+_WAKE_DECISION_KEYS = frozenset({'schema', 'open_sha256', 'attempt_sha256', 'outcome_sha256',
+    'sequence', 'status', 'continuation_offered', 'human_root', 'root_wake_sha256'})
+_WAKE_PENDING_CODES = frozenset({'pending', 'pending-missing-human-source',
+    'pending-wake-state-unverifiable', 'pending-already-requested-native-user',
+    'pending-wake-guidance-bound', 'pending-undeliverable-window',
+    'pending-wake-unknown-after-reservation', 'pending-wake-busy', 'pending-wake-unavailable'})
+_WAKE_DECISION_CODES = _WAKE_PENDING_CODES | {'offered', 'wake-not-evaluated', 'not-armed', 'unknown'}
+_WAKE_READBACK_CODES = _WAKE_DECISION_CODES | {'unrecorded', 'unbound'}
+
+
+def _wake_decision_directory(directory):
+    # Derive only from the already checked stream coverage namespace.
+    return directory.parents[2] / 'omp-wake-decisions-v1' / directory.parent.name / directory.name
+
+
+def _seal_evidence(directory, sequence, *, opened=None, attempt_digest=None):
+    actual_open = _open_value(turn_sources.read(directory / 'open.json', MAX_METADATA), directory)
+    if opened is not None and actual_open != opened:
+        raise ContractError('Wake decision OPEN changed')
+    open_digest = _digest(actual_open)
+    attempt = turn_sources.read(directory / 'attempts' / f'{sequence}.json', MAX_METADATA)
+    _exact(attempt, {'schema', 'open_sha256', 'instance_id', 'sequence', 'action', 'event_ordinal',
+        'disposition', 'reason', 'identity', 'source_kind', 'frame_kind'})
+    _integer(attempt['sequence']); _integer(attempt['event_ordinal'])
+    if (attempt['schema'] != 'agent-memory/omp-stream-attempt-v1'
+            or attempt['open_sha256'] != open_digest or attempt['instance_id'] != directory.name
+            or attempt['sequence'] != sequence or attempt['action'] != 'seal'
+            or attempt['disposition'] != 'accepted' or attempt['reason'] is not None
+            or attempt['source_kind'] != 'session-manager' or attempt['frame_kind'] != 'REQUEST'):
+        raise ContractError('Wake decision lacks a real session-manager seal')
+    actual_digest = _digest(attempt)
+    if attempt_digest is not None and actual_digest != attempt_digest:
+        raise ContractError('Wake decision attempt changed')
+    start = turn_sources.read(directory / 'started' / f'{sequence}.json', 4096)
+    _exact(start, {'schema', 'open_sha256', 'attempt_sha256', 'sequence'})
+    _integer(start['sequence'])
+    if start != {'schema': 'agent-memory/omp-stream-started-v1', 'open_sha256': open_digest,
+                 'attempt_sha256': actual_digest, 'sequence': sequence}:
+        raise ContractError('Wake decision lacks a bound source start')
+    outcome = turn_sources.read(directory / 'outcomes' / f'{sequence}.json', MAX_METADATA)
+    _exact(outcome, {'schema', 'open_sha256', 'attempt_sha256', 'sequence', 'outcome', 'code',
+        'source_references'})
+    _integer(outcome['sequence']); _source_refs(outcome['source_references'])
+    if (outcome['schema'] != 'agent-memory/omp-stream-outcome-v1'
+            or outcome['open_sha256'] != open_digest or outcome['attempt_sha256'] != actual_digest
+            or outcome['sequence'] != sequence or outcome['outcome'] != 'verified'
+            or outcome['code'] != 'verified'):
+        raise ContractError('Wake decision lacks a verified source outcome')
+    return actual_open, actual_digest, _digest(outcome)
+
+
+def _wake_root(directory, opened, path):
+    root = _uuid(path.stem)
+    expected = directory.parents[2] / 'omp-source-v1' / directory.parent.name / 'root-wakes' / (root + '.json')
+    if path != expected:
+        raise ContractError('Wake decision root namespace differs')
+    value = turn_sources.read(path, 4096)
+    _exact(value, {'schema', 'session', 'human_root', 'native_user_entry', 'request_id', 'status'})
+    if (value['schema'] != 'agent-memory/omp-root-wake-v1' or value['session'] != opened['session']
+            or value['human_root'] != root or value['status'] != 'requested'):
+        raise ContractError('Wake decision root binding differs')
+    turn_sources.bounded(value['native_user_entry']); _uuid(value['request_id'])
+    return value
+
+
+def _retain_wake_decision(coverage, sequence, attempt_digest, request, result, completion):
+    opened, attempt_digest, outcome_digest = _seal_evidence(coverage.directory, sequence,
+        opened=coverage.open, attempt_digest=attempt_digest)
+    status, root, root_digest = 'unknown', None, None
+    returned_status = result.get('status')
+    if request['payload'].get('request_wake') is not True:
+        status = 'not-armed'
+    elif result.get('continue') is True:
+        path = completion.offered_root_wake_path if completion is not None else None
+        try:
+            request_id = _uuid(result.get('request_id'))
+        except (ValueError, TypeError, AttributeError):
+            request_id = None
+        if path is not None and request_id is not None:
+            actual = _wake_root(coverage.directory, opened, path)
+            if actual['request_id'] != request_id:
+                raise ContractError('Wake decision request differs from retained root')
+            status, root, root_digest = 'offered', actual['human_root'], _digest(actual)
+    elif isinstance(returned_status, str):
+        if result.get('continue') is False and returned_status in _WAKE_PENDING_CODES:
+            status = returned_status
+        elif 'continue' not in result and returned_status in {'observed', 'pending'}:
+            status = 'wake-not-evaluated'
+    value = {'schema': _WAKE_DECISION_SCHEMA, 'open_sha256': _digest(opened),
+        'attempt_sha256': attempt_digest, 'outcome_sha256': outcome_digest, 'sequence': sequence,
+        'status': status, 'continuation_offered': status == 'offered',
+        'human_root': root, 'root_wake_sha256': root_digest}
+    path = _wake_decision_directory(coverage.directory) / f'{sequence}.json'
+    turn_sources.private_mkdir(path.parent)
+    try:
+        turn_sources.exclusive(path, value, 4096)
+    except FileExistsError:
+        if turn_sources.read_bytes(path, 4096) != turn_sources.encoded(value):
+            return 'unavailable'
+    return 'retained'
+
+
+def _checked_wake_decision(path, directory, sequence, evidence):
+    value = turn_sources.read(path, 4096)
+    _exact(value, _WAKE_DECISION_KEYS)
+    opened, attempt_digest, outcome_digest = evidence
+    _integer(value['sequence'])
+    if (value['schema'] != _WAKE_DECISION_SCHEMA or value['sequence'] != sequence
+            or value['open_sha256'] != _digest(opened) or value['attempt_sha256'] != attempt_digest
+            or value['outcome_sha256'] != outcome_digest
+            or not isinstance(value['status'], str) or value['status'] not in _WAKE_DECISION_CODES
+            or type(value['continuation_offered']) is not bool
+            or value['continuation_offered'] != (value['status'] == 'offered')):
+        raise ContractError('Unbound optional wake decision')
+    if value['status'] == 'offered':
+        root = _uuid(value['human_root'])
+        root_path = directory.parents[2] / 'omp-source-v1' / directory.parent.name / 'root-wakes' / (root + '.json')
+        if _digest(_wake_root(directory, opened, root_path)) != _sha(value['root_wake_sha256']):
+            raise ContractError('Wake decision root digest differs')
+    elif value['human_root'] is not None or value['root_wake_sha256'] is not None:
+        raise ContractError('Non-offered wake decision claims a root')
+    return value['status']
+
+
+def _wake_decision_summary(*, available):
+    return {'availability': 'available' if available else 'unavailable-or-unverifiable',
+        'counts': {code: 0 for code in sorted(_WAKE_READBACK_CODES)}, 'rows': [], 'truncated': False,
+        'delivery': 'not-observed', 'assessment_authority': False, 'completion_inferred': False}
+
+
+def wake_decisions(repo, streams, base=None):
+    """Read optional evidence only for an already successful ordinary inventory."""
+    base = _base(repo) if base is None else Path(base)
+    result = _wake_decision_summary(available=True)
+    for row in streams['streams']:
+        if row['instance_id'] is None or row['open_sha256'] is None:
+            continue
+        directory = _directory(base, row['session'], row['instance_id'])
+        opened = _open_value(turn_sources.read(directory / 'open.json', MAX_METADATA), directory)
+        if _digest(opened) != row['open_sha256'] or opened['repo_root'] != str(Path(repo).resolve()):
+            raise ContractError('Wake diagnostic inventory binding changed')
+        optional = _wake_decision_directory(directory)
+        paths = ({int(path.stem): path for path in _entries(optional, r'[1-9][0-9]*\.json', maximum=65536)}
+                 if os.path.lexists(optional) else {})
+        attempts_dir = directory / 'attempts'
+        if not os.path.lexists(attempts_dir):
+            continue
+        for path in _entries(attempts_dir, r'[1-9][0-9]*\.json'):
+            sequence = int(path.stem)
+            attempt = turn_sources.read(path, MAX_METADATA)
+            if (attempt['action'] != 'seal' or attempt['source_kind'] != 'session-manager'
+                    or attempt['disposition'] != 'accepted'
+                    or not os.path.lexists(directory / 'started' / path.name)
+                    or not os.path.lexists(directory / 'outcomes' / path.name)):
+                continue
+            outcome = turn_sources.read(directory / 'outcomes' / path.name, MAX_METADATA)
+            if outcome['outcome'] != 'verified':
+                continue
+            evidence = _seal_evidence(directory, sequence, opened=opened)
+            status = 'unrecorded'
+            if sequence in paths:
+                try:
+                    status = _checked_wake_decision(paths[sequence], directory, sequence, evidence)
+                except (MemoryError, RecursionError):
+                    raise
+                except Exception:
+                    status = 'unbound'
+            result['counts'][status] += 1
+            if len(result['rows']) < 64:
+                result['rows'].append({'instance_id': row['instance_id'], 'sequence': sequence,
+                    'status': status, 'continuation_offered': status == 'offered'})
+            else:
+                result['truncated'] = True
+    return result
 
 def _open_value(value, directory):
     fields = {'schema', 'project_id', 'repo_root', 'bank_path', 'checkout_key', 'session', 'instance_id',
