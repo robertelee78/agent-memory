@@ -263,6 +263,10 @@ fn nonblocking(fd: i32) -> io::Result<()> {
     Ok(())
 }
 
+/// Spare `proc_fdinfo` slots (8 bytes each) beyond the descriptors seen before fork.
+#[cfg(target_os = "macos")]
+const DESCRIPTOR_HEADROOM: usize = 4096;
+
 #[cfg(target_os = "macos")]
 fn descriptor_buffer() -> io::Result<Vec<libc::proc_fdinfo>> {
     let bytes = unsafe {
@@ -277,7 +281,10 @@ fn descriptor_buffer() -> io::Result<Vec<libc::proc_fdinfo>> {
     if bytes <= 0 {
         return Err(io::Error::last_os_error());
     }
-    let count = bytes as usize / std::mem::size_of::<libc::proc_fdinfo>() + 64;
+    // Other threads may open descriptors between this sizing and the child's
+    // snapshot after fork. The headroom makes that overflow implausible; the
+    // child still refuses (EOVERFLOW) rather than apply a partial snapshot.
+    let count = bytes as usize / std::mem::size_of::<libc::proc_fdinfo>() + DESCRIPTOR_HEADROOM;
     if count > i32::MAX as usize / std::mem::size_of::<libc::proc_fdinfo>() {
         return Err(io::Error::from_raw_os_error(libc::EOVERFLOW));
     }

@@ -21,6 +21,8 @@ pub mod host;
 pub mod identity_git;
 pub mod lifecycle;
 pub mod local_registry;
+pub mod migration_codecs;
+pub mod migration_contract;
 pub mod model_reference;
 pub mod omp_installation;
 pub mod pack_validation;

@@ -1,7 +1,7 @@
 {
-  "schema": "agent-memory/migration-catalog-v1",
+  "schema": "agent-memory/migration-catalog-v2",
   "codecs": [
-    {"schema": "agent-memory/v1", "validator": {"module": "scripts/agent_memory/migration_codecs.py", "function": "native"}}
+    {"schema": "agent-memory/v1", "validator": {"codec": "native"}}
   ],
   "steps": []
 }
