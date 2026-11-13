@@ -99,6 +99,17 @@ impl From<io::Error> for ReadError { fn from(error: io::Error) -> Self { Self::I
 pub struct ReadOptions {
     pub require_single_link: bool,
     pub full_parent_signature: bool,
+    pub growth_is_capacity: bool,
+    pub capacity_before_binding: bool,
+}
+
+impl ReadOptions {
+    pub const LAYOUT_RECOVERY: Self = Self {
+        require_single_link: true,
+        full_parent_signature: true,
+        growth_is_capacity: true,
+        capacity_before_binding: true,
+    };
 }
 
 #[cfg(target_os = "linux")]
@@ -480,15 +491,17 @@ impl PinnedRead {
 
     pub fn read(mut self) -> std::result::Result<ReadObservation, ReadError> {
         if self.before.size as u128 > self.limit as u128 {
-            self.recheck()?;
+            if !self.options.capacity_before_binding { self.recheck()?; }
             return Err(ReadError::SizeLimit { limit: self.limit, observed: self.before.size as u64, exact: true });
         }
         let bytes = self.file.read_up_to(self.limit)?;
         let over_limit = bytes.len() > self.limit;
-        self.verify(over_limit.then_some(bytes.len()))?;
         if over_limit {
+            if !self.options.growth_is_capacity { return Err(ReadError::SourceChanged); }
+            if !self.options.capacity_before_binding { self.verify(Some(bytes.len()))?; }
             return Err(ReadError::SizeLimit { limit: self.limit, observed: bytes.len() as u64, exact: false });
         }
+        self.verify(None)?;
         if bytes.len() as u128 != self.before.size as u128 { return Err(ReadError::SourceChanged); }
         Ok(ReadObservation { bytes, identity: self.before })
     }
@@ -503,6 +516,6 @@ pub fn read_source_with_options(directory: &Path, relative: &Path, limit: usize,
 }
 
 pub fn read_regular(directory: &Path, relative: &Path, limit: usize) -> std::result::Result<(Vec<u8>, u32), ReadError> {
-    let observation = read_source_with_options(directory, relative, limit, ReadOptions { require_single_link: true, full_parent_signature: false })?;
+    let observation = read_source_with_options(directory, relative, limit, ReadOptions { require_single_link: true, ..ReadOptions::default() })?;
     Ok((observation.bytes, observation.identity.mode & 0o777))
 }

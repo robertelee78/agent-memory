@@ -143,7 +143,7 @@ fn optional_stat(path: &Path) -> Result<Option<Identity>> {
 pub struct TreeInspection {
     path: PathBuf,
     git_metadata: bool,
-    root: Option<(DirectoryChain, Identity, Vec<OsString>)>,
+    root: Option<(DirectoryChain, Identity)>,
 }
 
 impl TreeInspection {
@@ -159,8 +159,7 @@ impl TreeInspection {
                     if !chain.directory().stat().map_err(contract_io)?.same_binding(info) {
                         return refuse(path, "path changed during trust inspection");
                     }
-                    let entries = chain.directory().entries().map_err(contract_io)?;
-                    Some((chain, info, entries))
+                    Some((chain, info))
                 } else { None }
             };
             Ok(Self { path: path.to_path_buf(), git_metadata, root })
@@ -169,8 +168,9 @@ impl TreeInspection {
 
     pub fn finish(self) -> Result<()> {
         trust_result(&self.path, (|| {
-            if let Some((chain, before, names)) = self.root {
+            if let Some((chain, before)) = self.root {
                 chain.recheck().map_err(contract_io)?;
+                let names = chain.directory().entries().map_err(contract_io)?;
                 visit_tree(chain.directory(), &self.path, self.git_metadata, before, names)?;
                 chain.recheck().map_err(contract_io)?;
             }
@@ -196,8 +196,11 @@ fn visit_tree(directory: &Descriptor, path: &Path, git_metadata: bool, before: I
             if !opened.same_binding(info) { return refuse(&node, "path changed during trust inspection"); }
             let names = child.entries().map_err(contract_io)?;
             visit_tree(&child, &node, metadata_entry, opened, names)?;
-            if !directory.stat_at(&name).map_err(contract_io)?.same_binding(opened) {
-                return refuse(&node, "path changed during trust inspection");
+            match directory.stat_at(&name) {
+                Ok(named) if !named.same_binding(opened) => return refuse(&node, "path changed during trust inspection"),
+                Ok(_) => {}
+                Err(error) if error.raw_os_error() == Some(libc::ENOENT) => continue,
+                Err(error) => return Err(contract_io(error)),
             }
         }
     }

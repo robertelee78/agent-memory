@@ -400,7 +400,7 @@ fn size_refusals_are_typed_and_follow_binding_checks() {
     fs::write(root.join("source"), b"abc").unwrap();
     let pinned = PinnedRead::open(root.path(), Path::new("source"), 4).unwrap();
     fs::write(root.join("source"), b"abcdefghi").unwrap();
-    assert!(matches!(pinned.read(), Err(ReadError::SizeLimit { limit: 4, observed: 5, exact: false })));
+    assert!(matches!(pinned.read(), Err(ReadError::SourceChanged)));
     amfs::private_mkdir(&root.join("parent")).unwrap();
     file(&root.join("parent/file"), b"oversize");
     let pinned = PinnedRead::open(root.path(), Path::new("parent/file"), 4).unwrap();
@@ -417,7 +417,7 @@ fn single_link_policy_is_selected_by_the_consumer() {
     assert_eq!(amfs::read_source(root.path(), Path::new("source"), 100).unwrap().bytes, b"shared");
     assert!(matches!(amfs::read_regular(root.path(), Path::new("source"), 100), Err(ReadError::MultipleLinks)));
     assert!(matches!(amfs::read_source_with_options(root.path(), Path::new("source"), 100,
-        ReadOptions { require_single_link: true, full_parent_signature: true }), Err(ReadError::MultipleLinks)));
+        ReadOptions::LAYOUT_RECOVERY), Err(ReadError::MultipleLinks)));
 }
 
 #[test]
@@ -427,7 +427,7 @@ fn full_parent_signatures_stop_at_the_requested_root() {
     amfs::private_mkdir(&root.join("ancestor/bank/nested")).unwrap();
     file(&root.join("ancestor/bank/nested/file"), b"exact");
     let bank = root.join("ancestor/bank");
-    let options = ReadOptions { require_single_link: true, full_parent_signature: true };
+    let options = ReadOptions::LAYOUT_RECOVERY;
     let pinned = PinnedRead::open_with_options(&bank, Path::new("nested/file"), 100, options).unwrap();
     fs::File::open(root.join("ancestor")).unwrap().set_modified(UNIX_EPOCH + std::time::Duration::from_secs(2)).unwrap();
     assert_eq!(pinned.read().unwrap().bytes, b"exact");
@@ -563,4 +563,57 @@ fn read_failure_kinds_do_not_require_message_parsing() {
     assert!(matches!(amfs::read_source(root.path(), Path::new("missing"), 10), Err(ReadError::Io(_))));
     amfs::private_mkdir(&root.join("directory")).unwrap();
     assert!(matches!(amfs::read_source(root.path(), Path::new("directory"), 10), Err(ReadError::NotRegular)));
+}
+
+#[test]
+fn tree_finish_inspects_entries_added_after_open() {
+    let root = PrivateDirectory::new();
+    amfs::private_mkdir(&root.join("repository")).unwrap();
+    let repo = root.join("repository");
+    let observed = trust::TreeInspection::open(&repo, false).unwrap();
+    symlink("../outside-metadata", repo.join(".git")).unwrap();
+    assert_eq!(reason(&observed.finish().unwrap_err()),
+        "a trusted ordinary path must not be redirected by a symlink");
+    assert!(fs::symlink_metadata(repo.join(".git")).unwrap().file_type().is_symlink());
+}
+
+#[test]
+fn growth_capacity_is_selected_per_consumer() {
+    use amfs::{ReadError, ReadOptions};
+    for growth_is_capacity in [false, true] {
+        let root = PrivateDirectory::new(); file(&root.join("source"), b"abc");
+        let options = ReadOptions { growth_is_capacity, ..ReadOptions::default() };
+        let pinned = PinnedRead::open_with_options(root.path(), Path::new("source"), 4, options).unwrap();
+        fs::write(root.join("source"), b"abcdefghi").unwrap();
+        let result = pinned.read();
+        if growth_is_capacity {
+            assert!(matches!(result, Err(ReadError::SizeLimit { limit: 4, observed: 5, exact: false })));
+        } else {
+            assert!(matches!(result, Err(ReadError::SourceChanged)));
+        }
+    }
+}
+
+#[test]
+fn layout_capacity_precedes_binding_checks_but_bank_capacity_does_not() {
+    use amfs::{ReadError, ReadOptions};
+    for capacity_before_binding in [false, true] {
+        let root = PrivateDirectory::new(); file(&root.join("source"), b"oversize");
+        let options = ReadOptions { capacity_before_binding, ..ReadOptions::LAYOUT_RECOVERY };
+        let pinned = PinnedRead::open_with_options(root.path(), Path::new("source"), 4, options).unwrap();
+        fs::rename(root.join("source"), root.join("retained")).unwrap();
+        file(&root.join("source"), b"replacement");
+        let result = pinned.read();
+        if capacity_before_binding {
+            assert!(matches!(result, Err(ReadError::SizeLimit { limit: 4, observed: 8, exact: true })));
+        } else {
+            assert!(matches!(result, Err(ReadError::SourceChanged)));
+        }
+    }
+    let root = PrivateDirectory::new(); file(&root.join("source"), b"abc");
+    let pinned = PinnedRead::open_with_options(root.path(), Path::new("source"), 4, ReadOptions::LAYOUT_RECOVERY).unwrap();
+    fs::write(root.join("source"), b"abcdefghi").unwrap();
+    fs::rename(root.join("source"), root.join("retained")).unwrap();
+    file(&root.join("source"), b"replacement");
+    assert!(matches!(pinned.read(), Err(ReadError::SizeLimit { limit: 4, observed: 5, exact: false })));
 }
