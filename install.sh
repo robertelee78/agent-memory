@@ -1,517 +1,313 @@
-#!/usr/bin/env bash
-# Generated from the same reviewed verifier shipped in the portable artifact.
-# A truncated pipe cannot execute a complete prefix of this compound command.
+#!/bin/sh
+# Agent Memory bootstrap. Downloads the signed `am` binary for this host,
+# verifies it with ssh-keygen against the release key pinned below, and only
+# then runs `am install`. POSIX sh only; no interpreter and no JSON parsing.
+# The whole program is one compound command, so a truncated download cannot
+# execute a complete prefix of it.
 if :; then
-set -euo pipefail
-for argument in "$@"; do
-  case "$argument" in
+set -eu
+
+# Release constants. Nothing in the environment or on the command line can
+# change them; the contract tests substitute these lines in a private copy.
+AM_RELEASE_BASE='https://github.com/robertelee78/agent-memory/releases/latest/download/'
+AM_PROTOCOLS='=https'
+AM_ALLOWED_SIGNERS='release@agent-memory namespaces="agent-memory.release,agent-memory.release-binary" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB+C//uSRKmScS5hTki796yvLR2oOSn2IKHLkr1RWE2y'
+AM_PRINCIPAL='release@agent-memory'
+AM_NAMESPACE='agent-memory.release-binary'
+AM_BINARY_LIMIT=67108864
+AM_SIGNATURE_LIMIT=4096
+AM_ATTEMPTS=3
+AM_ATTEMPT_SECONDS=60
+AM_CONNECT_SECONDS=5
+
+am_os=other
+am_arch=other
+am_triple=
+am_directory=
+
+# One fixed JSON line: constant strings chosen from the tables in this file
+# plus integer curl exit / HTTP status. Never text from the host or network.
+am_fail() {
+  printf '{"schema":"agent-memory/bootstrap-failure-v1","stage":"%s","reason":"%s","os":"%s","arch":"%s","curl_exit":%s,"http_status":%s,"activation_accepted":false,"repair":"%s"}\n' \
+    "$1" "$2" "$am_os" "$am_arch" "$4" "$5" "$6"
+  exit "$3"
+}
+
+am_refuse() {
+  am_fail "$1" "$2" "$3" null null "$4"
+}
+
+am_help() {
+  printf '%s\n' \
+    'Install Agent Memory: install.sh [--check|--dry-run] [--json] [--verbose] [--mode link|copy] [--presets all|none|CLIENTS]' \
+    'Custom discovery: --target-dir PATH, --bin-dir PATH, --no-guidance' \
+    'Native omp (excluded from all): --presets omp --omp-agent-dir ABSOLUTE_ROOT --omp-peers-upgraded' \
+    'Quiescence gates: --layout-quiescence VALUE, --omp-layout-quiescence VALUE' \
+    'Explicit sources: --development-source PATH or --remote URL --ref BRANCH' \
+    'Bootstrap: downloads the signed am binary for this host, verifies it with ssh-keygen, then runs am install.' \
+    'Requires curl and ssh-keygen. Hosts: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.' \
+    'After installation: am --version; am update; am uninstall'
+}
+
+# Syntax check of the options `am install` accepts, so a typo needs no download.
+am_validate() {
+  am_development=no
+  am_channel=no
+  while [ "$#" -gt 0 ]; do
+    am_word=$1
+    case $am_word in
+      --remote=*|--ref=*|--development-source=*|--mode=*|--presets=*|--target-dir=*|--bin-dir=*|--omp-agent-dir=*|--omp-layout-quiescence=*|--layout-quiescence=*)
+        am_option=${am_word%%=*}
+        am_value=${am_word#*=}
+        ;;
+      --remote|--ref|--development-source|--mode|--presets|--target-dir|--bin-dir|--omp-agent-dir|--omp-layout-quiescence|--layout-quiescence)
+        if [ "$#" -lt 2 ]; then
+          am_refuse usage missing-value 2 'An option needs a value. Run install.sh --help.'
+        fi
+        am_option=$am_word
+        shift
+        am_value=$1
+        ;;
+      --check|--dry-run|--no-guidance|--json|--verbose|-v|--omp-peers-upgraded)
+        am_option=$am_word
+        am_value=flag
+        ;;
+      *)
+        am_refuse usage unknown-option 2 'Unknown install option. Run install.sh --help.'
+        ;;
+    esac
+    case $am_value in
+      ''|--*)
+        am_refuse usage missing-value 2 'An option needs a value. Run install.sh --help.'
+        ;;
+    esac
+    case $am_option in
+      --development-source) am_development=yes ;;
+      --remote|--ref) am_channel=yes ;;
+    esac
+    shift
+  done
+  if [ "$am_development" = yes ] && [ "$am_channel" = yes ]; then
+    am_refuse usage conflicting-sources 2 'Choose development source or managed remote/ref, not both.'
+  fi
+}
+
+am_detect() {
+  am_kernel=$(uname -s 2>/dev/null) || am_kernel=
+  am_machine=$(uname -m 2>/dev/null) || am_machine=
+  case $am_kernel in
+    Darwin) am_os=darwin ;;
+    Linux) am_os=linux ;;
+    FreeBSD) am_os=freebsd ;;
+    OpenBSD) am_os=openbsd ;;
+    NetBSD) am_os=netbsd ;;
+    DragonFly) am_os=dragonfly ;;
+    SunOS) am_os=sunos ;;
+    AIX) am_os=aix ;;
+    Haiku) am_os=haiku ;;
+    CYGWIN*|MINGW*|MSYS*) am_os=windows ;;
+    *) am_os=other ;;
+  esac
+  case $am_machine in
+    arm64|aarch64) am_arch=aarch64 ;;
+    x86_64|amd64) am_arch=x86_64 ;;
+    i386|i486|i586|i686|i86pc) am_arch=x86 ;;
+    armv*) am_arch=arm ;;
+    riscv64) am_arch=riscv64 ;;
+    ppc64le) am_arch=ppc64le ;;
+    ppc64) am_arch=ppc64 ;;
+    s390x) am_arch=s390x ;;
+    *) am_arch=other ;;
+  esac
+  case $am_os/$am_arch in
+    darwin/aarch64) am_triple=aarch64-apple-darwin ;;
+    darwin/x86_64) am_triple=x86_64-apple-darwin ;;
+    linux/x86_64) am_triple=x86_64-unknown-linux-musl ;;
+    linux/aarch64) am_triple=aarch64-unknown-linux-musl ;;
+    *) am_triple= ;;
+  esac
+}
+
+am_workspace() {
+  case ${TMPDIR:-} in
+    /*) am_parent=${TMPDIR%/} ;;
+    *) am_parent=/tmp ;;
+  esac
+  umask 077
+  am_directory=$(mktemp -d "$am_parent/am-bootstrap.XXXXXXXX" 2>/dev/null) || am_directory=
+  if [ -z "$am_directory" ] || [ ! -d "$am_directory" ] || [ -h "$am_directory" ]; then
+    am_refuse workspace temporary-directory 1 'Could not create a private temporary directory. Check TMPDIR space and permissions.'
+  fi
+  chmod 700 "$am_directory"
+}
+
+# Baseline download-failure-v1 vocabulary for curl exits.
+am_category() {
+  if [ "$am_reason" != transport ]; then
+    am_category=$am_reason
+    return 0
+  fi
+  case $am_code in
+    5) am_category='proxy DNS failure' ;;
+    6) am_category='DNS failure' ;;
+    7) am_category='connection failure' ;;
+    16) am_category='HTTP/2 failure' ;;
+    18) am_category='incomplete response' ;;
+    22) am_category='HTTP rejection' ;;
+    23) am_category='local staging write failure' ;;
+    28) am_category='transfer timeout' ;;
+    35) am_category='TLS handshake failure' ;;
+    52) am_category='empty response' ;;
+    55) am_category='send failure' ;;
+    56) am_category='receive failure' ;;
+    60) am_category='certificate validation failure' ;;
+    77) am_category='certificate configuration failure' ;;
+    92) am_category='HTTP/2 stream failure' ;;
+    *) am_category='transport failure' ;;
+  esac
+}
+
+am_guidance() {
+  am_guidance='Failed downloaded bytes were not accepted for activation. '
+  if [ "$am_reason" = size-limit ]; then
+    am_guidance=$am_guidance'Check expected release size and local temporary-storage/file-size limits; report a persistent mismatch.'
+    return 0
+  fi
+  case $am_code in
+    35|51|58|59|60|64|66|77|82|83|90|91)
+      am_guidance=$am_guidance'Check the system clock, trusted certificates and any TLS-inspecting proxy configuration, then retry.'
+      return 0
+      ;;
+  esac
+  case $am_http in
+    429)
+      am_guidance=$am_guidance'The server rate-limited this request. Wait for its limit to reset, then retry the same command.'
+      return 0
+      ;;
+    401|403)
+      am_guidance=$am_guidance'Check server access restrictions, proxy policy and GitHub API rate limits, then retry.'
+      return 0
+      ;;
+    404)
+      am_guidance=$am_guidance'The release endpoint or asset is unavailable. Check the selected release or report the missing asset.'
+      return 0
+      ;;
+  esac
+  if [ "$am_code" -eq 23 ] || [ "$am_reason" = process-start ]; then
+    am_guidance=$am_guidance'Check that curl is executable and private temporary storage has space and writable permissions.'
+    return 0
+  fi
+  am_guidance=$am_guidance'Retry the same command after checking network, DNS, VPN/proxy access and connection speed to the reported host.'
+}
+
+# Bounded download with the baseline retry and failure classification.
+am_download() {
+  am_url=$1
+  am_output=$2
+  am_limit=$3
+  am_stage=$4
+  am_blocks=$((am_limit / 512 + 2))
+  am_attempt=1
+  while :; do
+    rm -f -- "$am_output"
+    am_code=0
+    am_status=$(
+      ulimit -f "$am_blocks" 2>/dev/null || :
+      exec curl --disable --fail --silent --location \
+        --proto "$AM_PROTOCOLS" --proto-redir "$AM_PROTOCOLS" --max-redirs 5 \
+        --max-time "$AM_ATTEMPT_SECONDS" --connect-timeout "$AM_CONNECT_SECONDS" \
+        --max-filesize "$am_limit" --header 'Accept: application/octet-stream' \
+        --output "$am_output" --write-out '%{http_code}' -- "$am_url" 2>/dev/null
+    ) || am_code=$?
+    am_http=null
+    case $am_status in
+      [1-5][0-9][0-9]) am_http=$am_status ;;
+    esac
+    am_size=0
+    if [ -f "$am_output" ]; then
+      am_size=$(($(wc -c < "$am_output")))
+    fi
+    am_reason=transport
+    if [ "$am_size" -gt "$am_limit" ] || [ "$am_code" -eq 63 ] || [ "$am_code" -eq 153 ]; then
+      am_reason=size-limit
+    elif [ "$am_code" -eq 126 ] || [ "$am_code" -eq 127 ]; then
+      am_reason=process-start
+    elif [ "$am_code" -gt 128 ]; then
+      am_reason=process-terminated
+    fi
+    if [ "$am_code" -eq 0 ] && [ "$am_reason" = transport ]; then
+      return 0
+    fi
+    am_retry=no
+    if [ "$am_reason" = transport ]; then
+      case $am_code in
+        5|6|7|16|18|28|52|55|56|92)
+          if [ "$am_http" = null ] || [ "$am_http" -lt 400 ]; then
+            am_retry=yes
+          fi
+          ;;
+        22)
+          case $am_http in
+            408|500|502|503|504) am_retry=yes ;;
+          esac
+          ;;
+      esac
+    fi
+    if [ "$am_retry" = no ] || [ "$am_attempt" -ge "$AM_ATTEMPTS" ]; then
+      break
+    fi
+    sleep "$am_attempt"
+    am_attempt=$((am_attempt + 1))
+  done
+  rm -f -- "$am_output"
+  am_category
+  am_guidance
+  am_fail "$am_stage" "$am_category" 1 "$am_code" "$am_http" "$am_guidance"
+}
+
+am_verify() {
+  am_signers=$am_directory/allowed-signers
+  printf '%s\n' "$AM_ALLOWED_SIGNERS" > "$am_signers"
+  if ssh-keygen -Y verify -f "$am_signers" -I "$AM_PRINCIPAL" -n "$AM_NAMESPACE" -s "$am_signature" < "$am_binary" > /dev/null 2>&1; then
+    return 0
+  fi
+  am_refuse signature-verification invalid-signature 1 'The downloaded am binary is not signed by the pinned release key. Nothing was run; retry, and report a persistent failure.'
+}
+
+for am_argument in "$@"; do
+  case $am_argument in
     --help|-h)
-      printf '%s\n' 'Install Agent Memory: install.sh [--check] [--json] [--mode link|copy] [--presets all|none|CLIENTS]' \
-        'Custom discovery: --target-dir PATH, --bin-dir PATH, --no-guidance' \
-        'Native omp (excluded from all): --presets omp --omp-agent-dir ABSOLUTE_ROOT --omp-peers-upgraded' \
-        'Explicit sources: --development-source PATH or --remote URL --ref BRANCH' \
-        'After installation: am --version; am update; am uninstall'
-      exit 0 ;;
+      am_help
+      exit 0
+      ;;
   esac
 done
-am_python=
-old_ifs=$IFS
-IFS=:
-set -f
-for directory in $PATH; do
-  [ -n "$directory" ] || directory=.
-  candidate=$directory/python3
-  if [ -x "$candidate" ] && "$candidate" -I -c 'import sys; sys.exit(sys.version_info < (3, 11))' >/dev/null 2>&1; then
-    am_python=$candidate
-    break
-  fi
-done
-IFS=$old_ifs
-set +f
-if [ -z "$am_python" ]; then
-  echo 'am: Python 3.11+ must be available as python3 on PATH' >&2; exit 1
+
+# The private directory is removed on every exit path, including signals.
+trap 'if [ -n "$am_directory" ]; then rm -rf -- "$am_directory"; fi' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+am_detect
+am_validate "$@"
+if [ -z "$am_triple" ]; then
+  am_refuse target unsupported-target 1 'No signed am binary exists for this host. Supported: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.'
 fi
-"$am_python" -I - "$@" <<'AM_VERIFIED_INSTALLER'
-"""C2E-style signed acquisition; standalone so the bootstrap embeds this verifier."""
-from __future__ import annotations
-
-import gzip
-import hashlib
-import io
-import json
-import os
-from pathlib import Path, PurePosixPath
-import re
-import resource
-import signal
-import time
-from urllib.parse import urlsplit
-import shutil
-import stat
-import subprocess
-import tarfile
-import tempfile
-
-REPOSITORY = 'robertelee78/agent-memory'
-API = 'https://api.github.com/repos/' + REPOSITORY + '/releases'
-ASSETS = 'https://github.com/' + REPOSITORY + '/releases/download'
-PUBLIC_KEY = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB+C//uSRKmScS5hTki796yvLR2oOSn2IKHLkr1RWE2y'
-PRINCIPAL = 'release@agent-memory'
-NAMESPACE = 'agent-memory.release'
-ARCHIVE = 'agent-memory.tar.gz'
-MANIFEST = 'release-manifest.json'
-SIGNATURE = MANIFEST + '.sshsig'
-PREFIX = 'skills/agent-memory/'
-# Reuse the portable reader's complete inventory budgets.
-MAX_BYTES = 16777216
-MAX_FILE = 2097152
-MAX_ENTRIES = 4096
-MAX_ARCHIVE = MAX_BYTES + 1048576
-MAX_TAR = MAX_BYTES + MAX_ENTRIES * 1024
-MAX_METADATA = 65536
-VERSION = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)')
-
-
-class DistributionError(ValueError):
-    """Acquisition/authentication failure, not an interrupted activation."""
-
-
-def require(condition, message):
-    if not condition:
-        raise DistributionError(message)
-
-
-def digest(raw):
-    return hashlib.sha256(raw).hexdigest()
-
-
-def unique(pairs):
-    result = {}
-    for key, value in pairs:
-        require(key not in result, 'Duplicate release metadata field')
-        result[key] = value
-    return result
-
-
-def parse(raw):
-    require(len(raw) <= MAX_METADATA, 'Release metadata exceeds its bound')
-    return json.loads(raw, object_pairs_hook=unique,
-                      parse_constant=lambda _: require(False, 'Nonfinite release metadata'))
-
-
-def inventory_digest(files):
-    return digest(json.dumps(files, sort_keys=True, separators=(',', ':')).encode())
-
-
-def regular(path, maximum):
-    mode = path.lstat().st_mode
-    require(stat.S_ISREG(mode) and path.stat().st_nlink == 1,
-            'Release input must be an ordinary unlinked file')
-    with path.open('rb') as stream:
-        raw = stream.read(maximum + 1)
-    require(len(raw) <= maximum, 'Release input exceeds its bound')
-    return raw
-
-
-def verify_manifest(raw, signature, tag=None, installed_root=None):
-    require(len(raw) <= MAX_METADATA and 0 < len(signature) <= 4096,
-            'Manifest or signature exceeds its bound')
-    require(shutil.which('ssh-keygen'), 'OpenSSH ssh-keygen with SSH signature support is required')
-    signers = (PRINCIPAL + ' namespaces="' + NAMESPACE + '" ' + PUBLIC_KEY + '\n').encode()
-    def verify(signers_path, signature_path):
-        result = subprocess.run(['ssh-keygen', '-Y', 'verify', '-f', str(signers_path),
-                                 '-I', PRINCIPAL, '-n', NAMESPACE, '-s', str(signature_path)],
-                                input=raw, capture_output=True, timeout=20)
-        require(result.returncode == 0, 'Release publisher signature is invalid')
-    if installed_root is not None:
-        signers_path = installed_root/'skills/agent-memory/keys/allowed-signers'
-        signature_path = installed_root/SIGNATURE
-        require(regular(signers_path, 4096) == signers and regular(signature_path, 4096) == signature,
-                'Installed signature inputs differ from the pinned trust root')
-        verify(signers_path, signature_path)
-    else:
-        with tempfile.TemporaryDirectory(prefix='am-signature-') as temporary:
-            root = Path(temporary)
-            (root/'allowed-signers').write_bytes(signers)
-            (root/'signature').write_bytes(signature)
-            verify(root/'allowed-signers', root/'signature')
-    value = parse(raw)
-    require(isinstance(value, dict) and set(value) == {
-        'schema', 'repository', 'tag', 'version', 'source_commit', 'archive',
-        'archive_size', 'archive_sha256', 'artifact_digest'}, 'Unknown release manifest fields')
-    require(value['schema'] == 'agent-memory/release-v1' and value['repository'] == REPOSITORY,
-            'Wrong release schema or repository')
-    require(isinstance(value['version'], str) and len(value['version']) <= 64 and VERSION.fullmatch(value['version'])
-            and value['tag'] == 'v' + value['version'] and (tag is None or tag == value['tag']),
-            'Release tag/version differs from its selected stable release')
-    require(isinstance(value['source_commit'], str)
-            and re.fullmatch(r'[0-9a-f]{40}', value['source_commit']), 'Invalid release source commit')
-    require(value['archive'] == ARCHIVE and type(value['archive_size']) is int
-            and 0 < value['archive_size'] <= MAX_ARCHIVE, 'Invalid release archive identity')
-    for field in ('archive_sha256', 'artifact_digest'):
-        require(isinstance(value[field], str) and re.fullmatch(r'[0-9a-f]{64}', value[field]),
-                'Invalid release digest')
-    return value
-
-
-def package_identity(root):
-    """Inspect all bytes and modes without importing candidate Python."""
-    require(stat.S_ISDIR(root.lstat().st_mode), 'Portable root must be an ordinary directory')
-    files = {}; total = 0; count = 0
-    for directory, dirs, names in os.walk(root, followlinks=False,
-                                          onerror=lambda e: (_ for _ in ()).throw(e)):
-        count += len(dirs) + len(names)
-        require(count <= MAX_ENTRIES, 'Release inventory exceeds its entry bound')
-        for name in dirs + names:
-            path = Path(directory)/name
-            mode = path.lstat().st_mode
-            require(stat.S_ISREG(mode) or stat.S_ISDIR(mode), 'Unsafe release file type')
-            if name in dirs:
-                require(mode & 0o500 == 0o500, 'Unreadable release directory')
-                continue
-            raw = regular(path, MAX_FILE); total += len(raw)
-            require(total <= MAX_BYTES and stat.S_IMODE(mode) in (0o644, 0o755),
-                    'Release bytes or modes violate the portable bound')
-            files[path.relative_to(root).as_posix()] = {'sha256': digest(raw), 'mode': oct(stat.S_IMODE(mode))}
-    require('SKILL.md' in files, 'Release lacks its portable root')
-    signers = (PRINCIPAL + ' namespaces="' + NAMESPACE + '" ' + PUBLIC_KEY + '\n').encode()
-    require(regular(root/'keys/allowed-signers', 4096) == signers, 'Portable key differs from the pinned publisher')
-    text = regular(root/'SKILL.md', MAX_FILE).decode('utf-8')
-    declarations = re.findall(r'^metadata: (\{[^\n]+\})$', text, re.MULTILINE)
-    require(len(declarations) == 1, 'Release needs one version declaration')
-    version = parse(declarations[0].encode()).get('version')
-    require(isinstance(version, str) and len(version) <= 64 and VERSION.fullmatch(version), 'Invalid portable release version')
-    return version, inventory_digest(files), files
-
-
-def extract(raw, destination, manifest):
-    try:
-        _extract(raw, destination, manifest)
-    except (tarfile.TarError, EOFError) as exc:
-        raise DistributionError('Invalid signed portable archive') from exc
-
-
-def _extract(raw, destination, manifest):
-    require(len(raw) == manifest['archive_size'] and digest(raw) == manifest['archive_sha256'],
-            'Archive differs from the signed release identity')
-    # Bound inflation before tarfile parses even a signed malformed PAX header.
-    with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
-        expanded = stream.read(MAX_TAR + 1)
-    require(len(expanded) <= MAX_TAR, 'Release expansion exceeds its bound')
-    destination.mkdir(mode=0o700)
-    seen = set(); total = 0
-    with tarfile.open(fileobj=io.BytesIO(expanded), mode='r:') as archive:
-        for member in archive:
-            name = member.name
-            path = PurePosixPath(name)
-            require(len(seen) < MAX_ENTRIES and name not in seen and path.as_posix() == name
-                    and not path.is_absolute() and '..' not in path.parts
-                    and (name.startswith(PREFIX) or (member.isdir() and name in ('skills', 'skills/agent-memory'))),
-                    'Unsafe, duplicate or excessive release member')
-            seen.add(name)
-            require(not member.pax_headers and member.mode in (0o644, 0o755)
-                    and member.type in (tarfile.REGTYPE, tarfile.AREGTYPE, tarfile.DIRTYPE),
-                    'Unsafe release member type or mode')
-            target = destination.joinpath(*path.parts)
-            if member.isdir():
-                require(member.mode == 0o755 and member.size == 0, 'Invalid release directory')
-                target.mkdir(mode=0o755, parents=True, exist_ok=True)
-                continue
-            total += member.size
-            require(0 <= member.size <= MAX_FILE and total <= MAX_BYTES, 'Release member exceeds its byte bound')
-            target.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
-            with archive.extractfile(member) as stream:
-                data = stream.read(MAX_FILE + 1)
-            require(len(data) == member.size, 'Truncated release member')
-            with target.open('xb') as stream:
-                stream.write(data)
-            target.chmod(member.mode)
-    version, identity, _ = package_identity(destination/'skills/agent-memory')
-    require(version == manifest['version'] and identity == manifest['artifact_digest'],
-            'Portable identity differs from its signed declaration')
-
-
-DOWNLOAD_ATTEMPTS = 3
-DOWNLOAD_BUDGET = 30.0
-STDERR_LIMIT = 8192
-RETRY_CURL = {5, 6, 7, 16, 18, 28, 52, 55, 56, 92}
-RETRY_HTTP = {408, 500, 502, 503, 504}
-
-
-def download_location(url):
-    parsed = urlsplit(url)
-    host = parsed.hostname or 'configured HTTPS host'
-    if not re.fullmatch(r'[A-Za-z0-9.-]{1,253}', host):
-        host = 'configured HTTPS host'
-    name = parsed.path.rsplit('/', 1)[-1]
-    stage = {MANIFEST: 'release manifest', SIGNATURE: 'publisher signature',
-             ARCHIVE: 'release archive', 'install.sh': 'bootstrap readback'}.get(name, 'release download')
-    if parsed.path.endswith('/latest'):
-        stage = 'release discovery'
-    return {'stage': stage, 'host': host}
-
-
-def safe_download_detail(raw):
-    text = ''.join(c for c in raw.decode('utf-8', 'replace')
-                   if 32 <= ord(c) < 127 or c in '\n\r\t')
-    text = re.sub(r'(?im)\b(?:authorization|proxy-authorization|cookie|set-cookie)\s*:.*$',
-                  '[redacted authentication header]', text)
-    text = re.sub(r'(?i)https?://\S+', '[redacted URL]', text)
-    text = re.sub(r'\S+@\S+', '[redacted userinfo]', text)
-    assignment = '(?:"[^"\\n]*"|\'[^\'\\n]*\'|\\S+)'
-    text = re.sub(r'(?i)\b(?:[a-z0-9_-]*(?:token|password|passwd|secret|api[_-]?key)[a-z0-9_-]*)\s*[:=]\s*' + assignment,
-                  '[redacted secret]', text)
-    text = re.sub(r'\b[A-Z][A-Z0-9_]*\s*=\s*' + assignment,
-                  '[redacted environment value]', text)
-    text = re.sub(r"[\"']/[^\"'\n]*[\"']", '[redacted local path]', text)
-    text = re.sub(r"(?<![a-zA-Z0-9])/[^\s\"'<>]+", '[redacted local path]', text)
-    return ' '.join(text.split())[:512]
-
-
-def retain_download_failure(value):
-    """Retain sanitized evidence only; never write inside runtime or repository."""
-    raw = (json.dumps(value, sort_keys=True, indent=2) + '\n').encode()
-    require(len(raw) <= 8192, 'Download diagnostic exceeds its private report bound')
-    parent = Path('/tmp').resolve(strict=True)
-    node = Path(parent.anchor)
-    for part in (None, *parent.parts[1:]):
-        if part is not None:
-            node = node / part
-        info = node.lstat()
-        require(stat.S_ISDIR(info.st_mode) and info.st_uid == 0
-                and (not info.st_mode & 0o022 or info.st_mode & stat.S_ISVTX),
-                'Unsafe download diagnostic temporary root')
-    root = Path(tempfile.mkdtemp(prefix='am-download-failure-', dir=parent))
-    fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
-        info = os.fstat(fd)
-        require(info.st_uid == os.geteuid() and stat.S_IMODE(info.st_mode) == 0o700,
-                'Download diagnostic directory must be private and current-owner')
-        record = os.open('failure.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-                         0o600, dir_fd=fd)
-        with os.fdopen(record, 'wb') as stream:
-            stream.write(raw); stream.flush(); os.fsync(stream.fileno())
-        named = root.lstat()
-        require((named.st_dev, named.st_ino) == (info.st_dev, info.st_ino),
-                'Download diagnostic directory changed before readback')
-    finally:
-        os.close(fd)
-    return str(root/'failure.json')
-
-
-class DownloadError(DistributionError):
-    """Terminal transport evidence and actionable guidance, never payload bytes."""
-    def __init__(self, location, attempts, elapsed):
-        last = attempts[-1] if attempts else {'reason': 'deadline', 'curl_exit': None,
-                                              'http_status': None, 'detail': ''}
-        category = last['reason']
-        if category == 'transport':
-            category = {5:'proxy DNS failure',6:'DNS failure',7:'connection failure',16:'HTTP/2 failure',
-                        18:'incomplete response',28:'transfer timeout',52:'empty response',55:'send failure',
-                        56:'receive failure',92:'HTTP/2 stream failure',22:'HTTP rejection',
-                        35:'TLS handshake failure',60:'certificate validation failure',
-                        77:'certificate configuration failure',23:'local staging write failure'}.get(last['curl_exit'], 'transport failure')
-        self.details = {'schema': 'agent-memory/download-failure-v1', **location,
-                        'attempts': attempts, 'attempt_count': len(attempts),
-                        'elapsed_seconds': round(elapsed, 3), 'budget_seconds': DOWNLOAD_BUDGET,
-                        'reason': category, 'curl_exit': last['curl_exit'],
-                        'http_status': last['http_status'], 'activation_accepted': False}
-        try:
-            self.details['diagnostic_path'] = retain_download_failure(self.details)
-        except (OSError, ValueError, TypeError, DistributionError):
-            self.details['diagnostic_path'] = None
-            self.details['diagnostic_error'] = 'Could not retain the private diagnostic; save this error text.'
-        reason = last['reason']; status = last['http_status']; code = last['curl_exit']
-        if reason == 'size-limit':
-            guidance = 'Check expected release size and local temporary-storage/file-size limits; report a persistent mismatch.'
-        elif code in (35, 51, 58, 59, 60, 64, 66, 77, 82, 83, 90, 91):
-            guidance = 'Check the system clock, trusted certificates and any TLS-inspecting proxy configuration, then retry.'
-        elif status == 429:
-            guidance = 'The server rate-limited this request. Wait for its limit to reset, then retry the same command.'
-        elif status in (401, 403):
-            guidance = 'Check server access restrictions, proxy policy and GitHub API rate limits, then retry.'
-        elif status == 404:
-            guidance = 'The release endpoint or asset is unavailable. Check the selected release or report the missing asset.'
-        elif code == 23 or reason == 'process-start':
-            guidance = 'Check that curl is executable and private temporary storage has space and writable permissions.'
-        else:
-            guidance = 'Retry the same command after checking network, DNS, VPN/proxy access and connection speed to the reported host.'
-        self.repair = 'Failed downloaded bytes were not accepted for activation. ' + guidance
-        if self.details['diagnostic_path']:
-            self.repair += ' Private diagnostic: ' + self.details['diagnostic_path']
-        else:
-            self.repair += ' ' + self.details['diagnostic_error']
-        status_text = str(status) if status is not None else 'unknown'
-        exit_text = str(code) if code is not None else 'not completed'
-        message = ('Signed release download failed: ' + location['stage'] + ' from ' + location['host']
-                   + ' after ' + str(len(attempts)) + ' attempt(s) (curl ' + exit_text
-                   + '; HTTP ' + status_text + '; ' + category + ').')
-        if last['detail']:
-            message += ' ' + last['detail']
-        super().__init__(message)
-
-
-def download(url, maximum, *, json_response=False):
-    require(url.startswith('https://'), 'Release acquisition requires HTTPS')
-    require(shutil.which('curl'), 'curl is required for bounded HTTPS release acquisition')
-    location = download_location(url)
-    start = time.monotonic(); deadline = start + DOWNLOAD_BUDGET; attempts = []
-    for number in range(1, DOWNLOAD_ATTEMPTS + 1):
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            break
-        def bound_output():
-            _, hard = resource.getrlimit(resource.RLIMIT_FSIZE)
-            bound = max(maximum + 1, STDERR_LIMIT + 1)
-            resource.setrlimit(resource.RLIMIT_FSIZE, (bound if hard == resource.RLIM_INFINITY else min(bound, hard), hard))
-        attempt_start = time.monotonic(); code = None; status = None; detail = ''; reason = 'transport'
-        with tempfile.TemporaryFile() as body, tempfile.TemporaryFile() as metadata, tempfile.TemporaryFile() as errors:
-            try:
-                result = subprocess.run(['curl', '--disable', '--fail', '--silent', '--show-error', '--location',
-                    '--proto', '=https', '--proto-redir', '=https', '--max-redirs', '5',
-                    '--max-time', str(remaining), '--connect-timeout', str(min(5.0, remaining)),
-                    '--max-filesize', str(maximum), '--header', 'Accept: ' +
-                    ('application/vnd.github+json' if json_response else 'application/octet-stream'),
-                    '--output', '/dev/fd/' + str(body.fileno()), '--write-out', '%{http_code}', '--', url],
-                    stdout=metadata, stderr=errors, pass_fds=(body.fileno(),), close_fds=True,
-                    timeout=remaining, preexec_fn=bound_output)
-                code = result.returncode
-            except subprocess.TimeoutExpired:
-                reason = 'deadline'
-            except OSError as exc:
-                reason = 'process-start'; detail = safe_download_detail(str(exc).encode())
-            metadata.seek(0); raw_status = metadata.read(17)
-            if re.fullmatch(rb'[0-9]{3}', raw_status) and raw_status != b'000':
-                status = int(raw_status)
-            errors.seek(0); detail = detail or safe_download_detail(errors.read(STDERR_LIMIT))
-            size = os.fstat(body.fileno()).st_size
-            if size > maximum or code in (63, -signal.SIGXFSZ):
-                reason = 'size-limit'
-            elif code is not None and code < 0:
-                reason = 'process-terminated'
-            if code == 0 and reason == 'transport':
-                body.seek(0); raw = body.read(maximum + 1)
-                require(len(raw) <= maximum, 'Release download exceeds its bound')
-                return raw
-        attempts.append({'attempt': number, 'curl_exit': code, 'http_status': status,
-                         'reason': reason, 'detail': detail, 'received_bytes': size,
-                         'seconds': round(time.monotonic() - attempt_start, 3)})
-        retry = reason == 'transport' and (((status is None or status < 400) and code in RETRY_CURL)
-                                           or (code == 22 and status in RETRY_HTTP))
-        if not retry or number == DOWNLOAD_ATTEMPTS:
-            break
-        delay = 0.25 * number
-        if deadline - time.monotonic() <= delay:
-            break
-        time.sleep(delay)
-    raise DownloadError(location, attempts, time.monotonic() - start)
-
-
-def probe():
-    """Authenticate the latest release identity before fetching its payload."""
-    locator = parse(download(API + '/latest', MAX_METADATA, json_response=True))
-    require(isinstance(locator, dict) and locator.get('draft') is False and locator.get('prerelease') is False
-            and isinstance(locator.get('tag_name'), str), 'Stable release locator is unavailable')
-    tag = locator['tag_name']
-    require(len(tag) <= 65 and tag.startswith('v') and VERSION.fullmatch(tag[1:]), 'Invalid stable release tag')
-    base = ASSETS + '/' + tag + '/'
-    raw = download(base + MANIFEST, MAX_METADATA)
-    signature = download(base + SIGNATURE, 4096)
-    manifest = verify_manifest(raw, signature, tag)
-    return manifest, raw, signature, base
-
-
-def acquire(destination, *, observation=None):
-    manifest, raw, signature, base = observation if observation is not None else probe()
-    extract(download(base + ARCHIVE, manifest['archive_size']), destination, manifest)
-    (destination/MANIFEST).write_bytes(raw)
-    (destination/SIGNATURE).write_bytes(signature)
-    return manifest
-
-
-def installed(root):
-    require(stat.S_ISDIR((root/'skills').lstat().st_mode), 'Release skills directory is redirected')
-    manifest = verify_manifest(regular(root/MANIFEST, MAX_METADATA), regular(root/SIGNATURE, 4096),
-                               installed_root=root)
-    version, identity, _ = package_identity(root/'skills/agent-memory')
-    require(version == manifest['version'] and identity == manifest['artifact_digest'],
-            'Installed portable identity differs from its signed release')
-    require(set(p.name for p in root.iterdir()) == {'skills', MANIFEST, SIGNATURE}
-            and set(p.name for p in (root/'skills').iterdir()) == {'agent-memory'},
-            'Unexpected content in the signed source layout')
-    return manifest
-
-
-import sys
-sys.dont_write_bytecode = True
-
-class UsageError(ValueError):
-    pass
-
-def usage(condition, message):
-    if not condition: raise UsageError(message)
-
-def bootstrap():
-    require(sys.version_info >= (3, 11), 'Python 3.11+ is required')
-    args = sys.argv[1:]
-    choices = {}; index = 0
-    while index < len(args):
-        word = args[index]
-        option, separator, value = word.partition('=')
-        if option in ('--remote', '--ref', '--development-source', '--mode', '--presets', '--target-dir', '--bin-dir', '--omp-agent-dir', '--omp-layout-quiescence', '--layout-quiescence'):
-            if not separator:
-                index += 1
-                usage(index < len(args), option + ' requires a value')
-                value = args[index]
-            usage(value and not value.startswith('--'), option + ' requires a value')
-            if option in ('--remote', '--ref', '--development-source'): choices[option] = value
-        else:
-            usage(word in ('--check','--dry-run','--no-guidance','--json','--verbose','-v','--omp-peers-upgraded'),
-                  'Unknown install option: '+word+' (use --help)')
-        index += 1
-    usage(not ('--development-source' in choices and ('--remote' in choices or '--ref' in choices)),
-          'Choose development source or managed remote/ref, not both')
-    with tempfile.TemporaryDirectory(prefix='am-bootstrap-') as temporary:
-        root = Path(temporary)/'source'
-        explicit = bool(choices)
-        if '--development-source' in choices:
-            root = Path(choices['--development-source']).expanduser().resolve(strict=True)
-        elif explicit:
-            remote = choices.get('--remote', 'https://github.com/robertelee78/agent-memory.git')
-            ref = choices.get('--ref', 'main')
-            usage(ref and not ref.startswith('-'), 'Invalid explicit source branch')
-            result = subprocess.run(['git', 'clone', '--quiet', '--depth', '1', '--single-branch',
-                                     '--branch', ref, '--', remote, str(root)], capture_output=True,
-                                    timeout=120, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
-            if result.returncode:
-                print('am: Could not stage the operator-selected source',file=sys.stderr)
-                raise SystemExit(result.returncode)
-        else:
-            acquire(root)
-        pack = root/'skills/agent-memory' if (root/'skills/agent-memory').is_dir() else root
-        sys.path.insert(0, str(pack/'scripts'))
-        if not explicit:
-            from agent_memory import installation, console
-            installation.BOOTSTRAP_SOURCE = root
-            return console.main(['install', *args])
-        # Explicit custom/development selection is its own trust decision, as in
-        # the existing installer; it is never labeled publisher-authenticated.
-        import runpy
-        entry = pack/'scripts/am_console.py'
-        if not entry.is_file(): entry = pack/'scripts/installer.py'
-        sys.argv = [str(entry), 'install', *args]
-        runpy.run_path(str(entry), run_name='__main__')
-        return 0
-
-try:
-    raise SystemExit(bootstrap())
-except (OSError, ValueError, KeyError, TypeError, RecursionError, subprocess.SubprocessError) as error:
-    if '--json' in sys.argv:
-        print(json.dumps({'operation': 'install', 'verified': False, 'error': str(error),
-                          **({'download': error.details, 'repair': error.repair} if isinstance(error, DownloadError) else {})}))
-    else:
-        print('am: ' + str(error), file=sys.stderr)
-        if isinstance(error, DownloadError): print(error.repair, file=sys.stderr)
-    raise SystemExit(2 if isinstance(error, UsageError) else 1)
-AM_VERIFIED_INSTALLER
+if ! command -v curl > /dev/null 2>&1; then
+  am_refuse dependency missing-curl 1 'curl is required to download the signed am binary. Install curl, then retry.'
+fi
+if ! command -v ssh-keygen > /dev/null 2>&1; then
+  am_refuse dependency missing-ssh-keygen 1 'OpenSSH ssh-keygen with SSH signature support is required. Install OpenSSH, then retry.'
+fi
+am_workspace
+am_binary=$am_directory/am-$am_triple
+am_signature=$am_binary.sshsig
+am_download "$AM_RELEASE_BASE""am-$am_triple" "$am_binary" "$AM_BINARY_LIMIT" binary-download
+am_download "$AM_RELEASE_BASE""am-$am_triple.sshsig" "$am_signature" "$AM_SIGNATURE_LIMIT" signature-download
+am_verify
+chmod 700 "$am_binary"
+am_exit=0
+"$am_binary" install --bootstrap-binary "$am_binary" "$@" || am_exit=$?
+exit "$am_exit"
 fi

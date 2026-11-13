@@ -1,4 +1,4 @@
-name: Offline release contracts
+name: Rust contracts
 
 on:
   workflow_dispatch:
@@ -7,104 +7,99 @@ permissions:
   contents: read
 
 concurrency:
-  group: offline-release-contracts-${{ github.ref }}
+  group: rust-contracts-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  CARGO_TERM_COLOR: never
+  CARGO_INCREMENTAL: '0'
+
 jobs:
-  contracts:
-    name: Contracts (${{ matrix.os }}, Python ${{ matrix.python }}, shard ${{ matrix.shard }})
+  test:
+    name: Test (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 180
+    timeout-minutes: 60
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python: ['3.11', '3.15']
-        shard: [0, 1, 2]
+        include:
+          - os: macos-15
+            target: aarch64-apple-darwin
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Run assigned isolated contracts
-        shell: bash
+      - name: Install Rust toolchain
+        shell: sh
         run: |
-          mkdir -p reports
-          python3 -I -c 'import json,platform,sys; print(json.dumps({"python":sys.version,"executable":sys.executable,"platform":platform.platform()}))' > reports/runtime.json
-          git rev-parse HEAD > reports/commit.txt
-          git rev-parse 'HEAD^{tree}' > reports/tree.txt
-          scripts/test.sh --release --jobs 2 --json --shard-index '${{ matrix.shard }}' --shard-count 3 --cell-os '${{ matrix.os }}' --cell-python '${{ matrix.python }}' --output reports/test-gate.json > reports/test-gate.stdout 2> reports/test-gate.stderr
-      - name: Retain receipts and failures
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-${{ matrix.shard }}
-          path: reports/
-          if-no-files-found: error
-          retention-days: 14
+          rustup toolchain install stable --profile minimal --component rustfmt
+          rustup default stable
+          rustc --version --verbose
+      - name: Require the host triple
+        shell: sh
+        run: |
+          test "$(rustc --version --verbose | sed -n 's/^host: //p')" = '${{ matrix.target }}'
+      - name: Format
+        shell: sh
+        run: cargo fmt --check
+      - name: Test
+        shell: sh
+        run: cargo test --locked
 
-  cells:
-    name: Aggregate (${{ matrix.os }}, Python ${{ matrix.python }})
-    needs: contracts
-    if: always()
+  musl:
+    name: Static build (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 180
+    timeout-minutes: 60
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python: ['3.11', '3.15']
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Download shard 0
-        continue-on-error: true
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-0
-          path: shards/0
-      - name: Download shard 1
-        continue-on-error: true
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-1
-          path: shards/1
-      - name: Download shard 2
-        continue-on-error: true
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-2
-          path: shards/2
-      - name: Verify complete cell
-        shell: bash
+      - name: Install Rust toolchain and musl target
+        shell: sh
         run: |
-          mkdir -p reports
-          scripts/test.sh --release --json --shard-count 3 --cell-os '${{ matrix.os }}' --cell-python '${{ matrix.python }}' --output reports/test-gate.json --merge-shards shards/0/test-gate.json shards/1/test-gate.json shards/2/test-gate.json > reports/test-gate.stdout 2> reports/test-gate.stderr
-      - name: Retain aggregate receipt
-        if: always()
+          rustup toolchain install stable --profile minimal --target '${{ matrix.target }}'
+          rustup default stable
+      - name: Build
+        shell: sh
+        run: cargo build --locked --release --bins --target '${{ matrix.target }}'
+      - name: Require a static am
+        shell: sh
+        run: |
+          binary='target/${{ matrix.target }}/release/am'
+          test -f "$binary"
+          file "$binary"
+          file "$binary" | grep -Eq 'statically linked|static-pie linked'
+      - name: Retain unsigned build output
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-aggregate
-          path: reports/
+          name: am-${{ matrix.target }}-unsigned
+          path: target/${{ matrix.target }}/release/am
           if-no-files-found: error
           retention-days: 14
 
-  release-gate:
-    name: Complete release gate
-    needs: [contracts, cells]
+  gate:
+    name: Complete Rust gate
+    needs: [test, musl]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
-      - name: Require all shards and cells
+      - name: Require every test and static build
         env:
-          SHARDS: ${{ needs.contracts.result }}
-          CELLS: ${{ needs.cells.result }}
-        run: test "$SHARDS" = success && test "$CELLS" = success
+          TESTS: ${{ needs.test.result }}
+          BUILDS: ${{ needs.musl.result }}
+        run: test "$TESTS" = success && test "$BUILDS" = success
