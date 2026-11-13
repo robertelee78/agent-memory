@@ -4,6 +4,7 @@
  "registry_sha256": "7df1675b21743c19dcda4a73fcb34499647276452c939a321b5ab613a5bf868e",
  "status_values": [
   "unported",
+  "partial",
   "ported",
   "implementation-only",
   "blocker"
@@ -693,8 +694,8 @@
   {
    "id": "tests/contracts/test_boundary_assessment.py::BoundaryAssessmentContract.test_duplicate_needs_explicit_read_evidence_and_rationale",
    "registered": false,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::duplicate_needs_explicit_read_evidence_and_rationale",
    "note": null
   },
   {
@@ -2478,8 +2479,8 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_already_observed_completion_survives_late_consumption",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::real_git_already_observed_completion_survives_late_consumption",
    "note": null
   },
   {
@@ -2534,9 +2535,9 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_command_failures_are_consumed_in_original_order_at_every_position",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::real_git_group_consumes_failures_in_original_order_and_optional_cannot_hide_later_error",
+   "note": "injected ENFILE and signal-at-every-position cases not ported"
   },
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_descendant_held_pipes_timeout_without_waiting_for_descendant_eof",
@@ -2562,8 +2563,8 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_four_invoking_workers_each_finish_their_own_real_children",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::four_workers_own_independent_real_git_groups",
    "note": null
   },
   {
@@ -2583,8 +2584,8 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_late_observed_exit_is_not_accepted_after_owner_parser_deadline",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::real_git_owner_parsing_time_cannot_turn_pending_timeout_into_success",
    "note": null
   },
   {
@@ -2604,9 +2605,9 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_optional_command_absence_does_not_hide_later_required_error",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::real_git_group_consumes_failures_in_original_order_and_optional_cannot_hide_later_error",
+   "note": "real Git subset"
   },
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_ordinary_and_system_exit_keep_unbounded_os_wait_parity",
@@ -2618,8 +2619,8 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_owner_parsing_time_is_charged_at_value_and_normal_exit",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::real_git_owner_parsing_time_cannot_turn_pending_timeout_into_success",
    "note": null
   },
   {
@@ -2639,15 +2640,15 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_sequential_runner_keeps_real_partial_timeout_diagnostics_and_cleanup",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::real_git_groups_drain_large_exact_outputs_and_single_runner_keeps_nonzero_bytes",
+   "note": "partial-timeout diagnostics not ported"
   },
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_success_drains_both_pipes_under_pressure_and_preserves_exact_bytes",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::real_git_groups_drain_large_exact_outputs_and_single_runner_keeps_nonzero_bytes",
    "note": null
   },
   {
@@ -6588,71 +6589,71 @@
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_copied_portable_evaluator_does_not_modify_inputs_or_create_state",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::evaluator_is_read_only_and_emits_exact_mode_receipts",
+   "note": "installed/copy-pack CLI fixture not ported yet"
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_correction_and_supersession_require_exact_active_replacement",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::correction_and_supersession_require_exact_active_replacement",
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_current_requires_every_gate_before_ranking",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::current_requires_every_gate_before_ranking",
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_each_event_guard_refuses_missing_authority_review_or_new_event",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::each_event_guard_refuses_missing_authority_review_or_new_event",
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_fractional_boundaries_preserve_every_accepted_digit",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::fractional_boundaries_preserve_every_accepted_digit",
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_generated_guide_definition_and_router_share_one_model",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::generated_guide_definition_and_router_share_one_model",
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_revocation_expiry_and_reactivation_remain_distinct",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::revocation_expiry_and_reactivation_remain_distinct",
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_time_is_start_inclusive_end_exclusive_with_offsets",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::time_is_start_inclusive_end_exclusive_with_offsets",
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_transition_table_drives_all_legal_states_and_deletion_is_terminal",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::transition_table_drives_all_legal_states_and_deletion_is_terminal",
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_model.py::LifecycleContract.test_unknown_or_malformed_axes_do_not_become_current",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
+   "status": "ported",
+   "rust_test": "tests/t1_a1.rs::unknown_or_malformed_axes_do_not_become_current",
    "note": null
   },
   {
@@ -10068,9 +10069,9 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_normalization_strips_secrets_and_unifies_only_documented_equivalence",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::normalization_strips_secrets_and_unifies_only_documented_equivalence",
+   "note": "normalizer only; CLI transport not ported yet"
   },
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_observed_alias_registered_after_preview_refuses_and_retains_history",
@@ -11139,9 +11140,9 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_real_root_spellings_and_linked_worktrees_preserve_public_identity",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::real_git_private_repositories_preserve_unborn_committed_and_linked_root_bytes",
+   "note": "root/HEAD only; settings and scope integration not ported yet"
   },
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_real_verified_hold_remains_readonly_through_grouped_settings_and_enrollment",
@@ -11209,9 +11210,9 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_unborn_root_preserves_local_settings_and_indexed_bank_identity",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::real_git_private_repositories_preserve_unborn_committed_and_linked_root_bytes",
+   "note": "root/HEAD only; settings and indexed-bank integration not ported yet"
   },
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_unreadable_or_malformed_metadata_preserves_refusal_and_original_bank",
@@ -13106,23 +13107,23 @@
   {
    "id": "tests/contracts/test_validation_memo.py::ValidationMemoContract.test_changed_child_bytes_paths_and_returned_values_do_not_reuse_old_truth",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::memo_keys_and_returned_values_do_not_reuse_old_truth",
+   "note": "bank validation integration not ported yet"
   },
   {
    "id": "tests/contracts/test_validation_memo.py::ValidationMemoContract.test_exceptions_nesting_and_budget_fallback_do_not_leak_validation_state",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::memo_exceptions_nesting_and_suspension_restore_exact_context",
+   "note": "direct producers stand in for bank fixtures"
   },
   {
    "id": "tests/contracts/test_validation_memo.py::ValidationMemoContract.test_identical_file_authority_text_rechecks_changed_filesystem_topology",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::memo_fresh_guard_runs_before_accepting_hits_and_failures_are_not_cached",
+   "note": "bank authority/symlink integration not ported yet"
   },
   {
    "id": "tests/contracts/test_validation_memo.py::ValidationMemoContract.test_parsed_record_output_is_produced_even_after_a_format_hit",
@@ -13148,9 +13149,9 @@
   {
    "id": "tests/contracts/test_validation_memo.py::ValidationMemoContract.test_small_retained_budgets_evict_and_oversized_results_fall_back_without_truncation",
    "registered": true,
-   "status": "unported",
-   "rust_test": null,
-   "note": null
+   "status": "partial",
+   "rust_test": "tests/t1_a1.rs::memo_small_budgets_evict_lru_without_truncating_large_results",
+   "note": "direct producers stand in for bank and security fixtures"
   },
   {
    "id": "tests/contracts/test_worker_collection.py::WorkerCollectionContract.test_completed_and_timed_out_worker_groups_do_not_leave_descendants",
@@ -13198,6 +13199,11 @@
   "static_methods": 1741,
   "generated_selectors": 121,
   "registered": 1829,
-  "unregistered": 33
+  "unregistered": 33,
+  "by_status": {
+   "partial": 11,
+   "ported": 15,
+   "unported": 1836
+  }
  }
 }

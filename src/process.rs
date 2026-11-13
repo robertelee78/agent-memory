@@ -149,19 +149,30 @@ fn invalid(message: &'static str) -> ProcessError {
 struct Owner {
     child: Child,
     status: Option<ExitStatus>,
+    // First observed reap time, never an inferred actual child-exit instant.
+    observed_ns: Option<u64>,
     killed: bool,
 }
 
 impl Owner {
-    fn observe(&mut self) -> io::Result<()> {
-        while self.status.is_none() {
+    fn observe(&mut self) -> io::Result<u64> {
+        if self.status.is_some() {
+            return Ok(self.observed_ns.unwrap_or_else(monotonic_ns));
+        }
+        loop {
             match self.child.try_wait() {
-                Ok(status) => { self.status = status; break; }
+                Ok(status) => {
+                    let observed_ns = monotonic_ns();
+                    self.status = status;
+                    if status.is_some() {
+                        self.observed_ns = Some(observed_ns);
+                    }
+                    return Ok(observed_ns);
+                }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
                 Err(error) => return Err(error),
             }
         }
-        Ok(())
     }
 
     fn cancel(&mut self) -> io::Result<()> {
@@ -183,7 +194,11 @@ impl Owner {
         }
         loop {
             match self.child.wait() {
-                Ok(status) => { self.status = Some(status); return Ok(()); }
+                Ok(status) => {
+                    self.status = Some(status);
+                    self.observed_ns = Some(monotonic_ns());
+                    return Ok(());
+                }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
                 Err(error) => return Err(error),
             }
@@ -548,12 +563,13 @@ fn spawn<'a>(spec: &Spec<'a>, timing: Timing) -> std::result::Result<Active<'a>,
     }
     let child = command.spawn().map_err(|error| early_error(Refusal::Spawn, error))?;
     let launch_elapsed_ns = monotonic_ns().saturating_sub(start);
-    let mut owner = Owner { child, status: None, killed: false };
+    let mut owner = Owner { child, status: None, observed_ns: None, killed: false };
     let input = owner.child.stdin.take();
     let stdout = owner.child.stdout.take();
     let stderr = owner.child.stderr.take();
     let mut active = Active {
         owner, input, stdout, stderr, start, launch_elapsed_ns, deadline: spec.deadline,
+        interval_deadline: matches!(timing, Timing::FromLaunch(_)),
         payload: match &spec.stdin { Input::Bytes(bytes) => *bytes, _ => &[] },
         sent: 0, out: Vec::new(), err: Vec::new(), poll_wakeups: 0,
         stdout_limit: match spec.stdout { Target::Capture { limit } => limit, _ => 0 },
@@ -590,6 +606,8 @@ struct Active<'a> {
     start: u64,
     launch_elapsed_ns: u64,
     deadline: Deadline,
+    // Launch-relative queries refuse completion first observed at the deadline.
+    interval_deadline: bool,
     poll_wakeups: u64,
 }
 
@@ -599,7 +617,13 @@ impl Active<'_> {
     }
 
     fn advance(&mut self) -> std::result::Result<bool, (Refusal, Option<io::Error>)> {
-        self.owner.observe().map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+        if self.interval_deadline && self.deadline.expired() {
+            return Err((Refusal::Deadline, None));
+        }
+        let observed_ns = self.owner.observe().map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+        if self.interval_deadline && observed_ns >= self.deadline.as_ns() {
+            return Err((Refusal::Deadline, None));
+        }
         if self.complete() {
             return Ok(true);
         }
@@ -625,6 +649,9 @@ impl Active<'_> {
         }
         if self.sent == self.payload.len() {
             close_pipe(self.input.take()).map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+        }
+        if self.interval_deadline && self.deadline.expired() {
+            return Err((Refusal::Deadline, None));
         }
         Ok(self.complete())
     }
@@ -969,9 +996,15 @@ pub fn run_for(spec: &Spec<'_>, timeout: Duration) -> std::result::Result<Output
 }
 
 fn consume_one(mut group: Group<'_>) -> std::result::Result<Output, ProcessError> {
-    let outcome = group.value(0);
-    group.finish()?;
-    outcome
+    match (group.value(0), group.finish()) {
+        (Err(mut error), Err(finish)) => {
+            error.cleanup_error = error.cleanup_error.or(finish.cleanup_error);
+            Err(error)
+        }
+        (Err(error), Ok(())) => Err(error),
+        (Ok(_), Err(finish)) => Err(finish),
+        (Ok(output), Ok(())) => Ok(output),
+    }
 }
 
 /// Signal zero observes liveness only; EPERM is not evidence of a dead owner.

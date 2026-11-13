@@ -483,6 +483,11 @@ fn deny_syscalls(calls: &[libc::c_long], errno: i32) {
     filter.push(libc::sock_filter {
         code: (libc::BPF_RET | libc::BPF_K) as u16, jt: 0, jf: 0, k: libc::SECCOMP_RET_ALLOW,
     });
+    install_seccomp_filter(&mut filter);
+}
+
+#[cfg(target_os = "linux")]
+fn install_seccomp_filter(filter: &mut [libc::sock_filter]) {
     let program = libc::sock_fprog { len: filter.len() as u16, filter: filter.as_mut_ptr() };
     assert_eq!(unsafe { libc::prctl(libc::PR_SET_NO_NEW_PRIVS, 1 as libc::c_ulong, 0 as libc::c_ulong,
         0 as libc::c_ulong, 0 as libc::c_ulong) }, 0, "{}", std::io::Error::last_os_error());
@@ -925,4 +930,113 @@ fn finish_reports_real_close_failures_after_cancelling_and_reaping() {
     assert_eq!(error.cleanup_error.unwrap().raw_os_error(), Some(libc::EIO));
     assert_gone_and_reaped(pid);
     std::process::exit(0);
+}
+
+#[cfg(target_os = "linux")]
+fn deny_capture_reads() {
+    // Leave the spawn handshake's short reads intact; fail full capture-buffer
+    // reads with a real kernel EIO after the child has successfully spawned.
+    let mut filter = [
+        libc::sock_filter {
+            code: (libc::BPF_LD | libc::BPF_W | libc::BPF_ABS) as u16, jt: 0, jf: 0, k: 0,
+        },
+        libc::sock_filter {
+            code: (libc::BPF_JMP | libc::BPF_JEQ | libc::BPF_K) as u16,
+            jt: 0, jf: 3, k: libc::SYS_read as u32,
+        },
+        libc::sock_filter {
+            code: (libc::BPF_LD | libc::BPF_W | libc::BPF_ABS) as u16,
+            jt: 0, jf: 0, k: (std::mem::offset_of!(libc::seccomp_data, args) + 2 * 8) as u32,
+        },
+        libc::sock_filter {
+            code: (libc::BPF_JMP | libc::BPF_JEQ | libc::BPF_K) as u16, jt: 0, jf: 1, k: 16_384,
+        },
+        libc::sock_filter {
+            code: (libc::BPF_RET | libc::BPF_K) as u16,
+            jt: 0, jf: 0, k: libc::SECCOMP_RET_ERRNO | libc::EIO as u32,
+        },
+        libc::sock_filter {
+            code: (libc::BPF_RET | libc::BPF_K) as u16, jt: 0, jf: 0, k: libc::SECCOMP_RET_ALLOW,
+        },
+    ];
+    install_seccomp_filter(&mut filter);
+}
+
+#[cfg(target_os = "linux")]
+fn assert_single_read_fault_retains_evidence(test_name: &str, interval: bool) {
+    const MARKER: &str = "AM_T0_SINGLE_READ_FAULT_WORKER";
+    if std::env::var_os(MARKER).is_none() {
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", test_name, "--nocapture"]).env(MARKER, "1").output().unwrap();
+        assert!(output.status.success(), "{}\n{}", String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr));
+        return;
+    }
+    let dir = PrivateDir::new();
+    let args = argv(&["/bin/sleep", "30"]);
+    let request = spec(&args, &dir.0);
+    deny_capture_reads();
+    let error = if interval {
+        process::run_for(&request, Duration::from_secs(5))
+    } else {
+        process::run(&request)
+    }.unwrap_err();
+    assert_eq!(error.reason, Refusal::Infrastructure);
+    assert_eq!(error.source.unwrap().raw_os_error(), Some(libc::EIO));
+    assert!(error.cleanup_error.is_none());
+    let evidence = error.evidence.unwrap();
+    assert_eq!(evidence.argv0, OsString::from("/bin/sleep"));
+    assert_eq!(evidence.stdout, b"");
+    assert_eq!(evidence.stderr, b"");
+    assert!(evidence.killed && evidence.reaped);
+    assert_eq!(evidence.status, Some(Status::Signal(libc::SIGKILL)));
+    assert_gone_and_reaped(evidence.pid);
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn run_retains_read_fault_bytes_and_kill_reap_evidence() {
+    assert_single_read_fault_retains_evidence("run_retains_read_fault_bytes_and_kill_reap_evidence", false);
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn run_for_retains_read_fault_bytes_and_kill_reap_evidence() {
+    assert_single_read_fault_retains_evidence("run_for_retains_read_fault_bytes_and_kill_reap_evidence", true);
+}
+
+#[test]
+fn group_refuses_an_exit_first_observed_after_its_interval_deadline() {
+    let dir = PrivateDir::new();
+    let args = [
+        argv(&["/bin/sh", "-c", "while [ ! -e closed.ready ]; do /bin/sleep 0.01; done; printf first"]),
+        argv(&["/bin/sh", "-c", "printf '%s\\n' $$ > late.pid; exec 1>&- 2>&-; printf closed > closed.ready; /bin/sleep 0.6; exit 0"]),
+    ];
+    let requests: Vec<_> = args.iter().map(|args| spec(args, &dir.0)).collect();
+    let mut group = Group::launch(&requests, Duration::from_millis(400)).unwrap();
+    // Query zero cannot finish until query one closed both pipes. Its ordered
+    // consumption pumps and closes those pipes while query one still lingers.
+    assert_eq!(group.value(0).unwrap().stdout, b"first");
+    let pid: u32 = fs::read_to_string(dir.0.join("late.pid")).unwrap().trim().parse().unwrap();
+    let mut status: libc::siginfo_t = unsafe { std::mem::zeroed() };
+    loop {
+        // WNOWAIT proves the direct child exited without stealing its reap.
+        let result = unsafe {
+            libc::waitid(libc::P_PID, pid as libc::id_t, &mut status, libc::WEXITED | libc::WNOWAIT)
+        };
+        if result == 0 {
+            break;
+        }
+        let error = std::io::Error::last_os_error();
+        assert_eq!(error.kind(), std::io::ErrorKind::Interrupted, "{error}");
+    }
+    let error = group.value(1).unwrap_err();
+    assert_eq!(error.reason, Refusal::Deadline);
+    let evidence = error.evidence.unwrap();
+    assert_eq!(evidence.pid, pid);
+    assert!(evidence.elapsed_ns >= 400_000_000);
+    assert!(!evidence.killed && evidence.reaped);
+    assert_eq!(evidence.status, Some(Status::Code(0)));
+    assert_gone_and_reaped(pid);
+    group.finish().unwrap();
 }
