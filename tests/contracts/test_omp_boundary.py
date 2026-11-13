@@ -245,6 +245,34 @@ class NativeSources(unittest.TestCase):
                 self.assertTrue(all(identifier in wake['additionalContext'] for identifier in old_ids))
                 self.assertLessEqual(len(wake['additionalContext'].encode()), 8192)
 
+    def test_full_backlog_and_long_unicode_repo_still_offer_one_bounded_wake(self):
+        with World() as world:
+            repository = world.repository
+            name = Path(*(['界' * 68] * 3), 'x' * 16)
+            world.repository = lambda: repository(name)
+            repo, session, lifecycle = self.fixture(world)
+            with patch.dict(os.environ, world.env, clear=True):
+                entries = []
+                for number in range(15):
+                    entries.append(self.entry('human-' + str(number), 'user',
+                                              'Another bounded source', attribution='user'))
+                    result = self.observe(repo, session, lifecycle, entries)
+                    lifecycle = result['lifecycle']
+                rows, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                references = {row['source_reference'] for row in rows}
+                request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'wake',
+                           'session': session, 'lifecycle': lifecycle, 'payload': result['wake_payload']}
+                wake = self.observe_request(repo, request, delivery_window=LiveDeliveryWindow())
+                self.assertTrue(wake['continue'], wake)
+                self.assertFalse(wake['inventory_complete'])
+                self.assertLessEqual(len(wake['additionalContext'].encode()), 8192)
+                self.assertFalse(wake['canonical_writes_performed'])
+                self.assertFalse(self.observe_request(repo, request, delivery_window=LiveDeliveryWindow())['continue'])
+                after, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                self.assertEqual({row['source_reference'] for row in after}, references)
+
     def test_completed_snapshots_require_bound_drain_proof_after_marker_removal(self):
         with World() as world:
             repo, session, lifecycle = self.fixture(world)

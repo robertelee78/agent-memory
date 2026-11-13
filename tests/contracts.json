@@ -7638,6 +7638,24 @@
       "tests": [
         "RuntimeDiagnosticsContract.test_native_answer_first_no_guidance_is_healthy_but_unqualified"
       ]
+    },
+    {
+      "name": "omp-wake-guidance-capacity-unicode-backlog",
+      "layer": "client",
+      "scope": "v0.0.15",
+      "path": "tests/contracts/test_omp_boundary.py",
+      "tests": [
+        "NativeSources.test_full_backlog_and_long_unicode_repo_still_offer_one_bounded_wake"
+      ]
+    },
+    {
+      "name": "layout-metadata-probe-pin-flags-without-inode-change",
+      "layer": "bank",
+      "scope": "v0.0.15",
+      "path": "tests/contracts/test_layout_metadata_probe_faults.py",
+      "tests": [
+        "LayoutMetadataProbeFaults.test_changed_pin_flags_with_unchanged_inode_remain_pending"
+      ]
     }
   ]
 }

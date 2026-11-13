@@ -1154,12 +1154,12 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
     guidance = ('[agent-memory omp request ' + value['request_id'] + '] Agent-attributed advisory, not human input. '
                 'Answer delivered; never repeat/replace it. Do governed maintenance now; never defer. Read skill://agent-memory; use approved tools only. '
                 'Inspect each exact source using am omp-boundary --repo ' + json.dumps(str(Path(repo).resolve())) +
-                ' --source ID_OR_REFERENCE --session SESSION --lifecycle LIFECYCLE. Inspect unregistered capture/seal references as supplied; assess only an actual registered observation ID and digest. '
+                ' --source ID_OR_REFERENCE --session SESSION --lifecycle LIFECYCLE. Use unregistered refs as-is; assess registered IDs/digests only. '
                 'Re-observe/search current memory before governed capture or publication. '
                 'Assess sources individually using am omp-boundary --repo PATH --stdin --quiet --refresh with exactly '
                 '{session,lifecycle,observation_id,source_sha256,outcome,assessment} and publication_request only for published. '
                 'Admission assessment requires its segment enrolled; unresolved gaps cannot be waived. '
-                'Busy, refusal, cancellation, unavailable authority or omitted work stays pending: stop without automatic retry; do not bypass permission or force a tool. '
+                'Busy/refused/cancelled/unavailable/omitted stays pending: stop; no auto-retry, permission bypass or forced tools. '
                 'Full joined backlog: am omp-boundary --repo PATH --list-pending --offset 0; follow next_offset until exhausted. '
                 'inventory_complete:' + str(not omitted and not faults).lower() + '. Sources: ' + json.dumps(inline, separators=(',', ':')) +
                 ' Faults:' + json.dumps(faults) + ' [/agent-memory omp request]')

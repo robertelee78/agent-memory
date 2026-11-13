@@ -303,6 +303,12 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
                 required = stat.UF_NODUMP if sys.platform == 'darwin' else 0x40
                 flags = exact_metadata.inode_flags(target, exact_metadata.inode_flags(target) | required)
                 self.assertEqual(flags & required, required)
+            elif foreign == 'pin-flags':
+                before = target.stat()
+                observed = json.loads(pin.read_bytes())
+                observed['flags'] ^= stat.UF_NODUMP if sys.platform == 'darwin' else 0x40
+                pin.write_text(json.dumps(observed))
+                self.assertEqual(target.stat(), before)
             elif foreign:
                 original_inode = target.stat().st_ino
                 if foreign == 'inode':
@@ -336,6 +342,9 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
 
     def test_changed_inode_flags_after_pin_remain_pending(self):
         self.ambiguity_case('file', foreign='flags')
+
+    def test_changed_pin_flags_with_unchanged_inode_remain_pending(self):
+        self.ambiguity_case('file', foreign='pin-flags')
 
     def late_probe_case(self, kind, index, mode, *, expected_labels=None):
         with World() as world:
