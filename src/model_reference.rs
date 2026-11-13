@@ -1,10 +1,16 @@
 //! Render the shared semantic reference from its actual policy definitions.
 use crate::codec::json::{self, DecodePolicy, DuplicateKeys, NonFinite, Value};
-use crate::lifecycle::{get, text};
 use crate::error::{ContractError, Result};
+use crate::lifecycle::{get, text};
 
 // Baseline owner: security.CLASSES (security.py:22); security batch moves this to security::CLASSES and imports it here.
-pub const CLASSES: &[&str] = &["assistant", "external", "tool", "user", "verified-repository"];
+pub const CLASSES: &[&str] = &[
+    "assistant",
+    "external",
+    "tool",
+    "user",
+    "verified-repository",
+];
 
 pub const AUTHORITY_GUIDANCE: &str = r#"A session MUST identify what kind of fact it needs before deciding which source
 is stronger. It MUST read the current applicable source, including its evidence,
@@ -112,25 +118,65 @@ NOT be created. A direct user decision about this project MAY be retained with
 its source and applicability as shared project knowledge."#;
 
 fn schema(source: &str) -> Value {
-    json::decode(source, DecodePolicy { duplicate_keys: DuplicateKeys::Reject,
-        non_finite: NonFinite::Reject, ..DecodePolicy::default() }).expect("bundled model policy")
+    json::decode(
+        source,
+        DecodePolicy {
+            duplicate_keys: DuplicateKeys::Reject,
+            non_finite: NonFinite::Reject,
+            ..DecodePolicy::default()
+        },
+    )
+    .expect("bundled model policy")
 }
 fn quoted(values: &Value) -> String {
-    values.as_array().unwrap().iter().map(|v| format!("`{}`", v.as_str().unwrap())).collect::<Vec<_>>().join(", ")
+    values
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| format!("`{}`", v.as_str().unwrap()))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 pub fn render(lifecycle_text: &str) -> Result<String> {
-    let authority = schema(include_str!("../skills/agent-memory/schemas/authority-policy.json"));
-    let scope = schema(include_str!("../skills/agent-memory/schemas/scope-policy.json"));
+    let authority = schema(include_str!(
+        "../skills/agent-memory/schemas/authority-policy.json"
+    ));
+    let scope = schema(include_str!(
+        "../skills/agent-memory/schemas/scope-policy.json"
+    ));
     let record = schema(include_str!("../skills/agent-memory/schemas/record.json"));
-    let matrix = "| Fact | Authority |\n| --- | --- |\n".to_owned() + &get(&authority, "domains").as_array().unwrap().iter()
-        .map(|r| format!("| {} | {} |", text(r, "meaning").unwrap(), text(r, "authority").unwrap())).collect::<Vec<_>>().join("\n");
+    let matrix = "| Fact | Authority |\n| --- | --- |\n".to_owned()
+        + &get(&authority, "domains")
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|r| {
+                format!(
+                    "| {} | {} |",
+                    text(r, "meaning").unwrap(),
+                    text(r, "authority").unwrap()
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
     let authority_text = AUTHORITY_GUIDANCE.replace("{authority_matrix}", &matrix);
-    let (preface, states) = lifecycle_text.split_once("\n## Independent axes\n")
+    let (preface, states) = lifecycle_text
+        .split_once("\n## Independent axes\n")
         .ok_or_else(|| ContractError::new("not enough values to unpack (expected 2, got 1)"))?;
     let preface = preface.replacen("# Memory lifecycle model", "# Shared memory model", 1);
     let kinds = quoted(get(get(get(&record, "properties"), "kind"), "enum"));
-    let classes = CLASSES.iter().map(|s| format!("`{s}`")).collect::<Vec<_>>().join(", ");
+    let classes = CLASSES
+        .iter()
+        .map(|s| format!("`{s}`"))
+        .collect::<Vec<_>>()
+        .join(", ");
     let conditions = quoted(get(&scope, "condition-kinds"));
-    let overview = format!("This conditional reference also derives its kinds, authority rows and scope\nvocabulary from `schemas/record.json`, `schemas/authority-policy.json`,\n`schemas/scope-policy.json` and the security policy source classes.\n\n## Memory kinds and source classes\n\nStandalone memory kinds: {kinds}.\n\nGoverned source classes: {classes}.\n\nThe provenance source describes where a claim came from; the governed source\nclass describes the actual invoking source. Neither label authenticates an\nactor, proves an assertion or substitutes for independent trust, evidence and\nprocedure approval. Context prose need not become a standalone record.\n\n## Source authority and contradictions\n\n{authority_text}\n\n## Repository scope and applicability\n\n{SCOPE_GUIDANCE}\n\nThe executable scope condition vocabulary is {conditions}. Its combination\nrule is `{}`; developer attribution remains\n`{}`.\n", text(&scope, "condition-combination").unwrap(), text(&scope, "developer-role").unwrap());
-    Ok(format!("---\nkind: model\n---\n\n{preface}\n{overview}\n## Independent axes\n{states}"))
+    let overview = format!(
+        "This conditional reference also derives its kinds, authority rows and scope\nvocabulary from `schemas/record.json`, `schemas/authority-policy.json`,\n`schemas/scope-policy.json` and the security policy source classes.\n\n## Memory kinds and source classes\n\nStandalone memory kinds: {kinds}.\n\nGoverned source classes: {classes}.\n\nThe provenance source describes where a claim came from; the governed source\nclass describes the actual invoking source. Neither label authenticates an\nactor, proves an assertion or substitutes for independent trust, evidence and\nprocedure approval. Context prose need not become a standalone record.\n\n## Source authority and contradictions\n\n{authority_text}\n\n## Repository scope and applicability\n\n{SCOPE_GUIDANCE}\n\nThe executable scope condition vocabulary is {conditions}. Its combination\nrule is `{}`; developer attribution remains\n`{}`.\n",
+        text(&scope, "condition-combination").unwrap(),
+        text(&scope, "developer-role").unwrap()
+    );
+    Ok(format!(
+        "---\nkind: model\n---\n\n{preface}\n{overview}\n## Independent axes\n{states}"
+    ))
 }

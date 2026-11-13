@@ -13,6 +13,19 @@ pub enum Kind {
     Contract,
     /// An unsafe lifecycle trust path: the path is preserved, not repaired.
     TrustPath { path: PathBuf, reason: String },
+    /// A validated canonical bank capacity observation.
+    BankCapacity {
+        code: crate::bank_capacity::CapacityCode,
+        path: PathBuf,
+        limit: usize,
+        observed: usize,
+        measurement: crate::bank_capacity::Measurement,
+        unit: &'static str,
+    },
+    /// A local identity registry exceeded its bounded reader budget.
+    LocalRegistryBound { limit: usize, observed: u64 },
+    /// A value required as textual metadata is not UTF-8.
+    NonUtf8 { what: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,14 +38,66 @@ pub type Result<T, E = ContractError> = std::result::Result<T, E>;
 
 impl ContractError {
     pub fn new(message: impl Into<String>) -> Self {
-        Self { kind: Kind::Contract, message: message.into() }
+        Self {
+            kind: Kind::Contract,
+            message: message.into(),
+        }
+    }
+
+    /// Only bank_capacity may construct this variant after validating its observation.
+    pub(crate) fn bank_capacity(
+        code: crate::bank_capacity::CapacityCode,
+        path: PathBuf,
+        limit: usize,
+        observed: usize,
+        measurement: crate::bank_capacity::Measurement,
+        message: String,
+    ) -> Self {
+        Self {
+            kind: Kind::BankCapacity {
+                code,
+                path,
+                limit,
+                observed,
+                measurement,
+                unit: code.unit(),
+            },
+            message,
+        }
+    }
+
+    pub(crate) fn local_registry_bound(limit: usize, observed: u64) -> Self {
+        Self {
+            kind: Kind::LocalRegistryBound { limit, observed },
+            message: "Local registry exceeds its reader bound; preserve it and inspect manually"
+                .into(),
+        }
+    }
+
+    pub(crate) fn non_utf8(what: &str) -> Self {
+        Self {
+            kind: Kind::NonUtf8 { what: what.into() },
+            message: format!(
+                "Non-UTF-8 {what} cannot be recorded; rename it or configure a UTF-8 value"
+            ),
+        }
     }
 
     /// Same text as the prior runtime: `Unsafe lifecycle trust path: <path>: <reason>`.
     pub fn trust_path(path: &Path, reason: impl Into<String>) -> Self {
         let reason = reason.into();
-        let message = format!("Unsafe lifecycle trust path: {}: {}", path.display(), reason);
-        Self { kind: Kind::TrustPath { path: path.to_path_buf(), reason }, message }
+        let message = format!(
+            "Unsafe lifecycle trust path: {}: {}",
+            path.display(),
+            reason
+        );
+        Self {
+            kind: Kind::TrustPath {
+                path: path.to_path_buf(),
+                reason,
+            },
+            message,
+        }
     }
 
     pub fn kind(&self) -> &Kind {
