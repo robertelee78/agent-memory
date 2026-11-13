@@ -127,8 +127,10 @@ must not inherit a qualification without their own evidence.
 Current 18.19 qualification is still pending. Write-conflict continuation sessions
 are conservatively treated as forks: carried history is inherited and an
 unavailable final old view remains pending. Shutdown and own-manual-read behavior
-require current-producer qualification; the Linux 18.19 clock/wake image is not
-yet admitted. These are release blockers, not accepted reductions in coverage.
+require current-producer qualification. The exact Linux 18.19 image is admitted
+by the same-clock guard after private Python 3.11/3.15 probes, but native wake
+and timing qualification remain open. These are release blockers, not accepted
+reductions in coverage.
 
 For a qualifying full read of the receipt-owned AM manual, the omp learning
 snapshot records historical instruction-context provenance without the manual
