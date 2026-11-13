@@ -180,3 +180,37 @@ fn unicode_decimal_digits_are_not_confused_with_other_numeric_characters() {
         assert_eq!(frontmatter::scalar(numeric).unwrap(), Value::String(numeric.into()));
     }
 }
+
+#[test]
+fn large_objects_preserve_order_and_duplicate_policy() {
+    use std::fmt::Write;
+    const COUNT: usize = 200_000;
+    for repeat_first in [false, true] {
+        let mut text = String::with_capacity(COUNT * 20);
+        text.push('{');
+        for index in 0..COUNT {
+            if index > 0 { text.push(','); }
+            if repeat_first && index == COUNT - 1 {
+                write!(text, "\"key\\u0030\":{index}").unwrap();
+            } else {
+                write!(text, "\"key{index}\":{index}").unwrap();
+            }
+        }
+        text.push('}');
+        let value = json::decode(&text, DecodePolicy::default()).unwrap();
+        let pairs = value.as_object().unwrap();
+        assert_eq!(pairs.len(), COUNT - usize::from(repeat_first));
+        for (index, (key, value)) in pairs.iter().enumerate() {
+            assert_eq!(key, &format!("key{index}"));
+            let expected = if repeat_first && index == 0 { COUNT - 1 } else { index };
+            assert_eq!(value.as_int().unwrap().as_u64(), Some(expected as u64));
+        }
+        let strict = DecodePolicy { duplicate_keys: DuplicateKeys::Reject, ..DecodePolicy::default() };
+        let result = json::decode(&text, strict);
+        if repeat_first {
+            assert_eq!(result.unwrap_err().to_string(), "Duplicate metadata key: key0");
+        } else {
+            assert_eq!(result.unwrap().as_object().unwrap().len(), COUNT);
+        }
+    }
+}

@@ -1,5 +1,6 @@
 use crate::error::{ContractError, Result};
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fmt::{self, Write};
 
 pub const MAX_DEPTH: usize = 256;
@@ -167,6 +168,7 @@ impl Parser<'_> {
         self.pos += 1;
         self.whitespace();
         let mut pairs: Vec<(String, Value)> = Vec::new();
+        let mut positions: Option<HashMap<String, usize>> = None;
         if self.peek() == Some(b'}') { self.pos += 1; return Ok(Value::Object(pairs)); }
         loop {
             self.whitespace();
@@ -176,12 +178,26 @@ impl Parser<'_> {
             if self.peek() != Some(b':') { return Err(self.error("Expecting ':' delimiter")); }
             self.pos += 1;
             let value = self.value(depth)?;
-            if let Some((_, previous)) = pairs.iter_mut().find(|(k, _)| k == &key) {
+            if positions.is_none() && pairs.len() >= 8 {
+                positions = Some(pairs.iter().enumerate()
+                    .map(|(index, (key, _))| (key.clone(), index)).collect());
+            }
+            let previous = if let Some(positions) = &positions {
+                positions.get(key.as_str()).copied()
+            } else {
+                pairs.iter().position(|(previous, _)| previous == &key)
+            };
+            if let Some(index) = previous {
                 if self.policy.duplicate_keys == DuplicateKeys::Reject {
                     return Err(ContractError::new(format!("Duplicate metadata key: {key}")));
                 }
-                *previous = value;
-            } else { pairs.push((key, value)); }
+                pairs[index].1 = value;
+            } else {
+                if let Some(positions) = &mut positions {
+                    positions.insert(key.clone(), pairs.len());
+                }
+                pairs.push((key, value));
+            }
             self.whitespace();
             match self.peek() {
                 Some(b'}') => { self.pos += 1; return Ok(Value::Object(pairs)); }
