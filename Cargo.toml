@@ -11,6 +11,14 @@ publish = false
 name = "agent_memory"
 path = "src/lib.rs"
 
+[features]
+dev-tools = []
+
+[[bin]]
+name = "am-dev"
+path = "src/bin/am_dev/main.rs"
+required-features = ["dev-tools"]
+
 [dependencies]
 libc = "0.2"
 sha2 = "0.11"
