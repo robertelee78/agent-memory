@@ -1,0 +1,189 @@
+{
+ "source_commit": "78eaf70a3cfc7c7e3c9444435715d7d437c242dd",
+ "order": [
+  "T0",
+  "T1",
+  "T2a-recall",
+  "T2b-governance",
+  "T2c-sharing",
+  "T2d-layout",
+  "T2e-lifecycle",
+  "T2f-harness"
+ ],
+ "slices": {
+  "T0": [
+   "frontmatter",
+   "trust_paths"
+  ],
+  "T1": [
+   "artifact",
+   "authority",
+   "bank_capacity",
+   "bank_contract",
+   "bank_layout",
+   "bank_observation",
+   "bank_state",
+   "bank_transactions",
+   "bank_writes",
+   "boundary_assessment",
+   "checkpoint",
+   "developer_identity",
+   "handoff",
+   "identity_git",
+   "inactive",
+   "layout_history",
+   "layout_recovery_state",
+   "layout_resolution",
+   "lifecycle",
+   "local_registry",
+   "migration_contract",
+   "model_reference",
+   "pack_validation",
+   "private_state",
+   "private_workspace",
+   "project_identity",
+   "projections",
+   "records",
+   "recovery_frontier",
+   "recovery_quiescence",
+   "recovery_transactions",
+   "remote_identity",
+   "repository_config",
+   "runtime_faults",
+   "scope_binding",
+   "scopes",
+   "security",
+   "sharing_limits",
+   "tombstones",
+   "turn_sources",
+   "validation_memo"
+  ],
+  "T2a-recall": [
+   "admission_navigation",
+   "assembly",
+   "comparison",
+   "discovery",
+   "recall_catalog",
+   "retrieval"
+  ],
+  "T2b-governance": [
+   "admission",
+   "consolidation",
+   "governance",
+   "initialization",
+   "migration",
+   "migration_codecs"
+  ],
+  "T2c-sharing": [
+   "memory_publication",
+   "memory_refresh",
+   "semantic_sharing",
+   "sharing_boundary",
+   "sharing_frontier",
+   "sharing_hold_mapping",
+   "sharing_holds",
+   "sharing_page_export",
+   "sharing_recovery"
+  ],
+  "T2d-layout": [
+   "layout_recovery",
+   "layout_recovery_context",
+   "layout_recovery_observation",
+   "layout_recovery_publication",
+   "layout_recovery_retention",
+   "layout_recovery_temps",
+   "layout_restore",
+   "layout_units"
+  ],
+  "T2e-lifecycle": [
+   "__init__",
+   "cache_recovery",
+   "cli",
+   "client_hooks",
+   "console",
+   "diagnostics",
+   "doctor_fix",
+   "hook_failure",
+   "installation",
+   "managed_source",
+   "omp_installation",
+   "purging",
+   "release_distribution",
+   "uninstallation",
+   "updating"
+  ],
+  "T2f-harness": [
+   "claude_boundary",
+   "claude_turns",
+   "codex_boundary",
+   "omp_boundary",
+   "omp_control",
+   "omp_projection",
+   "omp_stream",
+   "omp_transport",
+   "turn_check"
+  ]
+ },
+ "lines": {
+  "T0": 258,
+  "T1": 11723,
+  "T2a-recall": 1894,
+  "T2b-governance": 2963,
+  "T2c-sharing": 3615,
+  "T2d-layout": 4855,
+  "T2e-lifecycle": 5556,
+  "T2f-harness": 5875
+ },
+ "upward_edges": {
+  "T1 -> T2e-lifecycle": [
+   "bank_contract->cli*",
+   "private_state->installation*"
+  ],
+  "T1 -> T2a-recall": [
+   "bank_state->retrieval*",
+   "bank_transactions->recall_catalog*",
+   "layout_resolution->comparison*",
+   "recovery_frontier->comparison*",
+   "recovery_frontier->recall_catalog*",
+   "recovery_quiescence->comparison*"
+  ],
+  "T1 -> T2b-governance": [
+   "bank_transactions->admission*",
+   "bank_transactions->consolidation*",
+   "bank_transactions->governance*",
+   "bank_transactions->initialization*",
+   "private_state->admission*",
+   "recovery_transactions->admission*",
+   "recovery_transactions->consolidation*",
+   "recovery_transactions->governance*",
+   "security->migration*"
+  ],
+  "T1 -> T2c-sharing": [
+   "bank_transactions->memory_refresh*",
+   "turn_sources->memory_publication*",
+   "turn_sources->sharing_recovery*"
+  ],
+  "T2e-lifecycle -> T2f-harness": [
+   "installation->omp_boundary*",
+   "omp_installation->omp_boundary*",
+   "omp_installation->omp_projection*",
+   "omp_installation->omp_stream*",
+   "omp_installation->omp_transport*",
+   "uninstallation->omp_boundary*",
+   "updating->omp_boundary*"
+  ],
+  "T2c-sharing -> T2d-layout": [
+   "memory_publication->layout_recovery_publication*"
+  ],
+  "T2b-governance -> T2e-lifecycle": [
+   "migration->installation*"
+  ],
+  "T1 -> T2f-harness": [
+   "private_state->omp_boundary*"
+  ],
+  "T1 -> T2d-layout": [
+   "project_identity->layout_recovery_observation*",
+   "recovery_frontier->layout_recovery_observation*"
+  ]
+ }
+}
