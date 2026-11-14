@@ -376,6 +376,28 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     crate::handoff::register_checkpoint(Some(checkpoint));
     crate::bank_state::register_comparison_view(Some(Arc::new(crate::retrieval::ComparisonView)));
     crate::diagnostics::register_projections(Some(Arc::new(crate::projections::Projections)));
+    crate::turn_sources::register_publication_gate(Some(Arc::new(crate::memory_publication::Gate)));
+    let transport = Arc::new(crate::omp_transport::Transport::installed());
+    crate::omp_boundary::register_omp_transport(Some(transport.clone()));
+    crate::omp_stream::register_omp_transport(Some(transport));
+    // Without a resolvable running executable the activation stays
+    // unregistered and every native operation refuses with MissingActivation.
+    if let Ok(executable) = crate::host::current_executable() {
+        let services = crate::installation::Services::registered()
+            .map_err(|error| ContractError::new(error.to_string()));
+        let activation = services.map(|services| {
+            Arc::new(crate::installation::InstallationActivation {
+                env: crate::installation::Environment::process(),
+                services,
+                executable,
+                harness: crate::omp_transport::Harness,
+            })
+        });
+        wired(activation.and_then(|activation| {
+            crate::omp_installation::register_activation(Some(activation))
+                .map_err(|error| ContractError::new(error.to_string()))
+        }))?;
+    }
     Ok(())
 }
 

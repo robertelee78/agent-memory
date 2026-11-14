@@ -8,12 +8,8 @@ bank_contract::register_recovery_coverage waits for recovery_frontier
 bank_contract::register_route_table waits for layout_recovery
 bank_writes::register_recovery_frontier waits for recovery_frontier
 bank_writes::register_recovery_transactions waits for recovery_transactions
-omp_installation::register_activation waits for installation, omp_boundary, omp_projection, omp_stream, omp_transport, turn_sources
 sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
 turn_check::register_memory_refresh waits for memory_refresh
-turn_sources::register_publication_gate waits for memory_publication, sharing_recovery
-omp_stream::register_omp_transport waits for omp_transport
-omp_boundary::register_omp_transport waits for omp_transport
 layout_restore::register_layout_recovery waits for layout_recovery
 admission::register_comparison waits for comparison
 discovery::register_comparison waits for comparison

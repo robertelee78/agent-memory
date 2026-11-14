@@ -1178,3 +1178,15 @@ pub fn command_result(outcome: Result<Value>) -> crate::lifecycle::CommandResult
         Err(error) => command_result(Err(error)),
     }
 }
+
+/// Baseline `any(re.search(p, text) for _, p in (*SECRETS, *SUSPICIOUS))`:
+/// every shared pattern searched once over the unredacted text. The caller
+/// names and enforces its own byte bound before calling.
+pub fn matches_any(text: &str) -> Result<bool> {
+    let patterns = PATTERNS.as_ref().map_err(Clone::clone)?;
+    Ok(patterns
+        .secrets
+        .iter()
+        .chain(&patterns.suspicious)
+        .any(|pattern| find_valid(pattern, text, 0).is_some()))
+}

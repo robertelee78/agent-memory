@@ -623,7 +623,7 @@ pub fn private_namespace(
     }
     Ok((ns, context))
 }
-fn enrollment_namespace(
+pub(crate) fn enrollment_namespace(
     repo: &Path,
     harness: &str,
     session: &str,

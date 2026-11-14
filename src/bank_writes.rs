@@ -227,6 +227,14 @@ pub trait RecoveryFrontier: Send + Sync {
         transaction: Option<&[u8]>,
         runtime_root: &Path,
     ) -> Result<Option<Value>>;
+    /// Baseline recovery_frontier.require_complete(repo, owner, transaction): the
+    /// observed token, refused unless coverage is complete and no hold is present.
+    fn require_complete(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+    ) -> Result<Value>;
 }
 /// Baseline recovery_frontier marker schemas; recovery_frontier reuses these.
 pub const HOLD: &str = "agent-memory/layout-frontier-hold-v1";

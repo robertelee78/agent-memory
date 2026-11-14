@@ -1844,7 +1844,7 @@ fn doctor_does_not_resume_a_separately_confirmed_purge() {
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_native_doctor_rejects_rebound_wrapper_bytes_modes_and_roles
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_native_doctor_never_repairs_missing_observer_locks
 #[test]
-#[ignore = "needs omp_projection, omp_transport registered (omp_installation::register_activation for omp.native_boundary)"]
+#[ignore = "needs recovery_frontier, memory_refresh registered (bank.inspection, omp.native_boundary)"]
 fn native_omp_doctor_distinguishes_extension_and_launchers() {
     for (install_mode, no_guidance) in
         [(Mode::Copy, false), (Mode::Link, false), (Mode::Copy, true)]

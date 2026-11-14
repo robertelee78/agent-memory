@@ -14,6 +14,7 @@ pub mod inactive;
 pub mod initialization;
 pub mod installation;
 pub mod lifecycle;
+pub mod memory_publication;
 pub mod migration;
 pub mod omp_boundary;
 pub mod pack_validation;

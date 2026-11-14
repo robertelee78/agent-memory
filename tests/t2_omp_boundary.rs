@@ -1131,15 +1131,15 @@ fn omp_boundary_route_reports_pending_work_and_argument_errors() {
             "/agent",
         ],
     ));
-    // `--stream` reaches the real finite stream: its observer binding needs the
-    // OMP activation composite (omp_projection/omp_transport pending), which
-    // refuses before any transport or source work.
+    // `--stream` reaches the real finite stream: its observer binding uses the
+    // registered OMP activation composite, whose installed runtime locations
+    // refuse before any transport or source work when no receipt owns `am`.
     assert_eq!(
         (status, stdout.as_str(), stderr.as_str()),
         (
             process::Status::Code(1),
             "",
-            "am omp-boundary: OMP activation interface is not registered; native ownership verification refuses\n"
+            "am omp-boundary: No installed Rust runtime receipt owns this executable; pass --pack PATH\n"
         )
     );
     // The stream parser, not the boundary parser, decides `--stream` argv.

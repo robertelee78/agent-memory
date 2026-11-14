@@ -42,6 +42,7 @@ pub static ENTRIES: &[Entry] = &[
     route("omp-boundary", &helpers::omp_boundary::HELPER),
     route("private", &helpers::private_workspace::HELPER),
     route("checkpoint", &helpers::checkpoint::HELPER),
+    route("publish", &helpers::memory_publication::HELPER),
     route("sharing", &helpers::sharing_boundary::HELPER),
     route("exchange", &helpers::sharing_recovery::HELPER),
     route("projection", &helpers::projections::HELPER),

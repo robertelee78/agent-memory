@@ -20,6 +20,18 @@ pub trait SemanticSharing: Send + Sync {
         root: &Path,
         project_id: &str,
     ) -> Result<BTreeSet<String>>;
+    /// Baseline semantic_sharing.check(repo, proof, owned_lock=).
+    fn check(&self, repo: &Path, proof: &Value, owned_lock: Option<&[u8]>) -> Result<Value>;
+    /// Baseline semantic_sharing.final_sources(root, observation, binding, owned_lock=).
+    fn final_sources(
+        &self,
+        root: &Path,
+        observation: &Value,
+        binding: &Value,
+        owned_lock: Option<&[u8]>,
+    ) -> Result<()>;
+    /// Baseline semantic_sharing.read_input(path, version2=).
+    fn read_input(&self, path: &Path, version2: bool) -> Result<Value>;
 }
 /// Implemented by `security` when that module is wired into the runtime.
 pub trait SecurityScan: Send + Sync {
@@ -38,6 +50,12 @@ pub fn register_semantic_sharing(provider: Box<dyn SemanticSharing>) -> Result<(
     SEMANTIC
         .set(provider)
         .map_err(|_| ContractError::new("Semantic sharing already registered"))
+}
+/// The registered semantic_sharing provider; absence is a typed MissingProvider.
+pub(crate) fn semantic_sharing_provider() -> Result<&'static dyn SemanticSharing> {
+    SEMANTIC.get().map(Box::as_ref).ok_or_else(|| {
+        ContractError::missing_provider("semantic_sharing provider is not registered")
+    })
 }
 pub fn register_security_scan(provider: Box<dyn SecurityScan>) -> Result<()> {
     SECURITY
