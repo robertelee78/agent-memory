@@ -374,6 +374,9 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     }));
     crate::bank_writes::register_recovery_frontier(Some(frontier.clone()));
     crate::bank_contract::register_recovery_coverage(Some(frontier));
+    crate::recovery_frontier::register_layout_resolution(Some(Arc::new(
+        crate::layout_resolution::LayoutResolution,
+    )));
     Ok(())
 }
 

@@ -1898,3 +1898,77 @@ pub fn accumulated_coverage(
 fn value_proposal_has_admission(value: &Value) -> bool {
     value.get("admission_evidence").is_some()
 }
+
+/// Recovery-frontier callee adapter; all evidence and ownership remain borrowed.
+pub struct LayoutResolution;
+impl crate::recovery_frontier::LayoutResolution for LayoutResolution {
+    fn advance_ledger(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        units: &Value,
+        expected_head: &Value,
+        owner: &[u8],
+        transaction: Option<&[u8]>,
+        unit_map_sha256: Option<&str>,
+        runtime_root: &Path,
+    ) -> Result<Value> {
+        advance_ledger(
+            repo,
+            operation_id,
+            units,
+            expected_head,
+            Some(owner),
+            transaction,
+            unit_map_sha256,
+            runtime_root,
+        )
+    }
+
+    fn restore_hold(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        owner: &[u8],
+        transaction: &[u8],
+        runtime_root: &Path,
+    ) -> Result<Vec<u8>> {
+        restore_hold(
+            repo,
+            operation_id,
+            Some(owner),
+            Some(transaction),
+            runtime_root,
+        )
+    }
+
+    fn retire(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        owner: &[u8],
+        transaction: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Value> {
+        retire(repo, operation_id, Some(owner), transaction, runtime_root)
+    }
+
+    fn resolve(
+        &self,
+        repo: &Path,
+        operation_id: Option<&str>,
+        unit_id: Option<&str>,
+        terminal: Option<&Value>,
+        proposal: Option<&Value>,
+        runtime_root: &Path,
+    ) -> Result<Value> {
+        resolve(
+            repo,
+            operation_id,
+            unit_id,
+            terminal,
+            proposal,
+            runtime_root,
+        )
+    }
+}

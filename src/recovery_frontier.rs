@@ -1,5 +1,5 @@
 //! Independently pinned private recovery coverage. Pending text is comparison-only.
-use crate::bank_writes as writes;
+use crate::bank_writes::{self as writes, HOLD, NESTED, SENTINEL, TRANSACTION};
 use crate::codec::json::Value;
 use crate::developer_identity::{digest, encoded, load_with_limit, uuid_valid};
 use crate::error::{ContractError, Result};
@@ -17,10 +17,6 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::{Arc, RwLock};
 
-pub const HOLD: &str = "agent-memory/layout-frontier-hold-v1";
-pub const NESTED: &str = "agent-memory/layout-frontier-transaction-v1";
-pub const TRANSACTION: &str = "agent-memory/layout-recovery-transaction-v1";
-pub const SENTINEL: &str = "agent-memory/layout-recovery-sentinel-v1";
 pub const TERMINAL: &[&str] = &[
     "admitted",
     "governed-terminal",
@@ -1044,8 +1040,7 @@ pub fn check(
     Ok(current)
 }
 
-/// Future layout_resolution implementation; a retained ledger never substitutes
-/// for the actual durable mutation and resolution provider.
+/// Durable mutation and resolution operations supplied by layout_resolution.
 pub trait LayoutResolution: Send + Sync {
     fn advance_ledger(
         &self,
@@ -1079,7 +1074,7 @@ pub trait LayoutResolution: Send + Sync {
         repo: &Path,
         operation: Option<&str>,
         unit: Option<&str>,
-        terminal: Option<&str>,
+        terminal: Option<&Value>,
         proposal: Option<&Value>,
         runtime: &Path,
     ) -> Result<Value>;
@@ -1884,6 +1879,14 @@ pub fn validate_comparison_review(
 }
 pub fn reservation(files: &Value, pending: &Value, token: &Value) -> Result<Value> {
     let checked = bank_contract::validate_files(files, None)?;
+    reservation_rows(files, array(pending)?, token, checked)
+}
+fn reservation_rows(
+    files: &Value,
+    pending: &[Value],
+    token: &Value,
+    checked: Value,
+) -> Result<Value> {
     let mut rows = Vec::new();
     let mut captures = Vec::new();
     let mut identities = BTreeSet::from([crate::host::uuid4()?]);
@@ -1922,7 +1925,6 @@ pub fn reservation(files: &Value, pending: &Value, token: &Value) -> Result<Valu
         }
         rows.push(row);
     }
-    let pending = array(pending)?;
     for row in pending {
         let body = s(get(row, "body"))?;
         if body.len() > sharing_limits::MAX_FILE {
@@ -2162,7 +2164,7 @@ pub fn resolve(
     repo: &Path,
     operation: Option<&str>,
     unit: Option<&str>,
-    terminal: Option<&str>,
+    terminal: Option<&Value>,
     proposal: Option<&Value>,
     runtime: &Path,
 ) -> Result<Value> {
@@ -2515,8 +2517,20 @@ pub fn successor_token(
     operation: &str,
     generation_change: bool,
 ) -> Result<Value> {
+    successor_token_units(
+        token,
+        array(pending_ids)?.to_vec(),
+        operation,
+        generation_change,
+    )
+}
+fn successor_token_units(
+    token: &Value,
+    mut units: Vec<Value>,
+    operation: &str,
+    generation_change: bool,
+) -> Result<Value> {
     let mut result = token.clone();
-    let mut units = array(pending_ids)?.to_vec();
     units.sort_unstable_by(|a, b| a.as_str().cmp(&b.as_str()));
     let complete = units.is_empty();
     put(&mut result, "unit_ids", Value::Array(units))?;
@@ -2604,6 +2618,16 @@ impl writes::RecoveryFrontier for FrontierProvider {
         project: &Value,
         expected: Option<&Value>,
     ) -> Result<Value> {
+        self.require_scope_owned(repo, project, expected, None, None)
+    }
+    fn require_scope_owned(
+        &self,
+        repo: &Path,
+        project: &Value,
+        expected: Option<&Value>,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+    ) -> Result<Value> {
         let project = match project {
             Value::Null => None,
             Value::String(project) => Some(project.as_str()),
@@ -2619,6 +2643,8 @@ impl writes::RecoveryFrontier for FrontierProvider {
             project,
             scope_binding::RequireOptions {
                 expected,
+                owned_lock: owner,
+                owned_transaction: transaction,
                 ..Default::default()
             },
             &runtime,
@@ -2698,6 +2724,84 @@ impl writes::RecoveryFrontier for FrontierProvider {
     }
     fn observe_source_markers(&self) -> Result<Box<dyn scope_binding::SourceMarkerObservation>> {
         Ok(Box::new(observe_source_markers()))
+    }
+    fn marker_bytes(
+        &self,
+        bank: &Path,
+        name: &str,
+        expected: Option<&[u8]>,
+    ) -> Result<Option<Vec<u8>>> {
+        marker_bytes(bank, name, expected)
+    }
+    fn marker_value(&self, raw: &[u8]) -> Result<Value> {
+        marker_value(raw)
+    }
+    fn invalidate(&self, repo: &Path) -> Result<String> {
+        invalidate(repo)
+    }
+    fn range_value(&self, value: &Value) -> Result<()> {
+        range_value(value).map(|_| ())
+    }
+    fn verified_hold_value(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        runtime: &Path,
+    ) -> Result<Option<VerifiedHold>> {
+        let (runtime, binary) = self.matching_runtime(runtime)?;
+        verified_hold(repo, owner, transaction, &runtime, &binary)
+    }
+    fn pending_rows(
+        &self,
+        repo: &Path,
+        token: &Value,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        runtime: &Path,
+    ) -> Result<Vec<Value>> {
+        match pending_rows(repo, token, owner, transaction, runtime)? {
+            Value::Array(rows) => Ok(rows),
+            _ => Err(err("Recovery pending rows must be an array")),
+        }
+    }
+    fn successor_token(
+        &self,
+        token: &Value,
+        pending_unit_ids: &[String],
+        operation: &str,
+        generation_change: bool,
+    ) -> Result<Value> {
+        successor_token_units(
+            token,
+            pending_unit_ids.iter().cloned().map(string).collect(),
+            operation,
+            generation_change,
+        )
+    }
+    fn reservation(&self, files: &Value, pending: &[Value], token: &Value) -> Result<Value> {
+        reservation_rows(
+            files,
+            pending,
+            token,
+            bank_contract::validate_files(files, None)?,
+        )
+    }
+    fn claim_value(&self, claim: &Value, row: &Value) -> Result<()> {
+        claim_value(claim, row).map(|_| ())
+    }
+    fn resolve_reference(&self, repo: &Path, reference: &Value, runtime: &Path) -> Result<Value> {
+        resolve_reference(repo, reference, runtime)
+    }
+    fn validate_comparison_review(
+        &self,
+        repo: &Path,
+        proof: &Value,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        runtime: &Path,
+    ) -> Result<Option<Value>> {
+        validate_comparison_review(repo, proof, owner, transaction, runtime)
     }
 }
 impl bank_contract::RecoveryCoverage for FrontierProvider {

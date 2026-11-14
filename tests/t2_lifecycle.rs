@@ -1,7 +1,7 @@
 //! Lifecycle lane: `am update` (Rust-to-Rust from a locally signed
 //! release-v2 channel), `am uninstall`, `am purge-data` and doctor repair,
-//! in isolated Worlds. Fault-injection scenarios run in a child copy of this
-//! test binary so the process environment of parallel tests is never mutated.
+//! in isolated Worlds. Fixture lifecycle faults run in this test binary;
+//! purge journeys install and invoke the receipt-owned native `am`.
 use agent_memory::cache_recovery::Qualification;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::installation::{
@@ -19,7 +19,6 @@ use std::process::Command;
 use std::sync::Arc;
 use std::time::Duration;
 
-mod support;
 const STAND_IN: &[u8] = b"#!/bin/sh\nprintf 'stand-in am %s\\n' \"$*\"\n";
 const BASE: &str = "0.0.15";
 const NEXT: &str = "0.0.16";
@@ -661,6 +660,35 @@ fn child_entry() {
     };
     let root = PathBuf::from(std::env::var("AGENT_MEMORY_TEST_ROOT").unwrap());
     let token = std::env::var("AGENT_MEMORY_TEST_TOKEN").unwrap();
+    match command.as_str() {
+        "native-purge-preview" | "native-purge-scenario" => {
+            let world = World::reopen(&root, &token);
+            install_native_purge_runtime(&world);
+            match command.as_str() {
+                "native-purge-preview" => purge_preview_scenario(&world),
+                "native-purge-scenario" => {
+                    let point = std::env::var("AM_T2_PURGE_POINT").unwrap();
+                    purge_interruption_scenario(&world, &point);
+                }
+                _ => unreachable!(),
+            }
+            use std::io::Write;
+            use std::os::unix::fs::OpenOptionsExt;
+            let mut receipt = std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .mode(0o600)
+                .open(world.path("native-purge-worker-completed"))
+                .unwrap();
+            receipt
+                .write_all(format!("{command}\n{token}\n").as_bytes())
+                .unwrap();
+            receipt.sync_all().unwrap();
+            std::fs::File::open(&root).unwrap().sync_all().unwrap();
+            return;
+        }
+        _ => {}
+    }
     let installed = Installed {
         world: World::reopen(&root, &token),
         channel: Channel::open(&root.join("channel")),
@@ -668,11 +696,6 @@ fn child_entry() {
     let run = || {
         let result = match command.as_str() {
             "recover" => install::recover_command(&installed.world.env(), &installed.services()),
-            "purge-scenario" => {
-                let point = std::env::var("AM_T2_PURGE_POINT").unwrap();
-                purge_interruption_scenario(&installed.world, &point);
-                return;
-            }
             "update" => updating::update_command(
                 &installed.world.env(),
                 &installed.services(),
@@ -683,32 +706,6 @@ fn child_entry() {
                 &installed.services(),
                 &UninstallRequest::default(),
             ),
-            "purge" => {
-                use std::io::Write;
-                use std::os::unix::fs::OpenOptionsExt;
-                let stage = std::env::var("AGENT_MEMORY_FAULT_STAGE").unwrap();
-                let path = installed.world.path(&format!("{stage}.entered"));
-                let mut proof = std::fs::OpenOptions::new()
-                    .write(true)
-                    .create_new(true)
-                    .mode(0o600)
-                    .open(path)
-                    .unwrap();
-                proof
-                    .write_all(format!("{stage}\n{}\n", installed.world.token).as_bytes())
-                    .unwrap();
-                proof.sync_all().unwrap();
-                agent_memory::purging::purge_command(
-                    &installed.world.env(),
-                    &installed.services(),
-                    &agent_memory::purging::PurgeRequest {
-                        repo: installed.world.path("repo"),
-                        path: installed.world.path("repo/memory-bank"),
-                        check: false,
-                        confirm: std::env::var("AM_T2_CONFIRM").ok(),
-                    },
-                )
-            }
             "doctor-fix" => {
                 // Diagnostics over this World with the production security tier.
                 let env = installed.world.env();
@@ -731,11 +728,7 @@ fn child_entry() {
             json::encode(&result.value.unwrap_or(Value::Null), json::COMPACT_ASCII).unwrap()
         );
     };
-    if matches!(command.as_str(), "purge" | "purge-scenario") {
-        support::with_frontier("child_entry", run);
-    } else {
-        run();
-    }
+    run();
 }
 
 struct Child {
@@ -743,9 +736,6 @@ struct Child {
     value: Option<Value>,
 }
 fn child(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
-    if matches!(command, "purge" | "purge-scenario") {
-        return bounded_purge_child(world, command, extra);
-    }
     let mut process = Command::new(std::env::current_exe().unwrap());
     process
         .args([
@@ -775,23 +765,19 @@ fn child(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
         value,
     }
 }
-fn bounded_purge_child(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
+/// The same bounded, cleared-environment process convention for native am and
+/// the assertion worker. Only the worker writes its normal-completion receipt.
+fn bounded_purge_process(
+    world: &World,
+    argv: &[OsString],
+    extra: &[(&str, String)],
+) -> agent_memory::process::Output {
     use agent_memory::{clock::Deadline, process};
-    let argv = [
-        std::env::current_exe().unwrap().into_os_string(),
-        "child_entry".into(),
-        "--exact".into(),
-        "--nocapture".into(),
-        "--test-threads=1".into(),
-        "-q".into(),
-    ];
     let mut environment: Vec<(OsString, OsString)> = world
         .pairs()
         .into_iter()
         .map(|(key, value)| (key.into(), value.into()))
         .collect();
-    // Complete the merged World's root-variable contract for this owned child;
-    // the explicit lifecycle state and process-global domain state are identical.
     for (key, relative) in [
         ("XDG_CACHE_HOME", "cache"),
         ("GH_CONFIG_DIR", "credentials"),
@@ -799,21 +785,16 @@ fn bounded_purge_child(world: &World, command: &str, extra: &[(&str, String)]) -
         ("AGENT_MEMORY_STATE_HOME", "state/agent-memory"),
         ("AGENT_MEMORY_BACKUP_HOME", "backups"),
     ] {
-        let path = world.path(relative);
-        std::fs::create_dir_all(&path).unwrap();
-        mode(&path, 0o700);
-        environment.push((key.into(), path.into_os_string()));
+        environment.push((key.into(), world.path(relative).into_os_string()));
     }
-    environment.push(("AM_T2_CHILD".into(), command.into()));
-    environment.push(("AM_FRONTIER_CONSUMER_CASE".into(), "child_entry".into()));
     environment.extend(
         extra
             .iter()
             .map(|(key, value)| ((*key).into(), value.into())),
     );
     let cwd = world.path("repo");
-    let output = process::run(&process::Spec {
-        argv: &argv,
+    process::run(&process::Spec {
+        argv,
         env: &environment,
         search_path: false,
         cwd: Some(&cwd),
@@ -830,22 +811,123 @@ fn bounded_purge_child(world: &World, command: &str, extra: &[(&str, String)]) -
         umask: Some(0o077),
         pass_fds: &[],
     })
-    .unwrap();
+    .unwrap()
+}
+
+fn native_purge_worker(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
+    let argv = [
+        std::env::current_exe().unwrap().into_os_string(),
+        "child_entry".into(),
+        "--exact".into(),
+        "--nocapture".into(),
+        "--test-threads=1".into(),
+        "-q".into(),
+    ];
+    let mut environment = vec![("AM_T2_CHILD", command.to_owned())];
+    environment.extend_from_slice(extra);
+    let output = bounded_purge_process(world, &argv, &environment);
     let code = match output.status {
-        process::Status::Code(code) => Some(code),
+        agent_memory::process::Status::Code(code) => Some(code),
         _ => None,
     };
-    if code == Some(0) {
-        assert_eq!(
-            std::fs::read(world.path("frontier-consumer-completed")).unwrap(),
-            format!("child_entry\n{}\n", world.token).as_bytes(),
-        );
-    }
-    let value = String::from_utf8_lossy(&output.stdout)
-        .lines()
-        .find_map(|line| line.strip_prefix("AM-RESULT:"))
-        .map(|line| json::decode(line, Default::default()).unwrap());
+    assert_eq!(
+        code,
+        Some(0),
+        "{command}: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+    assert_eq!(
+        std::fs::read(world.path("native-purge-worker-completed")).unwrap(),
+        format!("{command}\n{}\n", world.token).as_bytes(),
+    );
+    Child { code, value: None }
+}
+
+fn native_purge_command(
+    world: &World,
+    executable: &Path,
+    arguments: &[OsString],
+    extra: &[(&str, String)],
+) -> Child {
+    let mut argv = vec![executable.as_os_str().to_owned(), "--json".into()];
+    argv.extend_from_slice(arguments);
+    let output = bounded_purge_process(world, &argv, extra);
+    let code = match output.status {
+        agent_memory::process::Status::Code(code) => Some(code),
+        _ => None,
+    };
+    assert!(
+        output.stderr.is_empty(),
+        "native am: {}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let value = if output.stdout.is_empty() {
+        None
+    } else {
+        Some(json::decode_bytes(&output.stdout, Default::default()).unwrap())
+    };
     Child { code, value }
+}
+
+/// Copy the shipped assets without inventing a compatibility document or an
+/// installation receipt. The candidate CLI performs the real installation.
+fn install_native_purge_runtime(world: &World) {
+    for relative in [
+        "cache",
+        "credentials",
+        "config/agent-memory",
+        "state/agent-memory",
+        "backups",
+    ] {
+        let path = world.path(relative);
+        std::fs::create_dir_all(&path).unwrap();
+        mode(&path, 0o700);
+    }
+    let source = world.path("dev-source");
+    let pack = source.join("skills/agent-memory");
+    let shipped = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
+    for (relative, (bytes, permissions)) in
+        agent_memory::pack_validation::inventory(&shipped).unwrap()
+    {
+        let path = pack.join(relative);
+        write(&path, bytes);
+        mode(&path, permissions);
+    }
+    let binary = source.join("target/release/am");
+    std::fs::create_dir_all(binary.parent().unwrap()).unwrap();
+    std::fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
+    mode(&binary, 0o755);
+    let installed = native_purge_command(
+        world,
+        &binary,
+        &[
+            "install".into(),
+            "--development-source".into(),
+            source.into_os_string(),
+            "--mode".into(),
+            "link".into(),
+            "--presets".into(),
+            "none".into(),
+            "--no-guidance".into(),
+            "--bin-dir".into(),
+            world.bin().into_os_string(),
+        ],
+        &[],
+    );
+    verified(installed.code.unwrap(), &installed.value.unwrap());
+    let receipt = decode(&world.receipt_path());
+    assert_eq!(text(&receipt, "schema"), "agent-memory/install-receipt-v3");
+    let owned = install::source_binary(get(&receipt, "source")).unwrap();
+    assert_eq!(std::fs::canonicalize(&owned).unwrap(), binary);
+    assert_eq!(
+        std::fs::canonicalize(world.bin().join("am")).unwrap(),
+        owned,
+    );
+    assert_eq!(
+        text(get(&receipt, "source"), "pack"),
+        pack.to_str().unwrap()
+    );
 }
 fn fault(stage: &str) -> Vec<(&'static str, String)> {
     vec![
@@ -2288,7 +2370,7 @@ fn changed_or_added_legacy_payload_is_preserved() {
 // Checkpoint 2: am purge-data
 // ======================================================================
 
-fn purge(
+fn unregistered_purge(
     world: &World,
     repo: &Path,
     path: &Path,
@@ -2308,6 +2390,50 @@ fn purge(
     );
     assert!(result.stderr.is_empty(), "{}", result.stderr);
     (result.exit_code, result.value.unwrap())
+}
+
+fn native_purge_request(
+    repo: &Path,
+    path: &Path,
+    check: bool,
+    confirm: Option<&str>,
+) -> Vec<OsString> {
+    let mut arguments = vec![
+        "purge-data".into(),
+        "--repo".into(),
+        repo.as_os_str().to_owned(),
+        "--path".into(),
+        path.as_os_str().to_owned(),
+    ];
+    if check {
+        assert!(confirm.is_none());
+        arguments.push("--check".into());
+    } else {
+        arguments.push("--confirm".into());
+        arguments.push(confirm.expect("confirmed native purge").into());
+    }
+    arguments
+}
+
+fn native_purge(
+    world: &World,
+    repo: &Path,
+    path: &Path,
+    check: bool,
+    confirm: Option<&str>,
+) -> (i32, Value) {
+    let result = native_purge_command(
+        world,
+        &world.bin().join("am"),
+        &native_purge_request(repo, path, check, confirm),
+        &[],
+    );
+    (
+        result.code.expect("native purge exited by status"),
+        result
+            .value
+            .expect("native purge returned its JSON response"),
+    )
 }
 fn small_bank(world: &World) -> PathBuf {
     let bank = world.path("repo/memory-bank");
@@ -2344,8 +2470,8 @@ fn small_bank(world: &World) -> PathBuf {
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_broad_home_root_and_symlink_inputs_are_refused_without_writes
 #[test]
 fn broad_home_root_and_symlink_inputs_are_refused_without_writes() {
-    // The `broad` and `inside-link` cases need the bank locator (security
-    // scan) and the inventory (recovery frontier): see the ignored test below.
+    // Early path refusals deliberately use the unregistered in-process callee;
+    // the full bank-locator journey below uses the installed native CLI.
     for case in ["home", "root", "alias"] {
         let world = World::new();
         let bank = small_bank(&world);
@@ -2360,7 +2486,7 @@ fn broad_home_root_and_symlink_inputs_are_refused_without_writes() {
             }
         };
         let before = snapshot(&world.root);
-        let (code, denied) = purge(&world, &repo, &path, true, None);
+        let (code, denied) = unregistered_purge(&world, &repo, &path, true, None);
         let error = refused(code, &denied);
         let expected = match case {
             "broad" => {
@@ -2379,33 +2505,100 @@ fn broad_home_root_and_symlink_inputs_are_refused_without_writes() {
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_exact_preview_confirmation_and_repeat_preserve_runtime_backups_code_and_git
 #[test]
 fn broad_path_preview_confirm_and_repeat_purge_only_the_confirmed_bank() {
-    support::with_frontier(
-        "broad_path_preview_confirm_and_repeat_purge_only_the_confirmed_bank",
-        || {
-            let root = support::require_current_world().unwrap();
-            let token = std::env::var("AGENT_MEMORY_TEST_TOKEN").unwrap();
-            let world = World::reopen(&root, &token);
-            let bank = small_bank(&world);
-            let repo = world.path("repo");
-            let before = snapshot(&world.root);
-            let (code, denied) = purge(&world, &repo, &repo, true, None);
-            assert_eq!(
-                refused(code, &denied),
-                "Purge path must be exactly this repository's resolved Memory Bank, not a broad directory"
-            );
-            assert_eq!(snapshot(&world.root), before);
-            let (code, preview) = purge(&world, &repo, &bank, true, None);
-            assert_eq!(code, 0, "{preview:?}");
-            assert_eq!(snapshot(&world.root), before);
-            let token = text(get(&preview, "preview"), "confirmation").to_owned();
-            let (code, done) = purge(&world, &repo, &bank, false, Some(&token));
-            verified(code, &done);
-            assert!(!bank.exists());
-            let (code, repeated) = purge(&world, &repo, &bank, false, Some(&token));
-            verified(code, &repeated);
-            assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
-        },
+    let world = World::new();
+    native_purge_worker(&world, "native-purge-preview", &[]);
+}
+
+fn purge_preview_scenario(world: &World) {
+    let repo = world.path("repo");
+    let code_path = repo.join("worker.py");
+    write(&code_path, "print(\"original\")\n");
+    let git = |arguments: &[&str]| {
+        agent_memory::managed_source::git(&repo, arguments, None, 65536).unwrap()
+    };
+    git(&["init", "--quiet"]);
+    git(&["add", "--", "worker.py"]);
+    git(&[
+        "-c",
+        "user.name=Purge fixture",
+        "-c",
+        "user.email=purge@example.invalid",
+        "commit",
+        "--quiet",
+        "-m",
+        "Initial project",
+    ]);
+    write(&code_path, "print(\"staged worker edit\")\n");
+    git(&["add", "--", "worker.py"]);
+    let bank = small_bank(world);
+    write(
+        &bank.join(".agent-memory-cache/index.json"),
+        "{\"derived\":true}\n",
     );
+    let other_bank = world.path("another project/memory-bank");
+    write(
+        &other_bank.join("MEMORY.md"),
+        std::fs::read(bank.join("MEMORY.md")).unwrap(),
+    );
+    write(&world.path("backups/retained.txt"), "External backup\n");
+    let retained_paths = [
+        world.path("dev-source"),
+        code_path,
+        repo.join(".git"),
+        other_bank,
+        world.path("backups"),
+        world.receipt_path(),
+    ];
+    let retained: Vec<_> = retained_paths.iter().map(|path| snapshot(path)).collect();
+    let before = snapshot(&world.root);
+    let (code, denied) = native_purge(world, &repo, &repo, true, None);
+    assert_eq!(
+        refused(code, &denied),
+        "Purge path must be exactly this repository's resolved Memory Bank, not a broad directory"
+    );
+    assert_eq!(snapshot(&world.root), before);
+    let (code, preview) = native_purge(world, &repo, &bank, true, None);
+    assert_eq!(code, 0, "{preview:?}");
+    assert_eq!(snapshot(&world.root), before);
+    let counts = get(get(&preview, "preview"), "counts");
+    assert!(
+        get(counts, "durable_files")
+            .as_int()
+            .and_then(|value| value.as_u64())
+            .unwrap()
+            > 0
+    );
+    assert_eq!(
+        get(counts, "generated_runtime_files"),
+        &Value::Int(1.into())
+    );
+    let token = text(get(&preview, "preview"), "confirmation").to_owned();
+    let mut unconfirmed = vec![world.bin().join("am").into_os_string(), "--json".into()];
+    let mut arguments = native_purge_request(&repo, &bank, true, None);
+    arguments.pop();
+    unconfirmed.extend(arguments);
+    let denied = bounded_purge_process(world, &unconfirmed, &[]);
+    assert_eq!(denied.status, agent_memory::process::Status::Code(2),);
+    let error = String::from_utf8_lossy(&denied.stderr);
+    assert!(error.contains("--check") && error.contains("--confirm"));
+    assert_eq!(snapshot(&world.root), before);
+    let (code, done) = native_purge(world, &repo, &bank, false, Some(&token));
+    verified(code, &done);
+    assert!(!bank.exists());
+    assert_eq!(
+        get(get(&done, "receipt"), "deletion_readback_verified"),
+        &Value::Bool(true)
+    );
+    assert_eq!(
+        retained_paths
+            .iter()
+            .map(|path| snapshot(path))
+            .collect::<Vec<_>>(),
+        retained,
+    );
+    let (code, repeated) = native_purge(world, &repo, &bank, false, Some(&token));
+    verified(code, &repeated);
+    assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
 }
 
 #[test]
@@ -2414,12 +2607,10 @@ fn purge_refuses_without_touching_the_bank_outside_an_installed_runtime() {
     let bank = small_bank(&world);
     let repo = world.path("repo");
     let before = snapshot(&repo);
-    // The purge child is a test binary, not the installed runtime: after the
-    // lifecycle lock (whose lock/owner files persist by design) its canonical
-    // writer barrier cannot locate the runtime pack, so both phases refuse
-    // before any repository or bank write.
+    // A process without receipt-owned runtime authority must refuse before
+    // changing the selected repository or its canonical bank.
     for (check, confirm) in [(true, None), (false, Some("0".repeat(64)))] {
-        let (code, refusal) = purge(&world, &repo, &bank, check, confirm.as_deref());
+        let (code, refusal) = unregistered_purge(&world, &repo, &bank, check, confirm.as_deref());
         let error = refused(code, &refusal);
         assert!(
             error.ends_with("pass --pack PATH") || error.ends_with("provider is not registered"),
@@ -2583,9 +2774,9 @@ fn purge_interruptions_and_lost_response_converge_on_the_same_confirmation() {
         "purge-response-lost",
     ] {
         let world = World::new();
-        let outcome = child(
+        let outcome = native_purge_worker(
             &world,
-            "purge-scenario",
+            "native-purge-scenario",
             &[("AM_T2_PURGE_POINT", point.into())],
         );
         assert_eq!(outcome.code, Some(0), "{point}");
@@ -2595,17 +2786,19 @@ fn purge_interruption_scenario(world: &World, point: &str) {
     let bank = small_bank(&world);
     write(&bank.join("projectbrief.md"), "# Project\n");
     let repo = world.path("repo");
-    let (code, preview) = purge(&world, &repo, &bank, true, None);
+    let (code, preview) = native_purge(world, &repo, &bank, true, None);
     assert_eq!(code, 0, "{preview:?}");
     let token = text(get(&preview, "preview"), "confirmation").to_owned();
-    let mut extra = fault(point);
-    extra.push(("AM_T2_CONFIRM", token.clone()));
-    assert_eq!(child(&world, "purge", &extra).code, Some(86), "{point}");
-    assert_eq!(
-        std::fs::read(world.path(&format!("{point}.entered"))).unwrap(),
-        format!("{point}\n{}\n", world.token).as_bytes(),
+    let extra = fault(point);
+    let interrupted = native_purge_command(
+        world,
+        &world.bin().join("am"),
+        &native_purge_request(&repo, &bank, false, Some(&token)),
+        &extra,
     );
-    let (code, completed) = purge(&world, &repo, &bank, false, Some(&token));
+    assert_eq!(interrupted.code, Some(86), "{point}");
+    assert!(interrupted.value.is_none(), "{point}");
+    let (code, completed) = native_purge(world, &repo, &bank, false, Some(&token));
     verified(code, &completed);
     let receipt = get(&completed, "receipt");
     assert!(install::same(
@@ -2617,7 +2810,7 @@ fn purge_interruption_scenario(world: &World, point: &str) {
         &Value::Bool(true)
     );
     assert!(!bank.exists());
-    let (code, repeated) = purge(&world, &repo, &bank, false, Some(&token));
+    let (code, repeated) = native_purge(world, &repo, &bank, false, Some(&token));
     verified(code, &repeated);
     assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
 }

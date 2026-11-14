@@ -573,7 +573,7 @@ fn work(
             Some(&target).filter(|target| **target != Value::Null),
             "uninstall",
             &cwd,
-            &locations.runtime_pack(),
+            &plan.pack_source,
         )?;
         let missing_native = get(&proof, "missing_capabilities")
             .as_array()

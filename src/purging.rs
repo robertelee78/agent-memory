@@ -281,9 +281,22 @@ fn count(entries: &[(String, Value)], select: impl Fn(&str, &Value) -> bool) -> 
 fn preview(selection: &Selection, owner: Option<&[u8]>) -> Result<Value> {
     let repo = &selection.repo;
     let bank = &selection.bank;
-    let token =
-        crate::bank_writes::recovery_frontier_provider()?.observe_owned(repo, owner, None)?;
-    let indexed = crate::layout_recovery_state::index(repo, &selection.locations.runtime_pack())?;
+    let frontier = crate::bank_writes::recovery_frontier_provider()?;
+    let runtime_root = crate::cli::pack_root()?;
+    let (observed_repo, observed_bank, _, _) =
+        crate::layout_recovery_state::paths(repo, None, &runtime_root)?;
+    require(
+        observed_repo == *repo && observed_bank == *bank,
+        "Memory Bank location changed after purge selection",
+    )?;
+    let token = frontier.observe_bank(repo, bank, owner, None, true, &runtime_root)?;
+    let (current_repo, current_bank, _, _) =
+        crate::layout_recovery_state::paths(repo, None, &runtime_root)?;
+    require(
+        current_repo == observed_repo && current_bank == observed_bank,
+        "Recovery bank location changed during observation",
+    )?;
+    let indexed = crate::layout_recovery_state::index(repo, &runtime_root)?;
     let active = get(&indexed, "operations")
         .as_object()
         .unwrap_or(&[])

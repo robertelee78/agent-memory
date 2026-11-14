@@ -1,7 +1,9 @@
 use agent_memory::codec::json::Value;
 use agent_memory::developer_identity::{digest, encoded};
 use agent_memory::error::Kind;
-use agent_memory::{bank_contract, layout_recovery_state as state, recovery_frontier as frontier};
+use agent_memory::{
+    bank_contract, bank_writes, layout_recovery_state as state, recovery_frontier as frontier,
+};
 use std::os::unix::fs::{DirBuilderExt, PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 mod support;
@@ -212,7 +214,7 @@ impl Evidence {
         )
         .unwrap();
         let marker = encoded(&object([
-            ("schema", string(frontier::HOLD)),
+            ("schema", string(bank_writes::HOLD)),
             ("project_id", string(PROJECT)),
             ("operation_id", string(OPERATION)),
             ("hold_id", string(HOLD_ID)),
@@ -222,7 +224,7 @@ impl Evidence {
         private_file(
             &bank.join(".agent-memory-recovery.md"),
             &encoded(&object([
-                ("schema", string(frontier::SENTINEL)),
+                ("schema", string(bank_writes::SENTINEL)),
                 ("project_id", string(PROJECT)),
                 ("operation_id", string(OPERATION)),
             ]))
@@ -286,7 +288,7 @@ fn exact_markers_bound_unknown_disclosure_and_preserve_every_unsafe_occupant() {
         None
     );
     let marker = encoded(&object([
-        ("schema", string(frontier::HOLD)),
+        ("schema", string(bank_writes::HOLD)),
         ("project_id", string(PROJECT)),
         ("operation_id", string(OPERATION)),
         ("hold_id", string(HOLD_ID)),
@@ -329,18 +331,22 @@ fn exact_markers_bound_unknown_disclosure_and_preserve_every_unsafe_occupant() {
 
 #[test]
 fn all_typed_marker_schemas_require_exact_fields_uuid_and_canonical_bytes() {
-    for schema in [frontier::HOLD, frontier::NESTED, frontier::TRANSACTION] {
+    for schema in [
+        bank_writes::HOLD,
+        bank_writes::NESTED,
+        bank_writes::TRANSACTION,
+    ] {
         let mut value = object([
             ("schema", string(schema)),
             ("project_id", string(PROJECT)),
             ("operation_id", string(OPERATION)),
         ]);
-        if schema == frontier::TRANSACTION {
+        if schema == bank_writes::TRANSACTION {
             set(&mut value, "transaction_kind", string("apply"));
         } else {
             set(&mut value, "hold_id", string(HOLD_ID));
         }
-        if schema == frontier::NESTED {
+        if schema == bank_writes::NESTED {
             set(&mut value, "nested_id", string(PROPOSAL));
         }
         canonical_same(
@@ -711,25 +717,6 @@ fn proof_digest_excludes_only_review_attestation_and_successor_is_capacity_only(
         &Value::Int(9.into())
     );
     assert_eq!(get(&token, "review_digest"), &string("b".repeat(64)));
-}
-
-#[test]
-fn resolution_without_actual_provider_is_typed_pending_not_a_successful_ledger_transition() {
-    let world = World::new().unwrap();
-    let error = frontier::advance_ledger(
-        &world.root.join("repo"),
-        OPERATION,
-        &Value::Array(vec![]),
-        &Value::Null,
-        b"owned",
-        None,
-        None,
-        &world.root.join("data"),
-    )
-    .unwrap_err();
-    assert_eq!(error.kind(), &Kind::MissingProvider);
-    assert!(error.to_string().contains("layout_resolution"));
-    assert!(!world.root.join("repo/index.json").exists());
 }
 
 #[test]
@@ -1313,10 +1300,146 @@ fn explicit_hold_runtime_must_match_the_executing_pair_before_observation() {
                 refusal.to_string(),
                 "Recovery hold runtime differs from the installed executing runtime"
             );
+            let refusal = provider
+                .verified_hold_value(
+                    &fixture.root,
+                    Some(b"owned"),
+                    Some(b"transaction"),
+                    &foreign,
+                )
+                .err()
+                .unwrap();
+            assert_eq!(refusal.kind(), &Kind::Contract);
+            assert_eq!(
+                refusal.to_string(),
+                "Recovery hold runtime differs from the installed executing runtime"
+            );
             for (path, bytes) in retained {
                 assert_eq!(std::fs::read(path).unwrap(), bytes);
             }
             assert!(std::fs::read_dir(foreign).unwrap().next().is_none());
+        },
+    );
+}
+
+#[test]
+fn value_adapters_preserve_baseline_results_without_runtime_authority_queries() {
+    use bank_writes::RecoveryFrontier;
+
+    let provider = frontier::FrontierProvider::new(|| {
+        Err(agent_memory::error::ContractError::new(
+            "Unexpected executing-runtime query in a pure value adapter",
+        ))
+    });
+    let marker = encoded(&object([
+        ("schema", string(bank_writes::HOLD)),
+        ("project_id", string(PROJECT)),
+        ("operation_id", string(OPERATION)),
+        ("hold_id", string(HOLD_ID)),
+    ]))
+    .unwrap();
+    canonical_same(
+        &provider.marker_value(&marker).unwrap(),
+        &frontier::marker_value(&marker).unwrap(),
+    );
+    provider.range_value(&range(0, 8)).unwrap();
+    assert_eq!(
+        provider.range_value(&range(8, 0)).unwrap_err().to_string(),
+        frontier::range_value(&range(8, 0)).unwrap_err().to_string(),
+    );
+    assert_eq!(
+        provider
+            .claim_value(&Value::Null, &unit())
+            .unwrap_err()
+            .to_string(),
+        frontier::claim_value(&Value::Null, &unit())
+            .unwrap_err()
+            .to_string(),
+    );
+
+    let token = capacity_token();
+    let pending_ids = vec![UNIT.to_owned(), SOURCE.to_owned()];
+    for generation_change in [false, true] {
+        canonical_same(
+            &provider
+                .successor_token(&token, &pending_ids, OPERATION, generation_change)
+                .unwrap(),
+            &frontier::successor_token(
+                &token,
+                &Value::Array(pending_ids.iter().cloned().map(string).collect()),
+                OPERATION,
+                generation_change,
+            )
+            .unwrap(),
+        );
+    }
+    let files = canonical_files();
+    let adapted = provider.reservation(&files, &[], &token).unwrap();
+    let direct = frontier::reservation(&files, &Value::Array(vec![]), &token).unwrap();
+    for field in ["rows", "disclosure_bytes", "proof_bytes"] {
+        assert_eq!(get(&adapted, field), get(&direct, field));
+    }
+    let oversized = vec![object([("body", string("x".repeat(16385)))])];
+    let adapted = provider
+        .reservation(&files, &oversized, &token)
+        .unwrap_err();
+    let direct = frontier::reservation(&files, &Value::Array(oversized), &token).unwrap_err();
+    assert_eq!(adapted.kind(), direct.kind());
+    assert_eq!(adapted.to_string(), direct.to_string());
+}
+
+#[test]
+fn explicit_observation_adapters_do_not_depend_on_the_runtime_callback() {
+    use bank_writes::RecoveryFrontier;
+
+    in_world(
+        "explicit_observation_adapters_do_not_depend_on_the_runtime_callback",
+        |root| {
+            let provider = frontier::FrontierProvider::new(|| {
+                Err(agent_memory::error::ContractError::new(
+                    "Unexpected executing-runtime query in an explicit observation",
+                ))
+            });
+            let fixture = Evidence::new(root);
+            assert_eq!(
+                provider
+                    .marker_bytes(&fixture.bank, ".agent-memory-transaction.md", None)
+                    .unwrap(),
+                Some(fixture.marker.clone()),
+            );
+            canonical_same(
+                &provider
+                    .observe_bank(
+                        &fixture.root,
+                        &fixture.bank,
+                        None,
+                        None,
+                        false,
+                        &fixture.runtime,
+                    )
+                    .unwrap(),
+                &fixture.observe().unwrap(),
+            );
+            let (directory, head, current) = provider
+                .ledger(
+                    &fixture.root,
+                    OPERATION,
+                    &fixture.row,
+                    &fixture.bank,
+                    &fixture.runtime,
+                )
+                .unwrap();
+            assert_eq!(directory, fixture.directory);
+            canonical_same(&head, &fixture.head);
+            canonical_same(&current, &fixture.ledger);
+            let (manifest, proposal) = provider
+                .evidence(&directory, &current, &fixture.row, &fixture.runtime)
+                .unwrap();
+            let (direct_manifest, direct_proposal) =
+                frontier::evidence(&directory, &current, &fixture.row).unwrap();
+            canonical_same(&manifest, &direct_manifest);
+            canonical_same(&proposal, &direct_proposal);
+            assert_eq!(std::fs::read(fixture.original()).unwrap(), BODY);
         },
     );
 }

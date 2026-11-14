@@ -563,88 +563,99 @@ fn canonical_capacity_is_enforced_independently_of_optional_cache_metadata() {
 
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_warm_semantic_selection_matches_cold_sources_without_storing_learning_bodies
 #[test]
-#[ignore = "needs retrieval and discovery plus isolated real frontier callbacks; no recall query provider is substituted"]
 fn warm_catalog_preserves_canonical_body_without_storing_it() {
-    let world = World::new();
-    let runtime = world.runtime();
-    let mut observed = world.observed();
-    let engine = catalog::generation(&runtime).unwrap();
-    let environment = world.environment();
-    assert!(catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap());
-    let project = observed
-        .checked
-        .get("project_id")
-        .unwrap()
-        .as_str()
-        .unwrap();
-    let mut loaded = catalog::load_catalog_with_environment(
-        &observed.root,
-        project,
-        &runtime,
-        None,
-        &environment,
-    )
-    .unwrap();
-    assert_eq!(
-        loaded
-            .source("projectbrief.md", catalog::MAX_SOURCE)
-            .unwrap(),
-        observed.sources.get("projectbrief.md").unwrap().as_slice()
-    );
-    loaded.recheck(None).unwrap();
-    let (_, _, directory) =
-        catalog::locations_with_environment(&observed.root, &runtime.pack, &environment).unwrap();
-    let name = catalog::pointer(&directory)
-        .unwrap()
-        .0
-        .get("file")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_owned();
-    assert!(
-        !String::from_utf8_lossy(&std::fs::read(directory.join(name)).unwrap())
-            .contains("CANONICAL_BODY_NOT_IN_CATALOG")
+    support::with_frontier(
+        "warm_catalog_preserves_canonical_body_without_storing_it",
+        || {
+            let world = World::new();
+            let runtime = world.runtime();
+            let mut observed = world.observed();
+            let engine = catalog::generation(&runtime).unwrap();
+            let environment = world.environment();
+            assert!(
+                catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap()
+            );
+            let project = observed
+                .checked
+                .get("project_id")
+                .unwrap()
+                .as_str()
+                .unwrap();
+            let mut loaded = catalog::load_catalog_with_environment(
+                &observed.root,
+                project,
+                &runtime,
+                None,
+                &environment,
+            )
+            .unwrap();
+            assert_eq!(
+                loaded
+                    .source("projectbrief.md", catalog::MAX_SOURCE)
+                    .unwrap(),
+                observed.sources.get("projectbrief.md").unwrap().as_slice()
+            );
+            loaded.recheck(None).unwrap();
+            let (_, _, directory) =
+                catalog::locations_with_environment(&observed.root, &runtime.pack, &environment)
+                    .unwrap();
+            let name = catalog::pointer(&directory)
+                .unwrap()
+                .0
+                .get("file")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_owned();
+            assert!(
+                !String::from_utf8_lossy(&std::fs::read(directory.join(name)).unwrap())
+                    .contains("CANONICAL_BODY_NOT_IN_CATALOG")
+            );
+        },
     );
 }
 
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_missing_cache_automatically_rebuilds_and_returns_the_same_useful_memory
 #[test]
-#[ignore = "needs retrieval and discovery plus isolated real frontier callbacks; no recall query provider is substituted"]
 fn missing_cache_can_be_republished_from_unchanged_canonical_observation() {
-    let world = World::new();
-    let runtime = world.runtime();
-    let mut observed = world.observed();
-    let engine = catalog::generation(&runtime).unwrap();
-    let environment = world.environment();
-    let project = observed
-        .checked
-        .get("project_id")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_owned();
-    assert!(
-        catalog::load_catalog_with_environment(
-            &observed.root,
-            &project,
-            &runtime,
-            None,
-            &environment
-        )
-        .is_err()
+    support::with_frontier(
+        "missing_cache_can_be_republished_from_unchanged_canonical_observation",
+        || {
+            let world = World::new();
+            let runtime = world.runtime();
+            let mut observed = world.observed();
+            let engine = catalog::generation(&runtime).unwrap();
+            let environment = world.environment();
+            let project = observed
+                .checked
+                .get("project_id")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_owned();
+            assert!(
+                catalog::load_catalog_with_environment(
+                    &observed.root,
+                    &project,
+                    &runtime,
+                    None,
+                    &environment
+                )
+                .is_err()
+            );
+            catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
+            let loaded = catalog::load_catalog_with_environment(
+                &observed.root,
+                &project,
+                &runtime,
+                None,
+                &environment,
+            )
+            .unwrap();
+            assert_eq!(loaded.hashes, observed.hashes);
+            loaded.recheck(None).unwrap();
+        },
     );
-    catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
-    let loaded = catalog::load_catalog_with_environment(
-        &observed.root,
-        &project,
-        &runtime,
-        None,
-        &environment,
-    )
-    .unwrap();
-    assert_eq!(loaded.hashes, observed.hashes);
-    loaded.recheck(None).unwrap();
 }
 
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_late_mmap_change_with_restored_mtime_cannot_pass_the_final_whole_content_check
