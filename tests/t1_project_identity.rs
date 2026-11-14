@@ -333,12 +333,15 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
     }
     env.push(("AM_PROJECT_CASE".into(), name.into()));
     env.push(("AM_PROJECT_ROOT".into(), world.root.as_os_str().to_owned()));
-    let argv = [
+    let mut argv = vec![
         std::env::current_exe().unwrap().into_os_string(),
         "--exact".into(),
         name.into(),
         "--nocapture".into(),
     ];
+    if name == "nested_bank_roots_preserve_raw_recovery_identity" {
+        argv.push("--include-ignored".into());
+    }
     let output = command(&argv, &env, None);
     std::fs::remove_dir_all(&world.root).unwrap();
     assert_eq!(
@@ -396,6 +399,157 @@ fn bootstrap_readonly_then_explicit_registration() {
             0o700
         );
     });
+}
+
+#[test]
+fn configured_bank_roots_preserve_status_preview_apply_and_replay() {
+    in_world(
+        "configured_bank_roots_preserve_status_preview_apply_and_replay",
+        |w| {
+            for (name, relative) in [
+                ("single", "memory-bank"),
+                ("depth-two", "docs/shared memory"),
+                ("depth-three", "docs/team/shared memory"),
+            ] {
+                let repo = w.repo(name);
+                w.run(&repo, &["config", "agent-memory.bankRoot", relative]);
+                let before = w.snapshot(&repo);
+                let status = w.status(&repo);
+                assert_eq!(g(&status, "resolved"), &Value::Bool(false));
+                assert_eq!(
+                    st(
+                        g(g(&status, "evidence"), "repository_settings"),
+                        "bank_root"
+                    ),
+                    relative
+                );
+                let proposal = w.preview(&repo, "create", None);
+                assert_eq!(w.snapshot(&repo), before);
+                let receipt = w.apply(&proposal);
+                assert_eq!(g(&receipt, "verified"), &Value::Bool(true));
+                assert!(!repo.join(relative).exists());
+                let registry = std::fs::read(w.registry_path()).unwrap();
+                let replay = w.apply(&proposal);
+                assert_eq!(g(&replay, "already_applied"), &Value::Bool(true));
+                assert_eq!(
+                    g(g(&replay, "binding_status"), "resolved"),
+                    &Value::Bool(false)
+                );
+                assert_eq!(std::fs::read(w.registry_path()).unwrap(), registry);
+
+                let identity = st(&proposal, "project_id");
+                w.bank_at(&repo, relative, identity, None);
+                let before = w.snapshot(&repo);
+                let status = w.status(&repo);
+                assert_eq!(g(&status, "resolved"), &Value::Bool(true));
+                assert_eq!(st(&status, "project_id"), identity);
+                let replay = w.apply(&proposal);
+                assert_eq!(g(&replay, "already_applied"), &Value::Bool(true));
+                assert_eq!(
+                    g(g(&replay, "binding_status"), "resolved"),
+                    &Value::Bool(true)
+                );
+                assert_eq!(w.snapshot(&repo), before);
+                let link = w.preview(&repo, "link", None);
+                assert_eq!(w.snapshot(&repo), before);
+                let linked = w.apply(&link);
+                assert_eq!(
+                    g(g(&linked, "binding_status"), "resolved"),
+                    &Value::Bool(true)
+                );
+                let before = w.snapshot(&repo);
+                assert_eq!(g(&w.apply(&link), "already_applied"), &Value::Bool(true));
+                assert_eq!(w.snapshot(&repo), before);
+                assert_eq!(
+                    std::fs::read(repo.join(relative).join("MEMORY.md")).unwrap(),
+                    before[&repo.join(relative).join("MEMORY.md")]
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn committed_nested_bank_roots_bind_without_explicit_configuration() {
+    in_world(
+        "committed_nested_bank_roots_bind_without_explicit_configuration",
+        |w| {
+            for (name, relative) in [
+                ("depth-two", "docs/shared memory"),
+                ("depth-three", "docs/team/shared memory"),
+            ] {
+                let repo = w.repo(name);
+                let identity = host::uuid4().unwrap();
+                w.bank_at(&repo, relative, &identity, None);
+                w.commit(&repo);
+                let before = w.snapshot(&repo);
+                let status = w.status(&repo);
+                assert_eq!(st(&status, "project_id"), identity);
+                assert_eq!(g(&status, "resolved"), &Value::Bool(false));
+                assert_eq!(
+                    st(
+                        g(g(&status, "evidence"), "repository_settings"),
+                        "bank_root"
+                    ),
+                    relative
+                );
+                let proposal = w.preview(&repo, "bind", None);
+                assert_eq!(w.snapshot(&repo), before);
+                let receipt = w.apply(&proposal);
+                assert_eq!(
+                    g(g(&receipt, "binding_status"), "resolved"),
+                    &Value::Bool(true)
+                );
+                let before = w.snapshot(&repo);
+                let replay = w.apply(&proposal);
+                assert_eq!(g(&replay, "already_applied"), &Value::Bool(true));
+                assert_eq!(
+                    g(g(&replay, "binding_status"), "resolved"),
+                    &Value::Bool(true)
+                );
+                assert_eq!(w.snapshot(&repo), before);
+                assert_eq!(st(&w.status(&repo), "project_id"), identity);
+            }
+        },
+    );
+}
+
+#[test]
+fn nested_bank_roots_refuse_intermediate_symlinks_without_mutation() {
+    in_world(
+        "nested_bank_roots_refuse_intermediate_symlinks_without_mutation",
+        |w| {
+            for (name, relative, intermediate) in [
+                ("depth-two", "docs/shared memory", "docs"),
+                ("depth-three", "docs/team/shared memory", "docs/team"),
+            ] {
+                let repo = w.repo(name);
+                w.run(&repo, &["config", "agent-memory.bankRoot", relative]);
+                let target = w.root.join(format!("{name}-outside"));
+                std::fs::DirBuilder::new()
+                    .mode(0o700)
+                    .create(&target)
+                    .unwrap();
+                w.bank_at(&target, "shared memory", &host::uuid4().unwrap(), None);
+                let link = repo.join(intermediate);
+                std::fs::create_dir_all(link.parent().unwrap()).unwrap();
+                std::os::unix::fs::symlink(&target, &link).unwrap();
+                let before = w.snapshot(&repo);
+                let outside = w.snapshot(&target);
+                let expected = "Configured bank directory cannot follow symlinks or occupied files";
+                assert_eq!(project::status(&repo).unwrap_err().to_string(), expected);
+                assert_eq!(
+                    project::preview(&repo, "create", None, "Refuse symlink", None)
+                        .unwrap_err()
+                        .to_string(),
+                    expected
+                );
+                assert_eq!(std::fs::read_link(&link).unwrap(), target);
+                assert_eq!(w.snapshot(&repo), before);
+                assert_eq!(w.snapshot(&target), outside);
+            }
+        },
+    );
 }
 
 // obligation: tests/contracts/test_project_identity.py::ProjectIdentityContract.test_device_change_recovers_readonly_and_explicit_link_persists_alias
@@ -1200,6 +1354,7 @@ fn unknown_bank_symlinks_and_busy_state_preserve_sources() {
     in_world(
         "unknown_bank_symlinks_and_busy_state_preserve_sources",
         |w| {
+            project::register_bank_writes(Some(Arc::new(WriterOperations))).unwrap();
             let repo = w.repo("repository");
             w.create(&repo, None);
             let router = repo.join("memory-bank/MEMORY.md");
@@ -1213,12 +1368,45 @@ fn unknown_bank_symlinks_and_busy_state_preserve_sources() {
             std::fs::write(&router, &original).unwrap();
             let lock = router.parent().unwrap().join(".agent-memory.lock");
             std::fs::write(&lock, b"Writer").unwrap();
-            assert!(
-                project::status(&repo)
+            for (mode, expected) in [
+                (
+                    0o600,
+                    "Malformed canonical writer marker; preserve for inspection",
+                ),
+                (
+                    0o644,
+                    "Unknown or unsafe canonical writer marker; preserve for inspection",
+                ),
+            ] {
+                std::fs::set_permissions(&lock, std::fs::Permissions::from_mode(mode)).unwrap();
+                let before = w.snapshot(&repo);
+                assert_eq!(project::status(&repo).unwrap_err().to_string(), expected);
+                assert_eq!(
+                    project::discover(&repo, None, DiscoveryOptions::default())
+                        .unwrap_err()
+                        .to_string(),
+                    expected
+                );
+                assert_eq!(w.snapshot(&repo), before);
+            }
+            std::fs::remove_file(&lock).unwrap();
+            let marker_target = w.root.join("writer-marker");
+            std::fs::write(&marker_target, b"Writer").unwrap();
+            std::fs::set_permissions(&marker_target, std::fs::Permissions::from_mode(0o600))
+                .unwrap();
+            std::os::unix::fs::symlink(&marker_target, &lock).unwrap();
+            let before = w.snapshot(&repo);
+            let expected = "Unknown or unsafe canonical writer marker; preserve for inspection";
+            assert_eq!(project::status(&repo).unwrap_err().to_string(), expected);
+            assert_eq!(
+                project::preview(&repo, "link", None, "Refuse symlinked writer", None)
                     .unwrap_err()
-                    .to_string()
-                    .contains("provider is not registered")
+                    .to_string(),
+                expected
             );
+            assert_eq!(std::fs::read_link(&lock).unwrap(), marker_target);
+            assert_eq!(std::fs::read(&marker_target).unwrap(), b"Writer");
+            assert_eq!(w.snapshot(&repo), before);
             std::fs::remove_file(&lock).unwrap();
             let original_registry = std::fs::read(w.registry_path()).unwrap();
             std::fs::remove_file(w.registry_path()).unwrap();
@@ -1779,6 +1967,98 @@ fn owned_markers_and_migration_reader_preserve_authority() {
             );
         },
     );
+}
+
+#[test]
+fn owned_lock_and_transaction_symlinks_keep_busy_refusal_without_mutation() {
+    in_world(
+        "owned_lock_and_transaction_symlinks_keep_busy_refusal_without_mutation",
+        |w| {
+            let repo = w.repo("repository");
+            w.create(&repo, None);
+            let target = w.root.join("owned-marker");
+            std::fs::write(&target, b"Owned marker").unwrap();
+            std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o600)).unwrap();
+            for (name, owned) in [
+                (".agent-memory.lock", true),
+                (".agent-memory-transaction.md", false),
+                (".agent-memory-transaction.md", true),
+            ] {
+                let marker = repo.join("memory-bank").join(name);
+                std::os::unix::fs::symlink(&target, &marker).unwrap();
+                let options = DiscoveryOptions {
+                    owned_lock: (owned && name == ".agent-memory.lock")
+                        .then_some(b"Owned marker".as_slice()),
+                    owned_transaction: (owned && name == ".agent-memory-transaction.md")
+                        .then_some(b"Owned marker".as_slice()),
+                    ..DiscoveryOptions::default()
+                };
+                let before = w.snapshot(&repo);
+                let expected =
+                    "Bank busy or interrupted; inspect/recover before resolving identity";
+                assert_eq!(
+                    project::status_with_options(&repo, None, options)
+                        .unwrap_err()
+                        .to_string(),
+                    expected
+                );
+                assert_eq!(
+                    project::discover(&repo, None, options)
+                        .unwrap_err()
+                        .to_string(),
+                    expected
+                );
+                assert_eq!(std::fs::read_link(&marker).unwrap(), target);
+                assert_eq!(std::fs::read(&target).unwrap(), b"Owned marker");
+                assert_eq!(w.snapshot(&repo), before);
+                std::fs::remove_file(&marker).unwrap();
+            }
+        },
+    );
+}
+
+#[test]
+#[ignore = "needs layout_recovery_observation registered"]
+fn nested_bank_roots_preserve_raw_recovery_identity() {
+    in_world("nested_bank_roots_preserve_raw_recovery_identity", |w| {
+        struct BankMarkers;
+        impl project::BankObservation for BankMarkers {
+            fn markers(
+                &self,
+                bank: &Path,
+                owned_lock: Option<&[u8]>,
+                owned_transaction: Option<&[u8]>,
+            ) -> Result<()> {
+                agent_memory::bank_observation::markers(bank, owned_lock, owned_transaction)
+            }
+        }
+        project::register_bank_observation(Some(Arc::new(BankMarkers))).unwrap();
+        for (name, relative) in [
+            ("depth-two", "docs/shared memory"),
+            ("depth-three", "docs/team/shared memory"),
+        ] {
+            let repo = w.repo(name);
+            w.run(&repo, &["config", "agent-memory.bankRoot", relative]);
+            let proposal = w.preview(&repo, "create", None);
+            w.apply(&proposal);
+            w.bank_at(&repo, relative, st(&proposal, "project_id"), None);
+            let raw = std::fs::read(repo.join(relative).join("MEMORY.md")).unwrap();
+            let evidence = project::RawIdentityEvidence::observe(&repo, &raw, None).unwrap();
+            let before = w.snapshot(&repo);
+            let status = project::status_with_options(
+                &repo,
+                None,
+                DiscoveryOptions {
+                    raw_identity: Some(&evidence),
+                    ..DiscoveryOptions::default()
+                },
+            )
+            .unwrap();
+            assert_eq!(g(&status, "resolved"), &Value::Bool(true));
+            assert_eq!(g(&status, "project_id"), g(&proposal, "project_id"));
+            assert_eq!(w.snapshot(&repo), before);
+        }
+    });
 }
 
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_corrupt_missing_and_dangling_head_never_establish_empty_repository
