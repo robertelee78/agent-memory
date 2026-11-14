@@ -510,7 +510,9 @@ impl CommandResult {
 pub fn definition() -> Value {
     MODEL.clone()
 }
-pub fn command(operation: &str, request: Option<&Value>) -> CommandResult {
+/// `request` carries the CLI's `--input` read/decode outcome so its failure
+/// reaches the same error envelope as the baseline handler.
+pub fn command(operation: &str, request: Result<Option<Value>>) -> CommandResult {
     if operation == "guide" {
         return CommandResult {
             value: None,
@@ -522,8 +524,9 @@ pub fn command(operation: &str, request: Option<&Value>) -> CommandResult {
     let result = match operation {
         "definition" => Ok(definition()),
         "current" | "transition" => request
-            .ok_or_else(|| ContractError::new("--input is required"))
+            .and_then(|r| r.ok_or_else(|| ContractError::new("--input is required")))
             .and_then(|r| {
+                let r = &r;
                 let required = |key: &str| match r {
                     Value::Object(_) => r
                         .get(key)

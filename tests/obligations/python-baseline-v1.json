@@ -10202,7 +10202,7 @@
   {
    "id": "tests/contracts/test_public_cli.py::PublicCLIContract.test_default_help_version_flags_and_public_parser_names_are_read_only",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10223,14 +10223,14 @@
   {
    "id": "tests/contracts/test_public_cli.py::PublicCLIContract.test_json_is_explicit_and_source_helpers_and_memory_results_remain_structured",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_public_cli.py::PublicCLIContract.test_refusals_and_preserved_uninstall_are_readable_and_keep_failure_codes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12575,7 +12575,7 @@
   {
    "id": "tests/contracts/test_skill_routes.py::SkillRouteContract.test_missing_delegated_helper_cannot_be_hidden_behind_the_installed_command",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 98,
+   "partial": 102,
    "ported": 53,
-   "unported": 1711
+   "unported": 1707
   }
  }
 }

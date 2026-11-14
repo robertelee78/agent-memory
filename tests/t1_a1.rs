@@ -157,7 +157,7 @@ fn generated_guide_definition_and_router_share_one_model() {
     assert_eq!(field(&router, "x-lifecycle-model"), &s("lifecycle.json"));
     assert!(router.get("x-lifecycle-states").is_none());
     assert_eq!(
-        lifecycle::command("guide", None).stdout.as_bytes(),
+        lifecycle::command("guide", Ok(None)).stdout.as_bytes(),
         include_bytes!("../skills/agent-memory/model/GUIDE.md")
     );
 }
@@ -467,14 +467,14 @@ fn evaluator_is_read_only_and_emits_exact_mode_receipts() {
         ("record".into(), record.clone()),
         ("context".into(), context.clone()),
     ]);
-    let result = lifecycle::command("current", Some(&request));
+    let result = lifecycle::command("current", Ok(Some(request.clone())));
     assert_eq!(result.exit_code, 0);
     assert_eq!(
         field(result.value.as_ref().unwrap(), "writes_performed"),
         &Value::Bool(false)
     );
     assert_eq!((record, context), before);
-    let missing = lifecycle::command("current", None);
+    let missing = lifecycle::command("current", Ok(None));
     assert_eq!(missing.exit_code, 1);
     assert_eq!(
         missing.stdout,
@@ -1632,7 +1632,7 @@ fn lifecycle_non_string_operations_and_non_object_requests_match_python() {
             ("operation".into(), operation.clone()),
             ("event".into(), event.clone()),
         ]);
-        let result = lifecycle::command("transition", Some(&request));
+        let result = lifecycle::command("transition", Ok(Some(request)));
         assert_eq!(result.exit_code, 0);
         assert_eq!(
             field(result.value.as_ref().unwrap(), "result"),
@@ -1655,7 +1655,7 @@ fn lifecycle_non_string_operations_and_non_object_requests_match_python() {
         (Value::Bool(true), "'bool' object is not subscriptable"),
     ] {
         for operation in ["current", "transition"] {
-            let result = lifecycle::command(operation, Some(&request));
+            let result = lifecycle::command(operation, Ok(Some(request.clone())));
             assert_eq!(result.exit_code, 1);
             assert_eq!(field(result.value.as_ref().unwrap(), "error"), &s(message));
         }

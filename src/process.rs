@@ -7,10 +7,151 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::process::{CommandExt, ExitStatusExt};
 use std::path::Path;
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, ExitStatus, Stdio};
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::time::Duration;
 
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
 compile_error!("agent-memory process supervision requires Linux or macOS");
+
+// Owned-child termination registry (used only once a binary installs the handler).
+//
+// Invariants:
+// - Only `spawn` registers, and only after `install_termination_handler`.
+//   With SIGINT/SIGTERM blocked in the spawning thread it reserves a free slot
+//   *before* fork (none free: typed refusal, no child is launched), stores the
+//   PID right after fork, and only then unblocks. A termination signal thus
+//   always sees each live owned direct child.
+// - A slot holds 0 (free), RESERVED (fork pending, never signalled) or a PID.
+//   It is cleared once its child's status is collected, once waitpid reports
+//   ECHILD for it, or when the reserved spawn fails.
+// - The handler signals a recorded PID only after `waitpid(pid, WNOHANG)`
+//   returned 0: the PID then still names this process's unreaped child (an
+//   already reaped PID yields ECHILD and is skipped), so a recycled PID is
+//   never signalled. This holds because the binary supervises owned children
+//   on one thread, which the handler interrupts.
+// - Only positive PIDs are signalled; never a process group.
+//
+// Capacity: the largest concurrent set of owned children any baseline call
+// site launches is one `Group` of MAX_CHILDREN = 3 (repository_config's
+// config/listed/ls-tree query batch); no call site spawns while a group is live.
+const OWNED_SLOTS: usize = MAX_CHILDREN;
+const RESERVED: i32 = -1;
+static OWNED: [AtomicI32; OWNED_SLOTS] = [const { AtomicI32::new(0) }; OWNED_SLOTS];
+static TERMINATION: AtomicBool = AtomicBool::new(false);
+
+fn reserve_owned() -> Option<&'static AtomicI32> {
+    OWNED.iter().find(|slot| {
+        slot.compare_exchange(0, RESERVED, Ordering::SeqCst, Ordering::SeqCst)
+            .is_ok()
+    })
+}
+
+fn release_owned(pid: u32) {
+    let Ok(pid) = i32::try_from(pid) else {
+        return;
+    };
+    if pid <= 0 || !TERMINATION.load(Ordering::SeqCst) {
+        return;
+    }
+    for slot in &OWNED {
+        let _ = slot.compare_exchange(pid, 0, Ordering::SeqCst, Ordering::SeqCst);
+    }
+}
+
+/// Blocks SIGINT/SIGTERM in this thread until dropped.
+struct TerminationBlock(libc::sigset_t);
+
+impl TerminationBlock {
+    fn new() -> io::Result<Self> {
+        // sigset_t is plain data; sigemptyset initializes it before use.
+        let mut set: libc::sigset_t = unsafe { std::mem::zeroed() };
+        let mut previous: libc::sigset_t = unsafe { std::mem::zeroed() };
+        let code = unsafe {
+            libc::sigemptyset(&mut set);
+            libc::sigaddset(&mut set, libc::SIGINT);
+            libc::sigaddset(&mut set, libc::SIGTERM);
+            libc::pthread_sigmask(libc::SIG_BLOCK, &set, &mut previous)
+        };
+        if code != 0 {
+            return Err(io::Error::from_raw_os_error(code));
+        }
+        Ok(Self(previous))
+    }
+}
+
+impl Drop for TerminationBlock {
+    fn drop(&mut self) {
+        unsafe {
+            libc::pthread_sigmask(libc::SIG_SETMASK, &self.0, std::ptr::null_mut());
+        }
+    }
+}
+
+/// Reads errno through the libc thread-local accessor: a plain load.
+fn errno() -> libc::c_int {
+    #[cfg(target_os = "macos")]
+    let location = unsafe { libc::__error() };
+    #[cfg(target_os = "linux")]
+    let location = unsafe { libc::__errno_location() };
+    unsafe { *location }
+}
+
+/// waitpid retried on EINTR. Async-signal-safe: one syscall and an errno load
+/// per iteration; no allocation, lock or formatting.
+fn wait_retrying(pid: i32, options: libc::c_int) -> i32 {
+    let mut status = 0;
+    loop {
+        let result = unsafe { libc::waitpid(pid, &mut status, options) };
+        if result == -1 && errno() == libc::EINTR {
+            continue;
+        }
+        return result;
+    }
+}
+
+/// The SIGINT/SIGTERM handler. Every line group is async-signal-safe.
+extern "C" fn terminate(signal: libc::c_int) {
+    // Static array iteration and SeqCst atomic loads: no allocation or lock.
+    for slot in &OWNED {
+        let pid = slot.load(Ordering::SeqCst);
+        // Free (0) and RESERVED (-1) slots are never signalled. waitpid is
+        // async-signal-safe; 0 proves `pid` is still our unreaped child.
+        if pid > 0 && wait_retrying(pid, libc::WNOHANG) == 0 {
+            // kill(2) on that positive PID only: never a process group.
+            unsafe {
+                libc::kill(pid, libc::SIGKILL);
+            }
+            // Blocking waitpid reaps it before this process exits.
+            let _ = wait_retrying(pid, 0);
+        }
+    }
+    // _exit(2) skips atexit handlers, stdio flushing and destructors.
+    unsafe { libc::_exit(128 + signal) }
+}
+
+/// For a binary that supervises owned children on a single thread: on
+/// SIGINT/SIGTERM, SIGKILL and reap every live owned direct child started
+/// through this module, then `_exit(128 + signal)` without running any
+/// further code.
+pub fn install_termination_handler() -> io::Result<()> {
+    TERMINATION.store(true, Ordering::SeqCst);
+    for signal in [libc::SIGINT, libc::SIGTERM] {
+        // sigaction is plain data; every field is set before the call.
+        let mut action: libc::sigaction = unsafe { std::mem::zeroed() };
+        action.sa_sigaction = terminate as extern "C" fn(libc::c_int) as libc::sighandler_t;
+        action.sa_flags = 0;
+        let code = unsafe {
+            libc::sigemptyset(&mut action.sa_mask);
+            libc::sigaddset(&mut action.sa_mask, libc::SIGINT);
+            libc::sigaddset(&mut action.sa_mask, libc::SIGTERM);
+            libc::sigaction(signal, &action, std::ptr::null_mut())
+        };
+        if code != 0 {
+            return Err(io::Error::last_os_error());
+        }
+    }
+    Ok(())
+}
 
 pub enum Input<'a> {
     /// Inherit descriptor zero as-is, including a closed descriptor.
@@ -91,8 +232,13 @@ pub enum Refusal {
     InvalidInput,
     Spawn,
     Deadline,
-    CaptureLimit { stream: Stream, limit: usize },
+    CaptureLimit {
+        stream: Stream,
+        limit: usize,
+    },
     Infrastructure,
+    /// Every termination-registry slot is in use; refused before fork.
+    OwnedCapacity,
 }
 
 #[derive(Debug)]
@@ -192,11 +338,17 @@ impl Owner {
                     self.status = status;
                     if status.is_some() {
                         self.observed_ns = Some(observed_ns);
+                        release_owned(self.child.id());
                     }
                     return Ok(observed_ns);
                 }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
-                Err(error) => return Err(error),
+                Err(error) => {
+                    if error.raw_os_error() == Some(libc::ECHILD) {
+                        release_owned(self.child.id());
+                    }
+                    return Err(error);
+                }
             }
         }
     }
@@ -226,10 +378,16 @@ impl Owner {
                 Ok(status) => {
                     self.status = Some(status);
                     self.observed_ns = Some(monotonic_ns());
+                    release_owned(self.child.id());
                     return Ok(());
                 }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
-                Err(error) => return Err(error),
+                Err(error) => {
+                    if error.raw_os_error() == Some(libc::ECHILD) {
+                        release_owned(self.child.id());
+                    }
+                    return Err(error);
+                }
             }
         }
     }
@@ -709,10 +867,46 @@ fn spawn<'a>(spec: &Spec<'a>, timing: Timing) -> std::result::Result<Active<'a>,
             Err(executable.execute())
         });
     }
-    let child = command
-        .spawn()
-        .map_err(|error| early_error(Refusal::Spawn, error))?;
+    // Termination stays blocked from the slot reservation before fork until
+    // the PID is recorded; a full registry refuses before any child exists.
+    let block = if TERMINATION.load(Ordering::SeqCst) {
+        Some(TerminationBlock::new().map_err(|error| early_error(Refusal::Spawn, error))?)
+    } else {
+        None
+    };
+    let slot = match block {
+        Some(_) => match reserve_owned() {
+            Some(slot) => Some(slot),
+            None => {
+                return Err(early_error(
+                    Refusal::OwnedCapacity,
+                    io::Error::other("Owned child termination registry is full; no child launched"),
+                ));
+            }
+        },
+        None => None,
+    };
+    let child = match command.spawn() {
+        Ok(child) => child,
+        Err(error) => {
+            if let Some(slot) = slot {
+                slot.store(0, Ordering::SeqCst);
+            }
+            return Err(early_error(Refusal::Spawn, error));
+        }
+    };
     let launch_elapsed_ns = monotonic_ns().saturating_sub(start);
+    if let Some(slot) = slot {
+        // Unix PIDs are positive i32 values; anything else stays unsignalled (0).
+        slot.store(
+            i32::try_from(child.id())
+                .ok()
+                .filter(|pid| *pid > 0)
+                .unwrap_or(0),
+            Ordering::SeqCst,
+        );
+    }
+    drop(block);
     let mut owner = Owner {
         child,
         status: None,

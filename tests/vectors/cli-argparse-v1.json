@@ -1,0 +1,325 @@
+{
+  "interpreter": "3.13.12 (main, May 27 2026, 12:03:16) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "baseline": "78eaf70",
+  "columns": 80,
+  "note": "am rows run scripts/am_console.py (the installed wrapper entry); paths redacted to <ROOT>/<SCRIPTS>",
+  "rows": [
+    {
+      "row": 1,
+      "entry": "am",
+      "argv": [
+        "--not-an-option"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am [-h]\n          {developer,project,identity,init,inspect,bank,search,discover,get,explain,context,capture,admission,claude-boundary,codex-boundary,omp-boundary,private,compare,compact,checkpoint,govern,correct,supersede,revoke,forget,publish,refresh,boundary,semantic,sharing,exchange,projection,writes,transaction,migrate,install,update,uninstall,purge-data,recover,version,status,doctor} ...\nam: error: the following arguments are required: command\n"
+    },
+    {
+      "row": 2,
+      "entry": "am",
+      "argv": [
+        "bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am [-h]\n          {developer,project,identity,init,inspect,bank,search,discover,get,explain,context,capture,admission,claude-boundary,codex-boundary,omp-boundary,private,compare,compact,checkpoint,govern,correct,supersede,revoke,forget,publish,refresh,boundary,semantic,sharing,exchange,projection,writes,transaction,migrate,install,update,uninstall,purge-data,recover,version,status,doctor} ...\nam: error: argument command: invalid choice: 'bogus' (choose from developer, project, identity, init, inspect, bank, search, discover, get, explain, context, capture, admission, claude-boundary, codex-boundary, omp-boundary, private, compare, compact, checkpoint, govern, correct, supersede, revoke, forget, publish, refresh, boundary, semantic, sharing, exchange, projection, writes, transaction, migrate, install, update, uninstall, purge-data, recover, version, status, doctor)\n"
+    },
+    {
+      "row": 3,
+      "entry": "am",
+      "argv": [
+        "developer"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: the following arguments are required: command\n"
+    },
+    {
+      "row": 4,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: argument command: invalid choice: 'bogus' (choose from status, preview, apply, recover)\n"
+    },
+    {
+      "row": 5,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "status",
+        "--repo"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer status [-h] [--observe OBSERVE] [--harness HARNESS]\n                           [--session SESSION] [--repo REPO]\nam developer status: error: argument --repo: expected one argument\n"
+    },
+    {
+      "row": 6,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: one of the arguments --create --adopt --select is required\n"
+    },
+    {
+      "row": 7,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--adopt",
+        "x"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: argument --adopt: not allowed with argument --create\n"
+    },
+    {
+      "row": 8,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "apply"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer apply [-h] --proposal PROPOSAL\nam developer apply: error: the following arguments are required: --proposal\n"
+    },
+    {
+      "row": 9,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "status",
+        "--bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: unrecognized arguments: --bogus\n"
+    },
+    {
+      "row": 10,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "status",
+        "--rep",
+        ".",
+        "--harn",
+        "x"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"schema\": \"agent-memory/developer-result-v1\",\n  \"operation\": \"status\",\n  \"security_boundary\": \"Repository and OS permissions govern access. Developer IDs provide provenance, not authentication, memory ACLs or personal memory namespaces.\",\n  \"changed_memory_paths\": [],\n  \"developer_id\": null,\n  \"registered_developers\": {},\n  \"observed_sha256\": null,\n  \"registry_path\": \"<ROOT>/config/agent-memory/developers.json\",\n  \"observations\": [],\n  \"attribution_conflicts\": [],\n  \"setup_required\": true,\n  \"identity_authenticated\": false,\n  \"lock_present\": false,\n  \"session_context\": {\n    \"harness\": \"x\",\n    \"session\": null\n  },\n  \"writes_performed\": false\n}\n",
+      "stderr": ""
+    },
+    {
+      "row": 11,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--a",
+        "x"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: ambiguous option: --a could match --adopt, --alias\n"
+    },
+    {
+      "row": 12,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create=1"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: argument --create: ignored explicit argument '1'\n"
+    },
+    {
+      "row": 13,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label=--x"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"schema\": \"agent-memory/developer-result-v1\",\n  \"operation\": \"preview\",\n  \"security_boundary\": \"Repository and OS permissions govern access. Developer IDs provide provenance, not authentication, memory ACLs or personal memory namespaces.\",\n  \"changed_memory_paths\": [],\n  \"developer_id\": \"3b255087-17a0-41dd-9372-93c7305706dc\",\n  \"proposal\": {\n    \"schema\": \"agent-memory/developer-proposal-v1\",\n    \"operation_id\": \"df9b6f3f-7520-4c40-babf-28e3d26de5fd\",\n    \"action\": \"create\",\n    \"developer_id\": \"3b255087-17a0-41dd-9372-93c7305706dc\",\n    \"labels\": [\n      \"--x\"\n    ],\n    \"aliases\": [],\n    \"observed_sha256\": null,\n    \"registry_path\": \"<ROOT>/config/agent-memory/developers.json\"\n  },\n  \"writes_performed\": false,\n  \"verified\": false\n}\n",
+      "stderr": ""
+    },
+    {
+      "row": 14,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label",
+        "-x"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: argument --label: expected one argument\n"
+    },
+    {
+      "row": 15,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label",
+        "-x y"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"schema\": \"agent-memory/developer-result-v1\",\n  \"operation\": \"preview\",\n  \"security_boundary\": \"Repository and OS permissions govern access. Developer IDs provide provenance, not authentication, memory ACLs or personal memory namespaces.\",\n  \"changed_memory_paths\": [],\n  \"developer_id\": \"550d6b10-7d99-4161-b110-2bd2e7375712\",\n  \"proposal\": {\n    \"schema\": \"agent-memory/developer-proposal-v1\",\n    \"operation_id\": \"e61790dc-36ea-4323-b761-b7f5a102ed48\",\n    \"action\": \"create\",\n    \"developer_id\": \"550d6b10-7d99-4161-b110-2bd2e7375712\",\n    \"labels\": [\n      \"-x y\"\n    ],\n    \"aliases\": [],\n    \"observed_sha256\": null,\n    \"registry_path\": \"<ROOT>/config/agent-memory/developers.json\"\n  },\n  \"writes_performed\": false,\n  \"verified\": false\n}\n",
+      "stderr": ""
+    },
+    {
+      "row": 16,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "status",
+        "--",
+        "--repo",
+        "."
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: unrecognized arguments: -- --repo .\n"
+    },
+    {
+      "row": 17,
+      "entry": "script",
+      "argv": [
+        "scope_policy.py",
+        "model",
+        "--bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: scope_policy.py [-h] {model,decide} ...\nscope_policy.py: error: unrecognized arguments: --bogus\n"
+    },
+    {
+      "row": 18,
+      "entry": "script",
+      "argv": [
+        "record_contract.py",
+        "validate",
+        "--file",
+        "f",
+        "--require",
+        "bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: record_contract.py validate [-h] --file FILE\n                                   [--require {confidence,admission-reason,trust,visibility,redaction}]\nrecord_contract.py validate: error: argument --require: invalid choice: 'bogus' (choose from confidence, admission-reason, trust, visibility, redaction)\n"
+    },
+    {
+      "row": 19,
+      "entry": "script",
+      "argv": [
+        "lifecycle_model.py",
+        "bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: lifecycle_model.py [-h] [--input INPUT]\n                          {definition,guide,current,transition}\nlifecycle_model.py: error: argument operation: invalid choice: 'bogus' (choose from definition, guide, current, transition)\n"
+    },
+    {
+      "row": 20,
+      "entry": "script",
+      "argv": [
+        "artifact.py"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: artifact.py [-h] [--pack PACK] {inspect}\nartifact.py: error: the following arguments are required: operation\n"
+    },
+    {
+      "row": 21,
+      "entry": "script",
+      "argv": [
+        "validate_pack.py",
+        "extra"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: validate_pack.py [-h] [--pack PACK]\nvalidate_pack.py: error: unrecognized arguments: extra\n"
+    },
+    {
+      "row": "22a",
+      "entry": "am",
+      "argv": [
+        "developer",
+        "status",
+        "-h",
+        "--bogus"
+      ],
+      "exit": 0,
+      "stdout": "usage: am developer status [-h] [--observe OBSERVE] [--harness HARNESS]\n                           [--session SESSION] [--repo REPO]\n\noptions:\n  -h, --help         show this help message and exit\n  --observe OBSERVE\n  --harness HARNESS\n  --session SESSION\n  --repo REPO\n",
+      "stderr": ""
+    },
+    {
+      "row": "22b",
+      "entry": "am",
+      "argv": [
+        "developer",
+        "status",
+        "--bogus",
+        "-h"
+      ],
+      "exit": 0,
+      "stdout": "usage: am developer status [-h] [--observe OBSERVE] [--harness HARNESS]\n                           [--session SESSION] [--repo REPO]\n\noptions:\n  -h, --help         show this help message and exit\n  --observe OBSERVE\n  --harness HARNESS\n  --session SESSION\n  --repo REPO\n",
+      "stderr": ""
+    },
+    {
+      "row": 23,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--adopt",
+        "x",
+        "-h"
+      ],
+      "exit": 0,
+      "stdout": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\n\noptions:\n  -h, --help       show this help message and exit\n  --create\n  --adopt ADOPT\n  --select SELECT\n  --label LABEL\n  --alias ALIAS\n",
+      "stderr": ""
+    },
+    {
+      "row": "24a",
+      "entry": "am",
+      "argv": [
+        "help",
+        "developer"
+      ],
+      "exit": 0,
+      "stdout": "usage: am developer [-h] {status,preview,apply,recover} ...\n\nExplicit stable developer attribution; independent of installation and banks.\n\npositional arguments:\n  {status,preview,apply,recover}\n\noptions:\n  -h, --help            show this help message and exit\n",
+      "stderr": ""
+    },
+    {
+      "row": "24b",
+      "entry": "am",
+      "argv": [
+        "developer",
+        "--help"
+      ],
+      "exit": 0,
+      "stdout": "usage: am developer [-h] {status,preview,apply,recover} ...\n\nExplicit stable developer attribution; independent of installation and banks.\n\npositional arguments:\n  {status,preview,apply,recover}\n\noptions:\n  -h, --help            show this help message and exit\n",
+      "stderr": ""
+    }
+  ]
+}
