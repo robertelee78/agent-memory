@@ -11,5 +11,3 @@ bank_writes::register_recovery_transactions waits for recovery_transactions
 sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
 turn_check::register_memory_refresh waits for memory_refresh
 layout_restore::register_layout_recovery waits for layout_recovery
-admission::register_comparison waits for comparison
-discovery::register_comparison waits for comparison

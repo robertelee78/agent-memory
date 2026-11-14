@@ -41,6 +41,8 @@ pub static ENTRIES: &[Entry] = &[
     route("admission", &helpers::admission::HELPER),
     route("omp-boundary", &helpers::omp_boundary::HELPER),
     route("private", &helpers::private_workspace::HELPER),
+    route("compare", &helpers::comparison::HELPER),
+    route("compact", &helpers::consolidation::HELPER),
     route("checkpoint", &helpers::checkpoint::HELPER),
     route("publish", &helpers::memory_publication::HELPER),
     route("sharing", &helpers::sharing_boundary::HELPER),

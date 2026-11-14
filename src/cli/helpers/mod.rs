@@ -7,6 +7,8 @@ pub mod bank_contract;
 pub mod bank_layout;
 pub mod bank_writes;
 pub mod checkpoint;
+pub mod comparison;
+pub mod consolidation;
 pub mod developer_identity;
 pub mod diagnostics;
 pub mod discovery;

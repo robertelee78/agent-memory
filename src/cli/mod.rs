@@ -398,6 +398,12 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
                 .map_err(|error| ContractError::new(error.to_string()))
         }))?;
     }
+    wired(crate::bank_transactions::register_transaction_validator(
+        "compact",
+        Some(Arc::new(crate::consolidation::Consolidation)),
+    ))?;
+    crate::admission::register_comparison(Some(Arc::new(crate::comparison::Comparison)));
+    crate::discovery::register_comparison(Some(Arc::new(crate::comparison::Comparison)));
     Ok(())
 }
 
