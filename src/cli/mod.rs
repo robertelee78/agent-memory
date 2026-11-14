@@ -10,6 +10,7 @@ pub mod input;
 pub mod parser;
 pub mod surface;
 pub mod table;
+mod wiring;
 
 use crate::error::{ContractError, Result};
 use crate::lifecycle::CommandResult;
@@ -264,17 +265,35 @@ pub fn pack_root() -> Result<PathBuf> {
     provider.pack_root()
 }
 
-/// Composition root of the binary: register every provider the CLI owns.
-/// Later lanes add their provider registrations here.
+/// A registry that cannot be written (poisoned lock) stops the binary.
+fn wired(result: Result<()>) -> std::result::Result<(), crate::pack_validation::Invalid> {
+    result.map_err(|error| {
+        crate::pack_validation::Invalid::new("malformed-pack", ".", error.to_string())
+    })
+}
+
+/// Composition root of the binary: the one place where modules written
+/// before their callees existed are connected. Every `register_*` function in
+/// the crate is either called here or listed, with the module it waits for,
+/// in `tests/wiring-pending.txt`; `tests/wiring.rs` enforces that.
+/// Later lanes append their provider registrations at the end.
 pub fn register_providers() -> std::result::Result<(), crate::pack_validation::Invalid> {
     let surface = surface::Declared::current()?;
     crate::pack_validation::register_command_surface(Some(Arc::new(surface)))?;
-    crate::artifact::register_migration_contract(Some(Arc::new(
-        crate::migration_contract::Bundled,
-    )))
-    .map_err(|error| {
-        crate::pack_validation::Invalid::new("malformed-pack", ".", error.to_string())
-    })?;
+    wired(crate::artifact::register_migration_contract(Some(
+        Arc::new(crate::migration_contract::Bundled),
+    )))?;
+    crate::bank_contract::register_bank_observation(Some(Arc::new(
+        crate::bank_observation::BankObservation,
+    )));
+    crate::records::register_tombstone_parser(Some(Arc::new(crate::tombstones::TombstoneParser)));
+    crate::bank_transactions::register_project_identity(Some(Arc::new(wiring::ProjectStatus)));
+    wired(crate::project_identity::register_bank_observation(Some(
+        Arc::new(wiring::BankMarkers),
+    )))?;
+    wired(crate::project_identity::register_bank_writes(Some(
+        Arc::new(wiring::WriterOperations),
+    )))?;
     Ok(())
 }
 
