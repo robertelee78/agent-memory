@@ -342,10 +342,11 @@ fn pass_fds_retains_exact_numbers_and_every_other_fd_is_closed() {
     let dir = PrivateDir::new();
     let mut passed_file = dir.file("passed");
     let hidden_file = dir.file("hidden");
-    let passed = duplicate_at(passed_file.as_raw_fd(), 3);
+    let passed = duplicate_at(passed_file.as_raw_fd(), 64);
     let hidden = duplicate_at(hidden_file.as_raw_fd(), 100);
+    // dash rejects multi-digit >&N operands; /dev/fd still checks the exact inherited fd.
     let script = format!(
-        "echo x >&\"$1\"; if [ -e /dev/fd/{} ]; then exit 91; fi",
+        "echo x > /dev/fd/\"$1\"; if [ -e /dev/fd/{} ]; then exit 91; fi",
         hidden.as_raw_fd()
     );
     let number = passed.as_raw_fd().to_string();
