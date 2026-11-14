@@ -582,6 +582,7 @@ fn fixture(w: &World, pending: bool) -> Fixture {
         "project-id",
         s("75b38e17-c36e-4fab-8ba9-5fa51f25de91"),
     );
+    let original_omitted = g(&proposal, "omitted").clone();
     if let Value::Object(contexts) = proposal.get_mut("contexts").unwrap() {
         contexts.push((
             "activeContext.md".into(),
@@ -642,6 +643,14 @@ fn fixture(w: &World, pending: bool) -> Fixture {
         ("lifecycle", s("active")),
         ("read-when", s("When checking source preservation")),
     ]));
+    let original_routes: Vec<_> = routes
+        .iter()
+        .filter(|route| t(route, "path") != "activeContext.md")
+        .cloned()
+        .collect();
+    let original_router =
+        agent_memory::bank_contract::router_text(&header, &original_routes, &original_omitted)
+            .unwrap();
     set(
         &mut native,
         "MEMORY.md",
@@ -654,6 +663,9 @@ fn fixture(w: &World, pending: bool) -> Fixture {
         fs::create_dir_all(bank.join(p).parent().unwrap()).unwrap();
         fs::write(bank.join(p), b.as_str().unwrap()).unwrap();
     }
+    // As in the baseline fixture, only the intended router routes activeContext:
+    // recovery must actually replace MEMORY.md to reach its journal boundary.
+    fs::write(bank.join("MEMORY.md"), original_router).unwrap();
     let mut large = "# Active context\n\n".to_owned();
     while large.len() + sentence.len() <= 79_054 {
         large.push_str(sentence);
@@ -1349,7 +1361,7 @@ fn recover_fault(w: &World, pending: bool, stage: &str, mode: &str) {
     assert_eq!(
         output.status,
         agent_memory::process::Status::Code(1),
-        "{}",
+        "mode={mode}, stage={stage}\n{}",
         String::from_utf8_lossy(&output.stdout)
     );
     let preview = r::recover(

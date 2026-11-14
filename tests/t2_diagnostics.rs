@@ -1417,13 +1417,14 @@ fn am(world: &World, args: &[&str]) -> (i32, String) {
     )
 }
 
-/// Native diagnostics keep uninstalled-runtime and recovery-frontier failures
-/// independent of the available local-only refresh check.
+/// Native metadata-only diagnostics validate a healthy bank without an installed
+/// runtime; executing-artifact identity and project setup remain separate.
 #[test]
 fn am_diagnostics_run_natively_against_a_disposable_bank() {
     let world = World::new();
     let repo = world.path("repo");
     bank(&repo);
+    assert!(!world.receipt_path().exists());
     let before = snapshot(&world.root);
     let run = |args: &[&str], expected: i32| {
         let (code, stdout) = am(&world, args);
@@ -1431,6 +1432,9 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
         let value = json::decode(&stdout, Default::default()).unwrap();
         assert_eq!(text(&value, "schema"), diagnostics::SCHEMA);
         assert_eq!(text(&value, "operation"), args[1]);
+        for key in ["writes_performed", "repairs_performed", "network_performed"] {
+            assert_eq!(get(&value, key), &Value::Bool(false));
+        }
         value
     };
     let repo_text = repo.to_str().unwrap();
@@ -1442,12 +1446,23 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
     assert_eq!(text(get(&status, "bank"), "project_id"), PROJECT);
     assert_eq!(text(get(&status, "setup"), "state"), "binding_required");
     let doctor = run(&["--json", "doctor", "--repo", repo_text], 1);
-    // The baseline local-only refresh prerequisite succeeds before deep inventory.
-    // The uninstalled runtime and unported recovery-frontier still refuse separately.
+    // Read-only canonical inventory does not require an executing-runtime receipt.
+    // That does not establish runtime identity or adopt the bank's project.
+    assert_eq!(names(&doctor, "failures"), ["runtime.executing_artifact"]);
+    assert_eq!(text(get(&doctor, "bank"), "state"), "validated");
+    assert_eq!(text(get(&doctor, "bank"), "project_id"), PROJECT);
     assert_eq!(
-        names(&doctor, "failures"),
-        ["runtime.executing_artifact", "bank.inspection"]
+        get(get(&doctor, "bank"), "source_stability_verified"),
+        &Value::Bool(true)
     );
+    assert_eq!(
+        text(
+            component(&doctor, "bank.schema_and_readability")[0],
+            "state"
+        ),
+        "pass"
+    );
+    assert_eq!(text(get(&doctor, "setup"), "state"), "binding_required");
     assert_eq!(
         text(component(&doctor, "bank.refresh_prerequisites")[0], "state"),
         "pass"
@@ -1475,8 +1490,9 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
     );
     let (code, human) = am(&world, &["doctor", "--repo", repo_text]);
     assert_eq!(code, 1);
-    assert!(human.contains("setup inspection_required"), "{human}");
+    assert!(human.contains("setup binding_required"), "{human}");
     assert!(human.contains("next "), "{human}");
+    assert!(!world.receipt_path().exists());
     assert_eq!(snapshot(&world.root), before);
 }
 
@@ -1486,6 +1502,7 @@ fn am_init_runs_natively_against_a_disposable_bank() {
     let world = World::new();
     let repo = world.path("repo");
     bank(&repo);
+    assert!(!world.receipt_path().exists());
     let before = snapshot(&world.root);
     let repo_text = repo.to_str().unwrap();
     let (code, stdout) = am(&world, &["--json", "init", "inspect", "--repo", repo_text]);
@@ -1496,9 +1513,9 @@ fn am_init_runs_natively_against_a_disposable_bank() {
         "agent-memory/initialization-result-v1"
     );
     assert_eq!(text(&value, "operation"), "inspect");
-    // Canonical bank observation needs recovery_frontier (not ported): the
-    // existing bank is preserved for inspection, never overwritten.
-    assert_eq!(text(&value, "bank_state"), "needs-inspection");
+    // Read-only bank inventory is usable without a receipt; inspection neither
+    // installs a runtime nor replaces the existing bank.
+    assert_eq!(text(&value, "bank_state"), "usable");
     assert_eq!(text(&value, "project_id"), PROJECT);
     assert_eq!(get(&value, "writes_performed"), &Value::Bool(false));
     let (code, stdout) = am(
@@ -1531,6 +1548,7 @@ fn am_init_runs_natively_against_a_disposable_bank() {
     assert_eq!(code, 1, "{stdout}");
     let value = json::decode(&stdout, Default::default()).unwrap();
     assert_eq!(get(&value, "inspection_required"), &Value::Bool(true));
+    assert!(!world.receipt_path().exists());
     assert_eq!(snapshot(&world.root), before);
 }
 

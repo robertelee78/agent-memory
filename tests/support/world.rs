@@ -192,6 +192,16 @@ pub struct Child {
 }
 
 impl Child {
+    /// The original absolute collection deadline, without restarting its budget.
+    pub fn deadline(&self) -> Result<Deadline> {
+        let state = self.state.borrow();
+        state
+            .process
+            .as_ref()
+            .ok_or_else(|| WorldError::invalid("Owned child is already collected or closed"))?;
+        Ok(state.deadline)
+    }
+
     pub fn wait(&self) -> Result<Output> {
         let mut state = self.state.borrow_mut();
         let process = state
