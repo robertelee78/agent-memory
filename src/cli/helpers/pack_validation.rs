@@ -18,7 +18,7 @@ program behavior, source trust, or the truth of memory. Candidate code is data."
 };
 
 pub static HELPER: Helper = Helper {
-    script: "validate_pack.py",
+    command: "am validate-pack",
     module: "pack_validation",
     parser: &PARSER,
     routes: &[],

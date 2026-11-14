@@ -82,7 +82,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "scope_binding.py",
+    command: "am identity",
     module: "scope_binding",
     parser: &PARSER,
     routes: &[],

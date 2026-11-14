@@ -82,7 +82,7 @@ fn filter(
 ) -> (agent_memory::process::Output, Value) {
     command(
         w,
-        "tombstones.py",
+        "am tombstones",
         &[
             "filter".into(),
             "--repo".into(),

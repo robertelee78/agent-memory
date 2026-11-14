@@ -29,11 +29,13 @@ pub struct Context<'a> {
     pub required_operations: Option<&'static [&'static str]>,
 }
 
-/// One baseline helper script: its parser declaration and typed handler.
+/// One helper command: its parser declaration and typed handler.
 pub struct Helper {
-    /// Baseline wrapper file name under `scripts/`, e.g. `developer_identity.py`.
-    pub script: &'static str,
-    /// Baseline implementation module under `scripts/agent_memory/`.
+    /// Native command naming this helper in the signed command surface:
+    /// `am <name>` for its first table route without a fixed prefix (else its
+    /// first route), e.g. `am developer`.
+    pub command: &'static str,
+    /// Rust domain module implementing the helper, e.g. `developer_identity`.
     pub module: &'static str,
     pub parser: &'static Parser<'static>,
     /// Literal delegated routes of this helper (its own `MEMORY_ROUTES`).

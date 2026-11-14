@@ -67,7 +67,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "compare_learning.py",
+    command: "am compare",
     module: "comparison",
     parser: &PARSER,
     routes: &[],

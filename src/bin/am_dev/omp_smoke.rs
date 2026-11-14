@@ -4,6 +4,7 @@ use agent_memory::{
     codec::json::{self, Value},
     fs::{DirectoryChain, ReadOptions, canonical_path, read_source_with_options},
     host,
+    omp_installation::SUPPORTED_VERSION,
     process::{self, Input, Spec, Status, Target},
 };
 use sha2::{Digest, Sha256};
@@ -21,7 +22,6 @@ const BINARY_LIMIT: usize = 512 * 1024 * 1024;
 const FRAME_LIMIT: usize = 1024 * 1024;
 const FRAME_QUEUE_LIMIT: usize = 4096;
 const DIRECTORY_LIMIT: usize = 16_384;
-const SUPPORTED_VERSIONS: [&str; 2] = ["18.16.0", "18.19.0"];
 pub const HELP: &str = "usage: am-dev omp-smoke [-h] --binary BINARY --am AM --receipt RECEIPT\n                        --repo REPO --output OUTPUT --model MODEL\n                        [--approval-mode APPROVAL_MODE] [--timeout TIMEOUT]\n\nReal installed omp multi-turn smoke. This is not the full #249 release gate.\n\nRequires an explicitly prepared disposable, initialized/bound repository, actual\nprovider access, an installed Rust receipt-v3 binding, and normal native permissions.\nNever installs a fake tool, auto-approves a request, or fabricates a source receipt.\n\noptions:\n  -h, --help            show this help message and exit\n  --binary BINARY\n  --am AM\n  --receipt RECEIPT\n  --repo REPO\n  --output OUTPUT\n  --model MODEL         Actual operator-selected available provider/model\n  --approval-mode APPROVAL_MODE\n                        Optional explicit normal native mode; never auto-approved by this driver\n  --timeout TIMEOUT\n";
 
 #[derive(Debug)]
@@ -1105,11 +1105,20 @@ fn smoke(args: Arguments) -> Result<bool> {
     if sha(&read_bytes(&extension, JSON_LIMIT)?) != extension_digest {
         return Err(fail("Installed native extension differs from receipt"));
     }
-    let am = canonical(&args.am)?;
-    let bin_dir = PathBuf::from(text(&receipt, "bin_dir")?);
-    if ![bin_dir.join("am"), bin_dir.join("agent-memory")].contains(&am) {
+    // Rust installs own `bin/am` and `bin/agent-memory` as links to the runtime
+    // binary: the named command must be one of them, then it runs its target.
+    let bin_dir = canonical(Path::new(text(&receipt, "bin_dir")?))?;
+    let command_dir = match args.am.parent() {
+        Some(parent) if !parent.as_os_str().is_empty() => Some(canonical(parent)?),
+        _ => None,
+    };
+    let command_name = args.am.file_name().and_then(OsStr::to_str);
+    if command_dir.as_ref() != Some(&bin_dir)
+        || !matches!(command_name, Some("am" | "agent-memory"))
+    {
         return Err(fail("Smoke must use an exact receipt-owned public command"));
     }
+    let am = canonical(&args.am)?;
     let mut env: Environment = std::env::vars_os()
         .filter(|(key, _)| {
             let key = key.to_string_lossy();
@@ -1158,7 +1167,7 @@ fn smoke(args: Arguments) -> Result<bool> {
         ),
         ("binary_sha256", s(sha(&read_bytes(&binary, BINARY_LIMIT)?))),
         ("native_version", Value::Null),
-        ("supported_versions", list(SUPPORTED_VERSIONS.map(s))),
+        ("supported_versions", list([s(SUPPORTED_VERSION)])),
         ("installed_source", get(&receipt, "source").clone()),
         ("receipt_sha256", s(sha(&receipt_bytes))),
         ("extension_sha256", s(extension_digest)),
@@ -1214,12 +1223,9 @@ fn smoke(args: Arguments) -> Result<bool> {
             .map_err(|_| fail("Native version is not UTF-8"))?
             .trim();
         set(&mut report, "native_version", s(version));
-        if !SUPPORTED_VERSIONS
-            .iter()
-            .any(|v| version == format!("omp/{v}"))
-        {
+        if version != format!("omp/{SUPPORTED_VERSION}") {
             return Err(fail(format!(
-                "Unsupported omp binary: require exactly one of omp/18.16.0, omp/18.19.0, observed {version}"
+                "Unsupported omp binary: require exactly omp/{SUPPORTED_VERSION}, observed {version}"
             )));
         }
         native = Some(Native::launch(&argv, &env, &repo, args.timeout)?);

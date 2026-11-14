@@ -53,7 +53,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "tombstones.py",
+    command: "am tombstones",
     module: "tombstones",
     parser: &PARSER,
     routes: &[],

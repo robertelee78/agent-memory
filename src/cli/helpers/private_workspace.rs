@@ -45,7 +45,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "private_workspace.py",
+    command: "am private",
     module: "private_workspace",
     parser: &PARSER,
     routes: &[],

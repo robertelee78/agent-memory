@@ -36,7 +36,7 @@ fn ok(w: &World, args: &[OsString]) -> Value {
 fn developer(w: &World) -> String {
     let p = good(
         w,
-        "developer_identity.py",
+        "am developer",
         &[
             "preview".into(),
             "--create".into(),
@@ -46,7 +46,7 @@ fn developer(w: &World) -> String {
     );
     let receipt = good(
         w,
-        "developer_identity.py",
+        "am developer",
         &[
             "apply".into(),
             "--proposal".into(),
@@ -149,7 +149,7 @@ fn fixture() -> Recall {
 // obligation: tests/contracts/test_identity_canaries.py::IdentityCanaries.test_changed_developer_selection_invalidates_old_checkpoint_without_reattribution
 fn changed_developer_selection_invalidates_old_checkpoint_without_reattribution() {
     let r = fixture();
-    let first = good(&r.world, "developer_identity.py", &["status".into()]);
+    let first = good(&r.world, "am developer", &["status".into()]);
     let proposal = checkpoint(
         &r.world,
         &r.repo,
@@ -214,7 +214,7 @@ fn replacing_bank_with_another_project_never_silently_rebinds_or_recalls_it() {
         ]);
         let (output, value) = command(
             &r.world,
-            "security_policy.py",
+            "am security-policy",
             &[
                 "--repo".into(),
                 r.repo.as_os_str().to_owned(),
@@ -228,7 +228,7 @@ fn replacing_bank_with_another_project_never_silently_rebinds_or_recalls_it() {
     }
     let status = good(
         &r.world,
-        "scope_binding.py",
+        "am identity",
         &[
             "status".into(),
             "--repo".into(),
@@ -245,7 +245,7 @@ fn replacing_bank_with_another_project_never_silently_rebinds_or_recalls_it() {
 fn checkpoint_provenance_survives_fresh_machine_and_second_developer() {
     let mut r = fixture();
     let first = string(
-        &good(&r.world, "developer_identity.py", &["status".into()]),
+        &good(&r.world, "am developer", &["status".into()]),
         "developer_id",
     )
     .to_owned();
@@ -336,7 +336,7 @@ fn checkpoint_provenance_survives_fresh_machine_and_second_developer() {
     );
     let checked = good(
         &r.world,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -363,7 +363,7 @@ fn checkpoint_provenance_survives_fresh_machine_and_second_developer() {
     assert_eq!(fs::read(clone.join(".git/index")).unwrap(), index);
     let status = good(
         &r.world,
-        "scope_binding.py",
+        "am identity",
         &[
             "status".into(),
             "--repo".into(),

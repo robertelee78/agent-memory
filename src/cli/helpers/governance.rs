@@ -64,7 +64,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "govern_memory.py",
+    command: "am govern",
     module: "governance",
     parser: &PARSER,
     routes: &[],

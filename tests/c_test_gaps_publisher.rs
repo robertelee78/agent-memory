@@ -9,7 +9,10 @@ fn run(name: &str) {
         .parent()
         .unwrap()
         .to_path_buf();
-    let candidates = std::fs::read_dir(directory)
+    let test = format!("release_builder::gaps_tests::{name}");
+    // Earlier builds (other hashes, other feature sets) stay beside this one:
+    // use the most recent library test executable that actually has the test.
+    let mut candidates = std::fs::read_dir(directory)
         .unwrap()
         .map(Result::unwrap)
         .filter(|entry| {
@@ -20,14 +23,22 @@ fn run(name: &str) {
                 && entry.metadata().unwrap().is_file()
                 && entry.metadata().unwrap().permissions().mode() & 0o111 != 0
         })
-        .map(|entry| entry.path())
+        .filter(|entry| {
+            std::process::Command::new(entry.path())
+                .args(["--list", "--exact", &test])
+                .output()
+                .is_ok_and(|listed| {
+                    String::from_utf8_lossy(&listed.stdout).contains(&format!("{test}: test"))
+                })
+        })
+        .map(|entry| (entry.metadata().unwrap().modified().unwrap(), entry.path()))
         .collect::<Vec<_>>();
-    assert_eq!(
-        candidates.len(),
-        1,
-        "compile exactly one current library test executable with cargo test --offline --features dev-tools --lib --no-run"
+    candidates.sort();
+    let candidates: Vec<_> = candidates.into_iter().rev().map(|(_, path)| path).collect();
+    assert!(
+        !candidates.is_empty(),
+        "compile the library test executable with cargo test --offline --features dev-tools --lib --no-run"
     );
-    let test = format!("release_builder::gaps_tests::{name}");
     let output = world
         .run_with(
             [
@@ -50,13 +61,11 @@ fn run(name: &str) {
     );
 }
 #[test]
-#[ignore = "needs Gate C Python removal (native adapter entrypoint)"]
 // obligation: tests/contracts/test_signed_release_publisher.py::SignedPublisherContract.test_one_command_first_publish_exact_resume_and_harmless_descendant
 fn first_publish_resume_and_harmless_descendant() {
     run("one_command_first_publish_exact_resume_and_harmless_descendant");
 }
 #[test]
-#[ignore = "needs Gate C Python removal (native adapter entrypoint)"]
 // obligation: tests/contracts/test_signed_release_publisher.py::SignedPublisherContract.test_wrong_tags_and_incompatible_or_racing_main_never_claim_default_activation
 fn wrong_tags_and_racing_main_never_claim_activation() {
     run("wrong_tags_and_incompatible_or_racing_main_never_claim_default_activation");

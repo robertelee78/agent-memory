@@ -1,6 +1,6 @@
 //! `am hook <name>`: the client hook commands installed into Codex, Claude
-//! and OpenCode configuration (baseline `hooks/*.py`, started through
-//! `hooks/python3.sh`). Each reads its bounded event on stdin.
+//! and OpenCode configuration (baseline `hooks/*.py`, started through the
+//! pack's interpreter launcher). Each reads its bounded event on stdin.
 use crate::cli::parser::{Arg, Matches, Parser, Positional};
 use crate::cli::{Context, Native};
 use crate::hooks;

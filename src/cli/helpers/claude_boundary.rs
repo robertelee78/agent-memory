@@ -29,7 +29,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "claude_boundary.py",
+    command: "am claude-boundary",
     module: "claude_boundary",
     parser: &PARSER,
     routes: &[],

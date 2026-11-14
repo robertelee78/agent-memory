@@ -13,7 +13,7 @@ static PARSER: Parser = Parser {
     subcommands: None,
 };
 pub static HELPER: Helper = Helper {
-    script: "sharing_boundary.py",
+    command: "am sharing",
     module: "sharing_boundary",
     parser: &PARSER,
     routes: &[],

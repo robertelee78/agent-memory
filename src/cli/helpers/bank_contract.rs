@@ -52,7 +52,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "bank_contract.py",
+    command: "am bank",
     module: "bank_contract",
     parser: &PARSER,
     routes: &[crate::cli::Route {

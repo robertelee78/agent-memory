@@ -169,6 +169,8 @@ pub fn wake(
     let directory = namespace.join(canonical_uuid(&string(lifecycle))?);
     let cursor = read(&directory.join("cursor.json"), MAX_PAYLOAD)?;
     cursor_value(&cursor, &string(session), lifecycle)?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.wake.before-inventory")?;
     let (rows, faults) = pending_inventory(site)?;
     let root_value = get(get(&cursor, "origin"), "human_root");
     let current = root_rows(&rows, session, Some(root_value));
@@ -1018,6 +1020,8 @@ impl<'s> Sweep<'s> {
                 set(&mut cursor, "control_interval", control);
                 cursor.clone()
             };
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.pure.before-cursor")?;
             replace_cursor(&active.directory.join("cursor.json"), &updated)?;
         } else if truthy(get(&control, "pure_mode")) {
             set(&mut control, "pure_mode", Value::Bool(false));

@@ -54,7 +54,14 @@ impl Channel {
     }
     pub fn access(&self) -> ReleaseAccess {
         ReleaseAccess {
-            first_manifest_url: file_url(&self.root.join("latest").join(release::MANIFEST)),
+            first_manifest_url: file_url(
+                &self
+                    .root
+                    .join("assets")
+                    .join(format!("v{}", env!("CARGO_PKG_VERSION")))
+                    .join(release::MANIFEST),
+            ),
+            latest_manifest_url: file_url(&self.root.join("latest").join(release::MANIFEST)),
             assets: file_url(&self.root.join("assets")),
             options: release::DownloadOptions {
                 allow_file: true,

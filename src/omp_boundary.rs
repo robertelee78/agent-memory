@@ -1270,6 +1270,8 @@ pub fn required_source_capabilities_with_authority(
     turn_sources::read_only_locks(|| {
         private_state::observation_barrier(repo, runtime, |_| {
             let lock = turn_sources::private_lock(&base.join(TRANSPORT_LOCK), false, true)?;
+            #[cfg(feature = "dev-tools")]
+            bank_writes::fault("omp.required.after-transport-lock")?;
             let (binding, digest) = drain_inventory_with_authority(repo, runtime)?;
             let proof = turn_sources::read(
                 &base.join("omp-drains").join(format!("{digest}.json")),

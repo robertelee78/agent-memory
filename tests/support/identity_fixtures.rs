@@ -5,11 +5,11 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
 
-fn command(world: &World, executable: &Path, helper: &str, args: &[OsString]) -> Result<Value> {
+fn command(world: &World, executable: &Path, command: &str, args: &[OsString]) -> Result<Value> {
     let output = world.run(
         [executable.as_os_str().to_owned(), "--json".into()]
             .into_iter()
-            .chain(super::world::helper_arguments(helper, args)?),
+            .chain(super::world::native_arguments(command, args)?),
     )?;
     Ok(json::decode_bytes(
         &output.stdout,
@@ -17,13 +17,13 @@ fn command(world: &World, executable: &Path, helper: &str, args: &[OsString]) ->
     )?)
 }
 
-fn apply(world: &World, executable: &Path, helper: &str, proposal: &Value) -> Result<Value> {
+fn apply(world: &World, executable: &Path, command: &str, proposal: &Value) -> Result<Value> {
     let path = world.inside("fixture-identity-proposal.json")?;
     fs::write(&path, json::encode(proposal, json::DEFAULT)?)?;
-    command(
+    self::command(
         world,
         executable,
-        helper,
+        command,
         &["apply".into(), "--proposal".into(), path.into_os_string()],
     )
 }
@@ -35,12 +35,12 @@ pub fn bind_with_command(world: &World, repo: &Path, executable: &Path) -> Resul
         "--repo".into(),
         repo.as_os_str().to_owned(),
     ];
-    let developer = command(world, executable, "developer_identity.py", &status_args)?;
+    let developer = command(world, executable, "am developer", &status_args)?;
     if boolean(&developer, "setup_required")? {
         let proposal = command(
             world,
             executable,
-            "developer_identity.py",
+            "am developer",
             &[
                 "preview".into(),
                 "--create".into(),
@@ -48,14 +48,14 @@ pub fn bind_with_command(world: &World, repo: &Path, executable: &Path) -> Resul
                 "Disposable test developer".into(),
             ],
         )?;
-        apply(world, executable, "developer_identity.py", &proposal)?;
+        apply(world, executable, "am developer", &proposal)?;
     }
-    let current = command(world, executable, "scope_binding.py", &status_args)?;
+    let current = command(world, executable, "am identity", &status_args)?;
     if !boolean(&current, "resolved")? {
         let proposal = command(
             world,
             executable,
-            "scope_binding.py",
+            "am identity",
             &[
                 OsString::from("preview"),
                 "--repo".into(),
@@ -66,7 +66,7 @@ pub fn bind_with_command(world: &World, repo: &Path, executable: &Path) -> Resul
                 "Explicit disposable fixture bank adoption".into(),
             ],
         )?;
-        let receipt = apply(world, executable, "scope_binding.py", &proposal)?;
+        let receipt = apply(world, executable, "am identity", &proposal)?;
         if !boolean(&receipt, "verified")? {
             return Err(WorldError::invalid(format!(
                 "Identity fixture adoption was not verified: {}",
@@ -74,7 +74,7 @@ pub fn bind_with_command(world: &World, repo: &Path, executable: &Path) -> Resul
             )));
         }
     }
-    command(world, executable, "scope_binding.py", &status_args)
+    command(world, executable, "am identity", &status_args)
 }
 
 fn boolean(value: &Value, key: &str) -> Result<bool> {

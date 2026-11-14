@@ -18,7 +18,7 @@ use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-use support::world::helper_arguments;
+use support::world::native_arguments;
 use support::{RunOptions, World, WorldError};
 
 type TestResult<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -80,13 +80,13 @@ fn git(w: &World, cwd: &Path, args: &[&str]) -> TestResult<String> {
     )?;
     Ok(String::from_utf8(output.stdout)?)
 }
-fn call(w: &World, script: &str, args: &[&OsStr]) -> TestResult<(i32, Value)> {
+fn call(w: &World, command: &str, args: &[&OsStr]) -> TestResult<(i32, Value)> {
     let argv: Vec<OsString> = [
         w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
         OsString::from("--json"),
     ]
     .into_iter()
-    .chain(helper_arguments(script, args)?)
+    .chain(native_arguments(command, args)?)
     .collect();
     let output = w.run_with(
         argv,
@@ -102,16 +102,16 @@ fn call(w: &World, script: &str, args: &[&OsStr]) -> TestResult<(i32, Value)> {
     };
     let value = decode(&output.stdout).map_err(|error| {
         WorldError::invalid(format!(
-            "{script} produced no JSON ({error}): stdout={:?} stderr={:?}",
+            "{command} produced no JSON ({error}): stdout={:?} stderr={:?}",
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr)
         ))
     })?;
     Ok((code, value))
 }
-fn good(w: &World, script: &str, args: &[&OsStr]) -> TestResult<Value> {
-    let (code, value) = call(w, script, args)?;
-    assert_eq!(code, 0, "{script}: {}", encode(&value)?);
+fn good(w: &World, command: &str, args: &[&OsStr]) -> TestResult<Value> {
+    let (code, value) = call(w, command, args)?;
+    assert_eq!(code, 0, "{command}: {}", encode(&value)?);
     Ok(value)
 }
 fn install_runtime(w: &mut World) {
@@ -247,7 +247,7 @@ fn render_bank(w: &World, bank: &Path) -> TestResult {
     let input = save(w, &router_proposal()?, "router-proposal.json")?;
     let rendered = good(
         w,
-        "bank_contract.py",
+        "am bank",
         &[os("render"), os("--input"), input.as_os_str()],
     )?;
     fs::create_dir_all(bank)?;
@@ -390,13 +390,13 @@ fn judgment(inspection: &Value) -> TestResult<Value> {
 fn proof(w: &World, repo: &Path) -> TestResult<Value> {
     let inspection = good(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[os("inspect"), os("--repo"), repo.as_os_str()],
     )?;
     let input = save(w, &judgment(&inspection)?, "judgment.json")?;
     let reviewed = good(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("review"),
             os("--repo"),
@@ -411,7 +411,7 @@ fn prepared(w: &World, repo: &Path) -> TestResult<Value> {
     let input = save(w, &proof(w, repo)?, "proof.json")?;
     good(
         w,
-        "publish_memory.py",
+        "am publish",
         &[
             os("prepare"),
             os("--repo"),
@@ -425,7 +425,7 @@ fn publish(w: &World, repo: &Path, operation: &str, value: &Value) -> TestResult
     let input = save(w, value, "publication-request.json")?;
     call(
         w,
-        "publish_memory.py",
+        "am publish",
         &[
             os(operation),
             os("--repo"),
@@ -570,7 +570,7 @@ fn github(
     )?;
     let proposal = good(
         w,
-        "scope_binding.py",
+        "am identity",
         &[
             os("preview"),
             os("--repo"),
@@ -584,7 +584,7 @@ fn github(
     let path = save(w, &proposal, "rebind-proposal.json")?;
     good(
         w,
-        "scope_binding.py",
+        "am identity",
         &[os("apply"), os("--proposal"), path.as_os_str()],
     )?;
     if let Some(peer) = peer {
@@ -2106,7 +2106,7 @@ fn first_bank_compares_real_absence_without_a_second_starter() -> TestResult {
     let input = save(&w, &proof, "proof.json")?;
     let checked = good(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("check"),
             os("--repo"),
@@ -2155,7 +2155,7 @@ fn unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit() ->
     );
     fs::write(&router, edited)?;
     let before = state(&w, &repo, &bank)?;
-    let boundary = good(&w, "sharing_boundary.py", &[os("--repo"), repo.as_os_str()])?;
+    let boundary = good(&w, "am sharing", &[os("--repo"), repo.as_os_str()])?;
     assert_eq!(get(&boundary, "local_boundary_ready"), &Value::Bool(true));
     assert_eq!(
         get(&boundary, "proven_deleted_memory_paths"),
@@ -2167,7 +2167,7 @@ fn unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit() ->
     git(&w, &repo, &["add", "memory-bank/cache.json"])?;
     fs::remove_file(bank.join("cache.json"))?;
     let index = fs::read(repo.join(".git/index"))?;
-    let blocked = good(&w, "sharing_boundary.py", &[os("--repo"), repo.as_os_str()])?;
+    let blocked = good(&w, "am sharing", &[os("--repo"), repo.as_os_str()])?;
     assert!(
         get(&blocked, "blockers")
             .as_array()
@@ -2717,7 +2717,7 @@ fn removed_authority_bank_is_not_treated_as_first_initialization() -> TestResult
     git(&w, &peer, &["push", "origin", "HEAD:main"])?;
     let (code, value) = call(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[os("inspect"), os("--repo"), repo.as_os_str()],
     )?;
     assert_eq!(code, 1);
@@ -2798,8 +2798,8 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
         OsString::from("--json"),
     ]
     .into_iter()
-    .chain(helper_arguments(
-        "publish_memory.py",
+    .chain(native_arguments(
+        "am publish",
         [
             os("land"),
             os("--repo"),
@@ -3041,7 +3041,7 @@ fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_histor
     fs::write(repo.join("evidence.md"), evidence)?;
     let scope = good(
         &w,
-        "scope_binding.py",
+        "am identity",
         &[os("status"), os("--repo"), repo.as_os_str()],
     )?;
     let project = get(&scope, "project_id").clone();
@@ -3132,9 +3132,8 @@ fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_histor
     let request_path = save(&w, &request, "admission-request.json")?;
     let capture = good(
         &w,
-        "admit_learning.py",
+        "am capture",
         &[
-            os("capture"),
             os("--repo"),
             repo.as_os_str(),
             os("--request"),
@@ -3154,7 +3153,7 @@ fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_histor
     let compared_path = save(&w, &comparison, "comparison-request.json")?;
     let inspected = good(
         &w,
-        "compare_learning.py",
+        "am compare",
         &[
             os("inspect"),
             os("--repo"),
@@ -3190,7 +3189,7 @@ fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_histor
     let judgment_path = save(&w, &judgment, "admission-judgment.json")?;
     let reviewed = good(
         &w,
-        "compare_learning.py",
+        "am compare",
         &[
             os("review"),
             os("--repo"),
@@ -3205,7 +3204,7 @@ fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_histor
     let proof_path = save(&w, &reviewed, "admission-proof.json")?;
     let preview = good(
         &w,
-        "admit_learning.py",
+        "am admission",
         &[
             os("preview"),
             os("--repo"),
@@ -3221,7 +3220,7 @@ fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_histor
     let proposal = save(&w, get(&preview, "proposal"), "admission-proposal.json")?;
     let admitted = good(
         &w,
-        "admit_learning.py",
+        "am admission",
         &[os("apply"), os("--proposal"), proposal.as_os_str()],
     )?;
     assert_eq!(get(&admitted, "admission_verified"), &Value::Bool(true));
@@ -3301,7 +3300,7 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     let first_path = w.inside("first-inspection.json")?;
     good(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("inspect-v2"),
             os("--repo"),
@@ -3348,7 +3347,7 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     let selected_path = w.inside("selected-inspection.json")?;
     let selected = good(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("inspect-v2"),
             os("--repo"),
@@ -3365,7 +3364,7 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
         let index = get(page, "index").as_int().unwrap().to_string();
         visible.push(good(
             &w,
-            "reconcile_memory.py",
+            "am semantic",
             &[
                 os("page-v2"),
                 os("--repo"),
@@ -3405,7 +3404,7 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     let reviewed_path = w.inside("versioned-reviewed.json")?;
     visible.push(good(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("review-v2"),
             os("--repo"),
@@ -3420,7 +3419,7 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     let proof_path = save(&w, get(&reviewed, "proof"), "versioned-proof.json")?;
     let checked = good(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("check"),
             os("--v2"),
@@ -3442,7 +3441,7 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     assert_eq!(get(&reviewed, "conflicts_pending"), &Value::Bool(true));
     let prepared = good(
         &w,
-        "publish_memory.py",
+        "am publish",
         &[
             os("prepare"),
             os("--v2"),
@@ -3468,7 +3467,7 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     for code in ["known-holds-interrupted", "known-holds-registry-missing"] {
         let (exit, value) = call(
             &w,
-            "publish_memory.py",
+            "am publish",
             &[
                 os("land"),
                 os("--v2"),
@@ -3498,7 +3497,7 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     );
     let recovered = good(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("recover-holds"),
             os("--repo"),
@@ -3925,7 +3924,7 @@ fn fanout_d_publication_refuses_live_bank_lock_then_lands_only_canonical_paths()
     )?;
     let proposal = good(
         &w,
-        "bank_writes.py",
+        "am writes",
         &[
             os("preview"),
             os("--repo"),
@@ -4074,7 +4073,7 @@ fn fanout_d_new_index(
     let input = save(w, &request, "fanout-index.json")?;
     let rendered = good(
         w,
-        "bank_layout.py",
+        "am bank-layout",
         &[os("render-index"), os("--input"), input.as_os_str()],
     )?;
     let content = match introduction {
@@ -4098,13 +4097,13 @@ fn fanout_d_new_index(
 fn fanout_d_review_new_index(w: &World, repo: &Path) -> TestResult<(i32, Value)> {
     let inspection = good(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[os("inspect"), os("--repo"), repo.as_os_str()],
     )?;
     let input = save(w, &judgment(&inspection)?, "fanout-index-judgment.json")?;
     call(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("review"),
             os("--repo"),

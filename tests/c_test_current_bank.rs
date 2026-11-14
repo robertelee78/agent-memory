@@ -82,13 +82,9 @@ fn fixture(w: &World, tracked: bool, complete: bool) -> (PathBuf, PathBuf) {
 /// Baseline `command`: the inspection runs from the World root, so a renamed
 /// default repository directory is never the child's working directory.
 fn inspect(w: &World, repo: &std::path::Path) -> Value {
-    let args = support::world::helper_arguments(
-        "bank_state.py",
-        [
-            OsString::from("inspect"),
-            "--repo".into(),
-            repo.as_os_str().to_owned(),
-        ],
+    let args = support::world::native_arguments(
+        "am inspect",
+        [OsString::from("--repo"), repo.as_os_str().to_owned()],
     )
     .unwrap();
     let output = w
@@ -284,12 +280,8 @@ fn busy_or_interrupted_bank_is_not_repaired_by_state_loss() {
         let before = physical(&bank);
         refused(
             &w,
-            "bank_state.py",
-            &[
-                "inspect".into(),
-                "--repo".into(),
-                repo.as_os_str().to_owned(),
-            ],
+            "am inspect",
+            &["--repo".into(), repo.as_os_str().to_owned()],
         );
         assert_eq!(physical(&bank), before);
         fs::remove_file(marker).unwrap();

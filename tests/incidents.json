@@ -7,10 +7,11 @@
       "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
       "issue": "https://github.com/robertelee78/agent-memory/issues/31",
       "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:forgetting",
-      "suite": "tests/contracts/test_governance.py",
-      "class": "GovernanceContract",
       "tests": [
-        "test_legacy_flat_consumed_capture_stays_pending_after_revocation_and_compaction"
+        {
+          "target": "t2_governance",
+          "test": "journey_legacy_flat_consumed_capture_stays_pending"
+        }
       ],
       "corrected_candidate": "https://github.com/robertelee78/agent-memory/commit/10ad213e9771d679a727a1a8905feb7480a1dce5",
       "acceptance": {
@@ -49,11 +50,15 @@
       "work_key": "robertelee78/agent-memory:ADR-0012:retry-and-merges",
       "issue": "https://github.com/robertelee78/agent-memory/issues/95",
       "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:retry-and-merges",
-      "suite": "tests/contracts/test_sharing_recovery.py",
-      "class": "SharingRecoveryContract",
       "tests": [
-        "test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness",
-        "test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction"
+        {
+          "target": "t2_sharing_recovery",
+          "test": "test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness"
+        },
+        {
+          "target": "t2_sharing_recovery",
+          "test": "test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction"
+        }
       ],
       "corrected_candidate": "https://github.com/robertelee78/agent-memory/commit/454062b7d6fbb54d17dabd43d7e5c1a2f09116f5",
       "acceptance": {

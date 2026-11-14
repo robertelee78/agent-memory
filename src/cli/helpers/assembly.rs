@@ -43,7 +43,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "assemble_context.py",
+    command: "am context",
     module: "assembly",
     parser: &PARSER,
     routes: &[],

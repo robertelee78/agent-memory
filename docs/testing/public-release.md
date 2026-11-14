@@ -1,5 +1,52 @@
 # Manual public release checks
 
+## Publishing the signed release
+
+The developer-only `am-dev` binary (built with `--features dev-tools`, never
+shipped) owns packaging, signing, draft/upload restart, publication, public
+verification and fast-forward main promotion. From the clean, reviewed and
+pushed release integration branch, with the three static release binaries
+built by CI (`aarch64-apple-darwin`, `x86_64-unknown-linux-musl`,
+`aarch64-unknown-linux-musl`):
+
+```sh
+cargo run --offline --features dev-tools --bin am-dev -- release publish \
+  --private-key "$AM_RELEASE_SIGNING_KEY" \
+  --binary aarch64-apple-darwin=/private/path/am-aarch64-apple-darwin \
+  --binary x86_64-unknown-linux-musl=/private/path/am-x86_64-unknown-linux-musl \
+  --binary aarch64-unknown-linux-musl=/private/path/am-aarch64-unknown-linux-musl \
+  --integration-branch integrate/v0.0.15 \
+  --notes-file /private/path/release-notes.md
+```
+
+`release build --output NEW_PRIVATE_DIRECTORY` with the same key and binaries
+produces the signed assets locally without contacting GitHub; it is a
+contributor/qualification helper, not an additional publication step. Both
+operations accept `--root PATH` for a checkout other than the one `am-dev` was
+built from.
+
+Set `AM_RELEASE_SIGNING_KEY` to the dedicated external AM key. It must be an
+ordinary current-user single-link owner-only file in a private directory,
+outside the checkout and release output; it is never copied into source or
+assets. The publisher requires Git, GitHub CLI with repository write access,
+curl and OpenSSH. Consumer installation requires neither GitHub CLI,
+credentials, Cargo nor any interpreter.
+
+The publisher packs only tracked portable-pack files at the release source
+commit, refuses Python source or bytecode in them, inspects the pack with the
+same command surface and migration contract the shipped binary uses, signs the
+`agent-memory/release-v2` manifest (namespace `agent-memory.release`) and each
+target binary (namespace `agent-memory.release-binary`), and embeds the
+binary's generated `command_surface` declaration. It reuses an exact draft or
+published version after byte/source readback and never clobbers assets or
+tags. It publishes and verifies public assets before main exposes the
+signed-only bootstrap. A concurrent incompatible main change is preserved and
+reported as activation pending; it is never forced away. Repository main
+protection/rules must match the reviewed promotion path before publication
+begins.
+
+## Public-channel evaluation
+
 The public-release evaluator checks the real anonymous public channel in
 disposable World homes. It deliberately allows HTTPS for its own fixture Git
 transport. It is separate from the offline contract tests: it requires network
@@ -66,6 +113,12 @@ disposable profiles, not operator homes. Each public command stream and its
 bank/code/index preservation are checked independently of source-contract
 qualification. From v0.0.15 on, both sides of such a check are Rust releases;
 v0.0.14 → v0.0.15 is the bootstrap adoption journey above.
+
+Ordinary `am update` probes the latest signed manifest, then fetches the
+version-pinned assets it names. Bootstrap installation (including a re-run
+bootstrap update) instead pins the first manifest to the verified binary's
+compiled version. Qualification must publish a newer fixture while retaining
+the older manifest, so an accidentally version-pinned update cannot pass.
 
 A setup error before a product assertion is apparatus evidence, not a runtime
 pass or failure.

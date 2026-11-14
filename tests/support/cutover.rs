@@ -78,19 +78,20 @@ pub fn executable(w: &World) -> PathBuf {
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_am")))
 }
-pub fn command(w: &World, helper: &str, args: &[OsString]) -> (Output, Value) {
-    command_fault(w, helper, args, &[])
+/// Run `am --json <command> <args>`; `command` is the native path, e.g. `am writes`.
+pub fn command(w: &World, command: &str, args: &[OsString]) -> (Output, Value) {
+    command_fault(w, command, args, &[])
 }
 pub fn command_fault(
     w: &World,
-    helper: &str,
+    command: &str,
     args: &[OsString],
     env: &[(OsString, OsString)],
 ) -> (Output, Value) {
-    let translated = super::world::helper_arguments(helper, args).unwrap();
+    let native = super::world::native_arguments(command, args).unwrap();
     let argv = [executable(w).into_os_string(), "--json".into()]
         .into_iter()
-        .chain(translated);
+        .chain(native);
     let output = w
         .run_with(
             argv,
@@ -109,8 +110,8 @@ pub fn command_fault(
     };
     (output, value)
 }
-pub fn good(w: &World, helper: &str, args: &[OsString]) -> Value {
-    let (output, value) = command(w, helper, args);
+pub fn good(w: &World, command: &str, args: &[OsString]) -> Value {
+    let (output, value) = self::command(w, command, args);
     assert_eq!(
         output.status,
         Status::Code(0),
@@ -119,8 +120,8 @@ pub fn good(w: &World, helper: &str, args: &[OsString]) -> Value {
     );
     value
 }
-pub fn refused(w: &World, helper: &str, args: &[OsString]) -> Value {
-    let (output, value) = command(w, helper, args);
+pub fn refused(w: &World, command: &str, args: &[OsString]) -> Value {
+    let (output, value) = self::command(w, command, args);
     assert_eq!(output.status, Status::Code(1), "{value:?}");
     value
 }
@@ -297,7 +298,7 @@ impl Bank {
     pub fn preview(&self, files: &Value) -> Value {
         good(
             &self.world,
-            "bank_transactions.py",
+            "am transaction",
             &[
                 "preview".into(),
                 "--repo".into(),
@@ -312,7 +313,7 @@ impl Bank {
     pub fn apply(&self, prepared: &Value) -> (Output, Value) {
         command(
             &self.world,
-            "bank_transactions.py",
+            "am transaction",
             &[
                 "apply".into(),
                 "--proposal".into(),
@@ -327,7 +328,7 @@ impl Bank {
         ];
         let (output, _) = command_fault(
             &self.world,
-            "bank_transactions.py",
+            "am transaction",
             &[
                 "apply".into(),
                 "--proposal".into(),
@@ -343,10 +344,10 @@ impl Bank {
             "--repo".into(),
             self.repo.as_os_str().to_owned(),
         ];
-        let p = good(&self.world, "bank_writes.py", &args);
+        let p = good(&self.world, "am writes", &args);
         let receipt = good(
             &self.world,
-            "bank_writes.py",
+            "am writes",
             &[
                 args[0].clone(),
                 args[1].clone(),
@@ -360,7 +361,7 @@ impl Bank {
     pub fn recovery(&self, mode: &str) -> Value {
         let p = good(
             &self.world,
-            "bank_transactions.py",
+            "am transaction",
             &[
                 "recover".into(),
                 "--repo".into(),
@@ -376,7 +377,7 @@ impl Bank {
     pub fn recover(&self, prepared: &Value, env: &[(OsString, OsString)]) -> (Output, Value) {
         command_fault(
             &self.world,
-            "bank_transactions.py",
+            "am transaction",
             &[
                 "recover".into(),
                 "--repo".into(),
@@ -609,7 +610,7 @@ impl Recall {
     pub fn retrieve(&self, request: &Value) -> (Output, Value) {
         command(
             &self.world,
-            "retrieve.py",
+            "am search",
             &[
                 "--repo".into(),
                 self.repo.as_os_str().to_owned(),
@@ -762,7 +763,7 @@ pub fn dispatch(w: &World, args: &[OsString], event: Option<&Value>) -> (i32, St
 pub fn discovery_trace(r: &Recall, paths: &[String], intent: &str) -> Value {
     let value = good(
         &r.world,
-        "discover_memory.py",
+        "am discover",
         &[
             "start".into(),
             "--repo".into(),
@@ -817,9 +818,6 @@ pub fn copy_tree(source: &Path, target: &Path) {
     for entry in fs::read_dir(source).unwrap() {
         let path = entry.unwrap().path();
         let name = path.file_name().unwrap();
-        if name == "__pycache__" || path.extension().is_some_and(|e| e == "pyc" || e == "pyo") {
-            continue;
-        }
         let info = fs::symlink_metadata(&path).unwrap();
         if info.is_dir() {
             copy_tree(&path, &target.join(name));

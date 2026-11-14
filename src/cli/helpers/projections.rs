@@ -34,7 +34,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "projection.py",
+    command: "am projection",
     module: "projections",
     parser: &PARSER,
     routes: &[],

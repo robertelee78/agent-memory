@@ -37,7 +37,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "scope_policy.py",
+    command: "am scope-policy",
     module: "scopes",
     parser: &PARSER,
     routes: &[],

@@ -21,7 +21,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "lifecycle_model.py",
+    command: "am lifecycle-model",
     module: "lifecycle",
     parser: &PARSER,
     routes: &[],

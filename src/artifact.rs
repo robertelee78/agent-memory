@@ -96,14 +96,6 @@ pub trait MigrationContract: Send + Sync {
     fn inspect(&self, root: &Path, compatibility: &Value, files: &Value) -> Result<Value>;
 }
 
-fn python_minimum(value: Option<&str>) -> bool {
-    value.is_some_and(|v| {
-        v.split_once('.').is_some_and(|(a, b)| {
-            !a.is_empty() && !b.is_empty() && a.bytes().chain(b.bytes()).all(|b| b.is_ascii_digit())
-        })
-    })
-}
-
 fn check_compatibility(spec: &Value) -> Result<()> {
     require(
         spec.as_object().is_some()
@@ -115,10 +107,8 @@ fn check_compatibility(spec: &Value) -> Result<()> {
             && strings(get(spec, "migrator_source_schemas"), true)
             && strings(get(spec, "git_required_for"), false)
             && strings(get(spec, "optional_adapters"), true)
-            && python_minimum(text(spec, "python_minimum"))
-            && get(spec, "required_python_packages") == &Value::Array(vec![])
             && get(spec, "required_agent_clients") == &Value::Array(vec![]),
-        "Compatibility must declare bounded schema/tool lists and a client-neutral standard-library core",
+        "Compatibility must declare bounded schema/tool lists and a client-neutral core",
     )?;
     command_names(spec)?;
     let empty = Value::Array(vec![]);
@@ -160,7 +150,14 @@ fn router_schema(router: &Value) -> Result<&Value> {
         .ok_or_else(|| ContractError::new("Bank router declaration lacks its schema constant"))
 }
 
-fn adapter_entry(root: &Path, relative: &str, files: &Value) -> Result<Value> {
+/// An optional adapter's entrypoint is one native command (`am <name>`)
+/// declared by the signed command surface; the pack holds no executable.
+fn adapter_entry(
+    root: &Path,
+    relative: &str,
+    files: &Value,
+    surface: Option<&dyn CommandSurface>,
+) -> Result<Value> {
     require(
         relative.starts_with("adapters/"),
         "Optional adapters must be explicitly separated",
@@ -168,7 +165,7 @@ fn adapter_entry(root: &Path, relative: &str, files: &Value) -> Result<Value> {
     let adapter = declaration(root, &string(relative), files)?;
     require(
         adapter.as_object().is_some()
-            && text(&adapter, "schema") == Some("agent-memory/optional-adapter-v1")
+            && text(&adapter, "schema") == Some("agent-memory/optional-adapter-v2")
             && text(&adapter, "name").is_some_and(|v| !v.is_empty())
             && matches!(text(&adapter, "kind"), Some("service" | "client-discovery"))
             && strings(get(&adapter, "commands"), true)
@@ -176,10 +173,24 @@ fn adapter_entry(root: &Path, relative: &str, files: &Value) -> Result<Value> {
             && text(&adapter, "unavailable_behavior").is_some_and(|v| !v.is_empty()),
         "Invalid optional adapter declaration",
     )?;
+    let surface = surface.ok_or_else(|| {
+        ContractError::new(
+            "Signed command surface provider is not registered; adapter entrypoint validation refuses",
+        )
+    })?;
+    let name = text(&adapter, "entrypoint")
+        .and_then(|v| v.strip_prefix("am "))
+        .filter(|name| !name.is_empty() && !name.contains(char::is_whitespace));
+    let declared = match name {
+        Some(name) => surface
+            .command(name)
+            .map_err(|error| ContractError::new(error.detail))?
+            .is_some(),
+        None => false,
+    };
     require(
-        text(&adapter, "entrypoint")
-            .is_some_and(|v| v.starts_with("scripts/") && files.get(v).is_some()),
-        "Optional adapter entrypoint is missing from the portable artifact",
+        declared,
+        "Optional adapter entrypoint must be an am command declared by the command surface",
     )?;
     // Python `{'path': relative, **adapter}`: `path` keeps the first position.
     let mut entry = vec![("path".to_string(), string(relative))];
@@ -209,6 +220,7 @@ fn file_count(files: &Value) -> Result<usize> {
 fn inspect_validation(
     root: &Path,
     validation: &Value,
+    surface: Option<&dyn CommandSurface>,
     migration: Option<&dyn MigrationContract>,
 ) -> Result<Value> {
     let files = get(validation, "files");
@@ -230,7 +242,7 @@ fn inspect_validation(
     )?;
     let mut adapters = Vec::new();
     for relative in members(get(&spec, "optional_adapters")) {
-        adapters.push(adapter_entry(root, relative, files)?);
+        adapters.push(adapter_entry(root, relative, files, surface)?);
     }
     let digest = files_digest(files)?;
     let count = file_count(files)?;
@@ -275,8 +287,14 @@ fn runtime_error(detail: &str) -> Invalid {
 }
 
 pub fn inspect(pack: &Path) -> pack_validation::Result<Value> {
-    pack_validation::with_validated(pack, |root, v| {
-        inspect_validation(root, v, Some(&crate::migration_contract::Bundled)).map_err(pack_error)
+    pack_validation::with_validated(pack, |root, v, surface| {
+        inspect_validation(
+            root,
+            v,
+            Some(surface),
+            Some(&crate::migration_contract::Bundled),
+        )
+        .map_err(pack_error)
     })
 }
 
@@ -286,7 +304,7 @@ pub fn inspect_with(
     migration: Option<&dyn MigrationContract>,
 ) -> pack_validation::Result<Value> {
     pack_validation::with_validated_surface(pack, surface, |root, v| {
-        inspect_validation(root, v, migration).map_err(pack_error)
+        inspect_validation(root, v, surface, migration).map_err(pack_error)
     })
 }
 
@@ -365,9 +383,14 @@ fn with_binary(inspection: Value, binary: &Path) -> pack_validation::Result<Valu
 /// `inspect` with the installed binary bound into `files`, `file_count` and
 /// `artifact_digest`; the binary is read inside the pack's fresh-inventory bracket.
 pub fn inspect_runtime(pack: &Path, binary: &Path) -> pack_validation::Result<Value> {
-    pack_validation::with_validated(pack, |root, v| {
-        let inspection = inspect_validation(root, v, Some(&crate::migration_contract::Bundled))
-            .map_err(pack_error)?;
+    pack_validation::with_validated(pack, |root, v, surface| {
+        let inspection = inspect_validation(
+            root,
+            v,
+            Some(surface),
+            Some(&crate::migration_contract::Bundled),
+        )
+        .map_err(pack_error)?;
         with_binary(inspection, binary)
     })
 }
@@ -379,7 +402,7 @@ pub fn inspect_runtime_with(
     migration: Option<&dyn MigrationContract>,
 ) -> pack_validation::Result<Value> {
     pack_validation::with_validated_surface(pack, surface, |root, v| {
-        let inspection = inspect_validation(root, v, migration).map_err(pack_error)?;
+        let inspection = inspect_validation(root, v, surface, migration).map_err(pack_error)?;
         with_binary(inspection, binary)
     })
 }

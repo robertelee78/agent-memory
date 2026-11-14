@@ -10,6 +10,9 @@ use std::sync::{Arc, RwLock};
 
 pub const READER_CAPABILITY: &str = "omp-stored-source-v2";
 pub const HISTORICAL_READER_CAPABILITY: &str = "omp-harness-v1";
+/// The one stock omp release the native integration targets (tag commit
+/// b7fe8c7f); `hooks/omp.ts` gates on the same exact `VERSION` string.
+pub const SUPPORTED_VERSION: &str = "18.20.1";
 pub const MAX_RECEIPT: usize = 1024 * 1024;
 pub const MAX_MANUAL: usize = 16 * 1024 * 1024;
 pub const MAX_ACTIVATION: usize = 2 * 1024 * 1024;
@@ -480,7 +483,7 @@ pub fn diagnostics(repo: &Path, receipt: Option<&Value>) -> Result<Value> {
         ("native_loading".into(), string("not-live-verified")),
         (
             "supported_version_targets".into(),
-            Value::Array(["18.16.0", "18.19.0"].into_iter().map(string).collect()),
+            Value::Array(vec![string(SUPPORTED_VERSION)]),
         ),
         (
             "source_assessment".into(),

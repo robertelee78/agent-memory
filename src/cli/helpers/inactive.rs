@@ -44,7 +44,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "inactive_records.py",
+    command: "am inactive-records",
     module: "inactive",
     parser: &PARSER,
     routes: &[],

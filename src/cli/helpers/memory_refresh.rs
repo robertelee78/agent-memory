@@ -67,7 +67,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "refresh_memory.py",
+    command: "am refresh",
     module: "memory_refresh",
     parser: &PARSER,
     routes: &[],

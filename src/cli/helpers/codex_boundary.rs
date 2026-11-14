@@ -25,7 +25,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "codex_boundary.py",
+    command: "am codex-boundary",
     module: "codex_boundary",
     parser: &PARSER,
     routes: &[],

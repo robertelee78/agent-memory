@@ -108,7 +108,7 @@ Cargo); it is separate from the signed channel and is not updated by the updater
 
 ### Explicit native omp binding
 
-The native omp integration targets **18.16.0 and 18.19.0**, not an inferred
+The native omp integration targets exactly **18.20.1**, not an inferred
 version range, and is opt-in, separate from
 `all`. From a trusted complete candidate, preview `install --check --presets omp
 --omp-agent-dir /absolute/omp-agent --omp-peers-upgraded` before applying the
@@ -124,7 +124,7 @@ or successful capture/publication. Actual supported-platform/mode/peer claims
 must be backed by the signed release's independent real-native qualification;
 the runnable minimal smoke is not the complete release matrix.
 
-On stock omp 18.16.0, an advisory stop-hook continuation may be lost on
+On stock omp 18.20.1, an advisory stop-hook continuation may be lost on
 interruption or blocked before delivery. Retained source work remains pending
 until genuinely offered and assessed; a requested wake, a pending reference or
 a later offer does not establish that earlier guidance was delivered or that
@@ -132,13 +132,15 @@ assessment completed. The native guide distinguishes the source-inferred limits
 of queued guidance from actual platform qualification; other versions and modes
 must not inherit a qualification without their own evidence.
 
-Current 18.19 qualification is still pending. Write-conflict continuation sessions
+Current 18.20.1 qualification is still pending. Write-conflict continuation sessions
 are conservatively treated as forks: carried history is inherited and an
-unavailable final old view remains pending. Shutdown and own-manual-read behavior
-require current-producer qualification. The exact Linux 18.19 image is admitted
-by the same-clock guard; its earlier private probes predate the Rust runtime and
-do not qualify it, and native wake and timing qualification remain open. These
-are release blockers, not accepted
+unavailable final old view remains pending. `/clear` (the new `session_clear`
+event) discards a queued continuation; AM captures the reset and treats later
+work as not driven by its guidance. Shutdown behavior requires current-producer
+qualification. The exact 18.20.1 Linux arm64 and x86_64 images are admitted by
+the same-clock guard; a model-free arm64 probe admitted the real image and
+refused the 18.19.0 image, x86_64 is unprobed, and native wake and timing
+qualification remain open. These are release blockers, not accepted
 reductions in coverage.
 
 For a qualifying full read of the receipt-owned AM manual, the omp learning

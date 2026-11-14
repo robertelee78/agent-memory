@@ -43,7 +43,7 @@ fn preview_readonly_and_verified_write_preserves_external_state() {
     );
     good(
         &b.world,
-        "bank_contract.py",
+        "am bank",
         &["validate".into(), "--repo".into(), b.repo.into_os_string()],
     );
 }
@@ -87,7 +87,7 @@ fn lost_response_finishes_cleanup_without_replacing_or_switching_outcome() {
     b.unlock();
     refused(
         &b.world,
-        "bank_transactions.py",
+        "am transaction",
         &[
             "recover".into(),
             "--repo".into(),
@@ -214,7 +214,7 @@ fn raw_crlf_router_refuses_before_preview_or_journal() {
         fs::write(&router, &crlf).unwrap();
         refused(
             &b.world,
-            "bank_contract.py",
+            "am bank",
             &[
                 "validate".into(),
                 "--repo".into(),
@@ -224,7 +224,7 @@ fn raw_crlf_router_refuses_before_preview_or_journal() {
         let error = if timing == "before-preview" {
             refused(
                 &b.world,
-                "bank_transactions.py",
+                "am transaction",
                 &[
                     "preview".into(),
                     "--repo".into(),
@@ -327,10 +327,7 @@ fn single_reader_and_writer_share_component_spelling_validation() {
     fs::write(b.bank.join("topics/Case.md"), "# Physical topic\n").unwrap();
     fs::write(b.bank.join("MEMORY.md"), string(&routed, "MEMORY.md")).unwrap();
     let before = physical(&b.bank);
-    for (helper, verb) in [
-        ("bank_contract.py", "validate"),
-        ("bank_writes.py", "inspect"),
-    ] {
+    for (helper, verb) in [("am bank", "validate"), ("am writes", "inspect")] {
         refused(
             &b.world,
             helper,
@@ -341,7 +338,7 @@ fn single_reader_and_writer_share_component_spelling_validation() {
     fs::write(&path, "# New focus\n").unwrap();
     refused(
         &b.world,
-        "bank_writes.py",
+        "am writes",
         &[
             "preview".into(),
             "--repo".into(),
@@ -377,7 +374,7 @@ fn bank_root_alias_refuses_and_unique_unicode_target_works() {
     let before = physical(&alias);
     refused(
         &b.world,
-        "bank_writes.py",
+        "am writes",
         &[
             "inspect".into(),
             "--repo".into(),

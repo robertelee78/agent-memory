@@ -1,7 +1,7 @@
 //! Native client hook commands: `am hook <name>`.
 //!
 //! Baseline: the portable pack's `hooks/*.py` entry scripts, which Codex,
-//! Claude and OpenCode started through `/bin/sh hooks/python3.sh`. Each hook
+//! Claude and OpenCode started through the pack's interpreter launcher. Each hook
 //! here keeps its baseline stdin bound, stdout/stderr bytes and exit status;
 //! no hook output is ever a capture, admission or publication receipt.
 //!

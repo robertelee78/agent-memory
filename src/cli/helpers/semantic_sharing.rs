@@ -148,7 +148,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "reconcile_memory.py",
+    command: "am semantic",
     module: "semantic_sharing",
     parser: &PARSER,
     routes: &[],

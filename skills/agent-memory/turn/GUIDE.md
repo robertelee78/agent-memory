@@ -59,7 +59,7 @@ that exact reference first. Assessment MUST use the actual registered
 `observation_id` and digest, never the enrollment reference as a fabricated ID;
 if registration is still pending, leave it pending for a later governed boundary.
 
-In supported omp 18.16 stored-source captures, `--source` MAY show a closed
+In supported omp 18.20.1 stored-source captures, `--source` MAY show a closed
 `instruction_context` annotation with empty content for a full read of the
 receipt-owned installed AM manual. Its receipt, artifact and manual digests
 describe the observer's historical comparison; they do not authenticate the

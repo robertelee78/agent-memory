@@ -51,7 +51,7 @@ fn assess(w: &World, request: &Value) -> (agent_memory::process::Output, Value) 
     let before = fs::read(&path).unwrap();
     let result = command(
         w,
-        "authority_policy.py",
+        "am authority-policy",
         &[
             "assess".into(),
             "--input".into(),

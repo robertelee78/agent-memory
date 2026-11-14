@@ -273,6 +273,8 @@ pub fn segment_inventory(site: &Site<'_>, directory: &Path, cursor: &Value) -> R
             format!("omp:legacy-metadata:{lifecycle}"),
         )?]);
     }
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.join.after-origin-gate")?;
     let manifest = if lexists(&directory.join("segment.json"))? {
         Some(manifest_value(directory, cursor)?)
     } else {
@@ -388,7 +390,10 @@ pub fn segment_inventory(site: &Site<'_>, directory: &Path, cursor: &Value) -> R
     for enrollment in &enrollments {
         let observed = (|| -> Result<(Option<Value>, Vec<Value>)> {
             if site.context.is_none() {
-                return registration(site, directory, cursor, enrollment, false);
+                let value = registration(site, directory, cursor, enrollment, false)?;
+                #[cfg(feature = "dev-tools")]
+                crate::bank_writes::fault("omp.join.after-unscoped-lookup")?;
+                return Ok(value);
             }
             if state.is_none() && !inventory_failed {
                 let observation = (|| {

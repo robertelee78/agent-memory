@@ -1,24 +1,29 @@
 # Native omp integration: setup, limits and qualification
 
-The targets are **omp 18.16.0 and 18.19.0**, not an inferred version range. The
+The target is exactly **omp 18.20.1**, not an inferred version range. The
 [source-bound interface study](../research/2026-11-04-omp-native-interfaces.md)
-pins the historical 18.16 source and binary. The current 18.19 target names
-upstream `04cd1a7549a02d62ad1d24826198d52507595683` and macOS arm64 binary
-`d469628ae8b847617087cc987a628868e4cac53deb5f99451c8cfc4eec5e7e8d`.
-An actual model-free RPC startup observed its public SDK version, v3 session
-header, parser keys/UTF-8 byte size and a single-entry leaf-selector case. This does not
-qualify AM source observation, automatic wake, another platform or model use.
-Historical 18.16 results do not qualify 18.19. Source/binary equivalence remains
-unproven. This document is
+pins the historical 18.16 source and binary. The current target names upstream
+tag commit `b7fe8c7f43c378faa0863e79f5509f9dde16ad9a` and release assets
+`omp-darwin-arm64` `2a080bfd790309001ea001140382a5850be284e984c2f8678a81a41a37e77490`,
+`omp-linux-arm64` `21305158dbdecfa771b72a62254831d60be6b96726245877c25324a4b9988f76`
+and `omp-linux-x64` `24bef5a44d6db0d8f6e8f677404b9a7f1dde3c5e500c435290a3be71bb4dec2a`.
+18.16.0 and 18.19.0 now refuse. Model-free startup of the installed adapter
+under the real 18.20.1 macOS binary passed the version gate (18.19.0 reported
+inactive). This does not qualify AM source observation, automatic wake, another
+platform or model use. Historical 18.16 results do not qualify 18.20.1.
+Source/binary equivalence remains unproven. This document is
 an executable qualification recipe and support contract, **not a claim that
 its matrix has passed**. Signed release evidence must name the actual candidate,
 installed artifact, binary, provider, platform, client mode and independent reviewer.
 
-### Current 18.19 qualification blockers
+### Current 18.20.1 qualification blockers
 
 The 18.16-specific failed/skipped-lost/deferred acceptance bindings in the
-integration design remain pending re-review against 18.19's `04cd1a7` source.
-They do not transfer merely because the version gate admits this target.
+integration design remain pending independent re-review against 18.20.1's
+`b7fe8c7` source. The session-stop continuation, requeue and abort code is
+textually unchanged from 18.16 apart from moved lines; this is source
+inference, not a review verdict. They do not transfer merely because the
+version gate admits this target.
 
 - On a session-file write conflict, stock `continuationOf` creates a new session
   ID and parent-session header while carrying the transcript. AM conservatively
@@ -27,18 +32,23 @@ They do not transfer merely because the version gate admits this target.
 - Shutdown handlers start in load order but complete concurrently under stock's
   two-second cap. AM's 1.8-second flush cannot prove that another handler did not
   append after its final capture; current-producer qualification remains pending.
-- The Linux clock gate admits only the exact reviewed 18.16 and 18.19 arm64
-  images. The 18.19 image is
-  `61826bf89c2c0512417fee05fa2f486e60ee11b23ea95a17257a6c49edb6b8d5`.
-  The earlier private clock probes that exercised image rejection and
-  same-clock admission ran against the superseded baseline runtime; the Rust
-  guard (`src/omp_stream.rs`) keeps the same image allowlist and needs its own
-  probes. This is not automatic-wake, elapsed-rate, native
+- `/clear` emits the new `session_clear` event after stock drops queued hidden
+  turns, including a session-stop continuation. The adapter captures the stored
+  reset boundary, cancels any clock window and no longer attributes later work
+  to its own guidance. A native `/clear` control (TUI only) is still required.
+- `/fork` now aborts an active response before forking; the abort and fork
+  paths are the existing skipped/lost and transition cases.
+- The Linux clock gate admits only the exact 18.20.1 arm64 and x86_64 glibc
+  images (musl images refuse). A model-free arm64 probe of the Rust guard under
+  the real image admitted the window and refused the 18.19.0 image; x86_64
+  probes are still required. This is not automatic-wake, elapsed-rate, native
   workflow or timing qualification; those cells remain required.
-- Exact recognition of receipt-owned manual reads is not yet qualified for
-  18.19. Unknown renderer differences remain ordinary screened evidence/gaps,
-  not instruction-context provenance. Qualify the actual result, not a
-  normalized or reconstructed approximation.
+- A controlled stub-provider run showed the 18.20.1 full `read` carrier for the
+  owned `SKILL.md` and a canonical `GUIDE.md` equal to the existing renderer
+  recipe on copy and link installs. The renderer ID stays
+  `omp-18.16-full-skill-v1` pending decision; a real native read is still
+  required. Unknown renderer differences remain ordinary screened evidence/gaps,
+  not instruction-context provenance.
 
 These are unresolved release obligations, not accepted scope exclusions or a
 replacement for the existing native matrix.
@@ -126,7 +136,7 @@ boundary still captures a FULL checked stored view immediately. The last FULL
 view, never a hint, anchors OLD transition coverage. Shared unsafe screening
 remains unchanged, and unknown secrets or unavailable payloads remain limits.
 
-For the supported omp 18.16 stored-source renderer, a fresh full `read` of
+For the supported omp 18.20.1 stored-source renderer, a fresh full `read` of
 `skill://agent-memory` or `skill://agent-memory/<relative>/GUIDE.md` can be
 recognized as installed operating context only when its unique invocation/result
 pair and complete rendered content match the internally verified receipt-owned
@@ -354,7 +364,7 @@ Prepare a disposable existing bank/clone through the normal identity/init
 skill. Do not point a smoke at production project memory. Install this exact
 candidate into an explicit isolated native root, preserving real provider access
 and normal native permissions. The following driver verifies that the exact
-selected binary reports exactly **`omp/18.16.0` or `omp/18.19.0` before
+selected binary reports exactly **`omp/18.20.1` before
 launching RPC or using a provider/model**.
 It discovers the actual installed binding, uses two real RPC human turns and
 the real model/tools, checks original answers once, and requires both exact

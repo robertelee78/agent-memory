@@ -58,7 +58,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "checkpoint.py",
+    command: "am checkpoint",
     module: "checkpoint",
     parser: &PARSER,
     routes: &[],

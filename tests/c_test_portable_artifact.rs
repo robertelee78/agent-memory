@@ -46,17 +46,21 @@ fn complete_copy_keeps_identity_and_explicit_optional_prerequisites() {
         get(compatibility, "readable_bank_schemas"),
         &Value::Array(vec![Value::String("agent-memory/v1".into())])
     );
-    for key in [
-        "migrator_source_schemas",
-        "required_agent_clients",
-        "required_python_packages",
-    ] {
+    for key in ["migrator_source_schemas", "required_agent_clients"] {
         assert_eq!(get(compatibility, key), &Value::Array(vec![]));
+    }
+    // Rust-only runtime: no interpreter or interpreter-package declaration.
+    for key in ["python_minimum", "required_python_packages"] {
+        assert!(compatibility.get(key).is_none(), "{key}");
     }
     let adapter = &get(&copy, "optional_adapters").as_array().unwrap()[0];
     assert_eq!(
         get(adapter, "commands"),
         &Value::Array(vec![Value::String("gh".into())])
+    );
+    assert_eq!(
+        get(adapter, "entrypoint"),
+        &Value::String("am publish".into())
     );
     assert_eq!(get(adapter, "requires_authentication"), &Value::Bool(true));
     for key in [

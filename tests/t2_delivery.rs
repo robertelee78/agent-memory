@@ -1241,12 +1241,11 @@ struct NoExecutableSurface;
 impl agent_memory::pack_validation::CommandSurface for NoExecutableSurface {
     fn dispatch(
         &self,
-        script: &str,
-        _files: &agent_memory::pack_validation::Inventory,
+        command: &str,
     ) -> agent_memory::pack_validation::Result<agent_memory::pack_validation::Dispatch> {
         Err(agent_memory::pack_validation::Invalid::new(
             "dispatch",
-            script,
+            command,
             "Fixture declares no executable command routes",
         ))
     }
@@ -1291,7 +1290,7 @@ fn builder_preflight_uses_runtime_inspection_for_all_three_prebuilt_targets() {
         }
     }
     files.insert("inspect/GUIDE.md".into(), (operation.into_bytes(), 0o644));
-    files.insert("schemas/runtime-compatibility.json".into(),(br#"{"schema":"agent-memory/runtime-compatibility-v1","python_minimum":"3.11","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"git_required_for":["sharing"],"optional_adapters":[],"required_python_packages":[],"required_agent_clients":[]}"#.to_vec(),0o644));
+    files.insert("schemas/runtime-compatibility.json".into(),(br#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"git_required_for":["sharing"],"optional_adapters":[],"required_agent_clients":[]}"#.to_vec(),0o644));
     files.insert(
         "schemas/bank-router.json".into(),
         (

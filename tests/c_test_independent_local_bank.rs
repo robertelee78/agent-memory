@@ -120,7 +120,7 @@ fn initialized() -> (World, PathBuf, PathBuf, String) {
     .unwrap();
     let p = good(
         &w,
-        "developer_identity.py",
+        "am developer",
         &[
             "preview".into(),
             "--create".into(),
@@ -130,7 +130,7 @@ fn initialized() -> (World, PathBuf, PathBuf, String) {
     );
     good(
         &w,
-        "developer_identity.py",
+        "am developer",
         &[
             "apply".into(),
             "--proposal".into(),
@@ -139,7 +139,7 @@ fn initialized() -> (World, PathBuf, PathBuf, String) {
     );
     let p = good(
         &w,
-        "scope_binding.py",
+        "am identity",
         &[
             "preview".into(),
             "--repo".into(),
@@ -152,7 +152,7 @@ fn initialized() -> (World, PathBuf, PathBuf, String) {
     );
     let bound = good(
         &w,
-        "scope_binding.py",
+        "am identity",
         &[
             "apply".into(),
             "--proposal".into(),
@@ -358,7 +358,7 @@ fn initialize_checkpoint_resume_and_search_without_global_services() {
     );
     let checked = good(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -430,7 +430,7 @@ fn version_export_and_plain_file_repair_after_state_loss() {
     let validate = || {
         command(
             &w,
-            "bank_contract.py",
+            "am bank",
             &[
                 "validate".into(),
                 "--repo".into(),
@@ -507,7 +507,7 @@ fn interrupted_local_checkpoint_recovers_from_retained_receipt_evidence() {
     assert!(bank.join(".agent-memory.lock").exists());
     refused(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -516,7 +516,7 @@ fn interrupted_local_checkpoint_recovers_from_retained_receipt_evidence() {
     );
     let unlock = good(
         &w,
-        "bank_writes.py",
+        "am writes",
         &[
             "recover".into(),
             "--repo".into(),
@@ -525,7 +525,7 @@ fn interrupted_local_checkpoint_recovers_from_retained_receipt_evidence() {
     );
     good(
         &w,
-        "bank_writes.py",
+        "am writes",
         &[
             "recover".into(),
             "--repo".into(),
@@ -549,7 +549,7 @@ fn interrupted_local_checkpoint_recovers_from_retained_receipt_evidence() {
     assert!(!bank.join(".agent-memory.lock").exists());
     let checked = good(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),

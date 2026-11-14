@@ -192,7 +192,6 @@ pub fn capture(am: &Path, pack: &Path) -> Result<Value> {
     let files = Value::Object(
         inventory
             .iter()
-            .filter(|(path, _)| !path.split('/').any(|part| part == "__pycache__"))
             .map(|(path, (raw, _))| (path.clone(), string(release::digest(raw))))
             .collect(),
     );

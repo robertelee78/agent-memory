@@ -137,7 +137,7 @@ fn fresh_clone_resumes_from_bounded_canonical_markdown_without_state() {
     delete_generated(&w);
     let receipt = good(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -204,7 +204,7 @@ fn fresh_clone_resumes_from_bounded_canonical_markdown_without_state() {
     );
     let checked = good(
         &w,
-        "bank_contract.py",
+        "am bank",
         &["validate".into(), "--repo".into(), copy.into_os_string()],
     );
     assert_eq!(string(&checked, "project_id"), PROJECT);
@@ -226,7 +226,7 @@ fn state_loss_never_repairs_or_hides_an_interrupted_bank() {
         .unwrap();
         let receipt = refused(
             &w,
-            "bank_contract.py",
+            "am bank",
             &[
                 "validate".into(),
                 "--repo".into(),
@@ -244,7 +244,7 @@ fn state_loss_never_repairs_or_hides_an_interrupted_bank() {
     }
     let receipt = good(
         &w,
-        "bank_contract.py",
+        "am bank",
         &["validate".into(), "--repo".into(), repo.into_os_string()],
     );
     assert_eq!(string(&receipt, "project_id"), PROJECT);

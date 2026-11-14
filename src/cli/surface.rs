@@ -7,12 +7,12 @@ use super::parser::{Action, Arg, Default, Parser};
 use super::{Entry, Helper, table};
 use crate::codec::json::{self, Value};
 use crate::lifecycle::{object, string};
-use crate::pack_validation::{self, CommandRoute, CommandSurface, Dispatch, Invalid, Inventory};
+use crate::pack_validation::{self, CommandRoute, CommandSurface, Dispatch, Invalid};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub const SCHEMA: &str = "agent-memory/command-surface-v1";
-/// The root parser's baseline helper (installation.main).
-pub const ROOT_SCRIPT: &str = "installer.py";
+/// The root parser's native command (installation's own subcommands).
+pub const ROOT_COMMAND: &str = "am";
 pub const ROOT_MODULE: &str = "installation";
 
 fn strings<'a>(values: impl IntoIterator<Item = &'a str>) -> Value {
@@ -108,13 +108,13 @@ fn parser_value(parser: &Parser<'_>) -> Value {
 fn route_value(name: &str, helper: &Helper, prefix: &[&str]) -> Value {
     object([
         ("name", string(name)),
-        ("helper", string(helper.script)),
+        ("helper", string(helper.command)),
         ("prefix", strings(prefix.iter().copied())),
     ])
 }
 
 fn collect_helpers(helper: &'static Helper, seen: &mut Vec<&'static Helper>) {
-    if seen.iter().any(|known| known.script == helper.script) {
+    if seen.iter().any(|known| known.command == helper.command) {
         return;
     }
     seen.push(helper);
@@ -148,7 +148,7 @@ pub fn declaration() -> Value {
         .iter()
         .map(|helper| {
             object([
-                ("script", string(helper.script)),
+                ("command", string(helper.command)),
                 ("module", string(helper.module)),
                 ("parser", parser_value(helper.parser)),
                 (
@@ -174,7 +174,7 @@ pub fn declaration() -> Value {
         (
             "root",
             object([
-                ("script", string(ROOT_SCRIPT)),
+                ("command", string(ROOT_COMMAND)),
                 ("module", string(ROOT_MODULE)),
                 ("description", string(super::ROOT_DESCRIPTION)),
             ]),
@@ -262,18 +262,22 @@ fn walk(
     Ok(())
 }
 
+/// A declared helper command: `am ` followed by one lowercase command name.
+fn helper_command(value: &str) -> bool {
+    value.strip_prefix("am ").is_some_and(|name| {
+        name.bytes().next().is_some_and(|b| b.is_ascii_lowercase())
+            && name
+                .bytes()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    })
+}
+
 fn routes(values: &[Value]) -> pack_validation::Result<BTreeMap<String, CommandRoute>> {
     let mut routes = BTreeMap::new();
     for route in values {
         let helper = text(route, "helper")?;
         let prefix = text_items(route, "prefix")?;
-        let valid_helper = helper.strip_suffix(".py").is_some_and(|stem| {
-            stem.bytes().next().is_some_and(|b| b.is_ascii_lowercase())
-                && stem
-                    .bytes()
-                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
-        });
-        if !valid_helper || prefix.len() > 1 {
+        if !helper_command(helper) || prefix.len() > 1 {
             return Err(malformed("route"));
         }
         let previous = routes.insert(
@@ -310,16 +314,17 @@ impl Declared {
             let mut flags: BTreeSet<String> = HELP.iter().map(|f| (*f).to_owned()).collect();
             walk(field(helper, "parser")?, &mut commands, &mut flags, 0)?;
             let routes = routes(array(helper, "routes")?)?;
+            let command = text(helper, "command")?;
+            if !helper_command(command) {
+                return Err(malformed("helper command"));
+            }
             let dispatch = Dispatch {
-                module: format!("scripts/agent_memory/{}.py", text(helper, "module")?),
+                module: text(helper, "module")?.to_owned(),
                 commands,
                 flags,
                 routes,
             };
-            if dispatches
-                .insert(format!("scripts/{}", text(helper, "script")?), dispatch)
-                .is_some()
-            {
+            if dispatches.insert(command.to_owned(), dispatch).is_some() {
                 return Err(malformed("duplicate helper"));
             }
         }
@@ -335,7 +340,7 @@ impl Declared {
                     let name = text(route, "name")?;
                     root_routes.push(route.clone());
                     let dispatch = dispatches
-                        .get(&format!("scripts/{}", text(route, "helper")?))
+                        .get(text(route, "helper")?)
                         .ok_or_else(|| malformed("route helper"))?
                         .clone();
                     let prefix = text_items(route, "prefix")?
@@ -370,13 +375,16 @@ impl Declared {
             }
         }
         let root_dispatch = Dispatch {
-            module: format!("scripts/agent_memory/{}.py", text(root, "module")?),
+            module: text(root, "module")?.to_owned(),
             commands,
             flags,
             routes: routes(&root_routes)?,
         };
+        if text(root, "command")? != ROOT_COMMAND {
+            return Err(malformed("root command"));
+        }
         if dispatches
-            .insert(format!("scripts/{}", text(root, "script")?), root_dispatch)
+            .insert(ROOT_COMMAND.to_owned(), root_dispatch)
             .is_some()
         {
             return Err(malformed("duplicate helper"));
@@ -387,7 +395,7 @@ impl Declared {
                     return Err(malformed("route outside commands"));
                 }
                 let child = dispatches
-                    .get(&format!("scripts/{}", route.helper))
+                    .get(&route.helper)
                     .ok_or_else(|| malformed("route helper"))?;
                 if route
                     .prefix
@@ -409,18 +417,19 @@ impl Declared {
         Self::from_value(&declaration())
     }
 
-    pub fn scripts(&self) -> impl Iterator<Item = &str> {
+    /// Every declared helper command, including the root `am`.
+    pub fn helper_commands(&self) -> impl Iterator<Item = &str> {
         self.dispatches.keys().map(String::as_str)
     }
 }
 
 impl CommandSurface for Declared {
-    fn dispatch(&self, script: &str, _files: &Inventory) -> pack_validation::Result<Dispatch> {
-        let dispatch = self.dispatches.get(script).ok_or_else(|| {
+    fn dispatch(&self, command: &str) -> pack_validation::Result<Dispatch> {
+        let dispatch = self.dispatches.get(command).ok_or_else(|| {
             Invalid::new(
                 "dispatch",
-                script,
-                "Helper is not declared by the signed command surface",
+                command,
+                "Helper command is not declared by the signed command surface",
             )
         })?;
         Ok(dispatch.clone())

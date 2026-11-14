@@ -84,7 +84,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "record_contract.py",
+    command: "am record-contract",
     module: "records",
     parser: &PARSER,
     routes: &[],

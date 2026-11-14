@@ -432,3 +432,107 @@ impl DeliveryWindow<'_> {
         }
     }
 }
+
+#[cfg(all(test, feature = "dev-tools"))]
+mod b3_tests {
+    use super::*;
+    use crate::lifecycle::{object, string};
+
+    // obligation: tests/contracts/test_omp_source_phase.py::LateWindowControls.test_nonce_cancel_replacement_eof_output_loss_and_one_shot_lookup
+    #[test]
+    fn b3_late_nonce_lookup_is_one_shot_and_revoked_by_real_controls() {
+        for mode in [
+            "early",
+            "late",
+            "cancel",
+            "replace",
+            "eof",
+            "output-loss",
+            "closed",
+            "wrong-nonce",
+        ] {
+            let instance = crate::host::uuid4().unwrap();
+            let writer = Arc::new(crate::omp_stream::ResponseWriter::unstarted(
+                &instance,
+                vec![],
+            ));
+            let recipient = writer.clone();
+            let owner = ClockWindows::new(
+                &instance,
+                Arc::new(move || recipient.live()),
+                Platform::Darwin,
+                Arc::new(crate::clock::monotonic_ns),
+                None,
+            );
+            let nonce = crate::host::uuid4().unwrap();
+            let late = LateNativeDeliveryWindow::new(
+                owner.clone(),
+                if mode == "wrong-nonce" {
+                    "00000000-0000-4000-8000-000000000001"
+                } else {
+                    &nonce
+                },
+            )
+            .unwrap();
+            if mode == "early" {
+                assert!(!late.reserve());
+            }
+            let now = crate::clock::monotonic_ns();
+            owner
+                .control(
+                    "CLOCK",
+                    &object([
+                        ("nonce", string(&nonce)),
+                        ("j0", string(now.to_string())),
+                        ("j_deadline", string((now + 950_000_000).to_string())),
+                    ]),
+                    writer.as_ref(),
+                )
+                .unwrap();
+            owner
+                .control(
+                    "CLOCK-ACK",
+                    &object([
+                        ("nonce", string(&nonce)),
+                        ("j0", string(now.to_string())),
+                        ("j3", string(crate::clock::monotonic_ns().to_string())),
+                    ]),
+                    writer.as_ref(),
+                )
+                .unwrap();
+            match mode {
+                "cancel" => owner
+                    .control(
+                        "CANCEL",
+                        &object([("nonce", string(&nonce))]),
+                        writer.as_ref(),
+                    )
+                    .unwrap(),
+                "replace" => {
+                    let now = crate::clock::monotonic_ns();
+                    owner
+                        .control(
+                            "CLOCK",
+                            &object([
+                                ("nonce", string(crate::host::uuid4().unwrap())),
+                                ("j0", string(now.to_string())),
+                                ("j_deadline", string((now + 950_000_000).to_string())),
+                            ]),
+                            writer.as_ref(),
+                        )
+                        .unwrap();
+                }
+                "eof" => owner.end(),
+                "output-loss" => crate::omp_stream::Responder::finish(writer.as_ref()),
+                "closed" => late.close(),
+                _ => (),
+            }
+            assert_eq!(late.reserve(), mode == "late", "{mode}");
+            assert!(!late.reserve());
+            assert_eq!(late.reservation_started(), mode == "late");
+            late.close();
+            assert_eq!(late.reservation_started(), mode == "late");
+            owner.end();
+        }
+    }
+}

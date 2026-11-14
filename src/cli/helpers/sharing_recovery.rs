@@ -60,7 +60,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "sharing_recovery.py",
+    command: "am exchange",
     module: "sharing_recovery",
     parser: &PARSER,
     routes: &[],

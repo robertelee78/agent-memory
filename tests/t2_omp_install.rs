@@ -632,3 +632,31 @@ fn private_test_roots_are_canonical_and_owner_only() {
         0o700
     );
 }
+
+/// The receipt-owned adapter's runtime gate admits exactly the Rust pin, and
+/// its stock 18.20.1 `session_clear` handler captures the stored reset boundary
+/// before dropping the own-guidance request that `/clear` discarded.
+#[test]
+fn adapter_gates_on_the_single_supported_version_and_handles_session_clear() {
+    let adapter = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory/hooks/omp.ts"),
+    )
+    .unwrap();
+    assert_eq!(omp::SUPPORTED_VERSION, "18.20.1");
+    let gate = format!(
+        "const supported = () => pi.pi.VERSION === '{}' &&",
+        omp::SUPPORTED_VERSION
+    );
+    assert!(adapter.contains(&gate));
+    assert_eq!(adapter.matches("pi.pi.VERSION").count(), 1);
+    let clear = adapter
+        .split("pi.on('session_clear', (_event, ctx) => {\n")
+        .nth(1)
+        .and_then(|rest| rest.split("\n  });\n").next())
+        .unwrap();
+    assert_eq!(
+        clear,
+        "    const current = capture(ctx, 'ingest'); if (!current) return;\n    cancel(current.state); current.state.request = undefined;"
+    );
+    assert_eq!(adapter.matches("pi.on('session_clear'").count(), 1);
+}

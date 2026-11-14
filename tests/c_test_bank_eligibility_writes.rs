@@ -69,7 +69,7 @@ fn render_and_single_preview_reject_complete_utf8_source() {
     fs::write(&content, &body).unwrap();
     let (output, value) = command(
         &b.world,
-        "bank_writes.py",
+        "am writes",
         &[
             "preview".into(),
             "--repo".into(),
@@ -98,7 +98,7 @@ fn render_and_single_preview_reject_complete_utf8_source() {
     );
     let (output, value) = command(
         &b.world,
-        "bank_contract.py",
+        "am bank",
         &[
             "render".into(),
             "--input".into(),
@@ -118,7 +118,7 @@ fn single_apply_revalidates_a_schema_valid_changed_request() {
     fs::write(&content, "# Focus\n\nNew focus.\n").unwrap();
     let mut p = good(
         &b.world,
-        "bank_writes.py",
+        "am writes",
         &[
             "preview".into(),
             "--repo".into(),
@@ -133,7 +133,7 @@ fn single_apply_revalidates_a_schema_valid_changed_request() {
     let before = physical(&b.repo);
     let (output, value) = command(
         &b.world,
-        "bank_writes.py",
+        "am writes",
         &[
             "apply".into(),
             "--proposal".into(),
@@ -154,7 +154,7 @@ fn multifile_preview_and_apply_reject_complete_oversized_map() {
     put(&mut desired, "activeContext.md", text(oversized()));
     let (output, value) = command(
         &b.world,
-        "bank_transactions.py",
+        "am transaction",
         &[
             "preview".into(),
             "--repo".into(),
@@ -196,7 +196,7 @@ fn multifile_capacity_includes_record_metadata() {
     let before = physical(&b.repo);
     let (output, value) = command(
         &b.world,
-        "bank_transactions.py",
+        "am transaction",
         &[
             "preview".into(),
             "--repo".into(),
@@ -363,7 +363,7 @@ fn large_marker_rollback_and_unknown_marker_refusal() {
     let saved = physical(&b.repo);
     let error = refused(
         &b.world,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -385,7 +385,7 @@ fn large_marker_rollback_and_unknown_marker_refusal() {
     let saved = physical(&b.repo);
     let error = refused(
         &b.world,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -502,7 +502,7 @@ fn unknown_fifo_marker_is_refused_without_opening_its_body() {
     fifo(&marker);
     let (output, error) = command(
         &b.world,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),

@@ -1,8 +1,8 @@
 {
-  "schema": "agent-memory/optional-adapter-v1",
+  "schema": "agent-memory/optional-adapter-v2",
   "name": "github-publication",
   "kind": "service",
-  "entrypoint": "scripts/publish_memory.py",
+  "entrypoint": "am publish",
   "commands": ["gh"],
   "requires_authentication": true,
   "unavailable_behavior": "Automatic GitHub policy-aware publication stays pending; local Markdown memory remains usable."

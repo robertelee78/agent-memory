@@ -546,6 +546,8 @@ pub fn recover(
         LockError::Busy => ContractError::new("Lock held by another writer/recovery"),
         other => io_error(other),
     })?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.recovery.after-exclusive")?;
     let inode = guard.descriptor().stat().map_err(io_error)?;
     if !dir.stat_at(name).map_err(io_error)?.same_inode(inode) {
         return Err(ContractError::new("Lock changed before inspection"));

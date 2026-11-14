@@ -604,6 +604,8 @@ impl FiniteExecutor {
             };
             match observed {
                 Ok(result) => {
+                    #[cfg(feature = "dev-tools")]
+                    let result = fault_native_result(result)?;
                     let verified = result.get("verified") == Some(&Value::Bool(true));
                     break if verified && started.get() {
                         ("verified", "verified", Some(result))
@@ -676,11 +678,15 @@ impl FiniteExecutor {
                 Some(transport) => transport,
                 None => coverage.authority().transport()?,
             };
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.postresponse.before-drain")?;
             transport.drain_after_response(
                 coverage.repo(),
                 self.receipt.as_ref(),
                 &coverage.frame_proof,
             )?;
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.postresponse.after-drain")?;
         }
         finished
     }
@@ -734,6 +740,8 @@ impl FiniteExecutor {
             && parsed.source_kind.as_deref() == Some("session-manager")
         {
             // Optional evidence cannot change the committed source or retry its wake.
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.decision.before-retain")?;
             let request = get(&parsed.value, "request");
             let _ = super::wake::retain_wake_decision(
                 coverage, sequence, digest, request, &result, completion,
@@ -746,4 +754,56 @@ impl FiniteExecutor {
 pub(crate) fn parse_utf8(raw: &[u8]) -> Result<Value> {
     let text = std::str::from_utf8(raw).map_err(|_| err("Invalid UTF-8 finite stream frame"))?;
     crate::developer_identity::load_with_limit(text.as_bytes(), super::MAX_FRAME)
+}
+
+/// Corrupt only an already returned real result, at the baseline observer
+/// return boundary. No replacement observer or production dispatch seam.
+#[cfg(feature = "dev-tools")]
+fn fault_native_result(mut result: Value) -> Result<Value> {
+    for stage in [
+        "omp.result.continue-string",
+        "omp.result.status-private",
+        "omp.result.request-null",
+        "omp.result.status-array",
+        "omp.result.oversize",
+    ] {
+        match crate::bank_writes::fault(stage) {
+            Ok(()) => continue,
+            Err(error) if error.message() == format!("Injected write failure at {stage}") => (),
+            Err(error) => return Err(error),
+        }
+        let Value::Object(pairs) = &mut result else {
+            return Err(err("Native result fault requires an actual object result"));
+        };
+        let mut put = |key: &str, value: Value| {
+            if let Some((_, old)) = pairs.iter_mut().find(|(name, _)| name == key) {
+                *old = value;
+            } else {
+                pairs.push((key.into(), value));
+            }
+        };
+        match stage {
+            "omp.result.continue-string" => {
+                put("continue", string("yes"));
+                put("status", string("pending"));
+            }
+            "omp.result.status-private" => {
+                put("continue", Value::Bool(false));
+                put("status", string("do-not-disclose"));
+            }
+            "omp.result.request-null" => {
+                put("continue", Value::Bool(true));
+                put("request_id", Value::Null);
+            }
+            "omp.result.status-array" => {
+                put("continue", Value::Bool(false));
+                put("status", Value::Array(vec![string("do-not-disclose")]));
+            }
+            _ => put(
+                "faults",
+                Value::Array(vec![string("x".repeat(super::MAX_RESPONSE))]),
+            ),
+        }
+    }
+    Ok(result)
 }
