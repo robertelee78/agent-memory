@@ -7065,7 +7065,7 @@
   {
    "id": "tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_layout_first_native_activation_requires_reviewed_new_routes_without_omp_preseed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9845,7 +9845,7 @@
   {
    "id": "tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_lockless_orphan_native_or_malformed_sources_refuse_readonly",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9866,7 +9866,7 @@
   {
    "id": "tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_routerless_notes_and_ordinary_receipts_remain_readonly_without_native_obligations",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9887,14 +9887,14 @@
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_native_absence_preserves_interrupts_and_fatal_failures",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_native_absence_rechecks_normal_and_ordinary_failures",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9943,7 +9943,7 @@
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_unchanged_absence_allows_normal_exit_and_preserves_ordinary_error",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12932,7 +12932,7 @@
   {
    "id": "tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_saved_bank_binding_keeps_missing_repository_and_bank_required",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 129,
+   "partial": 136,
    "ported": 61,
-   "unported": 1672
+   "unported": 1665
   }
  }
 }

@@ -1,0 +1,2 @@
+private_state::register_private_state_hooks waits for installation, omp_boundary, admission
+private_state::register_recovery_quiescence waits for recovery_quiescence

@@ -33,6 +33,7 @@ pub mod migration_contract;
 pub mod model_reference;
 pub mod omp_installation;
 pub mod pack_validation;
+pub mod private_state;
 pub mod process;
 pub mod project_identity;
 pub mod records;
