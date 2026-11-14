@@ -281,8 +281,19 @@ fn set_field(value: &mut Value, key: &str, replacement: Value) {
         }
     }
 }
+/// The running installed runtime, for operations after installation.
 fn runtime_root() -> Result<PathBuf> {
     crate::cli::pack_root()
+}
+/// The runtime a lifecycle source stages or owns: its `pack` (baseline: the
+/// pack of the installer actually running, i.e. the one being installed).
+/// Lifecycle operations never locate it through an installed receipt, which a
+/// fresh installation does not have yet.
+fn staged_runtime(source: &Value) -> Result<PathBuf> {
+    let pack = text(source, "pack")
+        .filter(|pack| pack.starts_with('/'))
+        .ok_or_else(|| err("Lifecycle source does not name the runtime it stages"))?;
+    fs::canonical_path(Path::new(pack), false)
 }
 
 fn marker_value(token: &str) -> Value {
@@ -1707,11 +1718,9 @@ fn target_refs<'a>(receipt: &'a Value, path: Option<&str>) -> Vec<&'a Value> {
 }
 
 /// Baseline `complete_stored_source_activation(state)`: the committed ownership
-/// receipt authorizes an idempotent marker upgrade.
-pub fn complete_stored_source_activation(
-    state: &Path,
-    runtime_root: &Path,
-) -> installation::Result<Value> {
+/// receipt authorizes an idempotent marker upgrade, under the runtime that
+/// receipt's source staged.
+pub fn complete_stored_source_activation(state: &Path) -> installation::Result<Value> {
     let env = Environment::process();
     let services = Services::registered()?;
     let receipt = installation::read_receipt(&env, state)?;
@@ -1769,6 +1778,7 @@ pub fn complete_stored_source_activation(
         false,
     )?;
     let roots = activation_roots(&receipt)?;
+    let runtime_root = &staged_runtime(get(&receipt, "source"))?;
     // The stored-source upgrade never replaces the guarded target.
     let mut upgrade = || -> Result<Option<Value>> {
         for repo in &roots {
@@ -2133,8 +2143,8 @@ fn recover_uninstalled(state: &Path, path: &Path, mut journal: Value) -> install
 }
 
 /// Baseline `recover_native_binding(state)`: restore a disabled extension only
-/// with its actual aware runtime selected.
-pub fn recover_native_binding(state: &Path, runtime_root: &Path) -> installation::Result<()> {
+/// with its actual aware runtime (the saved receipt's source) selected.
+pub fn recover_native_binding(state: &Path) -> installation::Result<()> {
     let path = state.join(TRANSITION_FILE);
     if !lexists(&path)? {
         return Ok(());
@@ -2187,6 +2197,7 @@ pub fn recover_native_binding(state: &Path, runtime_root: &Path) -> installation
             return Err(err("Native recovery selected an omp-unaware runtime").into());
         }
         let identity = get(&journal, "identity").clone();
+        let runtime_root = &staged_runtime(get(&old, "source"))?;
         private_state::activation_guard(
             Some(&old),
             Some(get(&old, "source")),
@@ -2266,24 +2277,27 @@ pub fn native_recovery_expected(state: &Path, target: &str) -> installation::Res
     Ok(Some(get(single, "identity").clone()))
 }
 
-/// The production `installation::OmpBoundary` seam: the executing runtime pack
-/// is the registered `cli::pack_root`.
+/// The production `installation::OmpBoundary` seam: lifecycle operations use
+/// the runtime their plan or committed receipt stages, never `cli::pack_root`
+/// (a fresh installation has no receipt that owns the running executable).
 pub struct InstallationBoundary;
 impl installation::OmpBoundary for InstallationBoundary {
     fn capability(&self) -> &str {
         CAPABILITY
     }
     fn native_transition(&self, plan: &mut Value, check: bool) -> installation::Result<Value> {
-        native_transition(plan, check, &runtime_root()?)
+        let runtime_root = staged_runtime(get(plan, "source"))?;
+        native_transition(plan, check, &runtime_root)
     }
     fn native_activation(&self, plan: &mut Value, check: bool) -> installation::Result<Value> {
-        Ok(native_activation(plan, check, &runtime_root()?)?)
+        let runtime_root = staged_runtime(get(plan, "source"))?;
+        Ok(native_activation(plan, check, &runtime_root)?)
     }
     fn finish_native_transition(&self, plan: &Value) -> installation::Result<()> {
         finish_native_transition(plan)
     }
     fn recover_native_binding(&self, state: &Path) -> installation::Result<()> {
-        recover_native_binding(state, &runtime_root()?)
+        recover_native_binding(state)
     }
     fn native_recovery_expected(
         &self,
@@ -2293,7 +2307,7 @@ impl installation::OmpBoundary for InstallationBoundary {
         native_recovery_expected(state, path)
     }
     fn complete_stored_source_activation(&self, state: &Path) -> installation::Result<Value> {
-        complete_stored_source_activation(state, &runtime_root()?)
+        complete_stored_source_activation(state)
     }
 }
 

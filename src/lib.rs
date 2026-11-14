@@ -34,6 +34,7 @@ pub mod error;
 pub mod fs;
 pub mod handoff;
 pub mod hook_failure;
+pub mod hooks;
 pub mod host;
 pub mod identity_git;
 pub mod inactive;

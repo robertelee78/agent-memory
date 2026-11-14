@@ -4,20 +4,30 @@ import { execFile } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { homedir } from 'node:os'
-import { realpathSync } from 'node:fs'
+import { realpathSync, statSync } from 'node:fs'
 
 const MAX_WINDOW_BYTES = 16 * 1024
 const FIELD = 'agent_memory_boundary'
 const SCHEMA = 'agent-memory/opencode-boundary-v1'
 
+// The owned runtime's am binary beside this pack (`<root>/skills/agent-memory`):
+// a signed release root (`bin/am`) or a development source (`target/release/am`).
+function runtimeExecutable() {
+  const root = dirname(dirname(dirname(dirname(realpathSync(fileURLToPath(import.meta.url))))))
+  for (const candidate of [join(root, 'bin', 'am'), join(root, 'target', 'release', 'am')]) {
+    try { if (statSync(candidate).isFile()) return candidate } catch {}
+  }
+  return null
+}
+
 async function reserveTurn(session, source, action = 'reserve', repo = null, publication_request = null, assessment = null, fingerprint = null, offset = 0, refresh_current = false) {
   let root
   try { root = realpathSync(process.env.AGENT_MEMORY_STATE_HOME || join(process.env.XDG_STATE_HOME || join(homedir(), '.local', 'state'), 'agent-memory')) } catch { return {status:'pending', reason:'state-root-unavailable'} }
-  const hookDirectory = dirname(fileURLToPath(import.meta.url))
-  const helper = join(hookDirectory, 'boundary_ledger.py')
-  const launcher = join(hookDirectory, 'python3.sh')
+  let executable
+  try { executable = runtimeExecutable() } catch { executable = null }
+  if (!executable) return {status:'pending', reason:'ledger-unavailable'}
   return await new Promise(resolve => {
-    const child = execFile('/bin/sh', [launcher, helper], { timeout: action === 'published' ? 120000 : refresh_current ? 35000 : 2000, maxBuffer: 65536 }, (error, stdout) => {
+    const child = execFile(executable, ['hook', 'boundary-ledger'], { timeout: action === 'published' ? 120000 : refresh_current ? 35000 : 2000, maxBuffer: 65536 }, (error, stdout) => {
       try { resolve(error ? {status:'pending', reason:'ledger-unavailable'} : JSON.parse(stdout)) } catch { resolve({status:'pending', reason:'ledger-unavailable'}) }
     })
     child.stdin.on('error', () => {})

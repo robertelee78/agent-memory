@@ -23,7 +23,8 @@ const fn route(name: &'static str, helper: &'static super::Helper) -> Entry {
 /// refresh, boundary, semantic, sharing, exchange, projection, writes,
 /// transaction, migrate; then helper-only commands (script stem with `-`);
 /// then installation's own install, update, uninstall, purge-data, recover,
-/// version, status, doctor. Unported modules have no line.
+/// version, status, doctor; then the client hook commands (`hook`). Unported
+/// modules have no line.
 pub static ENTRIES: &[Entry] = &[
     route("developer", &helpers::developer_identity::HELPER),
     route("identity", &helpers::scope_binding::HELPER),
@@ -67,6 +68,7 @@ pub static ENTRIES: &[Entry] = &[
     Entry::Native(helpers::diagnostics::VERSION_NATIVE),
     Entry::Native(helpers::diagnostics::STATUS_NATIVE),
     Entry::Native(helpers::diagnostics::DOCTOR_NATIVE),
+    Entry::Native(helpers::hooks::HOOK_NATIVE),
 ];
 
 /// The delegated route named `name`, if registered.

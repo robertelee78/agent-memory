@@ -1551,6 +1551,19 @@ fn inline_python(prose: &str) -> Vec<String> {
     }
     out
 }
+/// A client hook adapter that names a Python launcher or a `.py` helper.
+fn python_reference(raw: &[u8]) -> bool {
+    let word = |b: &u8| b.is_ascii_alphanumeric() || *b == b'_';
+    raw.windows(7).any(|w| w == b"python3")
+        || raw.windows(3).enumerate().any(|(index, w)| {
+            w == b".py"
+                && index
+                    .checked_sub(1)
+                    .and_then(|i| raw.get(i))
+                    .is_some_and(word)
+                && !raw.get(index + 3).is_some_and(word)
+        })
+}
 fn declared_assets(prose: &str) -> Vec<&str> {
     let mut out = Vec::new();
     let mut rest = prose;
@@ -1730,6 +1743,16 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
                 },
             )
             .map_err(malformed)?;
+        }
+        if path.starts_with("hooks/")
+            && [".js", ".mjs", ".ts"].iter().any(|ext| path.ends_with(ext))
+        {
+            require(
+                !python_reference(raw),
+                "dispatch",
+                path,
+                "Client hook adapters must invoke the am binary, never Python",
+            )?;
         }
         if !path.ends_with(".md") {
             continue;

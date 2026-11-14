@@ -584,20 +584,12 @@ fn read_receipt(state: &Path) -> Result<Option<Value>> {
         return Ok(None);
     }
     for item in targets(&value)? {
+        // The installation receipt schema owns the target-kind set (v3 adds
+        // command links and legacy sources); never a second, stale list.
         require(
             item.as_object().is_some()
-                && matches!(
-                    text(item, "kind"),
-                    Some(
-                        "copy"
-                            | "link"
-                            | "wrapper"
-                            | "activation"
-                            | "source"
-                            | "hook-config"
-                            | "hook-link"
-                    )
-                ),
+                && text(item, "kind")
+                    .is_some_and(|kind| crate::installation::TARGET_KINDS.contains(&kind)),
             "Malformed target ownership receipt",
         )?;
         let normalized = if let Some(path) = text(item, "path").map(Path::new) {

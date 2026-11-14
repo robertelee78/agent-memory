@@ -651,10 +651,9 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
     isolated(
         "native_recovery_validates_its_journal_and_completes_a_committed_uninstall",
         |root| {
-            let runtime = root.join("runtime");
             let state = state_directory(root);
             let journal = state.join("omp-transition.json");
-            boundary::recover_native_binding(&state, &runtime).unwrap();
+            boundary::recover_native_binding(&state).unwrap();
             assert!(!journal.exists());
             assert_eq!(
                 boundary::native_recovery_expected(&state, "/any/extension.ts").unwrap(),
@@ -665,7 +664,7 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
                 b"{\"schema\": \"agent-memory/omp-native-transition-v1\", \"status\": \"disabled\"}",
             );
             install_refusal(
-                boundary::recover_native_binding(&state, &runtime),
+                boundary::recover_native_binding(&state),
                 "Unverifiable native lifecycle recovery journal",
             );
             let agent = root.join("agent");
@@ -689,14 +688,14 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
                 transition_journal(source, &target, &identity, &backup, "completed").as_bytes(),
             );
             let completed = text(&journal);
-            boundary::recover_native_binding(&state, &runtime).unwrap();
+            boundary::recover_native_binding(&state).unwrap();
             assert_eq!(text(&journal), completed);
             write(
                 &journal,
                 transition_journal(source, &target, &identity, &backup, "disabled").as_bytes(),
             );
             // No committed receipt at all: never guess the executable.
-            assert!(boundary::recover_native_binding(&state, &runtime).is_err());
+            assert!(boundary::recover_native_binding(&state).is_err());
             let receipt = format!(
                 "{{\"schema\": \"agent-memory/install-receipt-v3\", \"installation_id\": \"{ID}\", \"verified\": true, \"uninstalled\": true, \"source\": {source}, \"targets\": [], \"omp_binding\": {}}}",
                 json::encode(&binding, json::DEFAULT).unwrap()
@@ -704,11 +703,11 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
             write(&state.join("receipt.json"), receipt.as_bytes());
             write(&target, b"foreign\n");
             install_refusal(
-                boundary::recover_native_binding(&state, &runtime),
+                boundary::recover_native_binding(&state),
                 "Committed native uninstall differs from its retained disabled executable",
             );
             std::fs::remove_file(&target).unwrap();
-            boundary::recover_native_binding(&state, &runtime).unwrap();
+            boundary::recover_native_binding(&state).unwrap();
             let recovered = installation::load(&journal).unwrap();
             assert_eq!(
                 recovered.get("status"),
@@ -730,7 +729,7 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
                 transition_journal(source, &target, &identity, &backup, "disabled").as_bytes(),
             );
             install_refusal(
-                boundary::recover_native_binding(&state, &runtime),
+                boundary::recover_native_binding(&state),
                 "Native uninstall recovery has no exact committed receipt",
             );
         },
@@ -907,7 +906,7 @@ fn native_lifecycle_entry_refusals_and_absent_work() {
         );
         assert_eq!(plan, before);
         assert_eq!(
-            boundary::complete_stored_source_activation(&state, &runtime).unwrap(),
+            boundary::complete_stored_source_activation(&state).unwrap(),
             decode("{\"status\": \"not-required\", \"verified\": true}")
         );
         refusal(

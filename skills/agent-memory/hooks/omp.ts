@@ -2,11 +2,10 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { closeSync, constants, fstatSync, lstatSync, openSync, readSync, realpathSync, type Stats } from 'node:fs';
 import { dirname, isAbsolute, join, parse, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import type { ExtensionAPI, ExtensionContext } from '@oh-my-pi/pi-coding-agent';
 
-type Binding = { artifact: string; agentDir: string; rolloutAttested: true; readerCapability: 'omp-stored-source-v2' };
+type Binding = { artifact: string; executable: string; agentDir: string; rolloutAttested: true; readerCapability: 'omp-stored-source-v2' };
 type NativeEntry = { type: string; id: string; parentId: string | null; message?: Record<string, unknown>;
   customType?: string; content?: unknown; attribution?: string; timestamp?: string; agent?: { kind?: string } };
 type Header = { id: string; cwd: string; version: number; parent_session: string | null; timestamp: string | null };
@@ -34,9 +33,6 @@ class CaptureRefusal extends Error {
 const REGISTRY = Symbol.for('agent-memory.omp.native-observer.v2');
 const globals = globalThis as typeof globalThis & { [key: symbol]: Map<string, { token: symbol; artifact: string }> | undefined };
 const registry = globals[REGISTRY] ??= new Map();
-const pack = dirname(dirname(realpathSync(fileURLToPath(import.meta.url))));
-const helper = join(pack, 'scripts', 'omp_boundary.py');
-const launcher = join(pack, 'hooks', 'python3.sh');
 const MAX_INPUT = 16 * 1024 * 1024;
 const MAX_QUEUE = 64 * 1024 * 1024;
 const MAX_FRAMES = 4096;
@@ -234,6 +230,7 @@ export default function nativeMemory(pi: ExtensionAPI, binding?: Binding) {
   const eligible = (ctx: ExtensionContext) => ctx.agent.kind !== 'sub';
   const supported = () => (pi.pi.VERSION === '18.16.0' || pi.pi.VERSION === '18.19.0') && binding?.rolloutAttested === true
     && binding.readerCapability === 'omp-stored-source-v2' && /^[0-9a-f]{64}$/.test(binding.artifact)
+    && typeof binding.executable === 'string' && isAbsolute(binding.executable)
     && typeof pi.pi.parseSessionContent === 'function' && pi.pi.CURRENT_SESSION_VERSION === 3
     && typeof pi.pi.resolveSessionLeafId === 'function' && typeof pi.pi.sessionEntryLeafId === 'function'
     && typeof pi.pi.lastSelfSelectedLeafId === 'function';
@@ -266,7 +263,7 @@ export default function nativeMemory(pi: ExtensionAPI, binding?: Binding) {
     let state = states.get(key); if (state && !state.retiring) return state;
     registry.set(key, { token, artifact: binding!.artifact });
     const instance = randomUUID(), lifecycle = randomUUID();
-    const child = spawn('/bin/sh', [launcher, helper, '--stream', '--repo', repo, '--session', session,
+    const child = spawn(binding!.executable, ['omp-boundary', '--stream', '--repo', repo, '--session', session,
       '--instance', instance, '--lifecycle', lifecycle, '--artifact', binding!.artifact, '--omp-agent-dir', binding!.agentDir],
       { stdio: ['pipe', 'pipe', 'pipe'], cwd: repo, detached: true });
     const { promise: startup, resolve: startupResolve } = Promise.withResolvers<boolean>();

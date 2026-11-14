@@ -12,6 +12,7 @@ pub mod consolidation;
 pub mod developer_identity;
 pub mod diagnostics;
 pub mod discovery;
+pub mod hooks;
 pub mod inactive;
 pub mod initialization;
 pub mod installation;

@@ -1219,7 +1219,6 @@ fn run(world: &World, argv: &[OsString], cwd: &Path) -> agent_memory::process::O
 }
 
 #[test]
-#[ignore = "fresh native install refuses: activation locates the pack via an installed receipt (No installed Rust runtime receipt owns this executable)"]
 fn installed_stream_passes_observer_binding_and_reaches_real_transport() {
     let world = World::new().unwrap();
     let source = development_source(&world);

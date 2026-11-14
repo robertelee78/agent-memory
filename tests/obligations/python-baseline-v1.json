@@ -1093,7 +1093,7 @@
   {
    "id": "tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_enroll_before_transcript_source_assertion_then_quiet_nullable_stop",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1121,7 +1121,7 @@
   {
    "id": "tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_shared_native_prompt_tracks_three_distinct_observations_without_transcript_projection",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2367,14 +2367,14 @@
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_bank_absence_clears_only_its_own_adapter",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_hook_failure_codes_survive_without_source_content",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2437,7 +2437,7 @@
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_unresolved_identity_retains_fixed_metadata_without_bank_change",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9558,77 +9558,77 @@
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_concurrent_single_reservation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_durable_reservation_and_restart_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_ids_cannot_collide_on_separator",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_intent_without_attempt_is_uncertain",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_rebinding_before_return_fails_pending",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_rejects_symlink_and_untrusted_root",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_supported_capacity_has_non_destructive_recovery",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_supported_intent_only_is_explicitly_recoverable",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_supported_no_learning_assessment_compacts_and_deduplicates",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::BoundaryLedgerTest.test_supported_tampered_intent_stays_pending",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::OpenCodeLauncherContract.test_real_ledger_with_older_python_first",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9642,84 +9642,84 @@
   {
    "id": "tests/contracts/test_opencode_boundary_ledger.py::UninitializedBoundaryContract.test_absent_context_skips_and_malformed_bank_remains_pending",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_backlog_pagination_recovers_sources_beyond_first_sixteen",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_enrollment_backlog_interruption_and_truthful_completion",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_fifo_markers_and_locks_refuse_without_blocking",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_fingerprint_once_and_hard_two_attempt_cap_survive_restart_and_contention",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_lock_removed_after_exclusive_create_conflict_is_not_recreated_or_hidden",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_native_backlog_exposes_legacy_uncertainty_without_inventing_ids",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_new_and_existing_enrollment_verify_namespace_before_acceptance",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_racing_lock_creator_preserves_wake_budget_and_completion_across_restart",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_state_inside_checkout_or_common_git_is_rejected_before_writes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_opencode_queue.py::OpenCodeQueueContract.test_queue_binds_distinct_turns_and_fails_closed_on_missing_sources",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12673,35 +12673,35 @@
   {
    "id": "tests/contracts/test_turn_hook.py::TurnHookContract.test_invalid_and_oversized_events_surface_pending_without_blocking",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_hook.py::TurnHookContract.test_opencode_adapters_inject_identical_context_once",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_hook.py::TurnHookContract.test_opencode_v2_exposes_only_observed_session_identity_during_active_queue",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_hook.py::TurnHookContract.test_opt_in_claude_stop_wakes_once_and_preserves_permissions",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_hook.py::TurnHookContract.test_prompt_keeps_harness_turn_unblocked",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 473,
-   "ported": 298,
-   "unported": 1091
+   "partial": 478,
+   "ported": 326,
+   "unported": 1058
   }
  }
 }
