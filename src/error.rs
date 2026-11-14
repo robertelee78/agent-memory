@@ -51,6 +51,12 @@ pub enum Kind {
     RecallCatalogMiss,
     /// Baseline layout_recovery_temps.ProbeOwnershipError: an unproven metadata probe.
     ProbeOwnership { path: String },
+    /// Fresh sharing authority or private observation cleanup failure.
+    SharingAuthority {
+        code: String,
+        component: String,
+        repair: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -239,3 +245,25 @@ impl fmt::Display for ContractError {
 }
 
 impl std::error::Error for ContractError {}
+
+impl ContractError {
+    pub(crate) fn sharing_authority(
+        code: &str,
+        component: &str,
+        message: &str,
+        repair: &str,
+    ) -> Self {
+        Self {
+            kind: Kind::SharingAuthority {
+                code: code.into(),
+                component: component.into(),
+                repair: repair.into(),
+            },
+            message: message.into(),
+        }
+    }
+    pub(crate) fn with_message(mut self, message: String) -> Self {
+        self.message = message;
+        self
+    }
+}

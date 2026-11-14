@@ -27,9 +27,11 @@ const fn route(name: &'static str, helper: &'static super::Helper) -> Entry {
 pub static ENTRIES: &[Entry] = &[
     route("developer", &helpers::developer_identity::HELPER),
     route("identity", &helpers::scope_binding::HELPER),
+    route("init", &helpers::initialization::HELPER),
     route("bank", &helpers::bank_contract::HELPER),
     route("omp-boundary", &helpers::omp_boundary::HELPER),
     route("private", &helpers::private_workspace::HELPER),
+    route("exchange", &helpers::sharing_recovery::HELPER),
     route("writes", &helpers::bank_writes::HELPER),
     route("migrate", &helpers::migration::HELPER),
     route("artifact", &helpers::artifact::HELPER),
@@ -45,6 +47,9 @@ pub static ENTRIES: &[Entry] = &[
     Entry::Native(helpers::uninstallation::UNINSTALL_NATIVE),
     Entry::Native(helpers::purging::PURGE_NATIVE),
     Entry::Native(helpers::installation::RECOVER_NATIVE),
+    Entry::Native(helpers::diagnostics::VERSION_NATIVE),
+    Entry::Native(helpers::diagnostics::STATUS_NATIVE),
+    Entry::Native(helpers::diagnostics::DOCTOR_NATIVE),
 ];
 
 /// The delegated route named `name`, if registered.

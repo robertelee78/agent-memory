@@ -358,6 +358,11 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     crate::security::register_migration_audit(Some(Arc::new(
         crate::migration::LocationAudit::executable(),
     )));
+    crate::doctor_fix::register_diagnostics(Some(Arc::new(crate::diagnostics::Runtime::process())));
+    wired(crate::bank_transactions::register_transaction_validator(
+        "initialize",
+        Some(Arc::new(crate::initialization::Validator)),
+    ))?;
     Ok(())
 }
 

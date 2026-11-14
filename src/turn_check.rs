@@ -47,6 +47,12 @@ pub trait ScopeBinding: Send + Sync {
 /// Implemented by memory_refresh.
 pub trait MemoryRefresh: Send + Sync {
     fn current_result(&self, repo: &Path) -> CompletionResult<Value>;
+    /// Baseline `memory_refresh.local_prerequisites(repo)` (used by diagnostics):
+    /// the observed prerequisites, or its typed `CurrentFailure` refusal.
+    fn local_prerequisites(
+        &self,
+        repo: &Path,
+    ) -> Result<std::result::Result<Value, CurrentFailure>>;
 }
 /// A locked notice namespace. Implementations must recheck private enrollment
 /// before and after each mutation, durably sync changes, and preserve corrupt
@@ -510,4 +516,19 @@ pub fn emit(result: &Value, quiet: bool) -> Result<(i32, String, String)> {
         String::new()
     };
     Ok((code, stdout, stderr))
+}
+
+/// Baseline `memory_refresh.CurrentFailure`: a bounded local-prerequisite
+/// refusal (`code`, message, `repair`, optional `path`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CurrentFailure {
+    pub code: String,
+    pub message: String,
+    pub repair: String,
+    pub path: Option<String>,
+}
+
+/// The registered memory_refresh provider (diagnostics' local prerequisites).
+pub(crate) fn memory_refresh_provider() -> Result<&'static dyn MemoryRefresh> {
+    refresh_backend()
 }

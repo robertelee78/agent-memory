@@ -680,6 +680,28 @@ fn child_entry() {
                 confirm: std::env::var("AM_T2_CONFIRM").ok(),
             },
         ),
+        "doctor-fix" => {
+            // Diagnostics over this World with the production security tier.
+            let env = installed.world.env();
+            let services = installed.running_services();
+            agent_memory::doctor_fix::register_diagnostics(Some(Arc::new(
+                agent_memory::diagnostics::Runtime::new(env.clone(), services.clone()),
+            )));
+            agent_memory::repository_config::register_security_scan(Some(Arc::new(
+                agent_memory::security::Security,
+            )))
+            .unwrap();
+            agent_memory::diagnostics::command(
+                &env,
+                &services,
+                &agent_memory::diagnostics::Request {
+                    operation: "doctor".into(),
+                    repo: installed.world.path("repo"),
+                    projection: None,
+                    fix: true,
+                },
+            )
+        }
         other => panic!("unknown child command {other}"),
     };
     println!(
@@ -2436,17 +2458,30 @@ fn purge_interruptions_and_lost_response_converge_on_the_same_confirmation() {
 
 // obligation: tests/contracts/test_doctor_fix.py::DoctorFixContract.test_healthy_unrelated_hook_configuration_needs_no_repair
 #[test]
-#[ignore = "needs diagnostics registered"]
 fn healthy_installation_needs_no_doctor_repair() {
     let installed = Installed::new(Mode::Copy);
+    let hook = installed.world.path("codex/hooks.json");
+    let mut value = decode(&hook);
+    if let Value::Object(fields) = &mut value {
+        fields.push((
+            "user-setting".into(),
+            Value::Object(vec![("keep".into(), Value::Bool(true))]),
+        ));
+    }
+    write(
+        &hook,
+        json::encode(&value, json::INDENT2_ASCII).unwrap() + "\n",
+    );
     let before = snapshot(&installed.world.root);
-    let value = agent_memory::doctor_fix::run(
-        &installed.world.env(),
-        &installed.running_services(),
-        &installed.world.path("repo"),
-        None,
-    )
-    .unwrap();
+    let result = child(&installed.world, "doctor-fix", &[]);
+    let value = result.value.unwrap();
+    assert_eq!(
+        result.code,
+        Some(0),
+        "{}",
+        json::encode(&value, json::INDENT2_ASCII).unwrap()
+    );
+    assert_eq!(text(&value, "operation"), "doctor-fix");
     assert_eq!(get(&value, "repairs_performed"), &Value::Bool(false));
     assert_eq!(get(&value, "writes_performed"), &Value::Bool(false));
     assert_eq!(get(&value, "restart_clients"), &Value::Array(vec![]));
