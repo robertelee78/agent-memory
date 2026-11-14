@@ -1125,6 +1125,31 @@ impl bank_writes::Security for Security {
     ) -> Result<()> {
         guarded_start(repo, id, context, files, sources, action, complete).map(|_| ())
     }
+    fn audit_records(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        category: &str,
+        phase: &str,
+        context: &Value,
+        source_kinds: &[&str],
+        reasons: &[String],
+        record_ids: &[String],
+        action: &str,
+    ) -> Result<Value> {
+        audit(
+            repo,
+            operation_id,
+            category,
+            phase,
+            context,
+            source_kinds,
+            reasons,
+            record_ids,
+            action,
+            None,
+        )
+    }
 }
 
 pub fn command_result(outcome: Result<Value>) -> crate::lifecycle::CommandResult {
