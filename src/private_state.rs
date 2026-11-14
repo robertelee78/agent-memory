@@ -34,6 +34,7 @@ pub trait RecoveryQuiescence: Send + Sync {
         runtime_digest: &str,
         runtime_root: &Path,
     ) -> Result<Option<Value>>;
+    /// Baseline recovery_quiescence.validate; no caller boolean can bypass it.
     fn validate(
         &self,
         repo: &Path,

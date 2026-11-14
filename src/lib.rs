@@ -80,6 +80,7 @@ pub mod projections;
 pub mod purging;
 pub mod recall_catalog;
 pub mod records;
+pub mod recovery_frontier;
 pub mod recovery_quiescence;
 pub mod recovery_transactions;
 #[cfg(feature = "dev-tools")]
