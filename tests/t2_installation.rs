@@ -1233,6 +1233,54 @@ fn journal_codec_refuses_unknown_status_and_foreign_staging_paths() {
 // Checkpoint 2: fresh install, copy and link modes, journaled recovery
 // ======================================================================
 
+#[test]
+fn executing_runtime_selects_the_owned_development_receipt_without_writes() {
+    // The existing opaque executable fixture proves locator selection, not
+    // qualification of a native CLI or of the production installation guards.
+    let world = World::new();
+    let source = development_source(&world, "executing development source");
+    let binary = source.join("target/release/am");
+    let env = world.env();
+    let before = snapshot(&world.root);
+    let refusal = install::executing_runtime(&env, &binary).unwrap_err();
+    assert!(matches!(&refusal, install::Error::Contract(_)));
+    assert!(refusal.to_string().contains("trusted bootstrap installer"));
+    assert!(!refusal.to_string().contains("pass --pack"));
+    assert_eq!(snapshot(&world.root), before);
+
+    let installed = ok(&world, &request(&source));
+    let receipt = get(&installed, "receipt");
+    let expected = (
+        PathBuf::from(text(get(receipt, "source"), "pack")),
+        install::source_binary(get(receipt, "source")).unwrap(),
+    );
+    assert_eq!(expected.1, binary);
+    let before = snapshot(&world.root);
+    assert_eq!(
+        install::executing_runtime(&env, &world.bin().join("am")).unwrap(),
+        expected
+    );
+    assert_eq!(
+        install::pack_root(&env, &world.bin().join("agent-memory")).unwrap(),
+        expected.0
+    );
+    let locations = install::omp_locations(&env, &world.bin().join("am")).unwrap();
+    assert_eq!(locations.state, world.state());
+    assert_eq!(locations.pack, expected.0);
+    assert_eq!(locations.binary, expected.1);
+    assert_eq!(snapshot(&world.root), before);
+
+    let unrelated = world.path("unowned-am");
+    write(&unrelated, STAND_IN);
+    mode(&unrelated, 0o755);
+    let before = snapshot(&world.root);
+    let refusal = install::executing_runtime(&env, &unrelated).unwrap_err();
+    assert!(matches!(&refusal, install::Error::Contract(_)));
+    assert!(refusal.to_string().contains("trusted bootstrap installer"));
+    assert!(!refusal.to_string().contains("pass --pack"));
+    assert_eq!(snapshot(&world.root), before);
+}
+
 // obligation: tests/contracts/test_installer.py::InstallerContract.test_fresh_plan_link_install_repeat_and_installed_command_preserve_source_and_user_config
 #[test]
 fn fresh_plan_link_install_repeat_preserve_source_and_user_config() {

@@ -309,7 +309,7 @@
   {
    "id": "tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_large_owned_marker_keeps_frontier_but_unknown_or_changed_bytes_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5636,14 +5636,14 @@
   {
    "id": "tests/contracts/test_layout_recovery_frontier.py::RecoveryFrontierContract.test_removed_sentinel_is_pending_not_successful_empty_coverage",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_frontier.py::RecoveryFrontierContract.test_reported_size_pending_repair_retains_exact_private_originals_and_qualified_recall",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5685,7 +5685,7 @@
   {
    "id": "tests/contracts/test_layout_recovery_frontier_closure.py::RecoveryFrontierClosureContract.test_partial_claims_need_two_receipts_and_independent_complete_union",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5762,7 +5762,7 @@
   {
    "id": "tests/contracts/test_layout_recovery_frontier_closure.py::RecoveryFrontierClosureContract.test_reservation_transition_accepts_last_complete_frontier_and_refuses_next",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5783,7 +5783,7 @@
   {
    "id": "tests/contracts/test_layout_recovery_frontier_substitution.py::RecoveryFrontierSubstitutionContract.test_corrupt_private_index_blocks_public_comparison_without_canonical_write",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 236,
+   "partial": 242,
    "ported": 262,
-   "unported": 1364
+   "unported": 1358
   }
  }
 }

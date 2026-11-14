@@ -542,12 +542,34 @@ impl World {
 }
 fn in_world(name: &str, body: impl FnOnce(&World)) {
     if std::env::var("AM_SCOPE_CASE").ok().as_deref() == Some(name) {
-        // Only production registrations. No scanner/frontier/hold/security mock.
+        // Real providers only; the actual frontier receives explicit fixture
+        // runtime/executable callbacks, not a synthetic scope or hold.
         cli::register_providers().unwrap();
         let world = World {
             root: PathBuf::from(std::env::var_os("AM_SCOPE_ROOT").unwrap()),
         };
+        let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
+            || {
+                Ok((
+                    Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+                    std::env::current_exe()
+                        .map_err(|error| ContractError::new(error.to_string()))?,
+                ))
+            },
+        ));
+        writes::register_recovery_frontier(Some(frontier.clone()));
+        bank::register_recovery_coverage(Some(frontier));
         body(&world);
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut completed = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(world.root.join("scope-body-completed"))
+            .unwrap();
+        completed.write_all(name.as_bytes()).unwrap();
+        completed.sync_all().unwrap();
         return;
     }
     let root = std::env::temp_dir().join(format!("am-scope-{}", host::uuid4().unwrap()));
@@ -571,6 +593,7 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
             ("AM_SCOPE_ROOT", world.root.as_os_str().to_owned()),
         ],
     );
+    let completed = std::fs::read(world.root.join("scope-body-completed"));
     std::fs::remove_dir_all(&world.root).unwrap();
     assert_eq!(
         output.status,
@@ -579,11 +602,11 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
+    assert_eq!(completed.unwrap(), name.as_bytes());
 }
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_combined_status_readonly_missing_conflicting_and_known_attribution
 #[test]
-#[ignore = "needs recovery_frontier registered for existing-bank binding snapshot"]
 fn combined_status_readonly_missing_conflicting_and_known_attribution() {
     in_world(
         "combined_status_readonly_missing_conflicting_and_known_attribution",
@@ -688,7 +711,7 @@ fn create_has_initialization_only_handoff_without_chicken_and_egg() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_rebind_previews_bank_change_reads_both_stores_and_preserves_aliases_and_code
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
+#[ignore = "needs an installed v3 runtime for the real TurnSources canonical-transaction barrier; frontier fixture callbacks do not replace that locator"]
 fn rebind_preserves_aliases_context_code_index_and_head() {
     in_world(
         "rebind_preserves_aliases_context_code_index_and_head",
@@ -749,7 +772,7 @@ fn rebind_preserves_aliases_context_code_index_and_head() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_fork_changes_every_namespace_and_preserves_record_provenance_conditions_and_tombstone
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
+#[ignore = "needs an installed v3 runtime for the real TurnSources canonical-transaction barrier; frontier fixture callbacks do not replace that locator"]
 fn fork_changes_every_namespace_through_real_two_store_binding() {
     in_world(
         "fork_changes_every_namespace_through_real_two_store_binding",
@@ -803,7 +826,6 @@ fn fork_changes_every_namespace_through_real_two_store_binding() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_stale_developer_registry_bank_and_remote_proposals_never_overwrite
 #[test]
-#[ignore = "needs recovery_frontier registered for existing-bank binding snapshot"]
 fn stale_developer_registry_bank_and_remote_never_overwrite() {
     in_world(
         "stale_developer_registry_bank_and_remote_never_overwrite",
@@ -862,7 +884,7 @@ fn stale_developer_registry_bank_and_remote_never_overwrite() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_registry_only_interruption_and_torn_bank_resume_with_original_bundle
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
+#[ignore = "needs an installed v3 runtime for native writes/recovery child processes and the real TurnSources barrier"]
 fn registry_only_and_torn_bank_interruptions_resume_original_bundle() {
     in_world(
         "registry_only_and_torn_bank_interruptions_resume_original_bundle",
@@ -932,7 +954,7 @@ fn registry_only_and_torn_bank_interruptions_resume_original_bundle() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_identity_is_pinned_from_preview_and_rechecked_under_the_bank_lock
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
+#[ignore = "needs an installed v3 runtime owning the native writes apply child executable"]
 fn identity_pins_are_rechecked_under_real_bank_lock() {
     in_world("identity_pins_are_rechecked_under_real_bank_lock", |w| {
         let repo = w.repo("repository");
@@ -1015,7 +1037,7 @@ fn identity_pins_are_rechecked_under_real_bank_lock() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_all_public_mediated_writers_refuse_unresolved_identity_and_raw_reads_remain_available
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
+#[ignore = "needs an installed v3 runtime for real TurnSources canonical write barriers; no fixture scope capability bypass"]
 fn every_mediated_writer_refuses_unresolved_identity_but_raw_validation_remains_available() {
     in_world(
         "every_mediated_writer_refuses_unresolved_identity_but_raw_validation_remains_available",
@@ -1053,7 +1075,6 @@ fn every_mediated_writer_refuses_unresolved_identity_but_raw_validation_remains_
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_portable_status_uses_selected_repo_and_preserves_whitespace_paths_despite_ambient_git
 #[test]
-#[ignore = "needs recovery_frontier registered for existing-bank binding snapshot"]
 fn public_status_preserves_whitespace_paths_and_ignores_ambient_git() {
     in_world(
         "public_status_preserves_whitespace_paths_and_ignores_ambient_git",
@@ -1113,7 +1134,6 @@ fn public_status_preserves_whitespace_paths_and_ignores_ambient_git() {
 
 // obligation: tests/contracts/test_project_identity.py::ProjectIdentityContract.test_scope_link_repair_preserves_bank_and_verifies_current_alias
 #[test]
-#[ignore = "needs recovery_frontier registered for existing-bank binding snapshot"]
 fn historical_device_scope_link_verifies_current_alias_without_bank_changes() {
     in_world(
         "historical_device_scope_link_verifies_current_alias_without_bank_changes",
@@ -1151,7 +1171,6 @@ fn historical_device_scope_link_verifies_current_alias_without_bank_changes() {
 
 // obligation: tests/contracts/test_project_identity.py::ProjectIdentityContract.test_conflicting_historical_aliases_allow_explicit_scope_link
 #[test]
-#[ignore = "needs recovery_frontier registered for existing-bank binding snapshot"]
 fn conflicting_historical_aliases_allow_explicit_scope_link() {
     in_world(
         "conflicting_historical_aliases_allow_explicit_scope_link",
@@ -1312,12 +1331,11 @@ fn production_scope_adapter_preserves_initialization_and_live_locator_boundaries
 
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_config_and_remote_mutation_between_enrollment_entry_exit_are_fresh
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
 fn enrollment_entry_and_exit_independently_recheck_repository_configuration() {
     in_world(
         "enrollment_entry_and_exit_independently_recheck_repository_configuration",
         |w| {
-            for mutation in ["config", "remote"] {
+            for (mutation, action) in [("config", "bind"), ("remote", "link")] {
                 let repo = w.repo(mutation);
                 w.git(
                     &repo,
@@ -1330,7 +1348,7 @@ fn enrollment_entry_and_exit_independently_recheck_repository_configuration() {
                 );
                 let bank = w.bank(&repo, ID, Some("repo://github.com/example/project"));
                 w.developer("Fixture developer");
-                w.bind(&repo);
+                scope::apply(&w.preview(&repo, action)).unwrap();
                 let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
                 let context = scope::private_enrollment_context(&repo, &runtime).unwrap();
                 assert!(!context.held());
@@ -1385,7 +1403,6 @@ fn enrollment_entry_and_exit_independently_recheck_repository_configuration() {
 
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_subdirectory_still_refuses_repository_root_authority
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
 fn enrollment_never_grants_repository_root_authority_to_subdirectories() {
     in_world(
         "enrollment_never_grants_repository_root_authority_to_subdirectories",

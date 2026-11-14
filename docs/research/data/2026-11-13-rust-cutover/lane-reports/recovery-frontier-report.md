@@ -1,10 +1,10 @@
 # Recovery frontier lane report
 
-Worktree `/opt/agent-memory-rust-recovery-frontier`, branch `lane/recovery-frontier`, frozen base `681c3b7f3e9cff5506709fef7a9a4fb8e4d5b31c`.
+Worktree `/opt/agent-memory-rust-recovery-frontier`, branch `lane/recovery-frontier`. Parent rebased the authored source onto approved `a725b97b34033221d8927cc7ecb95ddeaf694130` (security/observation/catalog/lifecycle base), reporting authored source commit `54b1b6b`. The worker performed no Git operation; the original implementation base was `681c3b7f3e9cff5506709fef7a9a4fb8e4d5b31c`.
 
 ## Delivery boundary
 
-The owned domain implementation and consumer tests are authored, and all three requested shared interface edits have explicit owner approval and are applied. This remains a **source-review boundary, not a complete/verified lane delivery**: final production executing-binary selection and bootstrap-refusal guidance require the installation owner's authorized callee change. The owner approved the existing installed-v3-receipt-only runtime-root contract: no receipt means a refusal directing the user to the trusted bootstrap, not an uninstalled source-root fallback. No guessed source root, placeholder provider, fallback scanner, synthetic verified hold, panic, or no-op bypasses that boundary. No build/test/lint/formatter/smoke command has run.
+The complete owned domain implementation, assigned providers, approved shared extensions and production composition are authored. The installation owner approved and the lane applied receipt-bound runtime-pair selection and bootstrap-refusal guidance. This is **source ready, not a verified complete lane delivery**: parent checks of the latest batch and the owner's subsequent integration API cutover remain outstanding. No guessed source root, placeholder provider, fallback scanner, synthetic verified hold, panic, or no-op bypasses that boundary. The worker ran no build/test/lint/formatter/smoke command.
 
 Applied files, exact list:
 
@@ -16,13 +16,26 @@ Applied files, exact list:
 - `src/project_identity.rs`: approved crate-visible accessor for the existing LayoutObservation registry, with typed absent-provider refusal.
 - `src/private_state.rs`: append only the required RecoveryQuiescence::validate method.
 - `tests/wiring-pending.txt`: remove the two implemented frontier/coverage pending entries; extend the existing ComparisonView dependency to retrieval/comparison/recall_catalog; append the actual layout_resolution dependency.
+- `tests/t1_scope_binding.rs`: enable five existing-bank binding/status/link scenarios and two enrollment scenarios with actual frontier callbacks in the existing isolated helper; add fresh after-body child completion receipts. Five canonical-write/native-write scenarios retain precise real installed-runtime prerequisites.
+- `tests/t1_security.rs`: preserve every full evaluator/workflow body; replace stale module-only ignore reasons with the actual installed-v3 native-runtime prerequisite (plus genuinely unported checkpoint/sharing modules where applicable).
+- `tests/t1_turn_sources.rs`: enable all four ordinary registration/ACK/wake/cap/publication scenarios with actual frontier callbacks and existing explicit-runtime APIs; require fresh child completion evidence. The full 128-registration/128-ACK capacity journey alone has an explicitly passed 600-second deadline following parent's syscall diagnosis; all other callers explicitly retain 120 seconds.
+- `tests/t1_bank.rs`: preserve four full writer bodies; replace stale provider/module ignore lists with the missing real principal/project fixture and receipt-backed barrier prerequisites.
+- `tests/t1_bank_transactions.rs`: enable the complete partial-rename/finish/rollback convergence body in merged World isolation with actual frontier callbacks.
+- `tests/t2_recall_catalog.rs`: enable both final-content/immutable-reader scenarios in merged World isolation; retain real retrieval/discovery prerequisites for the two query scenarios.
+- `tests/t2_lifecycle.rs`: generate the valid legacy MEMORY-only purge fixture using public bank_contract::router_text plus parse_router and all six omissions; enable both full purge journeys, align explicit/process state roots inside owned re-exec Worlds, inject actual frontier only in the test process, bound purge children and require normal completion proof or intentional fault-entry evidence plus exit86 and subsequent recovery.
+- `tests/support/mod.rs`: append the owner-approved with_frontier helper using the merged World environment/path/child convention; actual providers/callbacks only, exclusive fresh completion receipt after successful body, parent requires exact receipt and exit0. Owned frontier tests reuse it too.
+- `src/installation/providers.rs`: owner-authorized executing_runtime pair API; pack_root and omp_locations delegate to the same single-receipt authority; missing/foreign executable refusals direct to trusted bootstrap.
+- `src/installation.rs`: public executing_runtime export.
+- `src/cli/mod.rs`: one real Arc<FrontierProvider> cloned into both assigned registries in the existing composition point.
+- `tests/t2_installation.rs`: reuse existing installer fixtures for no-receipt, installed development symlink and foreign-executable locator contracts with unchanged filesystem snapshots; opaque fixture bytes do not qualify native CLI installation.
+- `tests/t2_cli.rs`: migrate the existing real no-receipt CLI refusal expectation to approved bootstrap guidance, retaining status/stdout/explicit-pack assertions.
 - `docs/research/data/2026-11-13-rust-cutover/lane-reports/recovery-frontier-report.md` (this explicitly requested report).
 
-External handoff: `/tmp/recovery-frontier-obligation-ids.txt` is TSV `status`, exact baseline ID, reason. It contains six partial and twenty unported entries; parent must not mark the unported entries partial merely because implementation exists. The obligation ledger is untouched.
+External handoff: `/tmp/recovery-frontier-obligation-ids.txt` is TSV `status`, exact baseline ID, reason. It contains 22 partial and twenty unported entries; parent must not promote an entry merely because source is authored or an ignore removed. The obligation ledger is untouched.
 
-No Python execution, Git mutation, commit/push, sibling import/rebase/cherry-pick, tracker/Vox operation, new crate, foundation edit, unsafe code, or production subprocess is introduced.
+The worker executed no Python, Git mutation, commit/push, sibling import/rebase/cherry-pick, tracker/Vox operation, build/test/lint/formatter/smoke command. Parent performed the explicitly approved rebase. No new crate, foundation edit, unsafe code or production subprocess is introduced.
 
-## Approved shared interfaces and remaining installation glue
+## Approved shared interfaces and runtime composition
 
 ### Reuse existing ComparisonView
 
@@ -39,7 +52,7 @@ Renamed existing `fn comparison_view()` to `pub(crate) fn comparison_view_provid
 
 ### Reuse existing LayoutObservation
 
-`src/project_identity.rs:53-55` already owns the exact raw-observation callee interface (`read_source(bank, relative, limit)`). Zero production implementations and one test implementation exist at this base. Added immediately after `register_layout_observation`:
+`src/project_identity.rs:53-55` owns the exact raw-observation callee interface (`read_source(bank, relative, limit)`). The approved rebase supplies and wires the real layout_recovery_observation implementation. The lane added an accessor immediately after register_layout_observation:
 
 ```rust
 pub(crate) fn layout_observation_provider() -> Result<Arc<dyn LayoutObservation>>;
@@ -61,20 +74,20 @@ Future implementer is the same recovery_quiescence module that provides existing
 
 ### Executing runtime root and final CLI wiring
 
-The `FrontierProvider` stores trusted composition callbacks `fn() -> Result<PathBuf>` for runtime root and executing binary. Its domain functions accept explicit runtime roots, matching layout_recovery_state and the existing private-state/turn-source APIs. Actual hold measurement uses `artifact::inspect_runtime(runtime, binary)`, not the pack-only digest.
+The `FrontierProvider` stores one trusted composition callback `fn() -> Result<(PathBuf, PathBuf)>`, returning executing pack and binary coherently. Implicit-runtime methods resolve that pair exactly once per call. Domain functions continue accepting explicit runtime roots, matching layout_recovery_state and existing private-state/turn-source APIs. Actual hold measurement uses artifact::inspect_runtime(runtime, binary), never a pack-only digest.
 
-The approved single locator remains `cli::pack_root` -> `installation::RuntimePackRoot`, requiring an installed verified v3 receipt. No receipt must direct the user to the trusted bootstrap; development install uses a prebuilt executable through install.sh --development-source. No CARGO_MANIFEST_DIR, binary-parent/source fallback, current_exe fallback, or omitted runtime exclusion is permitted.
+The single authority is installation::executing_runtime(env, executable): one trusted rust_receipt read filtered to v3, source_binary from that exact receipt, canonical executable equality, and the receipt source.pack returned with its selected binary. pack_root delegates to this API; omp_locations now gets state through locations and pack/binary together through this API. Production current_exe is only a checked equality argument, never the selected binary or a fallback. Missing receipt or foreign executable directs to the trusted bootstrap installer. Development selects recorded source.path/target/release/am; release selects recorded source.path/bin/am.
 
-Exact call chain: `bank_observation::observe:430` -> `RecoveryFrontier::observe_owned` -> frontier `observe` -> `state::paths` -> `state::_paths_for_bank:292`. That last function canonicalizes the actual runtime root and excludes recovery state beneath it even with an empty index/no hold. This trust check is not deferred. The remaining callee conflict was escalated with evidence: installation/plan.rs:1312-1335 records development source.path at the original source and active_binary=info.binary, while release uses locations.runtime/bin/am; installation.rs:410-420 source_binary consequently returns development target/release/am versus release bin/am. Owner must clarify receipt-authorized executing-binary selection or supply the real verified runtime-binary API; no nonexistent bin path is guessed.
+The bank_observation -> RecoveryFrontier::observe_owned -> observe -> state::paths -> state::_paths_for_bank call chain still canonicalizes the executing runtime root and excludes recovery state beneath it, even for an empty index/no hold. That trust check is not deferred. The two explicit-root hold adapters (verified_hold_for_runtime and verified_enrollment_hold_at_bank) resolve the authorized pair once, require canonical supplied root equality with its pack before any hold observation, and pass that coherent pair onward. Explicit-only observe_bank/ledger/evidence/validate_quiescence remain independent of the production locator. Scope/source callback fixtures select the same explicit roots their domain calls use.
 
-Once the installation callee is authorized, append both actual registrations to the single `cli::register_providers` composition point, sharing one real `Arc<FrontierProvider>`:
+Both actual registrations are appended at the single cli::register_providers composition point, sharing one Arc<FrontierProvider>:
 
 - `bank_writes::register_recovery_frontier(Some(provider.clone()))`.
 - `bank_contract::register_recovery_coverage(Some(provider))`.
 
-The executing-binary callback must come from actual receipt ownership, never host current_exe fallback. Existing installation/providers.rs absent-receipt and binary-mismatch messages currently say pass --pack PATH rather than approved bootstrap guidance; the exact minimal owner-owned callee correction was requested. The active `no_receipt_runtime_location_refuses_with_bootstrap_guidance_and_preserves_sources` scenario records the approved contract without executing it. No new register_providers helper or startup domain operation is needed. The pending-file removals are already authored; composition is the remaining unapplied lane edit.
+The real no-receipt locator scenario asserts bootstrap guidance and retained original bytes. A new real-adapter regression rejects both mismatched explicit hold roots before observation and preserves retained original/marker/head bytes and the empty foreign root. It asserts consumer outcomes, not callback plumbing. The installation regression uses existing real installer fixture operations rather than fabricated receipts or new providers; it proves locator selection only. There is no CARGO_MANIFEST_DIR/source/binary-parent production fallback, direct private receipt read, second registry or startup domain operation.
 
-The three shared declarations are applied with approval. Only the installation owner's executing-binary/guidance decision and corresponding final composition remain intentionally unapplied. They are not disguised as missing production functions; no complete verification claim precedes them.
+All currently approved glue is applied. Owner integration will separately move the sole marker constants and append any required trait methods at its new base; the worker must receive that tree before adapting exact new signatures.
 
 ## Complete 971-line baseline function/branch map
 
@@ -121,7 +134,7 @@ There are no intentionally omitted baseline domain functions or meaningful branc
 
 ## Public API and future implementers
 
-Public constants: HOLD, NESTED, TRANSACTION, SENTINEL, TERMINAL, UNIT_FIELDS. Public APIs are the table's functions, typed `VerifiedHold`, `SourceMarkerGuard`, `FrontierProvider::new(runtime_root_callback, executing_binary_callback)`, and `LayoutResolution` registration.
+Public constants at this base: HOLD, NESTED, TRANSACTION, SENTINEL, TERMINAL, UNIT_FIELDS. Public APIs are the table's functions, typed VerifiedHold, SourceMarkerGuard, FrontierProvider::new(executing_runtime_pair_callback), and LayoutResolution registration. Installation additionally exports executing_runtime(&Environment, &Path) -> installation::Result<(PathBuf, PathBuf)>.
 
 `FrontierProvider` implements **every method** of both assigned existing traits:
 
@@ -130,32 +143,33 @@ Public constants: HOLD, NESTED, TRANSACTION, SENTINEL, TERMINAL, UNIT_FIELDS. Pu
 
 New actual-callee interface in owned module: `LayoutResolution`, with required advance_ledger, restore_hold, retire, resolve methods and immediately following registry accessor. Future implementer is layout_resolution. `bank_writes::RecoveryTransactions::recover_nested` is a required append to the existing actual-callee interface, future implementer recovery_transactions. No implementation exists at this base, so no existing implementer/caller was left stale.
 
-Reuse actual current `repository_config::SecurityScan` for pending/reservation safety and actual ordinary scope/identity APIs. The security lane is not present in this branch; no Security/CLASSES duplicate or temporary model_reference::CLASSES dependency was added. Existing bank_writes::Security audits remain owned by their actual writer callees, not replaced by frontier.
+Reuse actual `repository_config::SecurityScan` for pending/reservation safety and ordinary scope/identity APIs. The approved rebased branch now contains and wires security::Security. No Security/CLASSES duplicate or temporary model_reference::CLASSES dependency was added. Existing bank_writes::Security audits remain owned by their actual writer callees, not replaced by frontier.
 
 No baseline CLI parser belongs to recovery_frontier, and no artificial command/helper route is introduced.
 
 ## Tests, ignores and exact obligation accounting
 
-Focused target: `t1_recovery_frontier`. Authored declarations: 16 active tests and one explicitly ignored real-security-dependent capacity test; these are declaration counts, not passing results. The active no-receipt locator scenario asserts the owner-approved bootstrap guidance and retained source bytes; the existing installation callee still needs its authorized guidance correction before that new assertion can pass.
+Focused target: t1_recovery_frontier. All 20 declarations are active after the real scanner and three reviewer/runtime regressions were added; these are declaration counts, not passing results. The no-receipt scenario and production installation callee now share the approved bootstrap contract.
 
 Tests reuse merged `tests/support::World` for canonical private roots, isolated full HOME/config/state/Git environment and actual finite-deadline owned re-exec children. Filesystem fixtures are retained canonical baseline state snapshots, not providers or verified-hold capabilities. They exercise real marker files, immutable ledgers/complete predecessor chains, external bindings, source originals, private modes, hardlinks/symlinks, corrupt/deleted index, missing/foreign sentinels, missing holds, review/proposal/original changes, duplicate units/revision loss, partial terminal receipts, exact ranges/framing/references, proof digest behavior, capacity-only successors, empty lifecycle identity, extremal capacity and actual kernel writer-lock contention/nested/unwound source-marker scopes. No external network/credential is required. The only child launcher is World's bounded owned process API; no new child registry or isolation convention exists.
 
-The ignored reservation test preserves its complete domain body and uses `cli::register_providers`, not a fake scanner. It is ignored precisely for the actual security scanner absent at681. Its full baseline public layout/admission contract remains partial even after the direct capacity body can run.
+The complete extremal reservation test is now enabled against the real security registration. It preserves its entire domain body and uses cli::register_providers, not a fake scanner. Full baseline public layout/admission qualification remains partial. Successful re-exec helper bodies publish a fresh exclusive 0600 completion receipt only after all assertions return; parent requires exact receipt plus child exit0, so an exact-filter zero-test dispatch cannot be counted as success.
 
-All frontier-related existing ignored test declarations were inspected, together with fixture/provider setup. **None waits solely for recovery_frontier** at681, so no existing body was removed/narrowed or ignore falsely lifted:
+Rebased fixture/dependency trace and exact enablement:
 
-- Four `t1_bank` writer tests still lack real security and scope/provider fixture prerequisites; their existing setup registers only observation and constructs write proposals, not a bound principal/project. Frontier alone cannot turn them into authorized writers.
-- `t1_bank_transactions::real_partial_rename_converges_finish_and_rollback_at_every_file_boundary` still needs the actual security scanner; full existing converge body is retained.
-- Thirteen `t1_scope_binding` ignores retain genuine security absence; their real bind/preview/apply/enrollment fixtures reach the scanner before the tested operation. Scope/project/turn providers already exist in the CLI but are not substitutes for security. Two enrollment tests additionally exercise actual hold/source prerequisites.
-- Two frontier-named `t1_private_state` ignores still require actual PrivateStateHooks (OMP/admission/installation composite) and security. Native absence must not be faked from ordinary source registries.
-- Four `t1_turn_sources` ignored registration/ACK/wake/cap/publication bodies still require actual security for fixture principal/project binding and a valid executing runtime locator/installation. Installation's presence as a module does not manufacture a receipt owning the test executable.
-- Raw nested identity has a separate real LayoutObservation ignore; this lane does not supply that callee.
+- Enabled seven complete scope bodies: combined status; stale principal/registry/bank/remote refusal; actual native identity status with whitespace/ambient Git; both historical registry-link cases; both explicit-runtime enrollment entry/exit/subdirectory cases. The native identity status operation itself does not request a runtime; only its in-process binding fixture needs frontier injection. No native CLI assertion was replaced with a library assertion.
+- Enabled all four ordinary source registration/ACK/backlog/wake/cap/publication bodies. They already pass explicit runtime paths into real source APIs, so only their in-process binding snapshot needed the actual frontier adapter. The missing-publication-gate scenario retains its typed refusal and does not fabricate publication.
+- Enabled the full existing transaction-convergence body and both catalog final-content/immutable-reader bodies. Their original assertions are retained; merged support::World owns child environment/root/deadline, and with_frontier injects real callbacks only inside that child.
+- Enabled both complete purge bodies after the approved fixture repair. The higher-level render proposal rejects zero contexts; public router_text followed by parse_router represents the genuinely valid legacy MEMORY-only router with all six contexts omitted, without adding context files or weakening production parsing. World records explicit root ownership: new owns its root, reopen is borrowed and never deletes it. Global/explicit lifecycle state roots agree. Each nested purge fault child is an owned bounded 120-second process. Normal completion requires a fresh receipt; deliberate faults require exact stage/token entry evidence plus exit86 and all original confirmation/recovery/repeat/source assertions. No ManuallyDrop/leak or production purge/parser change is used.
+- Six security evaluators genuinely still need an installed-v3 receipt owning the actual am security-policy subprocess. Their World::evaluate/good helpers invoke env!(CARGO_BIN_EXE_am); a callback registration in the test process does not propagate there. Parent confirmed fresh real installation is currently blocked by the genuine PrivateState adapter and no existing real installed fixture is available. Full public bodies remain intact and precisely gated, not faked or narrowed. Other security ignores retain checkpoint/sharing or installed canonical-write prerequisites as applicable.
+- Five remaining scope tests need actual installed-runtime canonical barriers or native writes/recovery subprocesses. Their complete bodies remain present; the actual TurnSources adapter still resolves cli::pack_root, and frontier fixture callbacks do not replace it.
+- Four bank writer tests still lack selected real developer/project fixture setup and receipt-backed canonical barriers; their observer-only WriterWorld cannot be turned into authorized scope by registration alone. Six private-state scenarios still need real PrivateStateHooks; native absence is never inferred from missing producer code. Two catalog query bodies still need actual retrieval/discovery. Workspace and raw nested identity scenarios were already unignored by the rebased upstream work and were not edited again.
 
-The TSV enumerates every exact obligation from the three baseline frontier/frontier_closure/frontier_substitution suites (25 total), plus the exact large-owned-marker eligibility obligation. Six partial annotations reflect active local contracts or the one authored ignored capacity body. Twenty are explicitly unported public campaigns, not narrowed into local tests or promoted to implementation-only. Existing held-enrollment/identity/OMP obligations retain their exact pending statuses/reasons in the applicable reports; this lane claims none of those native/held campaigns qualified.
+The TSV includes all 25 exact obligations from frontier/frontier_closure/frontier_substitution, the large-owned-marker eligibility obligation, and the newly enabled existing consumer IDs (42 entries total). Twenty public campaigns remain explicitly unported, not reduced to local tests or promoted to implementation-only. Twenty-two partial entries include authored local contracts and complete newly enabled bodies awaiting parent proof. Existing held/native/OMP campaigns remain unqualified; this lane claims none as complete.
 
 ## Declared deltas and safety
 
-- Runtime locations are explicit typed inputs/composition callbacks, replacing Python __file__ inference. Owner explicitly approved installed-v3-receipt-only root resolution and a bootstrap-directed no-receipt refusal; uninstalled source-root fallback is intentionally not supported.
+- Runtime locations are explicit typed inputs or one coherent receipt-authorized composition pair, replacing Python __file__ inference. Owner approved installed-v3-receipt-only resolution with bootstrap-directed no-receipt/foreign-executable refusal; uninstalled source fallback is unsupported. Explicit-root hold adapters must canonically match that pair, an intentional Rust receipt-authority delta; ordinary explicit-only observations do not acquire a locator dependency.
 - Hold measurement binds the actual Rust binary into the existing artifact digest, per cutover design. Pack-only legacy digest is not accepted as executing-runtime authority.
 - Rust types make arbitrary expected-marker types and arbitrary hold subclasses unrepresentable. Malformed Value arguments receive bounded named refusals, not Python tracebacks.
 - All observations/writes reuse existing foundation descriptor/trust/clock/codecs. No path-based std::fs trust decisions, new unsafe, unbounded reads, process cancellation or deadline changes are added.
@@ -173,7 +187,48 @@ After owner-approved interfaces/runtime wiring are applied and all lanes settle,
 1. `cargo fmt --check`.
 2. `cargo check --offline --locked --all-targets --features dev-tools`.
 3. `cargo test --offline --locked --features dev-tools --test t1_recovery_frontier` three times on GNU, then the same with `--target x86_64-unknown-linux-musl` three times.
-4. Focused affected consumers: `t1_bank`, `t1_bank_observation`, `t1_bank_transactions`, `t1_scope_binding`, `t1_private_state`, `t1_turn_sources`, and `wiring`, with only genuinely satisfied ignores lifted by their owners.
+4. Focused affected consumers: t1_bank, t1_bank_observation, t1_bank_transactions, t1_scope_binding, t1_private_state, t1_security, t1_turn_sources, t2_recall_catalog, t2_lifecycle, t2_installation, t2_cli, t_support_world, and wiring, with only genuinely satisfied ignores lifted. Native security/real canonical-write tests retain explicit installed-runtime gates and must not count as passes.
 5. Full `cargo test --offline --locked --no-fail-fast --features dev-tools` per parent integration policy, GNU and musl; independent Opus source/behavior acceptance.
 6. Required source panic/unsafe scan over `src/recovery_frontier.rs`; no scan result is fabricated here.
 7. Parent extracts only TSV partial rows' exact IDs and runs `am-dev obligations mark --status partial --ids-file ...`; twenty unported rows remain unported. Actual proof and any stronger status belong to parent.
+
+## Owner integration cutover notes
+
+- The current four public marker schema definitions are ONLY `recovery_frontier::{HOLD,NESTED,TRANSACTION,SENTINEL}`. Owner requested their sole definition move to `bank_writes` at integration. Move the definitions and migrate every source/test import/use in one cutover; do not duplicate values or retain a re-export shim. This frozen lane does not independently introduce a second definition.
+- Every requested baseline function is public, including marker_bytes, marker_value, invalidate, range_value, verified_hold, pending_rows, successor_token, reservation, claim_value, resolve_reference and validate_comparison_review. The owned require_scope accepts actual RequireOptions including owned_lock and owned_transaction, so the owner's require_scope_owned trait method can delegate directly without a second implementation. Explicit runtime/binary arguments remain mandatory.
+- The public domain verified_hold returns Result<Option<VerifiedHold>>; typed holds expose root(), bank(), token(), marker(), scope(), operation_id() and runtime_artifact_digest(). Existing RecoveryFrontier::verified_hold returns marker bytes to bank_observation. Owner selected verified_hold_value as the distinct future full-context trait method and require_scope_owned for owned scope; apply their exact declarations/delegations only after parent rebases to that owner tree. No guessed overload, re-export shim or authority mapping is added at a725.
+- LayoutResolution delegation remains one exact owned callee interface for advance_ledger/restore_hold/retire/resolve; selected_attestation/validate reuse the one private_state::RecoveryQuiescence interface. Owner supplies actual integration implementations/wiring, not fake success providers.
+- The historical a725 installation gap is resolved by the owner-approved executing_runtime API, not by console::InstalledReceipt JSON-shape trust or two separately read records. The API retains existing receipt trust/v3/current-executable checks and source_binary selection; pack_root and omp_locations reuse it. Development and release layouts remain distinct, as actually recorded.
+- Production composition now shares one real provider Arc across both traits. Test callbacks are only injected in isolated test processes; actual am child binaries retain production receipt authority. The original security native CLI gates therefore remain genuine, not treated as solved by this registration.
+
+## Parent compile and formatting handoff
+
+Parent reported the all-target check compiles; its only warnings were the intentional shared-support re-exports. Parent added the narrow allow(unused_imports) attribute on that pub use, which is preserved. The worker applied the exact formatting changes supplied in `/tmp/agent-memory-recovery-frontier-proof/initial-fmt.log` through anchored edit operations in the eight named source/test files, without running a formatter, build or test and without changing reviewed logic. Duplicate shared-module diff entries were applied once. Final formatting verification remains parent-owned; this note does not claim a rerun.
+
+## Independent-review corrections
+
+The reviewer identified two actual defects; both are corrected without changing public APIs, installation ownership or production wiring:
+
+- `install` now acquires the actual ComparisonView provider before its first durable write and retains that exact Arc for final invalidation. A private `invalidate_with` helper shares the existing invalidation result/error policy with public invalidate; no second registry lookup can lose the preflight dependency. Missing registration therefore leaves the original operation evidence, canonical bytes, index and binding untouched rather than publishing an active operation with no hold. The new isolated regression uses a genuine owned recovery lock, retained source/proposal/map/original files and no substitute comparison provider; it asserts the named refusal and absence of every new ledger/head/index/binding/marker.
+- `resolve_reference` now validates actual record-version positivity using the validated decimal Integer text, not as_i64/as_u64. Arbitrarily large positive versions remain accepted; zero, negative integers, floats and booleans refuse. A regression uses the existing retained-evidence fixture and a version above u64, checks exact resolved reference bytes, exercises all four invalid classes, restores the large valid version and verifies original source/hold bytes remain unchanged.
+
+Exact reviewer correction files: src/recovery_frontier.rs, tests/t1_recovery_frontier.rs and this report. Worker ran no checks after those corrections. The runtime API/composition blocker described at that historical boundary is now resolved by the separately authorized batch below.
+
+## First focused proof and fixture corrections
+
+Parent reported post-review fmt/check success, then the first focused run on GNU and musl each produced 7 passes and 12 failures. The worker read the GNU failure log and did not rerun either target. Eleven failures occurred before child launch: with_frontier incorrectly passed its legitimate test-control variable through RunOptions.env, whose existing contract accepts only fault-injection overrides. The helper now inserts that control into its owned World.env and invokes World's ordinary run method; canonical-root validation, private child environment, finite deadline/capture and exact post-body completion receipt remain unchanged. No production allowlist or ambient environment is changed.
+
+The remaining Busy assertion exposed malformed fixture ownership, not a port taxonomy defect. Baseline local_registry and the Rust probe both require operation names prefixed bank- before checking actual lock contention. The test created operation replace, correctly yielding an unknown-owner Contract refusal before Busy. Its real held lock now records bank-replace, preserving the original typed Busy assertion, nested/unwind restoration and source-preservation assertions. The new missing-comparison install regression likewise records the canonical bank-recover name. No production error kind or precedence changed.
+
+Exact first-proof correction files: tests/support/mod.rs, tests/t1_recovery_frontier.rs and this report. No public API/obligation status change, test-body narrowing or worker check occurred. The then-pending bootstrap API/composition is now applied in the authorized batch below.
+
+## Authorized post-full-suite source batch
+
+Parent reported frozen-a725 full-suite summaries: GNU 865 passed/51 failed/33 ignored; musl 907 passed/9 failed/33 ignored. These are parent observations of older bytes, not proof of this batch. Parent ran a separate syscall diagnostic of the already compiled capacity case: substantial active Git/filesystem work, 183 flock calls totaling 0.000740 seconds and no blocked lock. It authorized only the unchanged full-capacity scenario's 600-second bound; the helper now accepts an explicit seconds argument and all other callers retain 120. No cap, ACK count, retry or assertion was reduced.
+
+The scope enrollment fixture now explicitly binds its first independent checkout and links the second to the same established project; all fresh configuration/remote entry/exit refusal and unchanged-byte assertions remain. The prior second bind correctly refused and was not a production defect.
+
+The four reported lifecycle failures all reached the invalid zero-context render fixture (including the fault worker's exit101). The fixture now uses existing public router_text/parse_router, which permit zero routes with all six explicit omissions, preserving MEMORY-only state. Fault stages, entered evidence, expected exit86, exact confirmation reuse and recovery assertions remain unchanged. Latest runtime/fixture/deadline source requires fresh parent focused checks; none were executed by the worker.
+
+Exact additional files beyond the original seventeen are src/installation/providers.rs, src/installation.rs, src/cli/mod.rs, tests/t2_installation.rs and tests/t2_cli.rs (22 total). Obligation TSV remains 22 partial/20 unported; parent owns ledger marking and actual GNU/musl proof.
+

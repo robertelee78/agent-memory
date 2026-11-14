@@ -1630,7 +1630,7 @@ fn pause_fault_creates_missing_rendezvous_and_writes_ready() {
 
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_preview_and_inspect_are_read_only_and_apply_replaces_one_file_with_readback
 #[test]
-#[ignore = "needs recovery_frontier scope_binding security turn_sources registered"]
+#[ignore = "needs a real selected developer/project binding fixture and installed v3 runtime for canonical barriers; WriterWorld currently registers only observation"]
 fn write_preview_apply_preserves_mode_readback_and_exact_receipt_bytes() {
     use std::os::unix::fs::PermissionsExt;
     let fixture = WriterWorld::new();
@@ -1746,7 +1746,7 @@ fn expected_write_receipt(proposal: &Value, bank: &std::path::Path, outcome: &st
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_interrupted_after_replace_is_distinct_from_a_failed_write_and_replay_converges
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_lost_response_after_receipt_replays_without_duplicate_or_replacement
 #[test]
-#[ignore = "needs scope_binding recovery_frontier security turn_sources registered"]
+#[ignore = "needs a real selected developer/project binding fixture and installed v3 runtime for canonical barriers; WriterWorld currently registers only observation"]
 fn already_present_then_receipted_replay_preserves_bytes_and_hardlinked_receipt() {
     use std::os::unix::fs::MetadataExt;
     let fixture = WriterWorld::new();
@@ -1800,7 +1800,7 @@ fn already_present_then_receipted_replay_preserves_bytes_and_hardlinked_receipt(
 
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_invalid_scope_symlinks_and_operation_id_reuse_refuse
 #[test]
-#[ignore = "needs scope_binding recovery_frontier security turn_sources registered"]
+#[ignore = "needs a real selected developer/project binding fixture and installed v3 runtime for canonical barriers; WriterWorld currently registers only observation"]
 fn unexpected_receipt_is_preserved_during_apply() {
     let fixture = WriterWorld::new();
     let prepared = fixture.prepared();
@@ -1821,7 +1821,7 @@ fn unexpected_receipt_is_preserved_during_apply() {
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_external_target_edit_immediately_before_replacement_is_not_overwritten
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_failure_before_replace_leaves_the_original_and_no_verified_receipt
 #[test]
-#[ignore = "needs scope_binding recovery_frontier security turn_sources registered"]
+#[ignore = "needs a real selected developer/project binding fixture and installed v3 runtime for canonical barriers; WriterWorld currently registers only observation"]
 fn replacement_error_wins_when_the_temporary_was_removed_and_cleanup_leaves_no_files() {
     for remove_temporary in [false, true] {
         let fixture = WriterWorld::new();

@@ -29,7 +29,7 @@ pub use plan::{
 };
 pub use providers::{
     CacheInstallation, InstallationActivation, InstalledReceiptProvider, MANAGED_SOURCE_INFO,
-    ManagedSourceInfo, OmpHarness, RuntimePackRoot, installation_inventory,
+    ManagedSourceInfo, OmpHarness, RuntimePackRoot, executing_runtime, installation_inventory,
     omp_activation_template, omp_locations, omp_verify_targets, pack_root,
 };
 pub use records::{encoded, load, read_journal, read_receipt, receipt_is_rust_era};

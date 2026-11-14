@@ -8,6 +8,7 @@ use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
+mod support;
 
 const ID: &str = "00000000-0000-4000-8000-000000000000";
 const PROJECT: &str = "8e0b66aa-2be5-4fa3-b47f-1245474aa7dd";
@@ -933,92 +934,99 @@ fn real_files_inventory_accepts_empty_bank_and_ignores_runtime_payloads() {
 
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_every_interruption_boundary_refuses_normal_reads_and_converges_in_both_directions
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn real_partial_rename_converges_finish_and_rollback_at_every_file_boundary() {
-    real_observer();
-    for mode in ["finish", "rollback"] {
-        for completed in 0..=2 {
-            let w = World::new();
-            w.mkdir("repo/memory-bank");
-            let before = valid_files();
-            let mut after = before.clone();
-            *after.get_mut("activeContext.md").unwrap() = string("# Focus\n\nNew task.\n");
-            let router = get(&before, "MEMORY.md")
-                .as_str()
-                .unwrap()
-                .replace("2026-10-22T18:00:00Z", "2026-10-22T19:00:00Z");
-            *after.get_mut("MEMORY.md").unwrap() = string(router);
-            write_files(&w.path("repo/memory-bank"), &before);
-            let mut p = proposal(&w.path("repo"));
-            *p.get_mut("observed_hashes").unwrap() = txn::file_hashes(&before).unwrap();
-            *p.get_mut("files").unwrap() = after.clone();
-            let marker = txn::marker_bytes(&p).unwrap();
-            let (journal, receipt) = txn::locations_with_environment(
-                &w.path("repo"),
-                &w.path("repo/memory-bank"),
-                ID,
-                &w.environment(),
-            )
-            .unwrap();
-            let raw = encoded(&object([
-                ("schema", string("agent-memory/transaction-journal-v1")),
-                ("proposal", p.clone()),
-                ("base_files", before.clone()),
-            ]))
-            .unwrap();
-            agent_memory::local_registry::private_mkdir(journal.parent().unwrap()).unwrap();
-            agent_memory::local_registry::replace(&journal, &raw, None).unwrap();
-            txn::create_marker(&w.path("repo/memory-bank").join(txn::MARKER), &marker).unwrap();
-            let paths = BTreeSet::from(["activeContext.md".to_owned(), "MEMORY.md".to_owned()]);
-            for path in ["activeContext.md", "MEMORY.md"]
-                .into_iter()
-                .take(completed)
-            {
-                let expected =
-                    agent_memory::bank_writes::hashes(&w.path("repo/memory-bank")).unwrap();
-                txn::replace_file(
-                    &w.path("repo/memory-bank"),
-                    path,
-                    get(&after, path).as_str(),
-                    &expected,
-                    &marker,
-                    &paths,
-                    None,
-                    None,
-                )
-                .unwrap();
-            }
-            let observed = agent_memory::bank_writes::hashes(&w.path("repo/memory-bank")).unwrap();
-            let result = agent_memory::local_registry::exclusive(
-                &w.path("repo/memory-bank/.agent-memory.lock"),
-                ID,
-                "bank-recover",
-                agent_memory::host::Sources::default(),
-                |owner| {
-                    txn::converge(
+    support::with_frontier(
+        "real_partial_rename_converges_finish_and_rollback_at_every_file_boundary",
+        || {
+            real_observer();
+            for mode in ["finish", "rollback"] {
+                for completed in 0..=2 {
+                    let w = World::new();
+                    w.mkdir("repo/memory-bank");
+                    let before = valid_files();
+                    let mut after = before.clone();
+                    *after.get_mut("activeContext.md").unwrap() = string("# Focus\n\nNew task.\n");
+                    let router = get(&before, "MEMORY.md")
+                        .as_str()
+                        .unwrap()
+                        .replace("2026-10-22T18:00:00Z", "2026-10-22T19:00:00Z");
+                    *after.get_mut("MEMORY.md").unwrap() = string(router);
+                    write_files(&w.path("repo/memory-bank"), &before);
+                    let mut p = proposal(&w.path("repo"));
+                    *p.get_mut("observed_hashes").unwrap() = txn::file_hashes(&before).unwrap();
+                    *p.get_mut("files").unwrap() = after.clone();
+                    let marker = txn::marker_bytes(&p).unwrap();
+                    let (journal, receipt) = txn::locations_with_environment(
                         &w.path("repo"),
                         &w.path("repo/memory-bank"),
-                        &p,
-                        &before,
-                        &journal,
-                        &raw,
-                        &receipt,
-                        mode,
-                        &observed,
-                        owner,
-                        true,
-                        agent_memory::host::Sources::default(),
+                        ID,
+                        &w.environment(),
                     )
-                },
-            )
-            .unwrap();
-            assert_eq!(get(&result, "verified"), &Value::Bool(true));
-            assert_eq!(
-                txn::files_at(&w.path("repo/memory-bank")).unwrap(),
-                if mode == "finish" { after } else { before }
-            );
-            assert!(!journal.exists());
-            assert!(!w.path("repo/memory-bank").join(txn::MARKER).exists());
-        }
-    }
+                    .unwrap();
+                    let raw = encoded(&object([
+                        ("schema", string("agent-memory/transaction-journal-v1")),
+                        ("proposal", p.clone()),
+                        ("base_files", before.clone()),
+                    ]))
+                    .unwrap();
+                    agent_memory::local_registry::private_mkdir(journal.parent().unwrap()).unwrap();
+                    agent_memory::local_registry::replace(&journal, &raw, None).unwrap();
+                    txn::create_marker(&w.path("repo/memory-bank").join(txn::MARKER), &marker)
+                        .unwrap();
+                    let paths =
+                        BTreeSet::from(["activeContext.md".to_owned(), "MEMORY.md".to_owned()]);
+                    for path in ["activeContext.md", "MEMORY.md"]
+                        .into_iter()
+                        .take(completed)
+                    {
+                        let expected =
+                            agent_memory::bank_writes::hashes(&w.path("repo/memory-bank")).unwrap();
+                        txn::replace_file(
+                            &w.path("repo/memory-bank"),
+                            path,
+                            get(&after, path).as_str(),
+                            &expected,
+                            &marker,
+                            &paths,
+                            None,
+                            None,
+                        )
+                        .unwrap();
+                    }
+                    let observed =
+                        agent_memory::bank_writes::hashes(&w.path("repo/memory-bank")).unwrap();
+                    let result = agent_memory::local_registry::exclusive(
+                        &w.path("repo/memory-bank/.agent-memory.lock"),
+                        ID,
+                        "bank-recover",
+                        agent_memory::host::Sources::default(),
+                        |owner| {
+                            txn::converge(
+                                &w.path("repo"),
+                                &w.path("repo/memory-bank"),
+                                &p,
+                                &before,
+                                &journal,
+                                &raw,
+                                &receipt,
+                                mode,
+                                &observed,
+                                owner,
+                                true,
+                                agent_memory::host::Sources::default(),
+                            )
+                        },
+                    )
+                    .unwrap();
+                    assert_eq!(get(&result, "verified"), &Value::Bool(true));
+                    assert_eq!(
+                        txn::files_at(&w.path("repo/memory-bank")).unwrap(),
+                        if mode == "finish" { after } else { before }
+                    );
+                    assert!(!journal.exists());
+                    assert!(!w.path("repo/memory-bank").join(txn::MARKER).exists());
+                }
+            }
+        },
+    );
 }

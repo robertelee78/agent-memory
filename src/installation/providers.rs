@@ -24,23 +24,31 @@ fn rust_receipt(env: &Environment) -> Result<(PathBuf, Value)> {
         .filter(receipt_is_rust_era)
         .ok_or_else(|| {
             ContractError::new(
-                "No installed Rust runtime receipt owns this executable; pass --pack PATH",
+                "No installed Rust runtime receipt owns this executable; use the trusted bootstrap installer",
             )
         })?;
     Ok((state, receipt))
 }
 
-/// The installed pack of the running binary, from the receipt: the
-/// executable must be the receipt's owned runtime binary.
-pub fn pack_root(env: &Environment, executable: &Path) -> Result<PathBuf> {
+/// The executing pack and binary selected together from one installed v3 receipt.
+/// The executable is checked against that receipt, never used as a fallback.
+pub fn executing_runtime(env: &Environment, executable: &Path) -> Result<(PathBuf, PathBuf)> {
     let (_, receipt) = rust_receipt(env)?;
     let source = get(&receipt, "source");
     let binary = source_binary(source)?;
     super::require(
         canonical(executable)? == canonical(&binary)?,
-        "This executable is not the installed agent-memory runtime; pass --pack PATH",
+        "This executable is not the installed agent-memory runtime; use the trusted bootstrap installer",
     )?;
-    Ok(PathBuf::from(text(source, "pack").unwrap_or_default()))
+    Ok((
+        PathBuf::from(text(source, "pack").unwrap_or_default()),
+        binary,
+    ))
+}
+
+/// The installed pack of the running binary, from the same runtime authority.
+pub fn pack_root(env: &Environment, executable: &Path) -> Result<PathBuf> {
+    executing_runtime(env, executable).map(|(pack, _)| pack)
 }
 
 /// `cli::PackRoot` for the running executable in the process environment.
@@ -95,9 +103,8 @@ pub fn installation_inventory(env: &Environment) -> Result<Option<Value>> {
 
 /// Installation half of `OmpActivation::locations`.
 pub fn omp_locations(env: &Environment, executable: &Path) -> Result<RuntimeLocations> {
-    let (state, receipt) = rust_receipt(env)?;
-    let pack = pack_root(env, executable)?;
-    let binary = source_binary(get(&receipt, "source"))?;
+    let state = locations(env)?.state;
+    let (pack, binary) = executing_runtime(env, executable)?;
     Ok(RuntimeLocations {
         state,
         pack: canonical(&pack)?,

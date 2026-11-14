@@ -328,7 +328,7 @@ fn isolated(name: &str, body: impl FnOnce(&World)) {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_source_classes_remain_distinct_and_repository_bytes_are_actually_checked
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
+#[ignore = "needs an installed v3 runtime owning the actual am security-policy child executable; in-process frontier callbacks do not cross that process boundary"]
 fn source_classes_and_real_repository_inventory() {
     isolated("source_classes_and_real_repository_inventory", |world| {
         let (repo, bank) = world.fixture();
@@ -465,7 +465,7 @@ fn source_classes_and_real_repository_inventory() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_secret_candidates_are_redacted_and_audit_never_copies_payload_or_secret_hashes
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
+#[ignore = "needs an installed v3 runtime owning the actual am security-policy child executable; in-process frontier callbacks do not cross that process boundary"]
 fn secrets_redact_without_private_audit_payload() {
     isolated("secrets_redact_without_private_audit_payload", |world| {
         let (repo, bank) = world.fixture();
@@ -493,7 +493,7 @@ fn secrets_redact_without_private_audit_payload() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_hostile_authority_identity_and_conversation_text_quarantine_without_echo_or_execution
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
+#[ignore = "needs an installed v3 runtime owning the actual am security-policy child executable; in-process frontier callbacks do not cross that process boundary"]
 fn hostile_sources_never_echo_or_execute() {
     isolated("hostile_sources_never_echo_or_execute", |world| {
         let (repo, _) = world.fixture();
@@ -532,7 +532,7 @@ fn hostile_sources_never_echo_or_execute() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_wrong_project_oversize_private_evidence_and_embedded_approval_claims_do_not_authorize
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
+#[ignore = "needs an installed v3 runtime owning the actual am security-policy child executable; in-process frontier callbacks do not cross that process boundary"]
 fn wrong_project_private_evidence_and_claims_refuse() {
     isolated(
         "wrong_project_private_evidence_and_claims_refuse",
@@ -578,7 +578,7 @@ fn wrong_project_private_evidence_and_claims_refuse() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_procedure_eligibility_requires_separate_exact_project_content_version_approval
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
+#[ignore = "needs an installed v3 runtime owning the actual am security-policy child executable; in-process frontier callbacks do not cross that process boundary"]
 fn procedure_approval_is_separate_exact_and_typed() {
     isolated("procedure_approval_is_separate_exact_and_typed", |world| {
         let (repo, _) = world.fixture();
@@ -634,7 +634,7 @@ fn procedure_approval_is_separate_exact_and_typed() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_deleted_record_id_suppresses_cached_text_before_audited_retrieval_output
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
+#[ignore = "needs an installed v3 runtime owning the actual am security-policy child executable; in-process frontier callbacks do not cross that process boundary"]
 fn terminal_deletion_suppresses_cached_text() {
     isolated("terminal_deletion_suppresses_cached_text", |world| {
         let (repo, bank) = world.fixture();
@@ -1188,7 +1188,7 @@ fn audit_rejects_invalid_metadata_before_io_and_migration_requires_real_locator(
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_governed_checkpoint_and_primitive_checkpoint_refuse_secrets_before_canonical_writes
 #[test]
-#[ignore = "needs checkpoint, recovery_frontier and turn_sources registered"]
+#[ignore = "needs checkpoint and an installed v3 runtime owning the actual native command executable"]
 fn checkpoint_refuses_secrets_before_writes() {
     isolated("checkpoint_refuses_secrets_before_writes", |world| {
         let (repo, bank) = world.fixture();
@@ -1330,7 +1330,7 @@ fn initialization_refuses_secret_reviewed_summary() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_required_audit_failure_stops_write_and_same_operation_retries_after_repair
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
+#[ignore = "needs an installed v3 runtime for the actual am security-policy child and real TurnSources canonical write barrier"]
 fn audit_failure_stops_real_write_until_repair() {
     isolated("audit_failure_stops_real_write_until_repair", |world| {
         let (repo, bank) = world.fixture();
@@ -1368,7 +1368,7 @@ fn audit_failure_stops_real_write_until_repair() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_interrupted_checkpoint_audit_and_write_replay_converge_without_payload_copies
 #[test]
-#[ignore = "needs checkpoint, recovery_frontier and turn_sources registered"]
+#[ignore = "needs checkpoint and an installed v3 runtime owning the actual native command executable"]
 fn interrupted_checkpoint_replay_retains_metadata_only() {
     isolated(
         "interrupted_checkpoint_replay_retains_metadata_only",
@@ -1511,7 +1511,7 @@ fn authored_record(number: usize) -> String {
 
 // obligation: tests/contracts/test_large_refresh_security.py::LargeRefreshSecurityContract.test_complete_v2_delta_above_sixty_four_sources_imports_and_qualifies_peer_learning
 #[test]
-#[ignore = "needs semantic_sharing, memory_refresh, sharing_recovery, recovery_frontier and turn_sources registered"]
+#[ignore = "needs semantic_sharing, memory_refresh, sharing_recovery and an installed v3 runtime owning the actual native command executable"]
 fn complete_v2_refresh_preserves_feature_state_and_qualifies_last_source() {
     isolated(
         "complete_v2_refresh_preserves_feature_state_and_qualifies_last_source",

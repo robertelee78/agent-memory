@@ -19,6 +19,7 @@ use std::process::Command;
 use std::sync::Arc;
 use std::time::Duration;
 
+mod support;
 const STAND_IN: &[u8] = b"#!/bin/sh\nprintf 'stand-in am %s\\n' \"$*\"\n";
 const BASE: &str = "0.0.15";
 const NEXT: &str = "0.0.16";
@@ -28,6 +29,7 @@ const NEXT: &str = "0.0.16";
 struct World {
     root: PathBuf,
     token: String,
+    owns_root: bool,
 }
 impl World {
     fn new() -> Self {
@@ -47,12 +49,17 @@ impl World {
             std::fs::create_dir(root.join(name)).unwrap();
             mode(&root.join(name), 0o700);
         }
-        Self { root, token }
+        Self {
+            root,
+            token,
+            owns_root: true,
+        }
     }
     fn reopen(root: &Path, token: &str) -> Self {
         Self {
             root: root.to_path_buf(),
             token: token.to_owned(),
+            owns_root: false,
         }
     }
     fn path(&self, name: &str) -> PathBuf {
@@ -99,7 +106,7 @@ impl World {
 }
 impl Drop for World {
     fn drop(&mut self) {
-        if std::env::var_os("AM_T2_CHILD").is_none() {
+        if self.owns_root && std::env::var_os("AM_T2_CHILD").is_none() {
             let _ = make_writable(&self.root);
             let _ = std::fs::remove_dir_all(&self.root);
         }
@@ -658,34 +665,62 @@ fn child_entry() {
         world: World::reopen(&root, &token),
         channel: Channel::open(&root.join("channel")),
     };
-    let result = match command.as_str() {
-        "recover" => install::recover_command(&installed.world.env(), &installed.services()),
-        "update" => updating::update_command(
-            &installed.world.env(),
-            &installed.services(),
-            &UpdateRequest::default(),
-        ),
-        "uninstall" => uninstallation::uninstall_command(
-            &installed.world.env(),
-            &installed.services(),
-            &UninstallRequest::default(),
-        ),
-        "purge" => agent_memory::purging::purge_command(
-            &installed.world.env(),
-            &installed.services(),
-            &agent_memory::purging::PurgeRequest {
-                repo: installed.world.path("repo"),
-                path: installed.world.path("repo/memory-bank"),
-                check: false,
-                confirm: std::env::var("AM_T2_CONFIRM").ok(),
-            },
-        ),
-        other => panic!("unknown child command {other}"),
+    let run = || {
+        let result = match command.as_str() {
+            "recover" => install::recover_command(&installed.world.env(), &installed.services()),
+            "purge-scenario" => {
+                let point = std::env::var("AM_T2_PURGE_POINT").unwrap();
+                purge_interruption_scenario(&installed.world, &point);
+                return;
+            }
+            "update" => updating::update_command(
+                &installed.world.env(),
+                &installed.services(),
+                &UpdateRequest::default(),
+            ),
+            "uninstall" => uninstallation::uninstall_command(
+                &installed.world.env(),
+                &installed.services(),
+                &UninstallRequest::default(),
+            ),
+            "purge" => {
+                use std::io::Write;
+                use std::os::unix::fs::OpenOptionsExt;
+                let stage = std::env::var("AGENT_MEMORY_FAULT_STAGE").unwrap();
+                let path = installed.world.path(&format!("{stage}.entered"));
+                let mut proof = std::fs::OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .mode(0o600)
+                    .open(path)
+                    .unwrap();
+                proof
+                    .write_all(format!("{stage}\n{}\n", installed.world.token).as_bytes())
+                    .unwrap();
+                proof.sync_all().unwrap();
+                agent_memory::purging::purge_command(
+                    &installed.world.env(),
+                    &installed.services(),
+                    &agent_memory::purging::PurgeRequest {
+                        repo: installed.world.path("repo"),
+                        path: installed.world.path("repo/memory-bank"),
+                        check: false,
+                        confirm: std::env::var("AM_T2_CONFIRM").ok(),
+                    },
+                )
+            }
+            other => panic!("unknown child command {other}"),
+        };
+        println!(
+            "AM-RESULT:{}",
+            json::encode(&result.value.unwrap_or(Value::Null), json::COMPACT_ASCII).unwrap()
+        );
     };
-    println!(
-        "AM-RESULT:{}",
-        json::encode(&result.value.unwrap_or(Value::Null), json::COMPACT_ASCII).unwrap()
-    );
+    if matches!(command.as_str(), "purge" | "purge-scenario") {
+        support::with_frontier("child_entry", run);
+    } else {
+        run();
+    }
 }
 
 struct Child {
@@ -693,6 +728,9 @@ struct Child {
     value: Option<Value>,
 }
 fn child(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
+    if matches!(command, "purge" | "purge-scenario") {
+        return bounded_purge_child(world, command, extra);
+    }
     let mut process = Command::new(std::env::current_exe().unwrap());
     process
         .args([
@@ -721,6 +759,78 @@ fn child(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
         code: output.status.code(),
         value,
     }
+}
+fn bounded_purge_child(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
+    use agent_memory::{clock::Deadline, process};
+    let argv = [
+        std::env::current_exe().unwrap().into_os_string(),
+        "child_entry".into(),
+        "--exact".into(),
+        "--nocapture".into(),
+        "--test-threads=1".into(),
+        "-q".into(),
+    ];
+    let mut environment: Vec<(OsString, OsString)> = world
+        .pairs()
+        .into_iter()
+        .map(|(key, value)| (key.into(), value.into()))
+        .collect();
+    // Complete the merged World's root-variable contract for this owned child;
+    // the explicit lifecycle state and process-global domain state are identical.
+    for (key, relative) in [
+        ("XDG_CACHE_HOME", "cache"),
+        ("GH_CONFIG_DIR", "credentials"),
+        ("AGENT_MEMORY_CONFIG_HOME", "config/agent-memory"),
+        ("AGENT_MEMORY_STATE_HOME", "state/agent-memory"),
+        ("AGENT_MEMORY_BACKUP_HOME", "backups"),
+    ] {
+        let path = world.path(relative);
+        std::fs::create_dir_all(&path).unwrap();
+        mode(&path, 0o700);
+        environment.push((key.into(), path.into_os_string()));
+    }
+    environment.push(("AM_T2_CHILD".into(), command.into()));
+    environment.push(("AM_FRONTIER_CONSUMER_CASE".into(), "child_entry".into()));
+    environment.extend(
+        extra
+            .iter()
+            .map(|(key, value)| ((*key).into(), value.into())),
+    );
+    let cwd = world.path("repo");
+    let output = process::run(&process::Spec {
+        argv: &argv,
+        env: &environment,
+        search_path: false,
+        cwd: Some(&cwd),
+        stdin: process::Input::Null,
+        stdout: process::Target::Capture {
+            limit: 4 * 1024 * 1024,
+        },
+        stderr: process::Target::Capture {
+            limit: 4 * 1024 * 1024,
+        },
+        deadline: Deadline::from_seconds(120.0).unwrap(),
+        new_session: false,
+        file_size_limit: None,
+        umask: Some(0o077),
+        pass_fds: &[],
+    })
+    .unwrap();
+    let code = match output.status {
+        process::Status::Code(code) => Some(code),
+        _ => None,
+    };
+    if code == Some(0) {
+        assert_eq!(
+            std::fs::read(world.path("frontier-consumer-completed")).unwrap(),
+            format!("child_entry\n{}\n", world.token).as_bytes(),
+        );
+    }
+    let value = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .find_map(|line| line.strip_prefix("AM-RESULT:"))
+        .map(|line| json::decode(line, Default::default()).unwrap());
+    Child { code, value }
 }
 fn fault(stage: &str) -> Vec<(&'static str, String)> {
     vec![
@@ -2167,10 +2277,33 @@ fn purge(
 }
 fn small_bank(world: &World) -> PathBuf {
     let bank = world.path("repo/memory-bank");
-    write(
-        &bank.join("MEMORY.md"),
-        "---\nschema: agent-memory/v1\nproject-id: 8e0b66aa-2be5-4fa3-b47f-1245474aa7dd\n---\nBank.\n",
+    let metadata = Value::Object(vec![
+        ("schema".into(), Value::String("agent-memory/v1".into())),
+        (
+            "project-id".into(),
+            Value::String("8e0b66aa-2be5-4fa3-b47f-1245474aa7dd".into()),
+        ),
+        (
+            "router-updated".into(),
+            Value::String("2026-10-22T18:00:00Z".into()),
+        ),
+    ]);
+    let omitted = Value::Object(
+        agent_memory::bank_contract::CONTEXTS
+            .iter()
+            .map(|name| {
+                (
+                    (*name).into(),
+                    Value::String("No distinct purge fixture source".into()),
+                )
+            })
+            .collect(),
     );
+    // A legacy MEMORY-only router is valid; the higher-level render proposal
+    // intentionally requires a useful context and cannot represent this fixture.
+    let router = agent_memory::bank_contract::router_text(&metadata, &[], &omitted).unwrap();
+    agent_memory::bank_contract::parse_router(&router).unwrap();
+    write(&bank.join("MEMORY.md"), router);
     bank
 }
 
@@ -2211,28 +2344,34 @@ fn broad_home_root_and_symlink_inputs_are_refused_without_writes() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_exact_preview_confirmation_and_repeat_preserve_runtime_backups_code_and_git
 #[test]
-#[ignore = "needs security, recovery_frontier registered"]
 fn broad_path_preview_confirm_and_repeat_purge_only_the_confirmed_bank() {
-    let world = World::new();
-    let bank = small_bank(&world);
-    let repo = world.path("repo");
-    let before = snapshot(&world.root);
-    let (code, denied) = purge(&world, &repo, &repo, true, None);
-    assert_eq!(
-        refused(code, &denied),
-        "Purge path must be exactly this repository's resolved Memory Bank, not a broad directory"
+    support::with_frontier(
+        "broad_path_preview_confirm_and_repeat_purge_only_the_confirmed_bank",
+        || {
+            let root = support::require_current_world().unwrap();
+            let token = std::env::var("AGENT_MEMORY_TEST_TOKEN").unwrap();
+            let world = World::reopen(&root, &token);
+            let bank = small_bank(&world);
+            let repo = world.path("repo");
+            let before = snapshot(&world.root);
+            let (code, denied) = purge(&world, &repo, &repo, true, None);
+            assert_eq!(
+                refused(code, &denied),
+                "Purge path must be exactly this repository's resolved Memory Bank, not a broad directory"
+            );
+            assert_eq!(snapshot(&world.root), before);
+            let (code, preview) = purge(&world, &repo, &bank, true, None);
+            assert_eq!(code, 0, "{preview:?}");
+            assert_eq!(snapshot(&world.root), before);
+            let token = text(get(&preview, "preview"), "confirmation").to_owned();
+            let (code, done) = purge(&world, &repo, &bank, false, Some(&token));
+            verified(code, &done);
+            assert!(!bank.exists());
+            let (code, repeated) = purge(&world, &repo, &bank, false, Some(&token));
+            verified(code, &repeated);
+            assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
+        },
     );
-    assert_eq!(snapshot(&world.root), before);
-    let (code, preview) = purge(&world, &repo, &bank, true, None);
-    assert_eq!(code, 0, "{preview:?}");
-    assert_eq!(snapshot(&world.root), before);
-    let token = text(get(&preview, "preview"), "confirmation").to_owned();
-    let (code, done) = purge(&world, &repo, &bank, false, Some(&token));
-    verified(code, &done);
-    assert!(!bank.exists());
-    let (code, repeated) = purge(&world, &repo, &bank, false, Some(&token));
-    verified(code, &repeated);
-    assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
 }
 
 #[test]
@@ -2396,7 +2535,6 @@ fn doctor_fix_refuses_while_diagnostics_is_unregistered() {
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_interruptions_before_journal_detach_partial_delete_and_lost_response_converge
 // obligation: tests/contracts/test_lifecycle_lost_responses.py::LifecycleLostResponses.test_purge_response_loss_reuses_the_exact_original_confirmation
 #[test]
-#[ignore = "needs security, recovery_frontier registered"]
 fn purge_interruptions_and_lost_response_converge_on_the_same_confirmation() {
     for point in [
         "purge-bank-lock-ready",
@@ -2407,31 +2545,43 @@ fn purge_interruptions_and_lost_response_converge_on_the_same_confirmation() {
         "purge-response-lost",
     ] {
         let world = World::new();
-        let bank = small_bank(&world);
-        write(&bank.join("projectbrief.md"), "# Project\n");
-        let repo = world.path("repo");
-        let (code, preview) = purge(&world, &repo, &bank, true, None);
-        assert_eq!(code, 0, "{preview:?}");
-        let token = text(get(&preview, "preview"), "confirmation").to_owned();
-        let mut extra = fault(point);
-        extra.push(("AM_T2_CONFIRM", token.clone()));
-        assert_eq!(child(&world, "purge", &extra).code, Some(86), "{point}");
-        let (code, completed) = purge(&world, &repo, &bank, false, Some(&token));
-        verified(code, &completed);
-        let receipt = get(&completed, "receipt");
-        assert!(install::same(
-            get(receipt, "preview"),
-            get(&preview, "preview")
-        ));
-        assert_eq!(
-            get(receipt, "deletion_readback_verified"),
-            &Value::Bool(true)
+        let outcome = child(
+            &world,
+            "purge-scenario",
+            &[("AM_T2_PURGE_POINT", point.into())],
         );
-        assert!(!bank.exists());
-        let (code, repeated) = purge(&world, &repo, &bank, false, Some(&token));
-        verified(code, &repeated);
-        assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
+        assert_eq!(outcome.code, Some(0), "{point}");
     }
+}
+fn purge_interruption_scenario(world: &World, point: &str) {
+    let bank = small_bank(&world);
+    write(&bank.join("projectbrief.md"), "# Project\n");
+    let repo = world.path("repo");
+    let (code, preview) = purge(&world, &repo, &bank, true, None);
+    assert_eq!(code, 0, "{preview:?}");
+    let token = text(get(&preview, "preview"), "confirmation").to_owned();
+    let mut extra = fault(point);
+    extra.push(("AM_T2_CONFIRM", token.clone()));
+    assert_eq!(child(&world, "purge", &extra).code, Some(86), "{point}");
+    assert_eq!(
+        std::fs::read(world.path(&format!("{point}.entered"))).unwrap(),
+        format!("{point}\n{}\n", world.token).as_bytes(),
+    );
+    let (code, completed) = purge(&world, &repo, &bank, false, Some(&token));
+    verified(code, &completed);
+    let receipt = get(&completed, "receipt");
+    assert!(install::same(
+        get(receipt, "preview"),
+        get(&preview, "preview")
+    ));
+    assert_eq!(
+        get(receipt, "deletion_readback_verified"),
+        &Value::Bool(true)
+    );
+    assert!(!bank.exists());
+    let (code, repeated) = purge(&world, &repo, &bank, false, Some(&token));
+    verified(code, &repeated);
+    assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
 }
 
 // obligation: tests/contracts/test_doctor_fix.py::DoctorFixContract.test_healthy_unrelated_hook_configuration_needs_no_repair

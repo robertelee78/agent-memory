@@ -339,6 +339,20 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
                 .map_err(|error| error.to_string())
         });
     wired((*SECURITY_SCAN).clone().map_err(ContractError::new))?;
+    let frontier = Arc::new(crate::recovery_frontier::FrontierProvider::new(|| {
+        let executable =
+            std::env::current_exe().map_err(|error| ContractError::new(error.to_string()))?;
+        crate::installation::executing_runtime(
+            &crate::installation::Environment::process(),
+            &executable,
+        )
+        .map_err(|error| match error {
+            crate::installation::Error::Contract(error) => error,
+            other => ContractError::new(other.to_string()),
+        })
+    }));
+    crate::bank_writes::register_recovery_frontier(Some(frontier.clone()));
+    crate::bank_contract::register_recovery_coverage(Some(frontier));
     Ok(())
 }
 

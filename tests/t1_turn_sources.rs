@@ -621,7 +621,11 @@ fn retained_capacity_fault_cannot_be_cleared_by_completing_original_sources() ->
     Ok(())
 }
 
-fn in_repository(name: &str, body: impl FnOnce(&Path, &Path) -> Result<()>) -> Result<()> {
+fn in_repository(
+    name: &str,
+    seconds: f64,
+    body: impl FnOnce(&Path, &Path) -> Result<()>,
+) -> Result<()> {
     use agent_memory::{clock::Deadline, process};
     use std::ffi::OsString;
     if std::env::var("AM_TURN_SOURCE_CASE").ok().as_deref() == Some(name) {
@@ -632,10 +636,35 @@ fn in_repository(name: &str, body: impl FnOnce(&Path, &Path) -> Result<()>) -> R
             .ok_or_else(|| {
                 agent_memory::error::ContractError::new("missing isolated fixture root")
             })?;
-        return body(
+        let frontier = std::sync::Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
+            || {
+                Ok((
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR")),
+                    std::env::current_exe().map_err(|error| {
+                        agent_memory::error::ContractError::new(error.to_string())
+                    })?,
+                ))
+            },
+        ));
+        agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
+        agent_memory::bank_contract::register_recovery_coverage(Some(frontier));
+        body(
             &root.join("repository"),
             Path::new(env!("CARGO_MANIFEST_DIR")),
-        );
+        )?;
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut completed = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(root.join("source-body-completed"))
+            .map_err(|error| agent_memory::error::ContractError::new(error.to_string()))?;
+        completed
+            .write_all(name.as_bytes())
+            .and_then(|()| completed.sync_all())
+            .map_err(|error| agent_memory::error::ContractError::new(error.to_string()))?;
+        return Ok(());
     }
     let w = World::new()?;
     let home = w.path().join("home");
@@ -678,7 +707,7 @@ fn in_repository(name: &str, body: impl FnOnce(&Path, &Path) -> Result<()>) -> R
             stdin: process::Input::Null,
             stdout: process::Target::Capture { limit: 1024 * 1024 },
             stderr: process::Target::Capture { limit: 1024 * 1024 },
-            deadline: Deadline::from_seconds(120.0)?,
+            deadline: Deadline::from_seconds(seconds)?,
             new_session: false,
             file_size_limit: None,
             umask: Some(0o077),
@@ -755,6 +784,9 @@ fn in_repository(name: &str, body: impl FnOnce(&Path, &Path) -> Result<()>) -> R
         "--include-ignored".into(),
         "--nocapture".into(),
     ])?;
+    let completed = std::fs::read(w.path().join("source-body-completed"))
+        .map_err(|error| agent_memory::error::ContractError::new(error.to_string()))?;
+    assert_eq!(completed, name.as_bytes());
     Ok(())
 }
 fn bind_repository(repo: &Path) -> Result<()> {
@@ -827,10 +859,10 @@ fn acknowledge(
 
 // obligation: tests/contracts/test_turn_sources.py::Sources.test_distinct_and_identical_submissions_and_idempotent_ack
 #[test]
-#[ignore = "needs security, recovery_frontier, installation and their real dependency providers registered"]
 fn distinct_identical_callbacks_idempotent_ack_and_late_steering_backlog() -> Result<()> {
     in_repository(
         "distinct_identical_callbacks_idempotent_ack_and_late_steering_backlog",
+        120.0,
         |repo, runtime| {
             bind_repository(repo)?;
             let a = registered(repo, runtime, "session", "lifecycle", b"actual request")?;
@@ -886,10 +918,10 @@ fn distinct_identical_callbacks_idempotent_ack_and_late_steering_backlog() -> Re
 
 // obligation: tests/contracts/test_turn_sources.py::Sources.test_encoded_completion_bound_and_wake_cap
 #[test]
-#[ignore = "needs security, recovery_frontier, installation and their real dependency providers registered"]
 fn wake_two_reservations_exact_fingerprint_and_assessment_bound() -> Result<()> {
     in_repository(
         "wake_two_reservations_exact_fingerprint_and_assessment_bound",
+        120.0,
         |repo, runtime| {
             bind_repository(repo)?;
             let first = registered(repo, runtime, "session", "lifecycle", b"actual request")?;
@@ -956,10 +988,10 @@ fn wake_two_reservations_exact_fingerprint_and_assessment_bound() -> Result<()> 
 
 // obligation: tests/contracts/test_turn_sources.py::Sources.test_caps_fault_and_new_turn_backlog
 #[test]
-#[ignore = "needs security, recovery_frontier, installation and their real dependency providers registered"]
 fn full_source_capacity_fault_survives_ack_and_other_turn_enrolls() -> Result<()> {
     in_repository(
         "full_source_capacity_fault_survives_ack_and_other_turn_enrolls",
+        600.0,
         |repo, runtime| {
             bind_repository(repo)?;
             let mut observations = Vec::new();
@@ -994,10 +1026,10 @@ fn full_source_capacity_fault_survives_ack_and_other_turn_enrolls() -> Result<()
 }
 
 #[test]
-#[ignore = "needs security, recovery_frontier, installation and their real dependency providers registered"]
 fn published_completion_without_real_gate_is_typed_pending_not_success() -> Result<()> {
     in_repository(
         "published_completion_without_real_gate_is_typed_pending_not_success",
+        120.0,
         |repo, runtime| {
             bind_repository(repo)?;
             let source = registered(
