@@ -1957,3 +1957,135 @@ impl Drop for OwnedProcess {
         let _ = self.close();
     }
 }
+
+/// Nonblocking pipe output for a framed stream writer: a blocked recipient
+/// never pins the writing thread, which rechecks its liveness between waits.
+pub fn set_nonblocking(fd: BorrowedFd<'_>) -> io::Result<()> {
+    let flags = unsafe { libc::fcntl(fd.as_raw_fd(), libc::F_GETFL) };
+    if flags == -1 {
+        return Err(io::Error::last_os_error());
+    }
+    if unsafe { libc::fcntl(fd.as_raw_fd(), libc::F_SETFL, flags | libc::O_NONBLOCK) } == -1 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(())
+}
+
+/// One `write(2)`; `WouldBlock` reports a full nonblocking pipe.
+pub fn write_some(fd: BorrowedFd<'_>, bytes: &[u8]) -> io::Result<usize> {
+    loop {
+        let count = unsafe { libc::write(fd.as_raw_fd(), bytes.as_ptr().cast(), bytes.len()) };
+        if count >= 0 {
+            return Ok(count as usize);
+        }
+        let error = io::Error::last_os_error();
+        if error.kind() != io::ErrorKind::Interrupted {
+            return Err(error);
+        }
+    }
+}
+
+/// Wait at most `timeout` for `fd` to accept output (or report an error/hangup).
+pub fn wait_writable(fd: BorrowedFd<'_>, timeout: Duration) -> io::Result<()> {
+    let mut poll = libc::pollfd {
+        fd: fd.as_raw_fd(),
+        events: libc::POLLOUT,
+        revents: 0,
+    };
+    let millis = libc::c_int::try_from(timeout.as_millis()).unwrap_or(libc::c_int::MAX);
+    if unsafe { libc::poll(&mut poll, 1, millis) } == -1 {
+        let error = io::Error::last_os_error();
+        if error.kind() != io::ErrorKind::Interrupted {
+            return Err(error);
+        }
+    }
+    Ok(())
+}
+
+/// Linux parent-process observation for the finite stream's native clock
+/// qualification: a pidfd for exit detection and `/proc` reads, never signals.
+#[cfg(target_os = "linux")]
+pub mod parent {
+    use std::fs::File;
+    use std::io::{self, Read};
+    use std::os::fd::{AsRawFd, BorrowedFd, FromRawFd, OwnedFd};
+    use std::os::unix::fs::MetadataExt;
+    use std::path::Path;
+
+    /// `(st_mode, st_size, st_dev, st_ino, st_mtime_ns, st_ctime_ns)`.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct Stat {
+        pub mode: u32,
+        pub size: u64,
+        pub dev: u64,
+        pub ino: u64,
+        pub mtime_ns: i128,
+        pub ctime_ns: i128,
+    }
+    fn of(meta: &std::fs::Metadata) -> Stat {
+        Stat {
+            mode: meta.mode(),
+            size: meta.size(),
+            dev: meta.dev(),
+            ino: meta.ino(),
+            mtime_ns: i128::from(meta.mtime()) * 1_000_000_000 + i128::from(meta.mtime_nsec()),
+            ctime_ns: i128::from(meta.ctime()) * 1_000_000_000 + i128::from(meta.ctime_nsec()),
+        }
+    }
+    pub fn parent_pid() -> i32 {
+        std::os::unix::process::parent_id() as i32
+    }
+    pub fn own_pid() -> i32 {
+        std::process::id() as i32
+    }
+    pub fn pidfd_open(pid: i32) -> io::Result<OwnedFd> {
+        let fd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid, 0) };
+        if fd < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        let fd = i32::try_from(fd).map_err(|_| io::Error::other("pidfd out of range"))?;
+        Ok(unsafe { OwnedFd::from_raw_fd(fd) })
+    }
+    /// A pidfd becomes readable once its process exited.
+    pub fn pidfd_exited(fd: BorrowedFd<'_>) -> io::Result<bool> {
+        let mut poll = libc::pollfd {
+            fd: fd.as_raw_fd(),
+            events: libc::POLLIN,
+            revents: 0,
+        };
+        if unsafe { libc::poll(&mut poll, 1, 0) } == -1 {
+            return Err(io::Error::last_os_error());
+        }
+        Ok(poll.revents != 0)
+    }
+    /// At most `limit` bytes of a `/proc` pseudo-file (sizes there are 0).
+    pub fn read_proc(path: &Path, limit: usize) -> io::Result<Vec<u8>> {
+        let mut raw = Vec::new();
+        File::open(path)?.take(limit as u64).read_to_end(&mut raw)?;
+        Ok(raw)
+    }
+    /// `stat(2)` following the final link (`/proc/<pid>/exe`, `/proc/<pid>/ns/*`).
+    pub fn stat(path: &Path) -> io::Result<Stat> {
+        std::fs::metadata(path).map(|meta| of(&meta))
+    }
+    /// Open `/proc/<pid>/exe` (the magic link must be followed).
+    pub fn open_image(pid: i32) -> io::Result<File> {
+        File::open(format!("/proc/{pid}/exe"))
+    }
+    pub fn fstat(file: &File) -> io::Result<Stat> {
+        file.metadata().map(|meta| of(&meta))
+    }
+    pub fn read_block(file: &mut File, count: usize) -> io::Result<Vec<u8>> {
+        let mut raw = vec![0u8; count];
+        loop {
+            match file.read(&mut raw) {
+                Ok(size) => {
+                    raw.truncate(size);
+                    return Ok(raw);
+                }
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                Err(error) => return Err(error),
+            }
+        }
+    }
+}

@@ -269,3 +269,26 @@ pub fn expanduser_with_home(path: &Path, home: Option<&OsStr>) -> Result<PathBuf
 pub fn text<'a>(value: &'a OsStr, what: &str) -> Result<&'a str> {
     value.to_str().ok_or_else(|| ContractError::non_utf8(what))
 }
+
+/// Thirty-two unmodified kernel-random bytes for private authentication keys.
+pub fn random_32() -> Result<[u8; 32]> {
+    let mut first = [0u8; 16];
+    let mut second = [0u8; 16];
+    entropy(&mut first)
+        .and_then(|()| entropy(&mut second))
+        .map_err(|_| ContractError::new("OS authentication-key entropy unavailable"))?;
+    let mut result = [0u8; 32];
+    for (target, source) in result.iter_mut().zip(first.into_iter().chain(second)) {
+        *target = source;
+    }
+    Ok(result)
+}
+
+/// Wall-clock nanoseconds since the Unix epoch (`time.time_ns()`); a clock
+/// before the epoch is refused rather than represented as a negative stamp.
+pub fn time_ns() -> Result<u128> {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .map_err(|_| ContractError::new("UTC clock precedes the Unix epoch"))
+}

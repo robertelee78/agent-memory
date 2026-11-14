@@ -47,6 +47,8 @@ pub enum Kind {
         measured: u64,
         exact: bool,
     },
+    /// The optional derived recall catalog cannot qualify a reusable witness.
+    RecallCatalogMiss,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -210,6 +212,13 @@ impl ContractError {
                 exact,
             },
             message: "pending-recovery-capacity".to_owned(),
+        }
+    }
+
+    pub(crate) fn recall_catalog_miss(message: impl Into<String>) -> Self {
+        Self {
+            kind: Kind::RecallCatalogMiss,
+            message: message.into(),
         }
     }
 }

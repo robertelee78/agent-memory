@@ -326,6 +326,9 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     wired(crate::project_identity::register_layout_observation(Some(
         Arc::new(crate::layout_recovery_observation::LayoutObservation),
     )))?;
+    crate::bank_transactions::register_index_invalidation(Some(Arc::new(
+        crate::recall_catalog::IndexInvalidation,
+    )));
     Ok(())
 }
 

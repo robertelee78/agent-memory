@@ -39,6 +39,7 @@ pub mod migration_codecs;
 pub mod migration_contract;
 pub mod model_reference;
 pub mod omp_installation;
+pub mod omp_stream;
 pub mod pack_validation;
 pub mod package;
 pub mod private_state;
@@ -46,6 +47,7 @@ pub mod private_workspace;
 pub mod process;
 pub mod project_identity;
 pub mod purging;
+pub mod recall_catalog;
 pub mod records;
 #[cfg(feature = "dev-tools")]
 #[path = "bin/am_dev/release.rs"]

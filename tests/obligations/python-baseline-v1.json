@@ -8018,518 +8018,518 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_another_session_full_view_does_not_cover_hint_and_source_errors_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_arbitrary_exception_is_not_verified_receipt_or_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_bad_schema_session_and_identity_are_counted_without_dropping_later_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_broken_output_does_not_prevent_accepted_source_drain",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_busy_after_started_never_replays",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_busy_before_started_retries_same_attempt_only",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_busy_exhaustion_is_open_not_durable_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_cancelled_superseded_and_invalid_clock_acks_never_pin_source_close",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_earlier_instance_verified_full_view_covers_later_instance_hint",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_empty_refs_cannot_resolve_learning_attempt_or_transition",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_empty_session_or_orphan_lock_qualification_survives_later_same_session_start",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_exact_recovery_does_not_clear_open_unknown_tail",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_failed_hint_identity_copy_is_fast_counted_refusal_not_neutral_null_leaf",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_failed_retired_view_does_not_replace_precommit_transition_anchor",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_fixed_prestart_refusal_closes_but_blocks_drain",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_hint_cannot_carry_source_fields_or_create_human_authority",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_hints_preserve_full_delta_baseline_and_transition_anchor",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_internal_nonlearning_evidence_resolves_only_anchored_closed_transition",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_invalid_clock_control_revokes_wake_but_keeps_reading_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_invalid_utf8_and_partial_json_are_refused_without_losing_following_frame",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_inventory_accepts_symlinked_repository_alias",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_inventory_refuses_orphan_outcome",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_inventory_refuses_unknown_private_state",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_later_instance_full_view_resolves_earlier_hint",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_lost_refusal_notice_cannot_match_final",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_malformed_request_then_valid_source_and_sender_refusal_all_close_accounted",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_matching_preexisting_invalid_attempt_is_not_a_live_retry_witness",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_metadata_busy_after_verified_never_replays_observer",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_missing_open_with_source_records_is_not_an_unpublished_startup",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_null_leaf_hint_is_fast_neutral_metadata_and_never_observes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_partial_immutable_attempt_is_never_replaced_by_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_partial_open_is_pinned_as_unpublished_without_trusting_its_binding",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_pre_id_refusal_cannot_be_resolved_by_counts",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_real_io_failure_does_not_manufacture_invalid_request_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_refused_and_unknown_full_frames_do_not_cover_hint_merely_by_native_ids",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_removed_marker_refuses_open_and_later_metadata_producers",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_retirement_fence_prevents_old_start",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_retirement_skips_live_worker_even_while_stream_metadata_is_locked",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_run_drains_accepted_frames_only_after_valid_final_and_eof",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_run_eof_partial_or_after_final_cannot_close",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_same_session_different_instance_transition_is_valid_but_self_target_refuses",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_session_creation_contention_is_typed_busy_without_publishing_instance",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_source_kind_validation_failure_accounts_slot_and_continues",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_startup_accepts_real_32_hex_installation_id_and_refuses_uuid_form",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_startup_busy_exhaustion_is_pending_without_open_or_close",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_startup_typed_busy_retries_before_open_and_ready",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_transition_binds_last_old_view_and_remains_pending_after_close",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_unknown_hint_leaf_resolves_from_fresh_exact_native_disposition_join_once",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_unknown_identity_breaks_delta_chain",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_unpublished_instance_stays_pending_while_later_valid_source_closes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_verified_pending_is_terminal_transport_not_learning_completion",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_verified_without_on_started_is_not_accepted",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_cancel_eof_broken_output_and_recipient_revoke_window",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_cancel_replacement_revoke_and_end_after_reservation_do_not_reopen",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_cancel_replacement_revoke_and_end_before_reservation_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_concurrent_reservations_spend_window_once",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_different_epochs_use_lower_offset_and_exact_rate_subtraction",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_late_calibration_and_nonce_mismatch_cannot_mint",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_linux_hash_in_progress_does_not_block_clock_reply",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_linux_same_clock_envelope_is_strict_and_single_use",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_nonce_cannot_be_replayed_after_cancel_or_reservation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_replayed_old_nonce_cannot_remint_after_new_clock",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_same_clock_causal_envelope_never_overstates_remaining_time",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_unverified_linux_image_cannot_reserve",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::DeadlineWindows.test_windows_cannot_be_minted_or_serialized_by_json",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_actual_descriptor_failure_revokes_recipient",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_budget_counts_inflight_partial_and_queue",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_cancel_control_has_capacity_even_when_source_fifo_is_full",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_multibyte_utf8_crosses_every_read_boundary",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_noncanonical_header_and_oversize_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_oversize_response_becomes_fixed_notice_and_later_delivery_stays_live",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_partial_header_and_body_never_parse_prefix",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_priority_pressure_coalesces_bounded_loss_notice_without_disconnect",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::Framing.test_response_pressure_discards_received_before_priority",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8543,35 +8543,35 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::LinuxImageControls.test_close_during_hash_does_not_publish_or_leak",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::LinuxImageControls.test_image_hash_size_type_and_changes_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::LinuxImageControls.test_namespace_classification_and_mixed_absence",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::LinuxImageControls.test_self_check_rejects_unsupported_interpreters_and_clocks",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::LinuxImageControls.test_valid_rechecks_process_namespaces_and_image",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9411,28 +9411,28 @@
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_bounded_summary_orphans_and_unreadable_namespace_do_not_change_doctor_health",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_canonical_parsed_evidence_digests_survive_noncanonical_json_encoding",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_conflicting_existing_record_is_never_rewritten_or_replayed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_empty_verified_seal_reports_wake_not_evaluated",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9453,42 +9453,42 @@
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_false_observed_send_leaves_decision_unrecorded",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_malformed_real_result_shapes_are_unknown_without_inventing_a_cause",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_nonseal_and_failed_source_attempts_do_not_acquire_diagnostic_rows",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_not_armed_is_distinct_from_armed_without_nonce",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_binds_actual_root_after_response_without_changing_old_evidence",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_writer_checks_actual_request_without_cursor_or_root_scan",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9523,14 +9523,14 @@
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_spoofed_record_keys_types_digests_and_status_are_unbound_without_contents",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_substituted_oversize_response_never_records_an_offered_continuation",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10454,35 +10454,35 @@
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_actual_forget_removes_owned_generations_before_any_later_recall",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_actual_loaded_policy_code_namespace_and_dependency_changes_invalidate_the_witness",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_busy_optional_publisher_leaves_useful_recall_available_and_rebuilds_after_unlock",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_caller_modified_metadata_cannot_forge_a_successful_empty_selection",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_changed_executing_package_rebuilds_instead_of_reusing_an_old_engine_witness",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10496,42 +10496,42 @@
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_corrupt_oversized_cleanup_header_defers_without_decoding_it_or_failing_actual_forget",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_full_namespace_preserves_unknown_evidence_and_stops_adding_cache_files",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_hint_inventory_charges_excluded_runtime_entries_against_its_physical_budget",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_late_mmap_change_with_restored_mtime_cannot_pass_the_final_whole_content_check",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_loaded_immutable_reader_survives_concurrent_generation_replacement",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_missing_cache_automatically_rebuilds_and_returns_the_same_useful_memory",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10545,14 +10545,14 @@
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_oversized_canonical_source_refuses_with_or_without_catalog",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_unavailable_bounded_boot_manifest_disables_only_the_optional_accelerator",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10566,14 +10566,14 @@
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_warm_recall_refuses_changed_identity_tokens_defaults_and_callable_attributes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_warm_semantic_selection_matches_cold_sources_without_storing_learning_bodies",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 197,
-   "ported": 182,
-   "unported": 1483
+   "partial": 225,
+   "ported": 260,
+   "unported": 1377
   }
  }
 }
