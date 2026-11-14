@@ -268,7 +268,9 @@ pub fn pack_root() -> Result<PathBuf> {
 /// Later lanes add their provider registrations here.
 pub fn register_providers() -> std::result::Result<(), crate::pack_validation::Invalid> {
     let surface = surface::Declared::current()?;
-    crate::pack_validation::register_command_surface(Some(Arc::new(surface)))
+    crate::pack_validation::register_command_surface(Some(Arc::new(surface)))?;
+    crate::scope_binding::register_providers();
+    Ok(())
 }
 
 /// The executable entry: choose console or direct mode from argv0 and run.

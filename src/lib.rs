@@ -42,6 +42,7 @@ pub mod release_builder;
 pub mod release_distribution;
 pub mod remote_identity;
 pub mod repository_config;
+pub mod scope_binding;
 pub mod scopes;
 pub mod sharing_limits;
 pub mod tombstones;

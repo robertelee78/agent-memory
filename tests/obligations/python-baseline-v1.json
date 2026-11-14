@@ -9978,7 +9978,7 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_conflicting_historical_aliases_allow_explicit_scope_link",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10125,7 +10125,7 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_scope_link_repair_preserves_bank_and_verifies_current_alias",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11042,7 +11042,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_config_and_remote_mutation_between_enrollment_entry_exit_are_fresh",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11182,7 +11182,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_subdirectory_still_refuses_repository_root_authority",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11833,63 +11833,63 @@
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_all_public_mediated_writers_refuse_unresolved_identity_and_raw_reads_remain_available",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_combined_status_readonly_missing_conflicting_and_known_attribution",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_create_has_initialization_only_handoff_without_chicken_and_egg",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_fork_changes_every_namespace_and_preserves_record_provenance_conditions_and_tombstone",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_identity_is_pinned_from_preview_and_rechecked_under_the_bank_lock",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_portable_status_uses_selected_repo_and_preserves_whitespace_paths_despite_ambient_git",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_rebind_previews_bank_change_reads_both_stores_and_preserves_aliases_and_code",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_registry_only_interruption_and_torn_bank_resume_with_original_bundle",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_scope_binding.py::ScopeBindingContract.test_stale_developer_registry_bank_and_remote_proposals_never_overwrite",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 129,
+   "partial": 142,
    "ported": 61,
-   "unported": 1672
+   "unported": 1659
   }
  }
 }

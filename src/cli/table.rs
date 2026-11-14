@@ -26,6 +26,7 @@ const fn route(name: &'static str, helper: &'static super::Helper) -> Entry {
 /// version, status, doctor. Unported modules have no line.
 pub static ENTRIES: &[Entry] = &[
     route("developer", &helpers::developer_identity::HELPER),
+    route("identity", &helpers::scope_binding::HELPER),
     route("bank", &helpers::bank_contract::HELPER),
     route("writes", &helpers::bank_writes::HELPER),
     route("artifact", &helpers::artifact::HELPER),

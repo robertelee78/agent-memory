@@ -63,6 +63,12 @@ pub trait ScopeBinding: Send + Sync {
         owned_transaction: Option<&[u8]>,
         initialize: bool,
     ) -> Result<Value>;
+    /// Locator reuse is read-only and requires the exact live enrollment barrier.
+    fn observe_enrollment_location(
+        &self,
+        repo: &Path,
+        runtime_root: &Path,
+    ) -> Result<Option<crate::layout_recovery_state::RecoveryPaths>>;
 }
 pub trait Checkpoint: Send + Sync {
     fn validate_write(&self, proposal: &Value, sources: bool) -> Result<()>;
@@ -94,6 +100,24 @@ pub trait RecoveryFrontier: Send + Sync {
         project: &Value,
         expected: Option<&Value>,
     ) -> Result<Value>;
+    /// Full verified hold observation at an independently located bank.
+    fn verified_enrollment_hold_at_bank(
+        &self,
+        root: &Path,
+        bank: &Path,
+        runtime_root: &Path,
+    ) -> Result<Option<crate::scope_binding::VerifiedEnrollmentHold>>;
+    /// Observe the private frontier, including removed holds and its private index.
+    fn observe_enrollment_bank(
+        &self,
+        root: &Path,
+        bank: &Path,
+        runtime_root: &Path,
+    ) -> Result<Value>;
+    /// Guarded source-marker reads; the guard restores prior state on Drop.
+    fn observe_source_markers(
+        &self,
+    ) -> Result<Box<dyn crate::scope_binding::SourceMarkerObservation>>;
 }
 pub trait RecoveryTransactions: Send + Sync {
     fn apply_checkpoint(&self, proposal: &Value) -> Result<Value>;
@@ -144,6 +168,8 @@ pub trait TurnSources: Send + Sync {
         repo: &Path,
         ordinary_bank: Option<&Path>,
     ) -> Result<Box<dyn CanonicalWriterBarrier>>;
+    fn check_source_compatibility(&self, state_base: &Path) -> Result<()>;
+    fn source_barrier_held(&self, state_base: &Path) -> Result<bool>;
 }
 static SCOPE: RwLock<Option<Arc<dyn ScopeBinding>>> = RwLock::new(None);
 static CHECKPOINT: RwLock<Option<Arc<dyn Checkpoint>>> = RwLock::new(None);
