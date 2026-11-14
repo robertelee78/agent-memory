@@ -320,6 +320,172 @@
       "exit": 0,
       "stdout": "usage: am developer [-h] {status,preview,apply,recover} ...\n\nExplicit stable developer attribution; independent of installation and banks.\n\npositional arguments:\n  {status,preview,apply,recover}\n\noptions:\n  -h, --help            show this help message and exit\n",
       "stderr": ""
+    },
+    {
+      "row": 25,
+      "entry": "script",
+      "argv": [
+        "scope_policy.py",
+        "--",
+        "model"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"model\": {\n    \"schema\": \"agent-memory/scope-policy-v1\",\n    \"namespace\": \"repository-project-uuid\",\n    \"default-scope\": \"repository\",\n    \"route-kinds\": [\n      \"component\",\n      \"branch\",\n      \"worktree\",\n      \"task\",\n      \"session\"\n    ],\n    \"condition-kinds\": [\n      \"component\",\n      \"branch\",\n      \"worktree\",\n      \"task\",\n      \"session\",\n      \"revision\",\n      \"version\",\n      \"environment\",\n      \"prerequisite\"\n    ],\n    \"condition-combination\": \"all-known-and-matching\",\n    \"developer-role\": \"provenance-and-clarification-only\",\n    \"personal-namespaces\": false,\n    \"cross-repository\": \"unavailable-in-v0.0.1; future retrieval requires explicit selection and consent\",\n    \"authorization\": \"repository-and-OS-permissions; applicability is not an ACL\"\n  },\n  \"writes_performed\": false\n}\n",
+      "stderr": ""
+    },
+    {
+      "row": 26,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "--",
+        "bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: argument command: invalid choice: 'bogus' (choose from status, preview, apply, recover)\n"
+    },
+    {
+      "row": 27,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "--",
+        "--",
+        "bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: argument command: invalid choice: '--' (choose from status, preview, apply, recover)\n"
+    },
+    {
+      "row": 28,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "-h",
+        "--a"
+      ],
+      "exit": 0,
+      "stdout": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\n\noptions:\n  -h, --help       show this help message and exit\n  --create\n  --adopt ADOPT\n  --select SELECT\n  --label LABEL\n  --alias ALIAS\n",
+      "stderr": ""
+    },
+    {
+      "row": 29,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label",
+        "--a"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: argument --label: expected one argument\n"
+    },
+    {
+      "row": 30,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--a",
+        "x",
+        "-h"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: ambiguous option: --a could match --adopt, --alias\n"
+    },
+    {
+      "row": 31,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label",
+        "-\u0663",
+        "--bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: unrecognized arguments: --bogus\n"
+    },
+    {
+      "row": 32,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label",
+        "-.\u0665",
+        "--bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: unrecognized arguments: --bogus\n"
+    },
+    {
+      "row": 33,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label",
+        "-1\n",
+        "--bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer [-h] {status,preview,apply,recover} ...\nam developer: error: unrecognized arguments: --bogus\n"
+    },
+    {
+      "row": 34,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label",
+        "-1\n\n",
+        "--bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: argument --label: expected one argument\n"
+    },
+    {
+      "row": 35,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "preview",
+        "--create",
+        "--label",
+        "-\u00b9",
+        "--bogus"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer preview [-h] (--create | --adopt ADOPT | --select SELECT)\n                            [--label LABEL] [--alias ALIAS]\nam developer preview: error: argument --label: expected one argument\n"
+    },
+    {
+      "row": 36,
+      "entry": "am",
+      "argv": [
+        "developer",
+        "status",
+        "-=x",
+        "-h"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: am developer status [-h] [--observe OBSERVE] [--harness HARNESS]\n                           [--session SESSION] [--repo REPO]\nam developer status: error: ambiguous option: -=x could match -h, --help, --observe, --harness, --session, --repo\n"
     }
   ]
 }

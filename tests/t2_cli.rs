@@ -806,8 +806,30 @@ fn alive(pid: i32) -> bool {
     unsafe { libc::kill(pid, 0) == 0 }
 }
 
-fn terminate_with(signal: libc::c_int, status: i32) {
-    let dir = PrivateDir::new();
+fn errno_location() -> *mut libc::c_int {
+    #[cfg(target_os = "macos")]
+    let location = unsafe { libc::__error() };
+    #[cfg(target_os = "linux")]
+    let location = unsafe { libc::__errno_location() };
+    location
+}
+
+/// This process can no longer collect `pid`'s status (it was already reaped
+/// by this process) and the PID names no process.
+fn reaped_by_this_process(pid: i32) -> bool {
+    let mut status = 0;
+    let waited = unsafe { libc::waitpid(pid, &mut status, libc::WNOHANG) };
+    let wait_errno = std::io::Error::last_os_error().raw_os_error();
+    let signalled = unsafe { libc::kill(pid, 0) };
+    let kill_errno = std::io::Error::last_os_error().raw_os_error();
+    waited == -1
+        && wait_errno == Some(libc::ECHILD)
+        && signalled == -1
+        && kill_errno == Some(libc::ESRCH)
+}
+
+/// A fake `git` that records its PID, then sleeps as an owned child.
+fn hanging_git(dir: &PrivateDir) -> PathBuf {
     let fake = dir.0.join("fake");
     DirBuilder::new().mode(0o700).create(&fake).unwrap();
     let git = fake.join("git");
@@ -817,17 +839,45 @@ fn terminate_with(signal: libc::c_int, status: i32) {
     )
     .unwrap();
     fs::set_permissions(&git, fs::Permissions::from_mode(0o700)).unwrap();
+    fake
+}
+
+/// `am developer status` blocked on an owned git child, optionally started
+/// with `ignored` set to SIG_IGN as a non-interactive shell does for `&` jobs.
+fn status_with_owned_child(
+    dir: &PrivateDir,
+    pid_file: &Path,
+    ignored: Option<libc::c_int>,
+) -> std::process::Child {
+    use std::os::unix::process::CommandExt;
+    let fake = hanging_git(dir);
+    let mut command = dir.base("am", fake.to_str().unwrap());
+    command
+        .env("AM_TEST_CHILD_PID", pid_file)
+        .args(["developer", "status", "--repo", "."])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    if let Some(signal) = ignored {
+        // Only async-signal-safe calls between fork and exec.
+        unsafe {
+            command.pre_exec(move || {
+                if libc::signal(signal, libc::SIG_IGN) == libc::SIG_ERR {
+                    return Err(std::io::Error::last_os_error());
+                }
+                Ok(())
+            });
+        }
+    }
+    command.spawn().unwrap()
+}
+
+fn terminate_with(signal: libc::c_int) {
+    use std::os::unix::process::ExitStatusExt;
+    let dir = PrivateDir::new();
     let pid_file = dir.0.join("child.pid");
     // A non-owned sibling in the same process group must survive.
     let mut sentinel = Command::new("/bin/sleep").arg("30").spawn().unwrap();
-    let mut binary = dir
-        .base("am", fake.to_str().unwrap())
-        .env("AM_TEST_CHILD_PID", &pid_file)
-        .args(["developer", "status", "--repo", "."])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
+    let mut binary = status_with_owned_child(&dir, &pid_file, None);
     let child = wait_for_pid(&pid_file);
     assert!(
         alive(child),
@@ -841,7 +891,9 @@ fn terminate_with(signal: libc::c_int, status: i32) {
         std::io::Error::last_os_error().raw_os_error(),
         Some(libc::ESRCH)
     );
-    assert_eq!(output.code(), Some(status));
+    // Death by the signal itself (as the baseline interpreter), not exit 128+n.
+    assert_eq!(output.signal(), Some(signal), "{output:?}");
+    assert_eq!(output.code(), None);
     let mut stdout = String::new();
     std::io::Read::read_to_string(&mut binary.stdout.take().unwrap(), &mut stdout).unwrap();
     assert!(
@@ -857,13 +909,246 @@ fn terminate_with(signal: libc::c_int, status: i32) {
 }
 
 #[test]
-fn sigterm_kills_and_reaps_owned_children_then_exits_143() {
-    terminate_with(libc::SIGTERM, 143);
+fn sigterm_kills_and_reaps_owned_children_then_dies_by_sigterm() {
+    terminate_with(libc::SIGTERM);
 }
 
 #[test]
-fn sigint_kills_and_reaps_owned_children_then_exits_130() {
-    terminate_with(libc::SIGINT, 130);
+fn sigint_kills_and_reaps_owned_children_then_dies_by_sigint() {
+    terminate_with(libc::SIGINT);
+}
+
+#[test]
+fn a_termination_signal_inherited_as_ignored_stays_ignored() {
+    use std::os::unix::process::ExitStatusExt;
+    for (ignored, other) in [(libc::SIGINT, libc::SIGTERM), (libc::SIGTERM, libc::SIGINT)] {
+        let dir = PrivateDir::new();
+        let pid_file = dir.0.join("child.pid");
+        let mut binary = status_with_owned_child(&dir, &pid_file, Some(ignored));
+        let child = wait_for_pid(&pid_file);
+        assert_eq!(unsafe { libc::kill(binary.id() as i32, ignored) }, 0);
+        std::thread::sleep(Duration::from_millis(300));
+        assert!(
+            binary.try_wait().unwrap().is_none(),
+            "am must keep running when signal {ignored} was inherited as ignored"
+        );
+        assert!(alive(child), "owned child must keep running too");
+        // The other signal still has its handler.
+        assert_eq!(unsafe { libc::kill(binary.id() as i32, other) }, 0);
+        let status = binary.wait().unwrap();
+        assert_eq!(status.signal(), Some(other), "{status:?}");
+        assert!(!alive(child), "owned child survived or was left unreaped");
+    }
+}
+
+fn interrupted_status(status: libc::c_int) -> bool {
+    libc::WIFSIGNALED(status) && libc::WTERMSIG(status) == libc::SIGINT
+}
+
+/// Stops `am developer apply` while its `.developers.lock` exists, delivers
+/// SIGINT inside that window and resumes it. The test is the binary's parent
+/// and collects its status with waitpid only (never through `Child`).
+#[test]
+fn sigint_during_developer_apply_releases_lock_and_temp_then_dies_by_sigint() {
+    const ATTEMPTS: usize = 400;
+    let dir = PrivateDir::new();
+    let config = dir.0.join("config/agent-memory");
+    let lock = config.join(".developers.lock");
+    let mut interrupted_in_window = 0;
+    for _ in 0..ATTEMPTS {
+        if interrupted_in_window == 3 {
+            break;
+        }
+        let _ = fs::remove_dir_all(&config);
+        let preview = dir.run("am", &["developer", "preview", "--create"]);
+        assert_eq!(preview.status.code(), Some(0), "{}", text(&preview.stderr));
+        let proposal = dir.write("proposal.json", &preview.stdout);
+        let mut binary = dir
+            .base("am", "/usr/bin:/bin")
+            .args(["developer", "apply", "--proposal"])
+            .arg(&proposal)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let pid = binary.id() as i32;
+        let mut status = 0;
+        let mut exited = false;
+        while fs::symlink_metadata(&lock).is_err() {
+            if unsafe { libc::waitpid(pid, &mut status, libc::WNOHANG) } == pid {
+                exited = true;
+                break;
+            }
+        }
+        if exited {
+            continue;
+        }
+        assert_eq!(unsafe { libc::kill(pid, libc::SIGSTOP) }, 0);
+        assert_eq!(
+            unsafe { libc::waitpid(pid, &mut status, libc::WUNTRACED) },
+            pid
+        );
+        if !libc::WIFSTOPPED(status) {
+            continue;
+        }
+        let in_window = fs::symlink_metadata(&lock).is_ok();
+        if in_window {
+            assert_eq!(unsafe { libc::kill(pid, libc::SIGINT) }, 0);
+        }
+        assert_eq!(unsafe { libc::kill(pid, libc::SIGCONT) }, 0);
+        assert_eq!(unsafe { libc::waitpid(pid, &mut status, 0) }, pid);
+        if !in_window {
+            continue;
+        }
+        interrupted_in_window += 1;
+        assert!(interrupted_status(status), "wait status {status:#x}");
+        let mut stdout = Vec::new();
+        std::io::Read::read_to_end(&mut binary.stdout.take().unwrap(), &mut stdout).unwrap();
+        assert!(stdout.is_empty(), "no result after SIGINT");
+        let leftovers: Vec<String> = fs::read_dir(&config)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+            .filter(|name| name.starts_with(".developers"))
+            .collect();
+        assert!(leftovers.is_empty(), "{leftovers:?}");
+        let next = dir.run("am", &["developer", "preview", "--create"]);
+        assert_eq!(next.status.code(), Some(0), "{}", text(&next.stdout));
+    }
+    assert!(
+        interrupted_in_window > 0,
+        "no attempt stopped am while it held the registry lock"
+    );
+}
+
+// Re-exec worker: the termination handler in an otherwise idle test process.
+// The supervising test thread is the only one SIGINT is directed at.
+#[test]
+fn interrupt_handler_worker() {
+    use agent_memory::process::{self, Group, Refusal};
+    let Some(root) = std::env::var_os("AM_T2_CLI_INTERRUPT_WORKER") else {
+        return;
+    };
+    let blocked = std::env::var_os("AM_T2_CLI_INTERRUPT_MODE").as_deref()
+        == Some(std::ffi::OsStr::new("blocked"));
+    process::install_termination_handler().unwrap();
+    let root = PathBuf::from(root);
+    let argv: Vec<Vec<OsString>> = (0..3)
+        .map(|index| {
+            vec![
+                "/bin/sh".into(),
+                "-c".into(),
+                "echo $$ > \"$0\"; exec /bin/sleep 30".into(),
+                root.join(format!("child-{index}")).into(),
+            ]
+        })
+        .collect();
+    let specs: Vec<_> = argv.iter().map(|argv| owned_spec(argv)).collect();
+    // The largest baseline Group: three live owned children.
+    let mut group = Group::launch(&specs, Duration::from_secs(60)).unwrap();
+    let pids: Vec<i32> = (0..3)
+        .map(|index| wait_for_pid(&root.join(format!("child-{index}"))))
+        .collect();
+    let mut first = 0;
+    if blocked {
+        // SIGINT lands while this thread is blocked in the group's poll.
+        let target = unsafe { libc::pthread_self() } as usize;
+        let signaller = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(300));
+            unsafe { libc::pthread_kill(target as libc::pthread_t, libc::SIGINT) }
+        });
+        let start = Instant::now();
+        let error = group.value(0).unwrap_err();
+        assert!(start.elapsed() < Duration::from_secs(10));
+        assert_eq!(signaller.join().unwrap(), 0);
+        assert_eq!(error.reason, Refusal::Interrupted);
+        assert!(error.cleanup_error.is_none(), "{error}");
+        assert!(error.evidence.is_some_and(|evidence| evidence.reaped));
+        first = 1;
+    } else {
+        // A returning handler restores the interrupted code's errno.
+        unsafe { *errno_location() = libc::EDOM };
+        assert_eq!(unsafe { libc::raise(libc::SIGINT) }, 0);
+        assert_eq!(unsafe { *errno_location() }, libc::EDOM);
+    }
+    assert!(process::interrupted());
+    // This process, their parent, already collected all three: in idle mode
+    // nothing but the handler ran between raise() and this check.
+    for pid in &pids {
+        assert!(reaped_by_this_process(*pid), "child {pid} not reaped");
+    }
+    for index in first..3 {
+        let error = group.value(index).unwrap_err();
+        assert_eq!(error.reason, Refusal::Interrupted);
+        assert!(error.cleanup_error.is_none(), "{error}");
+    }
+    group.finish().unwrap();
+    // No further child is launched once interrupted.
+    let marker = root.join("marker");
+    let touch: Vec<OsString> = vec![
+        "/bin/sh".into(),
+        "-c".into(),
+        ": > \"$0\"".into(),
+        marker.clone().into(),
+    ];
+    let refused = process::run(&owned_spec(&touch)).unwrap_err();
+    assert_eq!(refused.reason, Refusal::Interrupted);
+    assert!(refused.evidence.is_none());
+    std::thread::sleep(Duration::from_millis(200));
+    assert!(!marker.exists(), "a child was launched after SIGINT");
+}
+
+fn run_interrupt_worker(mode: &str) {
+    let dir = PrivateDir::new();
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "interrupt_handler_worker",
+            "--nocapture",
+            "--test-threads=1",
+        ])
+        .env("AM_T2_CLI_INTERRUPT_WORKER", &dir.0)
+        .env("AM_T2_CLI_INTERRUPT_MODE", mode)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "stdout={} stderr={}",
+        text(&output.stdout),
+        text(&output.stderr)
+    );
+    assert!(text(&output.stdout).contains("1 passed"));
+}
+
+#[test]
+fn sigint_handler_reaps_every_owned_child_itself_and_restores_errno() {
+    run_interrupt_worker("idle");
+}
+
+#[test]
+fn sigint_while_a_three_child_group_is_supervised_refuses_as_interrupted() {
+    run_interrupt_worker("blocked");
+}
+
+#[test]
+fn content_files_are_read_with_universal_newlines_for_writes_preview_only() {
+    let dir = PrivateDir::new();
+    let crlf = dir.write("crlf.md", b"---\r\ntype: decision\r\n---\r\nbody\r\n");
+    let lone = dir.write("lone.md", b"---\ntype: decision\n---\nbo\rdy\r\r\n");
+    let crlf = crlf.to_str().unwrap();
+    let lone = lone.to_str().unwrap();
+    assert_eq!(
+        cli::input::read_text_universal(crlf).unwrap(),
+        "---\ntype: decision\n---\nbody\n"
+    );
+    assert_eq!(
+        cli::input::read_text_universal(lone).unwrap(),
+        "---\ntype: decision\n---\nbo\ndy\n\n"
+    );
+    // `read_bytes().decode()` call sites keep the bytes.
+    assert_eq!(
+        cli::input::read_text(crlf).unwrap(),
+        "---\r\ntype: decision\r\n---\r\nbody\r\n"
+    );
 }
 
 #[test]

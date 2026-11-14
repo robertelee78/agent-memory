@@ -22,14 +22,25 @@ compile_error!("agent-memory process supervision requires Linux or macOS");
 //   PID right after fork, and only then unblocks. A termination signal thus
 //   always sees each live owned direct child.
 // - A slot holds 0 (free), RESERVED (fork pending, never signalled) or a PID.
-//   It is cleared once its child's status is collected, once waitpid reports
-//   ECHILD for it, or when the reserved spawn fails.
-// - The handler signals a recorded PID only after `waitpid(pid, WNOHANG)`
+//   It is cleared once its child's status is collected (by the supervisor or
+//   by a handler), once waitpid reports ECHILD for it, or when the reserved
+//   spawn fails.
+// - The handlers signal a recorded PID only after `waitpid(pid, WNOHANG)`
 //   returned 0: the PID then still names this process's unreaped child (an
 //   already reaped PID yields ECHILD and is skipped), so a recycled PID is
 //   never signalled. This holds because the binary supervises owned children
 //   on one thread, which the handler interrupts.
+// - The supervisor signals a child only with SIGINT/SIGTERM blocked
+//   (`Owner::cancel`), so the returning SIGINT handler can never reap a PID
+//   between the supervisor's liveness observation and its kill.
 // - Only positive PIDs are signalled; never a process group.
+//
+// SIGINT returns (baseline `KeyboardInterrupt`): after killing and reaping it
+// records the signal in INTERRUPTED; `spawn`, `run`, `run_for` and `Group`
+// then refuse with `Refusal::Interrupted`, every guard on the stack drops,
+// and the binary dies by SIGINT through `exit_if_interrupted`. SIGTERM (which
+// the baseline leaves at its default) kills and reaps, then dies by SIGTERM
+// at once: the baseline's death without cleanup, minus orphaned children.
 //
 // Capacity: the largest concurrent set of owned children any baseline call
 // site launches is one `Group` of MAX_CHILDREN = 3 (repository_config's
@@ -38,6 +49,13 @@ const OWNED_SLOTS: usize = MAX_CHILDREN;
 const RESERVED: i32 = -1;
 static OWNED: [AtomicI32; OWNED_SLOTS] = [const { AtomicI32::new(0) }; OWNED_SLOTS];
 static TERMINATION: AtomicBool = AtomicBool::new(false);
+/// The SIGINT recorded by the returning handler; 0 while uninterrupted.
+static INTERRUPTED: AtomicI32 = AtomicI32::new(0);
+/// Self-pipe (both ends non-blocking, close-on-exec): the SIGINT handler
+/// writes one byte so a supervision `poll` wakes even when the signal landed
+/// just before the call. -1 until the handler is installed.
+static WAKE_READ: AtomicI32 = AtomicI32::new(-1);
+static WAKE_WRITE: AtomicI32 = AtomicI32::new(-1);
 
 fn reserve_owned() -> Option<&'static AtomicI32> {
     OWNED.iter().find(|slot| {
@@ -77,6 +95,16 @@ impl TerminationBlock {
         }
         Ok(Self(previous))
     }
+
+    /// Blocks only once a binary installed the handler; otherwise no handler
+    /// can interleave with the caller and nothing is blocked.
+    fn when_installed() -> io::Result<Option<Self>> {
+        if TERMINATION.load(Ordering::SeqCst) {
+            Self::new().map(Some)
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 impl Drop for TerminationBlock {
@@ -87,13 +115,18 @@ impl Drop for TerminationBlock {
     }
 }
 
-/// Reads errno through the libc thread-local accessor: a plain load.
-fn errno() -> libc::c_int {
+/// The thread-local errno location (a plain pointer from libc).
+fn errno_location() -> *mut libc::c_int {
     #[cfg(target_os = "macos")]
     let location = unsafe { libc::__error() };
     #[cfg(target_os = "linux")]
     let location = unsafe { libc::__errno_location() };
-    unsafe { *location }
+    location
+}
+
+/// Reads errno through the libc thread-local accessor: a plain load.
+fn errno() -> libc::c_int {
+    unsafe { *errno_location() }
 }
 
 /// waitpid retried on EINTR. Async-signal-safe: one syscall and an errno load
@@ -109,36 +142,130 @@ fn wait_retrying(pid: i32, options: libc::c_int) -> i32 {
     }
 }
 
-/// The SIGINT/SIGTERM handler. Every line group is async-signal-safe.
-extern "C" fn terminate(signal: libc::c_int) {
-    // Static array iteration and SeqCst atomic loads: no allocation or lock.
+/// Shared by both handlers. Every step is async-signal-safe: static array
+/// iteration, lock-free SeqCst atomics, waitpid, kill and errno loads; no
+/// allocation, lock, formatting or Drop.
+fn kill_and_reap_owned() {
     for slot in &OWNED {
         let pid = slot.load(Ordering::SeqCst);
-        // Free (0) and RESERVED (-1) slots are never signalled. waitpid is
-        // async-signal-safe; 0 proves `pid` is still our unreaped child.
-        if pid > 0 && wait_retrying(pid, libc::WNOHANG) == 0 {
+        // Free (0) and RESERVED (-1) slots are never signalled.
+        if pid <= 0 {
+            continue;
+        }
+        // 0 proves `pid` is still our unreaped child. A PID return reaped an
+        // exited child here; ECHILD means it was already reaped.
+        if wait_retrying(pid, libc::WNOHANG) == 0 {
             // kill(2) on that positive PID only: never a process group.
             unsafe {
                 libc::kill(pid, libc::SIGKILL);
             }
-            // Blocking waitpid reaps it before this process exits.
+            // Blocking waitpid reaps it before the handler goes on.
             let _ = wait_retrying(pid, 0);
         }
+        // Collected in every branch: the slot no longer names a live child.
+        let _ = slot.compare_exchange(pid, 0, Ordering::SeqCst, Ordering::SeqCst);
     }
-    // _exit(2) skips atexit handlers, stdio flushing and destructors.
-    unsafe { libc::_exit(128 + signal) }
 }
 
-/// For a binary that supervises owned children on a single thread: on
-/// SIGINT/SIGTERM, SIGKILL and reap every live owned direct child started
-/// through this module, then `_exit(128 + signal)` without running any
-/// further code.
+/// Restores the default disposition, unblocks `signal` and raises it, so the
+/// process dies by that signal; `_exit(128 + signal)` only if it survives.
+/// Async-signal-safe: sigaction, pthread_sigmask, raise and _exit only.
+fn die_by_signal(signal: libc::c_int) -> ! {
+    // sigaction and sigset_t are plain data; every field is set before use.
+    let mut action: libc::sigaction = unsafe { std::mem::zeroed() };
+    action.sa_sigaction = libc::SIG_DFL;
+    action.sa_flags = 0;
+    let mut set: libc::sigset_t = unsafe { std::mem::zeroed() };
+    unsafe {
+        libc::sigemptyset(&mut action.sa_mask);
+        libc::sigaction(signal, &action, std::ptr::null_mut());
+        libc::sigemptyset(&mut set);
+        libc::sigaddset(&mut set, signal);
+        libc::pthread_sigmask(libc::SIG_UNBLOCK, &set, std::ptr::null_mut());
+        libc::raise(signal);
+        // _exit(2) skips atexit handlers, stdio flushing and destructors.
+        libc::_exit(128 + signal)
+    }
+}
+
+/// SIGTERM: kill and reap owned children, then die by SIGTERM at once.
+extern "C" fn terminate(signal: libc::c_int) {
+    kill_and_reap_owned();
+    die_by_signal(signal)
+}
+
+/// SIGINT: kill and reap owned children, record the signal, wake a pending
+/// supervision poll and return, so the interrupted supervision refuses and
+/// every guard drops normally. The interrupted code's errno is saved and
+/// restored.
+extern "C" fn interrupt(signal: libc::c_int) {
+    let saved = errno();
+    kill_and_reap_owned();
+    INTERRUPTED.store(signal, Ordering::SeqCst);
+    let wake = WAKE_WRITE.load(Ordering::SeqCst);
+    if wake >= 0 {
+        // write(2) is async-signal-safe; the end is non-blocking, and a full
+        // pipe (EAGAIN) is already readable, so the result is irrelevant.
+        unsafe {
+            libc::write(wake, b"i".as_ptr().cast(), 1);
+        }
+    }
+    unsafe {
+        *errno_location() = saved;
+    }
+}
+
+/// Creates the wake pipe once. Called before any handler exists, by the
+/// binary's single thread, so no descriptor can leak to a concurrent fork.
+fn create_wake_pipe() -> io::Result<()> {
+    if WAKE_READ.load(Ordering::SeqCst) >= 0 {
+        return Ok(());
+    }
+    let mut ends = [-1; 2];
+    if unsafe { libc::pipe(ends.as_mut_ptr()) } != 0 {
+        return Err(io::Error::last_os_error());
+    }
+    for fd in ends {
+        let set = unsafe { libc::fcntl(fd, libc::F_SETFD, libc::FD_CLOEXEC) };
+        if set < 0 || nonblocking(fd).is_err() {
+            let error = io::Error::last_os_error();
+            unsafe {
+                libc::close(ends[0]);
+                libc::close(ends[1]);
+            }
+            return Err(error);
+        }
+    }
+    WAKE_READ.store(ends[0], Ordering::SeqCst);
+    WAKE_WRITE.store(ends[1], Ordering::SeqCst);
+    Ok(())
+}
+
+/// For a binary that supervises owned children on a single thread. SIGINT
+/// kills and reaps every live owned direct child started through this module
+/// and returns (see `interrupted`); SIGTERM does the same, then dies by SIGTERM.
+///
+/// A signal inherited as ignored stays ignored, as for the baseline
+/// interpreter (and its children, which keep `SIG_IGN` across exec).
+/// Handlers run without `SA_RESTART`: a blocking call returns EINTR, so the
+/// supervision loop observes an interruption promptly.
 pub fn install_termination_handler() -> io::Result<()> {
+    create_wake_pipe()?;
     TERMINATION.store(true, Ordering::SeqCst);
-    for signal in [libc::SIGINT, libc::SIGTERM] {
+    let handlers: [(libc::c_int, extern "C" fn(libc::c_int)); 2] =
+        [(libc::SIGINT, interrupt), (libc::SIGTERM, terminate)];
+    for (signal, handler) in handlers {
+        // sigaction is plain data; the kernel fills `current`.
+        let mut current: libc::sigaction = unsafe { std::mem::zeroed() };
+        if unsafe { libc::sigaction(signal, std::ptr::null(), &mut current) } != 0 {
+            return Err(io::Error::last_os_error());
+        }
+        if current.sa_sigaction == libc::SIG_IGN {
+            continue;
+        }
         // sigaction is plain data; every field is set before the call.
         let mut action: libc::sigaction = unsafe { std::mem::zeroed() };
-        action.sa_sigaction = terminate as extern "C" fn(libc::c_int) as libc::sighandler_t;
+        action.sa_sigaction = handler as libc::sighandler_t;
         action.sa_flags = 0;
         let code = unsafe {
             libc::sigemptyset(&mut action.sa_mask);
@@ -151,6 +278,29 @@ pub fn install_termination_handler() -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+/// True once the SIGINT handler has run: every owned child is gone, and every
+/// later spawn or supervision step refuses with `Refusal::Interrupted`.
+pub fn interrupted() -> bool {
+    INTERRUPTED.load(Ordering::SeqCst) != 0
+}
+
+/// After the interrupted work has unwound: die by the recorded SIGINT, as the
+/// baseline does after an uncaught `KeyboardInterrupt`. Returns when
+/// uninterrupted.
+pub fn exit_if_interrupted() {
+    let signal = INTERRUPTED.load(Ordering::SeqCst);
+    if signal != 0 {
+        die_by_signal(signal);
+    }
+}
+
+fn interrupted_error() -> ProcessError {
+    early_error(
+        Refusal::Interrupted,
+        io::Error::from_raw_os_error(libc::EINTR),
+    )
 }
 
 pub enum Input<'a> {
@@ -239,6 +389,9 @@ pub enum Refusal {
     Infrastructure,
     /// Every termination-registry slot is in use; refused before fork.
     OwnedCapacity,
+    /// SIGINT arrived: owned children were killed and reaped by the handler,
+    /// and no further child is launched or supervised.
+    Interrupted,
 }
 
 #[derive(Debug)]
@@ -324,11 +477,30 @@ struct Owner {
     // First observed reap time, never an inferred actual child-exit instant.
     observed_ns: Option<u64>,
     killed: bool,
+    // Reaped by the SIGINT handler (waitpid reports ECHILD once interrupted);
+    // its status was collected there and is unknown here.
+    collected: bool,
 }
 
 impl Owner {
+    fn done(&self) -> bool {
+        self.status.is_some() || self.collected
+    }
+
+    /// ECHILD after an interruption means the SIGINT handler reaped the child.
+    fn collected_by_handler(&mut self, error: &io::Error) -> bool {
+        if error.raw_os_error() != Some(libc::ECHILD) {
+            return false;
+        }
+        release_owned(self.child.id());
+        if interrupted() {
+            self.collected = true;
+        }
+        self.collected
+    }
+
     fn observe(&mut self) -> io::Result<u64> {
-        if self.status.is_some() {
+        if self.done() {
             return Ok(self.observed_ns.unwrap_or_else(monotonic_ns));
         }
         loop {
@@ -344,8 +516,10 @@ impl Owner {
                 }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
                 Err(error) => {
-                    if error.raw_os_error() == Some(libc::ECHILD) {
-                        release_owned(self.child.id());
+                    if self.collected_by_handler(&error) {
+                        let observed_ns = monotonic_ns();
+                        self.observed_ns = Some(observed_ns);
+                        return Ok(observed_ns);
                     }
                     return Err(error);
                 }
@@ -354,11 +528,14 @@ impl Owner {
     }
 
     fn cancel(&mut self) -> io::Result<()> {
+        // With SIGINT/SIGTERM blocked the handler cannot reap this child
+        // between the observation below and the kill: an unreaped owned PID
+        // cannot be reused, so the kill never reaches another process.
+        let _block = TerminationBlock::when_installed()?;
         self.observe()?;
-        if self.status.is_some() || self.killed {
+        if self.done() || self.killed {
             return Ok(());
         }
-        // Until waitpid has reaped it, this owned PID cannot be reused.
         match self.child.kill() {
             Ok(()) => {
                 self.killed = true;
@@ -370,7 +547,7 @@ impl Owner {
     }
 
     fn reap(&mut self) -> io::Result<()> {
-        if self.status.is_some() {
+        if self.done() {
             return Ok(());
         }
         loop {
@@ -383,8 +560,9 @@ impl Owner {
                 }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
                 Err(error) => {
-                    if error.raw_os_error() == Some(libc::ECHILD) {
-                        release_owned(self.child.id());
+                    if self.collected_by_handler(&error) {
+                        self.observed_ns = Some(monotonic_ns());
+                        return Ok(());
                     }
                     return Err(error);
                 }
@@ -400,7 +578,7 @@ impl Owner {
 
 impl Drop for Owner {
     fn drop(&mut self) {
-        if self.status.is_none() {
+        if !self.done() {
             let _ = self.stop();
         }
     }
@@ -869,11 +1047,15 @@ fn spawn<'a>(spec: &Spec<'a>, timing: Timing) -> std::result::Result<Active<'a>,
     }
     // Termination stays blocked from the slot reservation before fork until
     // the PID is recorded; a full registry refuses before any child exists.
-    let block = if TERMINATION.load(Ordering::SeqCst) {
-        Some(TerminationBlock::new().map_err(|error| early_error(Refusal::Spawn, error))?)
-    } else {
-        None
-    };
+    // A mask failure is an infrastructure fault, never a spawn failure that a
+    // caller could read as "Git absent".
+    let block = TerminationBlock::when_installed()
+        .map_err(|error| early_error(Refusal::Infrastructure, error))?;
+    // Checked while blocked: a SIGINT arriving after this check stays pending
+    // until the PID below is recorded, so the handler then kills that child.
+    if interrupted() {
+        return Err(interrupted_error());
+    }
     let slot = match block {
         Some(_) => match reserve_owned() {
             Some(slot) => Some(slot),
@@ -912,6 +1094,7 @@ fn spawn<'a>(spec: &Spec<'a>, timing: Timing) -> std::result::Result<Active<'a>,
         status: None,
         observed_ns: None,
         killed: false,
+        collected: false,
     };
     let input = owner.child.stdin.take();
     let stdout = owner.child.stdout.take();
@@ -997,7 +1180,21 @@ impl Active<'_> {
         self.owner.status.is_some() && self.stdout.is_none() && self.stderr.is_none()
     }
 
+    /// One supervision step; once SIGINT was recorded, before or during the
+    /// step (an EINTR, or ECHILD for a child the handler reaped), the step
+    /// refuses as interrupted instead of reporting what it observed.
     fn advance(&mut self) -> std::result::Result<bool, (Refusal, Option<io::Error>)> {
+        if interrupted() {
+            return Err((Refusal::Interrupted, None));
+        }
+        let step = self.advance_once();
+        if interrupted() {
+            return Err((Refusal::Interrupted, None));
+        }
+        step
+    }
+
+    fn advance_once(&mut self) -> std::result::Result<bool, (Refusal, Option<io::Error>)> {
         if self.interval_deadline && self.deadline.expired() {
             return Err((Refusal::Deadline, None));
         }
@@ -1141,7 +1338,7 @@ impl Active<'_> {
                 stdout: std::mem::take(&mut self.out),
                 stderr: std::mem::take(&mut self.err),
                 killed: self.owner.killed,
-                reaped: self.owner.status.is_some(),
+                reaped: self.owner.done(),
                 status: self.owner.status.map(Status::from),
                 poll_wakeups: self.poll_wakeups,
             }),
@@ -1365,7 +1562,7 @@ impl<'a> Group<'a> {
     }
 
     fn poll(&mut self) {
-        let mut fds: [libc::pollfd; 3 * MAX_CHILDREN] = std::array::from_fn(|_| libc::pollfd {
+        let mut fds: [libc::pollfd; 3 * MAX_CHILDREN + 1] = std::array::from_fn(|_| libc::pollfd {
             fd: -1,
             events: 0,
             revents: 0,
@@ -1394,6 +1591,17 @@ impl<'a> Group<'a> {
         }
         if !pending {
             return;
+        }
+        // The SIGINT handler writes to this pipe: a signal landing between the
+        // last `interrupted()` check and this poll still wakes it at once.
+        let wake = WAKE_READ.load(Ordering::SeqCst);
+        if wake >= 0 {
+            fds[count] = libc::pollfd {
+                fd: wake,
+                events: libc::POLLIN,
+                revents: 0,
+            };
+            count += 1;
         }
         // A closed-pipe child still needs bounded waitpid sweeps; round positive
         // intervals up to a millisecond instead of spinning below 1ms.

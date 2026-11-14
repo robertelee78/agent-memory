@@ -89,16 +89,16 @@ fn run(matches: &Matches, context: &Context<'_>) -> CommandResult {
     let repo = Path::new(args.text("repo").unwrap_or("."));
     let outcome = match command {
         "inspect" => domain::inspect(repo),
-        "preview" => {
-            input::read_text(args.text("content").unwrap_or_default()).and_then(|content| {
+        "preview" => input::read_text_universal(args.text("content").unwrap_or_default()).and_then(
+            |content| {
                 domain::preview(
                     repo,
                     args.text("path").unwrap_or_default(),
                     &content,
                     "replace",
                 )
-            })
-        }
+            },
+        ),
         "apply" => input::load(args.text("proposal").unwrap_or_default())
             .and_then(|proposal| domain::apply(&proposal)),
         _ => match args.text("proposal").filter(|v| !v.is_empty()) {
