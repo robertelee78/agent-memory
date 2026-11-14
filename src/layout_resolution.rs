@@ -13,7 +13,7 @@ use crate::host::Sources;
 use crate::lifecycle::{get, object, string};
 use crate::scope_binding::VerifiedEnrollmentHold;
 use crate::{
-    bank_observation, bank_state, bank_transactions as tx, host, layout_history,
+    bank_observation, bank_transactions as tx, host, layout_history,
     layout_recovery_observation as raw, layout_recovery_state as state, lifecycle,
     local_registry as storage, records, sharing_limits,
 };
@@ -146,7 +146,7 @@ pub(crate) fn frontier() -> Result<Arc<dyn RecoveryFrontier>> {
     writes::recovery_frontier_provider()
 }
 pub(crate) fn safe_text(value: &Value, maximum: usize) -> Result<()> {
-    bank_state::comparison_view_provider()?.safe_text(value, maximum)
+    crate::comparison::safe_text(value, maximum).map(|_| ())
 }
 /// `state.paths(repo, operation_id)` with its operation directory.
 pub(crate) fn operation_paths(
@@ -227,7 +227,8 @@ pub(crate) fn locked<T>(
     id: &str,
     body: impl FnOnce(&[u8]) -> Result<T>,
 ) -> Result<T> {
-    let mut barrier = writes::turn_sources_provider()?.canonical_writer_barrier(root)?;
+    let mut barrier =
+        crate::turn_sources::canonical_writer_barrier(root, None, &crate::cli::pack_root()?)?;
     let outcome = storage::exclusive(
         &bank.join(".agent-memory.lock"),
         id,

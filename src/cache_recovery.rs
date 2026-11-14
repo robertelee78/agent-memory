@@ -7,31 +7,26 @@ use crate::release_distribution as release;
 use crate::release_distribution::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
-use std::sync::{Arc, RwLock};
 
 pub const MAX_CACHES: usize = 256;
 pub const MAX_CACHE_FILE: usize = 2 * 1024 * 1024;
 pub const MAX_CACHE_BYTES: usize = 16 * 1024 * 1024;
+/// Fault points and clean-pack inspection, passed explicitly to the `*_with`
+/// forms; tests supply fixture packs and concurrent writers.
 pub trait Installation: Send + Sync {
     fn fault(&self, point: &str) -> Result<()>;
     fn inspect_package(&self, pack: &Path) -> Result<Value>;
 }
-static INSTALLATION: RwLock<Option<Arc<dyn Installation>>> = RwLock::new(None);
-pub fn register_installation(provider: Option<Arc<dyn Installation>>) -> Result<()> {
-    *INSTALLATION
-        .write()
-        .map_err(|_| ContractError::new("Cache recovery installation registry is poisoned"))? =
-        provider;
-    Ok(())
-}
-fn registered() -> Result<Arc<dyn Installation>> {
-    Ok(INSTALLATION
-        .read()
-        .map_err(|_| ContractError::new("Cache recovery installation registry is poisoned"))?
-        .clone()
-        .ok_or_else(|| {
-            ContractError::new("Cache recovery installation provider is not registered")
-        })?)
+/// The running installation: the dev-tools fault points of `bank_writes` and
+/// `artifact`'s clean-pack inspection.
+pub struct Installed;
+impl Installation for Installed {
+    fn fault(&self, point: &str) -> Result<()> {
+        Ok(crate::bank_writes::fault(point)?)
+    }
+    fn inspect_package(&self, pack: &Path) -> Result<Value> {
+        Ok(crate::artifact::inspect(pack)?)
+    }
 }
 fn require(condition: bool, reason: &str) -> Result<()> {
     if condition {
@@ -90,7 +85,7 @@ impl Observation {
     }
 }
 pub fn observe(root: &Path) -> Result<Observation> {
-    observe_with(root, registered()?.as_ref())
+    observe_with(root, &Installed)
 }
 pub fn observe_with(root: &Path, install: &dyn Installation) -> Result<Observation> {
     require(
@@ -279,12 +274,7 @@ pub struct Qualification {
     pub summary: Value,
 }
 pub fn qualify(root: &Path, receipt: &Value) -> Result<Qualification> {
-    qualify_with(
-        root,
-        receipt,
-        registered()?.as_ref(),
-        release::ALLOWED_SIGNERS,
-    )
+    qualify_with(root, receipt, &Installed, release::ALLOWED_SIGNERS)
 }
 fn cache_module(name: &str) -> Option<String> {
     let path = Path::new(name);
@@ -615,7 +605,7 @@ pub fn qualify_with(
     })
 }
 pub fn recheck(qualification: &Qualification) -> Result<()> {
-    recheck_with(qualification, registered()?.as_ref())
+    recheck_with(qualification, &Installed)
 }
 pub fn recheck_with(qualification: &Qualification, install: &dyn Installation) -> Result<()> {
     let observed = observe_with(&qualification.root, install)?;

@@ -602,7 +602,7 @@ pub fn observe_enrollment_location(
         .2
         .parent()
         .ok_or_else(|| err("Private enrollment source location has no parent"))?;
-    if !writes::turn_sources_provider()?.source_barrier_held(barrier)? {
+    if !crate::turn_sources::source_barrier_held(barrier) {
         return Err(err(
             "Observer locator reuse requires its already held source barrier",
         ));
@@ -666,7 +666,7 @@ fn private_enrollment_context_at(
     let source_base = recovery_base
         .parent()
         .ok_or_else(|| err("Private enrollment source location has no parent"))?;
-    writes::turn_sources_provider()?.check_source_compatibility(source_base)?;
+    crate::turn_sources::check_source_compatibility(source_base)?;
     let frontier = writes::recovery_frontier_provider()?;
     let hold = frontier.verified_enrollment_hold_at_bank(&raw_root, &raw_bank, &runtime_root)?;
     let scope = match &hold {
@@ -1067,15 +1067,17 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         ("developer_id", get(&dev, "developer_id").clone()),
         ("project_id", get(proj, "project_id").clone()),
     ]);
-    let security = writes::security_provider()?;
-    security.audit(
+    crate::security::audit(
         root,
         operation_id,
         "mutation",
         "started",
         &audit_context,
         &["external"],
+        &[],
+        &[],
         "bind",
+        None,
     )?;
     let bundle_path = if tx != &Value::Null {
         let (journal, receipt) = transactions::locations(
@@ -1155,14 +1157,17 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         ));
     }
     let audit = if verified {
-        security.audit(
+        crate::security::audit(
             root,
             operation_id,
             "mutation",
             "completed",
             &audit_context,
             &["external"],
+            &[],
+            &[],
             "bind",
+            None,
         )?
     } else {
         Value::Null
@@ -1216,64 +1221,8 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         ],
     ))
 }
-
-/// Production adapter for every bank_writes scope contract.
-pub struct ScopeBinding;
-impl writes::ScopeBinding for ScopeBinding {
-    fn context_value(&self, context: &Value) -> Result<()> {
-        context_value(context, false)
-    }
-    fn require(
-        &self,
-        repo: &Path,
-        project_id: &Value,
-        expected: &Value,
-        owned_lock: Option<&[u8]>,
-    ) -> Result<Value> {
-        let id = optional_project(project_id)?;
-        require(
-            repo,
-            id,
-            RequireOptions {
-                expected: (expected != &Value::Null).then_some(expected),
-                owned_lock,
-                ..Default::default()
-            },
-        )
-    }
-    fn context_value_for_initialization(&self, context: &Value, initialize: bool) -> Result<()> {
-        context_value(context, initialize)
-    }
-    fn require_transaction(
-        &self,
-        repo: &Path,
-        project_id: &Value,
-        expected: Option<&Value>,
-        owned_lock: Option<&[u8]>,
-        owned_transaction: Option<&[u8]>,
-        initialize: bool,
-    ) -> Result<Value> {
-        require(
-            repo,
-            optional_project(project_id)?,
-            RequireOptions {
-                expected,
-                initialize,
-                owned_lock,
-                owned_transaction,
-                migration_reader: None,
-            },
-        )
-    }
-    fn observe_enrollment_location(
-        &self,
-        repo: &Path,
-        runtime_root: &Path,
-    ) -> Result<Option<recovery_state::RecoveryPaths>> {
-        observe_enrollment_location(repo, None, runtime_root)
-    }
-}
-fn optional_project(value: &Value) -> Result<Option<&str>> {
+/// A proposal's project ID: JSON null for none, otherwise the exact string.
+pub(crate) fn optional_project(value: &Value) -> Result<Option<&str>> {
     if value == &Value::Null {
         Ok(None)
     } else {

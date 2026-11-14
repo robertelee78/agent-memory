@@ -2263,17 +2263,14 @@ fn current_runtime_artifact_locator_is_absolute() {
 
 #[test]
 fn diagnostics_uses_native_projection_bounds_and_validation() {
-    use agent_memory::diagnostics::Projections as _;
-    let provider = projections::Projections;
-    assert_eq!(provider.max_bytes(), projections::MAX_BYTES);
     let valid = obj([
         ("schema", s(projections::SCHEMA)),
         ("project_id", s(PROJECT)),
         ("source_hashes", obj([("MEMORY.md", s("a".repeat(64)))])),
         ("records", Value::Array(vec![])),
     ]);
-    assert_eq!(provider.value(&valid).unwrap(), valid);
+    assert_eq!(projections::value(&valid).unwrap(), &valid);
     let mut invalid = valid;
     set(&mut invalid, "source_hashes", obj([]));
-    assert!(provider.value(&invalid).is_err());
+    assert!(projections::value(&invalid).is_err());
 }

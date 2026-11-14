@@ -60,6 +60,8 @@ pub static ENTRIES: &[Entry] = &[
     route("revoke", &helpers::governance::HELPER),
     route("forget", &helpers::governance::HELPER),
     route("publish", &helpers::memory_publication::HELPER),
+    route("refresh", &helpers::memory_refresh::HELPER),
+    route("boundary", &helpers::memory_refresh::HELPER),
     route("semantic", &helpers::semantic_sharing::HELPER),
     route("sharing", &helpers::sharing_boundary::HELPER),
     route("exchange", &helpers::sharing_recovery::HELPER),

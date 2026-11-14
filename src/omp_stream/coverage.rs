@@ -160,7 +160,7 @@ impl StreamAuthority for Installed {
         .map_err(installation_error)
     }
     fn transport(&self) -> Result<Arc<dyn OmpTransport>> {
-        super::omp_transport_provider()
+        Ok(Arc::new(crate::omp_transport::Transport::installed()))
     }
 }
 /// The marker context must still name the OPEN's project, root, bank and checkout.

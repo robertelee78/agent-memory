@@ -65,7 +65,7 @@ fn direct_native_hooks_and_boundary_help_preserve_runtime_bytes_and_modes() {
 }
 
 #[test]
-#[ignore = "needs development installation providers registered"]
+
 // obligation: tests/contracts/test_read_only_audits.py::ReadOnlyAudits.test_repeated_installed_and_documented_source_audits_preserve_every_byte_and_mode
 fn repeated_installed_and_source_audits_preserve_all_runtime_bytes_and_modes() {
     for mode in ["copy", "link"] {
@@ -113,8 +113,8 @@ fn repeated_installed_and_source_audits_preserve_all_runtime_bytes_and_modes() {
 }
 
 #[test]
-#[ignore = "needs development installation providers registered"]
 // obligation: tests/contracts/test_read_only_audits.py::ReadOnlyAudits.test_outside_receipt_aware_audit_refuses_and_preserves_inert_cache_drift
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn outside_receipt_aware_audit_refuses_and_preserves_opaque_cache_drift() {
     let w = World::new().unwrap();
     let source = development_source(&w, "audit-source");

@@ -4,7 +4,6 @@ use crate::error::{ContractError, Result};
 use crate::lifecycle::{get, object, string, text};
 use crate::pack_validation::{self, CommandSurface, Invalid};
 use std::path::Path;
-use std::sync::{Arc, RwLock};
 
 pub const COMPATIBILITY: &str = "schemas/runtime-compatibility.json";
 /// Inventory entry naming the installed runtime binary inside the artifact digest.
@@ -91,18 +90,10 @@ pub fn command_names(compatibility: &Value) -> Result<Vec<String>> {
     Ok(listed.into_iter().map(String::from).collect())
 }
 
-/// Migration slice owns the implementation; candidate code is never imported.
+/// Migration codecs' contract inspection, passed explicitly to the `*_with`
+/// forms; candidate code is never imported.
 pub trait MigrationContract: Send + Sync {
     fn inspect(&self, root: &Path, compatibility: &Value, files: &Value) -> Result<Value>;
-}
-
-static MIGRATION_CONTRACT: RwLock<Option<Arc<dyn MigrationContract>>> = RwLock::new(None);
-
-pub fn register_migration_contract(provider: Option<Arc<dyn MigrationContract>>) -> Result<()> {
-    *MIGRATION_CONTRACT
-        .write()
-        .map_err(|_| ContractError::new("Migration contract registry is poisoned"))? = provider;
-    Ok(())
 }
 
 fn python_minimum(value: Option<&str>) -> bool {
@@ -283,19 +274,9 @@ fn runtime_error(detail: &str) -> Invalid {
     Invalid::new("runtime-binary", BINARY_ENTRY, detail)
 }
 
-fn registered_migration() -> pack_validation::Result<Option<Arc<dyn MigrationContract>>> {
-    let registry = MIGRATION_CONTRACT.read().map_err(|_| {
-        pack_error(ContractError::new(
-            "Migration contract registry is poisoned",
-        ))
-    })?;
-    Ok(registry.clone())
-}
-
 pub fn inspect(pack: &Path) -> pack_validation::Result<Value> {
-    let migration = registered_migration()?;
     pack_validation::with_validated(pack, |root, v| {
-        inspect_validation(root, v, migration.as_deref()).map_err(pack_error)
+        inspect_validation(root, v, Some(&crate::migration_contract::Bundled)).map_err(pack_error)
     })
 }
 
@@ -384,9 +365,9 @@ fn with_binary(inspection: Value, binary: &Path) -> pack_validation::Result<Valu
 /// `inspect` with the installed binary bound into `files`, `file_count` and
 /// `artifact_digest`; the binary is read inside the pack's fresh-inventory bracket.
 pub fn inspect_runtime(pack: &Path, binary: &Path) -> pack_validation::Result<Value> {
-    let migration = registered_migration()?;
     pack_validation::with_validated(pack, |root, v| {
-        let inspection = inspect_validation(root, v, migration.as_deref()).map_err(pack_error)?;
+        let inspection = inspect_validation(root, v, Some(&crate::migration_contract::Bundled))
+            .map_err(pack_error)?;
         with_binary(inspection, binary)
     })
 }

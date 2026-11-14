@@ -242,12 +242,6 @@ pub fn read_source_hash(bank: &Path, relative: &str, limit: usize) -> Result<(St
     let (hash, facts) = observe().map_err(read_error)?;
     Ok((hash, signature(&facts)))
 }
-pub struct LayoutObservation;
-impl project_identity::LayoutObservation for LayoutObservation {
-    fn read_source(&self, bank: &Path, relative: &Path, limit: usize) -> Result<Vec<u8>> {
-        read_source(bank, text(relative)?, limit).map(|(body, _)| body)
-    }
-}
 fn named(path: &Path) -> Result<Option<Identity>> {
     let Some(parent) = path.parent() else {
         return Err(err("Raw path has no parent"));

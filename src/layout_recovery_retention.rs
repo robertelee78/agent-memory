@@ -737,8 +737,7 @@ fn nested_complete(
         ));
     }
     let (_, canonical_path) = bank_transactions::locations(root, bank, nested_id)?;
-    let receipt =
-        writes::recovery_transactions_provider()?.nested_receipt(journal, &canonical_path)?;
+    let receipt = crate::recovery_transactions::nested_receipt(journal, &canonical_path)?;
     let Some(receipt) = receipt else {
         return Ok(false);
     };

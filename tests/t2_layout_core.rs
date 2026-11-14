@@ -7,10 +7,9 @@
 //! is deferred until those modules are ported.
 use agent_memory::codec::json::Value;
 use agent_memory::developer_identity::{digest, encoded};
-use agent_memory::error::Kind;
 use agent_memory::{
     layout_recovery_temps as temps, layout_resolution as resolution, layout_restore as restore,
-    layout_units as units, recovery_quiescence as quiescence,
+    recovery_quiescence as quiescence,
 };
 use std::fs;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
@@ -471,25 +470,6 @@ fn child_restore_probe_plan_covers_both_views_of_every_action() {
     assert_eq!(tasks.len(), 2);
     assert!(modes.contains(&&n(0o600)));
     assert!(modes.contains(&&n(0o640)));
-}
-
-#[test]
-fn layout_recovery_seam_refuses_without_a_registered_provider() {
-    let missing = |result: agent_memory::error::Result<_>| {
-        let error: agent_memory::error::ContractError = result.map(|_: Value| ()).unwrap_err();
-        assert!(matches!(error.kind(), Kind::MissingProvider), "{error}");
-    };
-    let root = Root::new();
-    missing(restore::value(&root.0, &Value::Object(Vec::new()), &root.0));
-    missing(units::apply(&root.0, &Value::Object(Vec::new()), &root.0));
-    missing(
-        units::revised(
-            &Value::Object(Vec::new()),
-            &Value::Object(Vec::new()),
-            &Value::Array(vec![Value::Null]),
-        )
-        .map(|_| Value::Null),
-    );
 }
 
 // ---- layout_resolution ----

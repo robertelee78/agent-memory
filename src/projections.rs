@@ -11,17 +11,6 @@ pub const SCHEMA: &str = "agent-memory/reference-projection-v1";
 pub const MAX_BYTES: usize = 2 * 1024 * 1024;
 pub const MAX_BUILD_INPUT: usize = 65536;
 
-/// Native reference-only validation consumed by diagnostics.
-pub struct Projections;
-impl crate::diagnostics::Projections for Projections {
-    fn max_bytes(&self) -> usize {
-        MAX_BYTES
-    }
-    fn value(&self, data: &Value) -> Result<Value> {
-        value(data).cloned()
-    }
-}
-
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }

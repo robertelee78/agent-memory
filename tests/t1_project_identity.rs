@@ -264,8 +264,6 @@ impl World {
 static OUTER_LAUNCH: std::sync::Mutex<()> = std::sync::Mutex::new(());
 fn in_world(name: &str, body: impl FnOnce(&World)) {
     if std::env::var("AM_PROJECT_CASE").ok().as_deref() == Some(name) {
-        repository_config::register_security_scan(Some(Arc::new(agent_memory::security::Security)))
-            .unwrap();
         let world = World {
             root: PathBuf::from(std::env::var_os("AM_PROJECT_ROOT").unwrap()),
         };
@@ -1340,7 +1338,6 @@ fn unknown_bank_symlinks_and_busy_state_preserve_sources() {
     in_world(
         "unknown_bank_symlinks_and_busy_state_preserve_sources",
         |w| {
-            project::register_bank_writes(Some(Arc::new(WriterOperations))).unwrap();
             let repo = w.repo("repository");
             w.create(&repo, None);
             let router = repo.join("memory-bank/MEMORY.md");
@@ -1699,38 +1696,6 @@ fn registry_bytes_validation_and_unordered_proposal_maps() {
     );
 }
 
-struct RecoveryReader;
-impl project::LayoutObservation for RecoveryReader {
-    fn read_source(&self, bank: &Path, relative: &Path, limit: usize) -> Result<Vec<u8>> {
-        agent_memory::fs::read_source(bank, relative, limit)
-            .map(|v| v.bytes)
-            .map_err(|e| agent_memory::error::ContractError::new(e.to_string()))
-    }
-}
-struct MarkerObservation;
-impl project::BankObservation for MarkerObservation {
-    fn markers(&self, bank: &Path, lock: Option<&[u8]>, transaction: Option<&[u8]>) -> Result<()> {
-        for (name, owned) in [
-            (".agent-memory.lock", lock),
-            (".agent-memory-transaction.md", transaction),
-        ] {
-            match agent_memory::fs::read_source(bank, Path::new(name), project::MARKER_MAX_BYTES) {
-                Ok(value) if owned == Some(value.bytes.as_slice()) => (),
-                Err(agent_memory::fs::ReadError::Io(e))
-                    if e.kind() == std::io::ErrorKind::NotFound =>
-                {
-                    ()
-                }
-                _ => {
-                    return Err(agent_memory::error::ContractError::new(
-                        "Bank busy or interrupted; inspect/recover before resolving identity",
-                    ));
-                }
-            }
-        }
-        Ok(())
-    }
-}
 #[test]
 fn raw_identity_requires_independent_typed_evidence_and_providers() {
     in_world(
@@ -1745,20 +1710,6 @@ fn raw_identity_requires_independent_typed_evidence_and_providers() {
                 raw_identity: Some(&evidence),
                 ..DiscoveryOptions::default()
             };
-            assert!(
-                project::discover(&repo, None, options)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("bank observation provider is not registered")
-            );
-            project::register_bank_observation(Some(Arc::new(MarkerObservation))).unwrap();
-            assert!(
-                project::discover(&repo, None, options)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("layout observation provider is not registered")
-            );
-            project::register_layout_observation(Some(Arc::new(RecoveryReader))).unwrap();
             assert_eq!(
                 g(
                     &project::status_with_options(&repo, None, options).unwrap(),
@@ -2006,22 +1957,6 @@ fn owned_lock_and_transaction_symlinks_keep_busy_refusal_without_mutation() {
 #[test]
 fn nested_bank_roots_preserve_raw_recovery_identity() {
     in_world("nested_bank_roots_preserve_raw_recovery_identity", |w| {
-        struct BankMarkers;
-        impl project::BankObservation for BankMarkers {
-            fn markers(
-                &self,
-                bank: &Path,
-                owned_lock: Option<&[u8]>,
-                owned_transaction: Option<&[u8]>,
-            ) -> Result<()> {
-                agent_memory::bank_observation::markers(bank, owned_lock, owned_transaction)
-            }
-        }
-        project::register_bank_observation(Some(Arc::new(BankMarkers))).unwrap();
-        project::register_layout_observation(Some(Arc::new(
-            agent_memory::layout_recovery_observation::LayoutObservation,
-        )))
-        .unwrap();
         for (name, relative) in [
             ("depth-two", "docs/shared memory"),
             ("depth-three", "docs/team/shared memory"),
@@ -2293,12 +2228,6 @@ fn competing_router_refusal_precedes_branch_validation() {
     });
 }
 
-struct WriterOperations;
-impl project::BankWrites for WriterOperations {
-    fn operations(&self) -> &[&str] {
-        agent_memory::bank_writes::OPERATIONS
-    }
-}
 #[test]
 fn canonical_writer_busy_and_initializing_remain_distinct_typed_refusals() {
     in_world(
@@ -2306,7 +2235,6 @@ fn canonical_writer_busy_and_initializing_remain_distinct_typed_refusals() {
         |w| {
             let repo = w.repo("repository");
             w.create(&repo, None);
-            project::register_bank_writes(Some(Arc::new(WriterOperations))).unwrap();
             let bank = repo.join("memory-bank");
             let lock = bank.join(".agent-memory.lock");
             let chain = agent_memory::fs::DirectoryChain::open(&bank).unwrap();

@@ -27,11 +27,12 @@ pub use plan::{
     hook_paths, lifecycle_paths, preflight_layout, preflight_path, prepare, presets, public_plan,
     source_info, stage_release,
 };
-pub(crate) use providers::into_contract;
 pub use providers::{
-    CacheInstallation, InstallationActivation, InstalledReceiptProvider, MANAGED_SOURCE_INFO,
-    ManagedSourceInfo, OmpHarness, RuntimePackRoot, installation_inventory,
-    omp_activation_template, omp_locations, omp_verify_targets, pack_root,
+    InstallationActivation, OmpHarness, installation_inventory, omp_activation_template,
+    omp_locations, omp_verify_targets, pack_root,
+};
+pub(crate) use providers::{
+    installed_receipt, into_contract, managed_source_info, runtime_pack_root,
 };
 pub use records::{encoded, load, read_journal, read_receipt, receipt_is_rust_era};
 pub use seams::{

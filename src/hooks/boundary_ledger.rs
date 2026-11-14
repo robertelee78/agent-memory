@@ -11,7 +11,7 @@ use crate::client_hooks::membership_equal;
 use crate::codec::json::{self, DecodePolicy, Value};
 use crate::error::ContractError;
 use crate::fs::{self, Descriptor, FlockGuard, LockMode};
-use crate::{bank_writes, boundary_assessment, scope_binding, turn_check, turn_sources};
+use crate::{bank_writes, boundary_assessment, scope_binding, turn_check};
 use std::ffi::{OsStr, OsString};
 use std::fmt;
 use std::io;
@@ -766,7 +766,6 @@ pub fn reserve(
         ));
     }
     if action == "published" {
-        let gate = turn_sources::publication_gate_provider()?;
         let (Some(bound), Some(request)) = (
             bound.as_ref(),
             options
@@ -778,7 +777,7 @@ pub fn reserve(
         request_hash = string(sha256_hex(
             json::encode(request, json::SORTED_COMPACT_UTF8)?.as_bytes(),
         ));
-        gate.request_value(&bound.repository, request)?;
+        crate::memory_publication::request_value(&bound.repository, request)?;
         let proof = request
             .get("proof")
             .filter(|proof| proof.as_object().is_some())
@@ -789,7 +788,7 @@ pub fn reserve(
         let (Some(base), Some(candidate)) = (request.get("base"), request.get("candidate")) else {
             return Err(value("publication request is incomplete"));
         };
-        let replay = gate.replay(
+        let replay = crate::sharing_recovery::replay(
             &bound.repository,
             &object([("base", base.clone()), ("candidate", candidate.clone())]),
             get(proof, "schema").as_str() == Some("agent-memory/semantic-sharing-proof-v2"),

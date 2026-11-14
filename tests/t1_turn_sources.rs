@@ -1,4 +1,3 @@
-use agent_memory::bank_writes::CanonicalWriterBarrier;
 use agent_memory::codec::json::Value;
 use agent_memory::error::{Kind, Result};
 use sha2::{Digest, Sha256};
@@ -1017,17 +1016,14 @@ fn published_completion_without_real_gate_is_typed_pending_not_success() -> Resu
                 ),
                 ("publication_request", Value::Null),
             ]);
-            sources::register_publication_gate(None);
             let outcome = sources::verify_assessment(
                 repo,
                 &value,
                 sources::bounded(get(&source, "observation_id"), 512)?,
                 runtime,
             );
-            assert!(matches!(
-                outcome.err().map(|e| e.kind().clone()),
-                Some(Kind::SourcePublicationUnavailable)
-            ));
+            // The real publication request check refuses the absent request.
+            assert!(outcome.is_err());
             let state = sources::inspect(repo, "codex", "session", "lifecycle", runtime)?;
             assert_eq!(array_len(&state, "pending"), 1);
             assert_eq!(array_len(&state, "completed"), 0);

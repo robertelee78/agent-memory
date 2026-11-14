@@ -335,10 +335,9 @@ pub fn render(
     if let Some(observation) = observation {
         desired.push((
             handoff::SECTION,
-            fenced(&handoff::reusable_with(
+            fenced(&handoff::reusable(
                 base,
                 handoff::validate_observation(observation)?,
-                &Checkpoint,
             ))?,
         ));
     }
@@ -409,7 +408,6 @@ fn hash(body: &str) -> Value {
     string(crate::developer_identity::sha256_hex(body.as_bytes()))
 }
 fn ensure_safe(files: &Value) -> Result<()> {
-    let scanner = repository_config::security_scan_provider()?;
     let fields = files
         .as_object()
         .ok_or_else(|| err("Governed mutation exceeds its bounded memory content batch"))?;
@@ -427,11 +425,10 @@ fn ensure_safe(files: &Value) -> Result<()> {
     }
     let mut reasons = BTreeSet::new();
     for (_, content) in fields {
-        let scanned = scanner.scan(
-            content
-                .as_str()
-                .ok_or_else(|| err("Invalid checkpoint content"))?,
-        )?;
+        let content = content
+            .as_str()
+            .ok_or_else(|| err("Invalid checkpoint content"))?;
+        let scanned = crate::security::scan(&string(content), crate::security::LIMIT)?;
         for reason in strings(get(&scanned, "reasons"))? {
             reasons.insert(reason);
         }
@@ -804,33 +801,6 @@ pub fn validate_preparation(tx: &Value, sources: bool) -> Result<()> {
         )?;
     }
     Ok(())
-}
-/// The actual provider for both pre-existing checkpoint interfaces.
-pub struct Checkpoint;
-impl writes::Checkpoint for Checkpoint {
-    fn validate_write(&self, proposal: &Value, sources: bool) -> Result<()> {
-        validate_write(proposal, sources)
-    }
-    fn validate_preparation(&self, proposal: &Value, sources: bool) -> Result<()> {
-        validate_preparation(proposal, sources)
-    }
-}
-impl handoff::Checkpoint for Checkpoint {
-    fn headings(&self, body: &str) -> Result<Vec<(usize, usize, String)>> {
-        headings(body)
-    }
-    fn fields(&self) -> Vec<String> {
-        FIELDS
-            .iter()
-            .map(|(_, label)| (*label).to_owned())
-            .collect()
-    }
-    fn extra(&self) -> Vec<String> {
-        EXTRA.iter().map(|label| (*label).to_owned()).collect()
-    }
-    fn list_text(&self, references: &[String]) -> Result<String> {
-        list_text(references)
-    }
 }
 pub fn command_result(operation: &str, outcome: Result<Value>) -> CommandResult {
     let (value, exit_code, style) = match outcome {

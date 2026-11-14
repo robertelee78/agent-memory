@@ -110,12 +110,6 @@ pub fn validate(text: &str) -> Result<Value> {
         ("identity_authenticated", Value::Bool(false)),
     ]))
 }
-pub struct TombstoneParser;
-impl crate::records::TombstoneParser for TombstoneParser {
-    fn parse(&self, text: &str) -> Result<Value> {
-        parse(text)
-    }
-}
 
 pub fn canonical_paths(bank: &Path) -> Result<BTreeSet<String>> {
     let physical = crate::bank_observation::physical_inventory(bank)?;
@@ -299,7 +293,6 @@ mod tests {
     use super::*;
     use std::os::unix::fs::DirBuilderExt;
     use std::path::PathBuf;
-    use std::sync::{Arc, Once};
 
     const PROJECT: &str = "8e0b66aa-2be5-4fa3-b47f-1245474aa7dd";
     const DEAD: &str = "a9abac6f-c33e-44c9-b40f-7b2ebafda860";
@@ -311,10 +304,6 @@ mod tests {
         }
     }
     fn fixture() -> std::result::Result<Fixture, Box<dyn std::error::Error>> {
-        static PARSER: Once = Once::new();
-        PARSER.call_once(|| {
-            crate::records::register_tombstone_parser(Some(Arc::new(TombstoneParser)))
-        });
         let root = PathBuf::from("/tmp").join(format!("am-tomb-history-{}", crate::host::uuid4()?));
         std::fs::DirBuilder::new().mode(0o700).create(&root)?;
         let fixture = Fixture(root.canonicalize()?);

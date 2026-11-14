@@ -496,10 +496,6 @@ fn public_bind_and_index_publish_and_preserve_identity() {
     if !isolated("public_bind_and_index_publish_and_preserve_identity") {
         return;
     }
-    agent_memory::repository_config::register_security_scan(Some(std::sync::Arc::new(
-        agent_memory::security::Security,
-    )))
-    .unwrap();
     let (repo, bank, runtime) = fixture();
     let (_, _, base, _) = state::paths(&repo, None, &runtime).unwrap();
     let empty = state::index(&repo, &runtime).unwrap();

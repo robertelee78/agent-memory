@@ -245,20 +245,3 @@ fn run(matches: &Matches, context: &Context<'_>) -> CommandResult {
         &runtime_root,
     )
 }
-/// The bank-contract route is the same typed parser and handler, never a script.
-pub struct RouteTable;
-impl crate::bank_contract::RouteTable for RouteTable {
-    fn execute(&self, route: &str, arguments: &[String]) -> crate::error::Result<CommandResult> {
-        if route != "recover-layout" {
-            return Err(crate::error::ContractError::new(
-                "Unknown bank recovery route",
-            ));
-        }
-        let route = crate::cli::Route {
-            name: "recover-layout",
-            helper: &HELPER,
-            prefix: &[],
-        };
-        Ok(crate::cli::execute(&route, arguments, "am bank").result)
-    }
-}

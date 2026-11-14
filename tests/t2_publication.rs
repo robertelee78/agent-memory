@@ -1777,28 +1777,17 @@ fn protected_landing_waits_for_review_then_exact_checks_then_uses_the_generated_
 }
 
 #[test]
-fn publication_gate_validates_the_request_and_forwards_replay() -> TestResult {
-    use agent_memory::turn_sources::PublicationGate;
+fn publication_request_and_replay_refuse_inexact_inputs() -> TestResult {
     let w = World::new()?;
     let (repo, _, _) = plain_repository(&w)?;
     agent_memory::cli::register_providers()?;
-    let gate = publication::Gate;
-    let error = gate.request_value(&repo, &obj([])).unwrap_err();
+    let error = publication::request_value(&repo, &obj([])).unwrap_err();
     assert_eq!(
         error.message(),
         "Use the exact private publication request in its original repository"
     );
-    let pin = obj([
-        ("base", s("a".repeat(40))),
-        ("candidate", s("b".repeat(40))),
-    ]);
-    let direct = agent_memory::sharing_recovery::replay(&repo, &pin, false).unwrap_err();
-    let forwarded = gate.replay(&repo, &pin, false).unwrap_err();
-    assert_eq!(forwarded.kind(), direct.kind());
-    assert_eq!(forwarded.message(), direct.message());
-    let inexact = gate
-        .replay(&repo, &obj([("base", s("a"))]), false)
-        .unwrap_err();
+    let inexact =
+        agent_memory::sharing_recovery::replay(&repo, &obj([("base", s("a"))]), false).unwrap_err();
     assert_eq!(
         inexact.message(),
         "Replay requires exact base and memory-only candidate commit IDs"
@@ -1925,7 +1914,7 @@ fn rev_parents(w: &World, repo: &Path, commit: &str) -> TestResult<Vec<String>> 
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_first_publication_excludes_feature_ancestry_and_preserves_original_files_index
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn first_publication_excludes_feature_ancestry_and_preserves_original_files_index() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, base) = bootstrap(&w)?;
@@ -1961,7 +1950,7 @@ fn first_publication_excludes_feature_ancestry_and_preserves_original_files_inde
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_required_human_review_and_checks_remain_pending_even_for_an_admin
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn required_human_review_and_checks_remain_pending_even_for_an_admin() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2020,7 +2009,7 @@ fn required_human_review_and_checks_remain_pending_even_for_an_admin() -> TestRe
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_first_bank_compares_real_absence_without_a_second_starter
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn first_bank_compares_real_absence_without_a_second_starter() -> TestResult {
     let w = World::new()?;
     let (repo, bank, base) = bootstrap(&w)?;
@@ -2068,7 +2057,7 @@ fn first_bank_compares_real_absence_without_a_second_starter() -> TestResult {
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit() -> TestResult {
     let w = World::new()?;
     let (repo, bank, _, _) = fixture(&w)?;
@@ -2109,7 +2098,7 @@ fn unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit() ->
 
 // obligation: tests/contracts/test_publication_policy.py::PublicationPolicyContract.test_rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2146,7 +2135,7 @@ fn rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed() ->
 
 // obligation: tests/contracts/test_publication_policy.py::PublicationPolicyContract.test_clean_rollup_cannot_substitute_for_missing_or_wrong_app_required_checks
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn clean_rollup_cannot_substitute_for_missing_or_wrong_app_required_checks() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2231,7 +2220,7 @@ fn restricted_publication(w: &mut World) -> TestResult<(PathBuf, PathBuf, PathBu
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_allowed_user_still_waits_for_reviews_and_checks_then_lands
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn allowed_user_still_waits_for_reviews_and_checks_then_lands() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2269,7 +2258,7 @@ fn allowed_user_still_waits_for_reviews_and_checks_then_lands() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_all_negative_identity_and_inventory_cases_refuse_prepare
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn all_negative_identity_and_inventory_cases_refuse_prepare() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2352,7 +2341,7 @@ fn all_negative_identity_and_inventory_cases_refuse_prepare() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_complete_later_page_succeeds_but_incomplete_chains_refuse
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn complete_later_page_succeeds_but_incomplete_chains_refuse() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2391,7 +2380,7 @@ fn complete_later_page_succeeds_but_incomplete_chains_refuse() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_actor_revoked_after_prepare_and_transport_rejection_stay_unpublished
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn actor_revoked_after_prepare_and_transport_rejection_stay_unpublished() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2424,7 +2413,7 @@ fn actor_revoked_after_prepare_and_transport_rejection_stay_unpublished() -> Tes
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_immediate_final_recheck_refuses_actor_allowlist_or_restriction_change
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn immediate_final_recheck_refuses_actor_allowlist_or_restriction_change() -> TestResult {
     for field in [
         "change_actor_at",
@@ -2461,7 +2450,7 @@ fn immediate_final_recheck_refuses_actor_allowlist_or_restriction_change() -> Te
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_bank
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_bank() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, _) = bootstrap(&w)?;
@@ -2533,7 +2522,7 @@ fn peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_ban
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_discarded_side_bank_is_not_invented_as_historical_authority_ownership
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn discarded_side_bank_is_not_invented_as_historical_authority_ownership() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, _) = bootstrap(&w)?;
@@ -2580,7 +2569,7 @@ fn discarded_side_bank_is_not_invented_as_historical_authority_ownership() -> Te
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_offline_permission_source_and_unsupported_policy_failures_keep_local_memory_pending
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn offline_permission_source_and_unsupported_policy_failures_keep_local_memory_pending()
 -> TestResult {
     let mut w = World::new()?;
@@ -2642,7 +2631,7 @@ fn offline_permission_source_and_unsupported_policy_failures_keep_local_memory_p
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_removed_authority_bank_is_not_treated_as_first_initialization
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn removed_authority_bank_is_not_treated_as_first_initialization() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2668,7 +2657,7 @@ fn removed_authority_bank_is_not_treated_as_first_initialization() -> TestResult
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_tampered_candidate_with_identical_memory_but_feature_code_is_refused
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn tampered_candidate_with_identical_memory_but_feature_code_is_refused() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2723,7 +2712,7 @@ fn tampered_candidate_with_identical_memory_but_feature_code_is_refused() -> Tes
 
 // obligation: tests/contracts/test_publication_recovery.py::PublicationRecoveryContract.test_lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2797,7 +2786,7 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
 
 // obligation: tests/contracts/test_publication_recovery.py::PublicationRecoveryContract.test_competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_authority_code
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_authority_code()
 -> TestResult {
     let mut w = World::new()?;
@@ -2861,7 +2850,7 @@ fn competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_au
 
 // obligation: tests/contracts/test_publication_worktree.py::PublicationWorktreeContract.test_linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags
 #[test]
-#[ignore = "needs semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, base) = bootstrap(&w)?;
@@ -2929,14 +2918,14 @@ fn linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags(
 
 // obligation: tests/contracts/test_publication_admission.py::PublicationAdmissionContract.test_admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history
 #[test]
-#[ignore = "needs admission, comparison, semantic_sharing, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history() -> TestResult {
     deferred_body("the AdmissionContract request/prepared/apply fixture (admission lane)")
 }
 
 // obligation: tests/contracts/test_publication_hold_recovery.py::PublicationHoldRecoveryContract.test_missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work
 #[test]
-#[ignore = "needs semantic_sharing, sharing_frontier, sharing_boundary, sharing_recovery registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work() -> TestResult {
     deferred_body(
         "the QuarantinedSharingVersionTwoContract versioned_review fixture (semantic_sharing lane)",

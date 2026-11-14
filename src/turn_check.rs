@@ -4,7 +4,6 @@ use crate::codec::json::{self, Value};
 use crate::error::{ContractError, Result};
 use crate::lifecycle::{get, object, string};
 use sha2::{Digest, Sha256};
-use std::any::Any;
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::OnceLock;
@@ -37,13 +36,6 @@ impl From<CompletionError> for ContractError {
     }
 }
 
-/// Implemented by scope_binding. The opaque context must retain its enrollment
-/// observation, including recovery holds, until the final recheck.
-pub trait ScopeBinding: Send + Sync {
-    fn private_enrollment_context(&self, repo: &Path) -> CompletionResult<Box<dyn Any>>;
-    fn held(&self, context: &dyn Any) -> bool;
-    fn recheck_private_enrollment(&self, context: &dyn Any) -> CompletionResult<()>;
-}
 /// Implemented by memory_refresh.
 pub trait MemoryRefresh: Send + Sync {
     fn current_result(&self, repo: &Path) -> CompletionResult<Value>;
@@ -54,62 +46,17 @@ pub trait MemoryRefresh: Send + Sync {
         repo: &Path,
     ) -> Result<std::result::Result<Value, CurrentFailure>>;
 }
-/// A locked notice namespace. Implementations must recheck private enrollment
-/// before and after each mutation, durably sync changes, and preserve corrupt
-/// state. `read` must enforce the supplied byte limit.
-pub trait NoticeStore {
-    fn read(&mut self, maximum: usize) -> CompletionResult<Option<Value>>;
-    fn replace(&mut self, value: &Value, maximum: usize) -> CompletionResult<()>;
-    fn remove(&mut self) -> CompletionResult<()>;
-}
-/// Implemented by turn_sources. The callback runs under the source barrier
-/// and the private namespace lock, in that order. The implementation obtains
-/// its own private enrollment context as the baseline private_namespace does.
-pub trait TurnSources: Send + Sync {
-    fn with_notice_store(
-        &self,
-        repo: &Path,
-        harness: &str,
-        session: &str,
-        action: &mut dyn FnMut(&mut dyn NoticeStore) -> Result<bool>,
-    ) -> CompletionResult<bool>;
-}
-static SCOPE: OnceLock<Box<dyn ScopeBinding>> = OnceLock::new();
 static REFRESH: OnceLock<Box<dyn MemoryRefresh>> = OnceLock::new();
-static SOURCES: OnceLock<Box<dyn TurnSources>> = OnceLock::new();
-
-pub fn register_scope_binding(value: Box<dyn ScopeBinding>) -> Result<()> {
-    SCOPE
-        .set(value)
-        .map_err(|_| ContractError::new("scope_binding is already registered"))
-}
 pub fn register_memory_refresh(value: Box<dyn MemoryRefresh>) -> Result<()> {
     REFRESH
         .set(value)
         .map_err(|_| ContractError::new("memory_refresh is already registered"))
-}
-pub fn register_turn_sources(value: Box<dyn TurnSources>) -> Result<()> {
-    SOURCES
-        .set(value)
-        .map_err(|_| ContractError::new("turn_sources is already registered"))
-}
-fn scope() -> Result<&'static dyn ScopeBinding> {
-    SCOPE
-        .get()
-        .map(Box::as_ref)
-        .ok_or_else(|| ContractError::new("scope_binding is not registered"))
 }
 fn refresh_backend() -> Result<&'static dyn MemoryRefresh> {
     REFRESH
         .get()
         .map(Box::as_ref)
         .ok_or_else(|| ContractError::new("memory_refresh is not registered"))
-}
-fn sources() -> Result<&'static dyn TurnSources> {
-    SOURCES
-        .get()
-        .map(Box::as_ref)
-        .ok_or_else(|| ContractError::new("turn_sources is not registered"))
 }
 
 pub fn requests(value: &Value) -> Result<Vec<Value>> {
@@ -193,7 +140,6 @@ fn hash(value: &Value, style: json::Style) -> Result<String> {
 }
 
 /// The cache is advisory: storage failures cannot suppress an actionable notice.
-/// An unregistered dependency is a refusal, not an advisory cache failure.
 pub fn notice_required(
     repo: &Path,
     harness: &str,
@@ -201,11 +147,10 @@ pub fn notice_required(
     refresh: &Value,
     failures: &[Value],
 ) -> Result<bool> {
-    let backend = sources()?;
     let Some(session) = session.as_str().filter(|s| !s.is_empty() && s.len() <= 512) else {
         return Ok(true);
     };
-    let mut action = |store: &mut dyn NoticeStore| -> Result<bool> {
+    let mut action = |store: &mut crate::turn_sources::NoticeStore<'_>| -> Result<bool> {
         let old = store.read(NOTICE_LIMIT)?;
         if let Some(old) = &old {
             if old.as_object().map_or(true, |p| p.len() != 2)
@@ -254,9 +199,7 @@ pub fn notice_required(
         store.replace(&value, NOTICE_LIMIT)?;
         Ok(true)
     };
-    Ok(backend
-        .with_notice_store(repo, harness, session, &mut action)
-        .unwrap_or(true))
+    Ok(crate::turn_sources::with_notice_store(repo, harness, session, &mut action).unwrap_or(true))
 }
 
 pub fn check(
@@ -266,12 +209,11 @@ pub fn check(
     harness: &str,
 ) -> Result<Value> {
     let values = requests(value)?;
-    let binding = scope()?;
-    // Resolve all registrations before any completion can mutate private state.
+    // Resolve the registration before any completion can mutate private state.
     let refresh_api = refresh_backend()?;
-    sources()?;
-    let context = binding.private_enrollment_context(repo)?;
-    let held = binding.held(context.as_ref());
+    let runtime_root = crate::cli::pack_root()?;
+    let context = crate::scope_binding::private_enrollment_context(repo, &runtime_root)?;
+    let held = context.held();
     let refresh = if held {
         object([
             ("sharing_state", string("recovery-pending")),
@@ -386,7 +328,7 @@ pub fn check(
         pairs.push(("assessment_count".into(), Value::Int(values.len().into())));
         pairs.push(("notice_required".into(), Value::Bool(notice)));
     }
-    binding.recheck_private_enrollment(context.as_ref())?;
+    crate::scope_binding::recheck_private_enrollment(&context)?;
     Ok(result)
 }
 

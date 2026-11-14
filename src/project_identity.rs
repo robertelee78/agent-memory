@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::{OsStr, OsString};
 use std::io;
 use std::path::Path;
-use std::sync::{Arc, LazyLock, RwLock};
+use std::sync::LazyLock;
 
 pub const ROUTER_MAX_BYTES: usize = 1_048_576;
 pub const REGISTRY_MAX_BYTES: usize = crate::developer_identity::REGISTRY_MAX_BYTES;
@@ -35,45 +35,6 @@ pub static SPEC: LazyLock<Value> = LazyLock::new(|| {
     )
     .expect("bundled project schema")
 });
-
-/// Implemented by bank_observation for raw recovery's owned-marker checks.
-pub trait BankObservation: Send + Sync {
-    fn markers(
-        &self,
-        bank: &Path,
-        owned_lock: Option<&[u8]>,
-        owned_transaction: Option<&[u8]>,
-    ) -> Result<()>;
-}
-/// Implemented by bank_writes; its operation set authenticates a canonical writer.
-pub trait BankWrites: Send + Sync {
-    fn operations(&self) -> &[&str];
-}
-/// Implemented by layout_recovery_observation; returns independently pinned bytes.
-pub trait LayoutObservation: Send + Sync {
-    fn read_source(&self, bank: &Path, relative: &Path, limit: usize) -> Result<Vec<u8>>;
-}
-static BANK_OBSERVATION: RwLock<Option<Arc<dyn BankObservation>>> = RwLock::new(None);
-static BANK_WRITES: RwLock<Option<Arc<dyn BankWrites>>> = RwLock::new(None);
-static LAYOUT_OBSERVATION: RwLock<Option<Arc<dyn LayoutObservation>>> = RwLock::new(None);
-pub fn register_bank_observation(provider: Option<Arc<dyn BankObservation>>) -> Result<()> {
-    *BANK_OBSERVATION
-        .write()
-        .map_err(|_| err("Project bank observation registry is poisoned"))? = provider;
-    Ok(())
-}
-pub fn register_bank_writes(provider: Option<Arc<dyn BankWrites>>) -> Result<()> {
-    *BANK_WRITES
-        .write()
-        .map_err(|_| err("Project bank writes registry is poisoned"))? = provider;
-    Ok(())
-}
-pub fn register_layout_observation(provider: Option<Arc<dyn LayoutObservation>>) -> Result<()> {
-    *LAYOUT_OBSERVATION
-        .write()
-        .map_err(|_| err("Project layout observation registry is poisoned"))? = provider;
-    Ok(())
-}
 
 pub type MigrationReader<'a> = &'a dyn Fn(&[u8]) -> Result<Option<Value>>;
 #[derive(Default, Clone, Copy)]
@@ -557,12 +518,7 @@ pub fn discover(
         return Err(err("Bank/router must not be symlinks"));
     }
     if options.raw_identity.is_some() {
-        let provider = BANK_OBSERVATION
-            .read()
-            .map_err(|_| err("Project bank observation registry is poisoned"))?
-            .clone()
-            .ok_or_else(|| err("Project bank observation provider is not registered"))?;
-        provider.markers(&bank, options.owned_lock, options.owned_transaction)?;
+        crate::bank_observation::markers(&bank, options.owned_lock, options.owned_transaction)?;
     } else {
         for (name, owned) in [
             (".agent-memory.lock", options.owned_lock),
@@ -584,13 +540,11 @@ pub fn discover(
             };
             if owned.is_none() || bytes.as_deref() != owned {
                 if name == ".agent-memory.lock" && owned.is_none() {
-                    let provider = BANK_WRITES
-                        .read()
-                        .map_err(|_| err("Project bank writes registry is poisoned"))?
-                        .clone()
-                        .ok_or_else(|| err("Project bank writes provider is not registered"))?;
-                    storage::check_canonical_writer(&bank.join(name), provider.operations())
-                        .map_err(canonical_writer_error)?;
+                    storage::check_canonical_writer(
+                        &bank.join(name),
+                        crate::bank_writes::OPERATIONS,
+                    )
+                    .map_err(canonical_writer_error)?;
                     if stat_optional(&bank, OsStr::new(name))?.is_none() {
                         continue;
                     }
@@ -602,12 +556,8 @@ pub fn discover(
         }
     }
     let (raw, metadata) = if let Some(identity) = options.raw_identity {
-        let provider = LAYOUT_OBSERVATION
-            .read()
-            .map_err(|_| err("Project layout observation registry is poisoned"))?
-            .clone()
-            .ok_or_else(|| err("Project layout observation provider is not registered"))?;
-        let raw = provider.read_source(&bank, Path::new("MEMORY.md"), ROUTER_MAX_BYTES)?;
+        let (raw, _) =
+            crate::layout_recovery_observation::read_source(&bank, "MEMORY.md", ROUTER_MAX_BYTES)?;
         if raw.len() > ROUTER_MAX_BYTES {
             return Err(err(
                 "Recovery identity requires complete bounded router bytes",

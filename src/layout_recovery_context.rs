@@ -5,9 +5,7 @@ use crate::layout_resolution::{
     digest, err, field, frontier, has_keys, items, operation_paths, read_optional, read_raw,
     read_value, same, sha, text,
 };
-use crate::layout_restore::{
-    self, LayoutRecovery, RECOVERY_JOURNAL, RecoverySource, layout_recovery_provider,
-};
+use crate::layout_restore::{self, RECOVERY_JOURNAL, RecoverySource};
 use crate::lifecycle::{get, object, string};
 use crate::{
     bank_observation, bank_writes as writes, layout_recovery_state as state, recovery_quiescence,
@@ -89,7 +87,6 @@ pub fn evidence(
     transaction: &[u8],
     runtime_root: &Path,
 ) -> Result<(Vec<Value>, String)> {
-    let recovery = layout_recovery_provider()?;
     let frontier = frontier()?;
     let marker = frontier.marker_value(transaction)?;
     let operation_id = text(proposal, "operation_id")?;
@@ -133,16 +130,15 @@ pub fn evidence(
                 operation,
                 proposal: parent,
                 ..
-            } = recovery.recovery_source(
+            } = crate::layout_recovery::recovery_source(
                 &root,
                 text(proposal, "parent_operation_id")?,
                 runtime_root,
             )?;
             let parent_dir = operation.directory;
             let parent_manifest = operation.manifest;
-            let receipt = recovery
-                .receipt_value(&parent_dir, &parent)?
-                .unwrap_or(Value::Null);
+            let receipt =
+                crate::layout_recovery::receipt_value(&parent_dir, &parent)?.unwrap_or(Value::Null);
             let head = read_value(&parent_dir.join("ledger-head.json"))?;
             if get(proposal, "parent_proposal_sha256").as_str() != Some(sha(&parent)?.as_str())
                 || get(proposal, "parent_receipt_sha256").as_str() != Some(sha(&receipt)?.as_str())
@@ -179,7 +175,7 @@ pub fn evidence(
             }
             (parent_manifest, parent)
         } else {
-            recovery.proposal_value(&root, proposal, runtime_root)?;
+            crate::layout_recovery::proposal_value(&root, proposal, runtime_root)?;
             let review_file = format!("reviews/{}.json", text(proposal, "review_id")?);
             let review = read_value(&directory.join(&review_file))?;
             let unit_map = read_value(&directory.join("unit-map.json"))?;
@@ -237,7 +233,6 @@ impl RecoveryReadSet {
         transaction: &[u8],
         runtime_root: &Path,
     ) -> Result<Self> {
-        let recovery: std::sync::Arc<dyn LayoutRecovery> = layout_recovery_provider()?;
         let operation_id = text(proposal, "operation_id")?;
         let (root, bank, _, directory) = operation_paths(repo, operation_id, runtime_root)?;
         bank_observation::markers(&bank, owner, Some(transaction))?;
@@ -247,11 +242,11 @@ impl RecoveryReadSet {
         let context = match read_optional(&context_path)? {
             Some(context) => context,
             None => {
-                let current = recovery.view(&bank, &[])?;
+                let current = crate::layout_recovery::view(&bank, &[])?;
                 let boundary = if get(proposal, "schema").as_str() == Some(layout_restore::SCHEMA) {
                     layout_restore::boundary(proposal, &current, None)?
                 } else {
-                    recovery.partial_boundary(proposal, manifest, &current)?
+                    crate::layout_recovery::partial_boundary(proposal, manifest, &current)?
                 };
                 if boundary != 0 {
                     return Err(err(
@@ -304,7 +299,6 @@ impl RecoveryReadSet {
 
     /// Recheck every pinned proof, the runtime, the frontier and the bank binding.
     pub fn check(&self, runtime_root: &Path) -> Result<bool> {
-        let recovery = layout_recovery_provider()?;
         let operation_id = text(&self.proposal, "operation_id")?;
         let (_, bank, _, directory) = operation_paths(&self.root, operation_id, runtime_root)?;
         let owner = self.owner.as_deref();
@@ -347,7 +341,13 @@ impl RecoveryReadSet {
             owner,
             transaction,
         )?;
-        recovery.rebind(&self.root, &self.manifest, owner, transaction, runtime_root)?;
+        crate::layout_recovery::rebind(
+            &self.root,
+            &self.manifest,
+            owner,
+            transaction,
+            runtime_root,
+        )?;
         Ok(true)
     }
 }

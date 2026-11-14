@@ -5,10 +5,9 @@
 //! rewrite and the human rendering of lifecycle and diagnostic results.
 
 use crate::codec::json::{self, DecodePolicy, Value};
-use crate::error::{ContractError, Result};
+use crate::error::Result;
 use std::ffi::OsStr;
 use std::path::Path;
-use std::sync::{Arc, RwLock};
 
 pub const NAMES: [&str; 2] = ["am", "agent-memory"];
 pub const HUMAN: [&str; 8] = [
@@ -227,19 +226,6 @@ pub fn options(argv: Vec<String>) -> (Vec<String>, bool, bool) {
     (args, machine, verbose)
 }
 
-/// The installation receipt the bootstrap rewrite consults. Implemented by
-/// `installation` (`locations()` + `read_receipt(state)`); an `Err` is the
-/// baseline's caught OSError/ValueError/TypeError/KeyError.
-pub trait InstalledReceipt: Send + Sync {
-    fn receipt(&self) -> Result<Option<Value>>;
-}
-
-static RECEIPT: RwLock<Option<Arc<dyn InstalledReceipt>>> = RwLock::new(None);
-
-pub fn register_installed_receipt(provider: Option<Arc<dyn InstalledReceipt>>) {
-    *RECEIPT.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-
 fn get<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
     value.as_object().and(value.get(key))
 }
@@ -262,6 +248,16 @@ fn truthy(value: Option<&Value>) -> bool {
 /// same channel, never silently switch it. `--bootstrap-binary PATH` is the
 /// Rust bootstrap's own argument and never reconfigures a target.
 pub fn bootstrap_command(args: Vec<String>) -> Result<Vec<String>> {
+    bootstrap_command_with(args, crate::installation::installed_receipt)
+}
+
+/// `bootstrap_command` with the installed-receipt read supplied by the caller;
+/// it runs only after the arguments qualify. An `Err` is the baseline's caught
+/// OSError/ValueError/TypeError/KeyError.
+pub fn bootstrap_command_with(
+    args: Vec<String>,
+    receipt: impl FnOnce() -> Result<Option<Value>>,
+) -> Result<Vec<String>> {
     if args.first().map(String::as_str) != Some("install") {
         return Ok(args);
     }
@@ -291,16 +287,7 @@ pub fn bootstrap_command(args: Vec<String>) -> Result<Vec<String>> {
             return Ok(args);
         }
     }
-    let provider = RECEIPT
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| {
-            ContractError::new(
-                "Installed receipt provider is not registered; bootstrap cannot select update",
-            )
-        })?;
-    let old = match provider.receipt() {
+    let old = match receipt() {
         Ok(old) => old,
         Err(_) => return Ok(args),
     };

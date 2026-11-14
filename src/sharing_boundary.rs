@@ -416,11 +416,3 @@ pub fn command_result(outcome: Result<Value>) -> CommandResult {
         },
     }
 }
-
-/// Production adapter for sharing_recovery's local boundary observation.
-pub struct SharingBoundary;
-impl recovery::SharingBoundary for SharingBoundary {
-    fn inspect(&self, repo: &Path, owned_lock: Option<&[u8]>) -> Result<Value> {
-        inspect(repo, owned_lock)
-    }
-}

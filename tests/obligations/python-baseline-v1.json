@@ -835,14 +835,14 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_concurrent_cache_writer_is_preserved_then_source_only_retry_converges",
    "registered": false,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_copy_client_drift_does_not_receive_source_qualification",
    "registered": false,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -856,7 +856,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_interrupted_activation_preserves_dirty_tree_as_pending_then_trusted_retry",
    "registered": false,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -870,7 +870,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_older_signed_runtime_upgrades_preserving_all_opaque_bytes",
    "registered": false,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -884,7 +884,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_reachable_writable_cache_directory_remains_refused",
    "registered": false,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1738,7 +1738,7 @@
   {
    "id": "tests/contracts/test_doctor_fix.py::DoctorFixContract.test_interrupted_bank_is_reported_and_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1766,35 +1766,35 @@
   {
    "id": "tests/contracts/test_doctor_fix.py::DoctorFixContract.test_receipted_bank_transaction_cleanup",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_doctor_fix.py::DoctorFixContract.test_recover_committed_interrupted_update_from_recorded_journal",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_doctor_fix.py::DoctorFixContract.test_recover_update_interrupted_before_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_doctor_fix.py::DoctorFixContract.test_unsafe_bank_markers_are_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_download_diagnostics.py::BootstrapPreview.test_signed_preview_uses_packaged_guidance_and_preserves_profiles",
    "registered": false,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1857,14 +1857,14 @@
   {
    "id": "tests/contracts/test_download_diagnostics.py::DownloadDiagnostics.test_retention_failure_preserves_primary_error",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_download_diagnostics.py::PreviewGuidance.test_preview_is_not_installation_and_does_not_request_restart",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -1885,7 +1885,7 @@
   {
    "id": "tests/contracts/test_download_diagnostics.py::ReviewRegressions.test_report_policy_failure_preserves_primary_error",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -1976,37 +1976,37 @@
   {
    "id": "tests/contracts/test_gate_diagnostics.py::GateDiagnosticsContract.test_actual_gate_retains_suite_stage_exception_chain_and_partial_timeout_output",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python test-gate/contract-suite harness retired; cargo test plus the obligations ledger is the v0.0.15 gate."
   },
   {
    "id": "tests/contracts/test_gate_diagnostics.py::GateDiagnosticsContract.test_actual_timeout_and_failed_completion_record_preserve_both_worker_streams",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python test-gate/contract-suite harness retired; cargo test plus the obligations ledger is the v0.0.15 gate."
   },
   {
    "id": "tests/contracts/test_gate_diagnostics.py::GateDiagnosticsContract.test_failed_suite_validation_does_not_report_successful_world_cleanup_as_the_error",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python test-gate/contract-suite harness retired; cargo test plus the obligations ledger is the v0.0.15 gate."
   },
   {
    "id": "tests/contracts/test_gate_diagnostics.py::GateDiagnosticsContract.test_merge_rejects_invalid_rows_and_accepts_complete_reordered_shards",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python test-gate/contract-suite harness retired; cargo test plus the obligations ledger is the v0.0.15 gate."
   },
   {
    "id": "tests/contracts/test_gate_diagnostics.py::GateDiagnosticsContract.test_optional_row_requires_exact_reason_and_integer_zero",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python test-gate/contract-suite harness retired; cargo test plus the obligations ledger is the v0.0.15 gate."
   },
   {
    "id": "tests/contracts/test_gate_shard_aggregation.py::ShardAggregationContract.test_complete_receipt_requires_the_actual_lifecycle_case",
@@ -2214,63 +2214,63 @@
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_actual_gate_rejects_empty_skipped_and_failing_suites",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python test-gate/contract-suite harness retired; cargo test plus the obligations ledger is the v0.0.15 gate."
   },
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_command_failure_and_timeout_are_not_success",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_escape_and_live_root_overrides_are_refused",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_public_command_runs_with_spaces_and_clean_environment",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_real_git_bare_remote_clones_and_worktree",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_registered_batches_cannot_omit_duplicate_or_invent_executed_cases",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python test-gate/contract-suite harness retired; cargo test plus the obligations ledger is the v0.0.15 gate."
   },
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_worker_is_isolated_and_credentials_are_absent",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_worker_rejects_a_live_home_before_importing_suite",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python test-gate/contract-suite harness retired; cargo test plus the obligations ledger is the v0.0.15 gate."
   },
   {
    "id": "tests/contracts/test_harness.py::HarnessContract.test_world_cleanup_does_not_follow_escape_symlink",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -2417,21 +2417,21 @@
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_source_compatibility_fault_is_not_misclassified_as_identity",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_stop_scope_loss_reports_identity_code_without_bank_change",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_unexpected_exception_is_fixed_and_does_not_expose_exception_text",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2711,49 +2711,49 @@
   {
    "id": "tests/contracts/test_incident_evidence.py::IncidentEvidenceContract.test_actual_incident_runner_exercises_both_user_visible_public_regressions",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_incident_evidence.py::IncidentEvidenceContract.test_examples_are_actual_public_exit_results_bound_to_the_complete_pack",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_incident_evidence.py::IncidentEvidenceContract.test_existing_runtime_wrapped_must_not_cannot_invert_to_a_positive_obligation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_incident_evidence.py::IncidentEvidenceContract.test_moved_identical_rules_and_explicit_wording_map_keep_equal_force",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_incident_evidence.py::IncidentEvidenceContract.test_real_runtime_guides_are_reachable_and_an_unchanged_tree_preserves_every_rule",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_incident_evidence.py::IncidentEvidenceContract.test_removed_weakened_inverted_and_unreachable_instructions_fail_even_with_a_mapping",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_incident_evidence.py::IncidentEvidenceContract.test_shorter_literal_fences_cannot_hide_a_real_rule_between_longer_examples",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3187,21 +3187,21 @@
   {
    "id": "tests/contracts/test_installed_layout.py::InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installed_layout.py::InstalledLayoutContract.test_custom_only_discovery_does_not_create_default_client_links_or_guidance",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installed_layout.py::InstalledLayoutContract.test_no_client_mode_still_exposes_installed_lifecycle_without_a_bank_or_identity",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -3236,14 +3236,14 @@
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_claude_stop_ownership_preserves_foreign_hooks_and_tampering",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_codex_stop_install_preserves_foreign_settings_and_uninstalls",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -3292,49 +3292,49 @@
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_managed_source_local_channel_and_external_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_omp_binding_installs_candidate_activation_in_copy_and_link_modes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_omp_historical_owned_shared_block_updates_and_rolls_back_by_recorded_hash",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_omp_historical_shared_activation_uninstall_preserves_unrelated_text",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_omp_missing_or_malformed_candidate_activation_refuses_without_fallback",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_omp_modified_or_foreign_activation_is_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_opencode_versioned_hook_is_owned_and_removed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -3390,9 +3390,9 @@
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_wrapper_chooses_supported_python_after_older_path_entry",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python interpreter/import/version-probe contract has no native equivalent."
   },
   {
    "id": "tests/contracts/test_installer.py::MacOSCommandContract.test_actual_shipped_old_updater_then_install_migrates_without_stranding_ownership",
@@ -3432,7 +3432,7 @@
   {
    "id": "tests/contracts/test_installer.py::MacOSCommandContract.test_uninstall_preserves_modified_am_and_runtime_while_removing_unchanged_compatibility_wrapper",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4432,414 +4432,414 @@
   {
    "id": "tests/contracts/test_layout_legacy_child.py::LayoutLegacyChild.test_handoff",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_child.py::LayoutLegacyChild.test_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_hold_receipt.py::LayoutLegacyHoldReceipt.test_after_hold_restore",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_hold_receipt.py::LayoutLegacyHoldReceipt.test_existing_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_hold_receipt.py::LayoutLegacyHoldReceipt.test_existing_receipt_with_decoy",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_apply_decoy",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_apply_decoy_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_apply_plain_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_apply_index",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_apply_receipt",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_apply_rename0",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_apply_rename1",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_apply_rename2",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_finish_receipt",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_finish_rename1",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_finish_rename2",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_rollback_receipt",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_rollback_rename0",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_terminal_index",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_terminal_receipt",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_terminal_removal",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_terminal_rename0",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_boundary_terminal_rename1",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_finish_decoy",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_finish_decoy_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_finish_plain",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_finish_plain_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_hold_decoy",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_hold_decoy_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_hold_plain",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_hold_plain_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_rollback_decoy",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_rollback_decoy_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_rollback_plain",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_rollback_plain_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_terminal_decoy",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_terminal_decoy_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_terminal_plain",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_markers.py::LayoutLegacyMarkers.test_terminal_plain_receipted",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_boundary_credited_unlinked",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_boundary_hold_restore",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_boundary_rename_event",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_boundary_rename_router",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_boundary_rename_target",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_with_nested_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_with_nested_receipt_with_decoy",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_without_nested_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_nested.py::LayoutLegacyNested.test_without_nested_receipt_with_decoy",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_stale.py::LayoutLegacyStaleLock.test_old_stale_lock_before_handoff",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_stale.py::LayoutLegacyStaleLock.test_old_stale_lock_recovery_preserves_interrupted_apply",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_swap.py::LayoutLegacySwap.test_old_consumers_after_hold_swap",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_swap.py::LayoutLegacySwap.test_old_consumers_after_swap",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_swap.py::LayoutLegacySwap.test_old_consumers_before_hold_swap",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_legacy_swap.py::LayoutLegacySwap.test_old_consumers_before_swap",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_attempt_journal_error",
@@ -5027,9 +5027,9 @@
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_legacy_stale_probe_without_marker",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_0_error",
@@ -5924,9 +5924,9 @@
   {
    "id": "tests/contracts/test_layout_recovery_legacy.py::LegacyLayoutConsumers.test_published_old_consumers_and_doctor_preserve_pending_hold",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_recovery_nested_closure.py::NestedRecoveryClosure.test_changed_coverage_review_refuses_nested_finish_without_replacement",
@@ -5952,16 +5952,16 @@
   {
    "id": "tests/contracts/test_layout_recovery_nested_closure.py::NestedRecoveryClosure.test_interrupted_activation_refuses_incapable_only_rollback_target",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "managed --remote/--ref update channels are dropped (design: Explicit-source installs); native refusal with re-bootstrap guidance is covered by c_test_committed_replanning"
   },
   {
    "id": "tests/contracts/test_layout_recovery_nested_closure.py::NestedRecoveryClosure.test_legacy_reader_does_not_recognize_runtime_only_sentinel",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_recovery_nested_closure.py::NestedRecoveryClosure.test_nested_marker_blocks_independent_scratch_resolution_until_finish",
@@ -6162,16 +6162,16 @@
   {
    "id": "tests/contracts/test_layout_recovery_released_identity.py::ReleasedIdentityHoldContract.test_released_identity_status_preserves_public_hold",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "executes the published Python v0.0.14 runtime as an old reader/writer; no Python in the tree (ADR-0029). Proved in release qualification instead: Gate D drives the Rust am to each layout state and runs the published v0.0.14 runtime against it (cutover-checklist, legacy-reader item)"
   },
   {
    "id": "tests/contracts/test_layout_recovery_released_identity.py::ReleasedIdentityHoldContract.test_released_managed_update_refuses_real_public_hold_without_activation",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "managed --remote/--ref update channels are dropped (design: Explicit-source installs); native refusal with re-bootstrap guidance is covered by c_test_committed_replanning"
   },
   {
    "id": "tests/contracts/test_layout_recovery_resolved_publication.py::ResolvedPublicationJourneyContract.test_eight_resolved_units_land_and_recall_in_an_empty_profile",
@@ -6274,9 +6274,9 @@
   {
    "id": "tests/contracts/test_layout_recovery_runtime_rollback.py::HeldRuntimeRollbackContract.test_interrupted_capable_update_rolls_back_exact_runtime_and_keeps_hold",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "managed --remote/--ref update channels are dropped (design: Explicit-source installs); native refusal with re-bootstrap guidance is covered by c_test_committed_replanning"
   },
   {
    "id": "tests/contracts/test_layout_recovery_semantic_dependencies.py::RecoverySemanticDependenciesContract.test_discard_requires_distinct_reviewer_and_preserves_pending_source",
@@ -6527,14 +6527,14 @@
   {
    "id": "tests/contracts/test_lifecycle_cleanup_after.py::CleanupAfterContract.test_after_error_cleanup_write",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_cleanup_before.py::CleanupBeforeContract.test_before_error_cleanup_write",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6569,7 +6569,7 @@
   {
    "id": "tests/contracts/test_lifecycle_lost_responses.py::LifecycleLostResponses.test_recovery_response_is_lost_after_real_rollback_is_durable",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6660,63 +6660,63 @@
   {
    "id": "tests/contracts/test_lifecycle_partitions.py::LifecyclePartitionContract.test_complete_actual_interruption_inventory_and_artifact_agree",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_partitions.py::LifecyclePartitionContract.test_finer_partitions_reject_wrong_count_and_missing_execution",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_partitions.py::LifecyclePartitionContract.test_missing_duplicate_or_foreign_interruption_cannot_complete_release",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_security_contract.py::LifecycleSecurityContract.test_corrupt_or_spoofed_receipt_stays_unauthenticated_and_preserved_on_failures",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_security_contract.py::LifecycleSecurityContract.test_managed_and_explicit_source_have_distinct_recorded_selection_without_signature_or_write_claim",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_security_contract.py::LifecycleSecurityContract.test_outside_helper_without_receipt_or_with_invalid_repository_keeps_negative_qualifications",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_security_contract.py::LifecycleSecurityContract.test_real_busy_writer_defers_ownership_checks_without_authenticating_or_stealing_lock",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_security_contract.py::LifecycleSecurityContract.test_receipt_changed_before_shared_lock_has_one_coherent_final_selection_and_warning",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_actual_linked_worktree_relative_common_pointer_and_native_alias_work",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6730,35 +6730,35 @@
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_common_metadata_directory_with_real_trailing_space_is_not_rewritten",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_each_multilink_sensitive_record_refuses_without_changes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_linked_git_locator_aliases_refuse_before_git_consumes_config",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_nonprivate_state_blocks_update_removal_recovery_and_doctor",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_normal_git_directory_common_pointer_is_also_checked_before_git",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6772,14 +6772,14 @@
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_preexisting_nonprivate_state_refuses_before_any_write",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_private_child_cannot_rescue_reachable_nonsticky_writable_parent",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6793,7 +6793,7 @@
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_symlinked_state_is_not_read_or_adopted",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6933,63 +6933,63 @@
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_equal_bank_and_orphan_journal",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_preserves_private_and_read_only_bank_permissions",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_refuses_local_and_authority_changes_at_final_recheck",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_refuses_unchanged_hidden_record_and_corrupt_hold_anchor",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_rejects_executable_and_world_writable_bank_files",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_succeeds_with_group_writable_umask_for_new_runtime_state",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_untracked_canonical_memory_explains_full_review_without_writes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_cursor_advances_memory_without_feature_ancestry_and_old_retry_cannot_reverse_newer_import",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_primed_unchanged_refresh_uses_catalog_and_matches_canonical_recall",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -7003,21 +7003,21 @@
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_private_state_directory_creation_preserves_existing_modes_and_links",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_private_state_directory_rejects_ancestor_rebinding_during_create",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_public_cli_rejects_relative_outputs_before_any_refresh_operation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7031,7 +7031,7 @@
   {
    "id": "tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_second_clone_import_is_recalled_with_conditions_without_code_index_or_local_learning_loss",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -7178,14 +7178,14 @@
   {
    "id": "tests/contracts/test_offline_skill.py::OfflineSkillContract.test_generated_state_absence_never_bypasses_busy_or_interrupted_bank",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_offline_skill.py::OfflineSkillContract.test_offline_manual_checkpoint_and_fresh_file_resume_preserve_project_and_unrelated_work",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9734,35 +9734,35 @@
   {
    "id": "tests/contracts/test_portable_artifact.py::PortableArtifactContract.test_complete_copy_outside_git_has_the_same_identity_and_explicit_optional_prerequisites",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_portable_artifact.py::PortableArtifactContract.test_copied_helpers_initialize_checkpoint_and_recall_while_preserving_unfinished_code",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_portable_artifact.py::PortableArtifactContract.test_core_python_imports_require_only_the_standard_library_and_bundled_package",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python interpreter/import/version-probe contract has no native equivalent."
   },
   {
    "id": "tests/contracts/test_portable_artifact.py::PortableArtifactContract.test_every_implemented_documented_helper_imports_and_dispatches_from_the_copy",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_portable_artifact.py::PortableArtifactContract.test_inventory_digest_changes_for_actual_bytes_or_modes_without_claiming_a_signature",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10210,14 +10210,14 @@
   {
    "id": "tests/contracts/test_public_cli.py::PublicCLIContract.test_human_bootstrap_preview_repeat_update_and_uninstall_journey_under_temp_alias",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_public_cli.py::PublicCLIContract.test_human_recovery_after_partial_activation_and_no_pending_transaction",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10238,9 +10238,9 @@
   {
    "id": "tests/contracts/test_public_cli.py::PublicCLIContract.test_unsupported_runtime_python_refuses_before_loading_operations",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python interpreter/import/version-probe contract has no native equivalent."
   },
   {
    "id": "tests/contracts/test_publication_admission.py::PublicationAdmissionContract.test_admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history",
@@ -10364,35 +10364,35 @@
   {
    "id": "tests/contracts/test_purge_unlock_after.py::PurgeUnlockAfterContract.test_after_refused_purge_unlock",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_purge_unlock_before.py::PurgeUnlockBeforeContract.test_before_refused_purge_unlock",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_purge_unlock_before.py::PurgeUnlockBeforeContract.test_live_foreign_or_malformed_lock_is_not_released",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_purge_write_after.py::PurgeWriteContract.test_after_every_purge_write",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_purge_write_before.py::PurgeWriteContract.test_before_every_purge_write",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10777,245 +10777,245 @@
   {
    "id": "tests/contracts/test_refresh_conflicts.py::RefreshConflictsContract.test_conflict_and_real_dependency_are_preserved_but_not_returned_as_current_guidance",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_conflicts.py::RefreshConflictsContract.test_held_claims_do_not_consume_a_small_budget_and_starve_an_independent_import",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_cursor.py::RefreshCursorContract.test_stashed_import_and_new_revision_on_same_branch_reimports_the_shared_lesson",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_cursor.py::RefreshCursorContract.test_stashed_import_and_same_head_branch_switch_reimports_the_shared_lesson",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_integration.py::RefreshIntegrationContract.test_cursor_loss_recovers_from_git_and_later_normal_code_merge_does_not_duplicate_memory",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_integration.py::RefreshIntegrationContract.test_linked_worktree_import_does_not_touch_sibling_bank_index_or_feature_heads",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_invalidation.py::RefreshInvalidationContract.test_imported_unknown_or_other_branch_conditions_stay_out_of_current_recall",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_invalidation.py::RefreshInvalidationContract.test_landed_tombstone_removes_a_locally_edited_old_record_without_staging_or_resurrection",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::RefreshPathPolicyIntegration.test_actual_protected_775_chain_current_and_doctor_preserve_feature_work",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::RefreshPathPolicyIntegration.test_final_source_mutation_has_specific_api_and_cli_diagnostic",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::RefreshPathPolicyIntegration.test_unprotected_state_failure_remains_specific_without_changing_work",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::TransactionPathPolicy.test_barrier_chmod_or_rebinding_during_observation_is_refused",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::TransactionPathPolicy.test_foreign_owner_rejected_below_private_barrier",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::TransactionPathPolicy.test_orphan_recovery_is_specific_and_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::TransactionPathPolicy.test_protected_intermediates_share_policy_without_chmod",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::TransactionPathPolicy.test_redirected_intermediate_rejected_without_following",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::TransactionPathPolicy.test_unexpected_error_text_is_not_exposed",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_path_policy.py::TransactionPathPolicy.test_unprotected_writable_ancestor_rejected_by_both_walks",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_pending.py::RefreshPendingContract.test_changed_candidate_or_foreign_recall_project_cannot_bypass_exact_source_review",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_pending.py::RefreshPendingContract.test_late_local_edit_and_same_commit_branch_change_refuse_the_original_proposal",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_pending.py::RefreshPendingContract.test_new_authority_and_offline_observation_require_fresh_review_before_import",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_receipt_snapshot.py::ReceiptSnapshotCurrent.test_cursor_receipt_and_branch_pins_cannot_be_mixed_or_missing",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_receipt_snapshot.py::ReceiptSnapshotCurrent.test_import_then_current_then_full_noop_then_current_preserves_feature_state",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_receipt_snapshot.py::ReceiptSnapshotCurrent.test_imported_remote_deletion_is_part_of_complete_snapshot",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_receipt_snapshot.py::ReceiptSnapshotCurrent.test_local_mutations_staged_memory_and_new_authority_remain_review_required",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_recovery.py::RefreshRecoveryContract.test_lost_completed_response_recovers_without_duplicates_and_remains_honest_while_offline",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_recovery.py::RefreshRecoveryContract.test_unfinished_source_bound_import_requires_rollback_then_fresh_review_not_old_finish",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_v2.py::RefreshVersionTwoContract.test_explicit_v2_inspection_uses_changed_learning_frontier_and_retains_the_actual_base",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_refresh_v2.py::RefreshVersionTwoContract.test_legacy_semantic_inspect_and_check_keep_their_required_input_contract",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_release_canaries.py::ReleaseCanaries.test_copied_pack_checks_routes_and_preserves_unknown_busy_or_interrupted_state",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_release_canaries.py::ReleaseCanaries.test_current_selection_excludes_every_inactive_state_and_independent_unsafe_axis",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_release_canaries.py::ReleaseCanaries.test_poisoned_imports_and_claimed_approval_do_not_execute_export_or_promote",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_release_canaries.py::ReleaseCanaries.test_secret_redaction_and_oversize_refusal_keep_bank_and_content_free_audit_safe",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_release_canaries.py::ReleaseCanaries.test_source_review_scope_and_byte_freshness_precede_any_admission_claim",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_release_canaries.py::ReleaseCanaries.test_terminal_tombstone_survives_clone_and_suppresses_cached_body_without_sensitive_hash",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11575,7 +11575,7 @@
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_changed_content_and_recreated_identical_bank_require_new_confirmation",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11589,7 +11589,7 @@
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_foreign_bank_lock_record_is_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11603,49 +11603,49 @@
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_live_bank_writer_blocks_purge_until_the_process_releases_its_lock",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_metadata_changed_after_alias_unlink_gap_is_not_adopted_as_self_mutation",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_ordinary_hardlink_aliases_finish_and_recover_the_unlink_bookkeeping_gap",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_pending_memory_transaction_marker_is_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_retry_preserves_a_recreated_canonical_bank_and_purges_only_the_confirmed_quarantine",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_same_inode_and_content_after_file_metadata_change_requires_fresh_consent",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_unapproved_quarantine_data_is_preserved_on_retry",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11729,14 +11729,14 @@
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_changed_owned_copy_update_retains_prior_payload_and_receipt_backups",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_competing_update_observes_the_live_lifecycle_lock",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11771,7 +11771,7 @@
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_discovered_and_explicit_banks_remain_unchanged_and_unsupported_schema_refuses",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11820,14 +11820,14 @@
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_unchanged_channel_does_not_derive_a_new_artifact_from_a_different_umask",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_unchanged_revision_refreshes_allowed_outside_text_without_a_code_switch",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12506,7 +12506,7 @@
   {
    "id": "tests/contracts/test_skill_routes.py::SkillRouteContract.test_complete_copied_pack_validates_without_changing_pack_or_caller_state",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12527,7 +12527,7 @@
   {
    "id": "tests/contracts/test_skill_routes.py::SkillRouteContract.test_every_documented_helper_dispatch_also_accepts_real_public_help",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12541,7 +12541,7 @@
   {
    "id": "tests/contracts/test_skill_routes.py::SkillRouteContract.test_installed_delegation_checks_real_child_operations_and_flags_without_execution",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12597,7 +12597,7 @@
   {
    "id": "tests/contracts/test_skill_routes.py::SkillRouteContract.test_reference_forms_work_for_owner_bindings_and_root_routes_with_global_definitions",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12618,7 +12618,7 @@
   {
    "id": "tests/contracts/test_skill_routes.py::SkillRouteContract.test_working_delegated_help_commands_are_valid_documented_commands",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12912,21 +12912,21 @@
   {
    "id": "tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_available_repository_without_a_bank_stays_in_compatibility_rechecks",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_deleted_registered_worktree_does_not_block_update_repeat_or_recovery",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_missing_explicit_repository_remains_an_error_and_preserves_targets",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12947,49 +12947,49 @@
   {
    "id": "tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_changed_bank_is_reobserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_changed_head_is_reobserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_changed_index_is_reobserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_changed_local_config_is_reobserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_new_idle_lock_is_reobserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_transient_lock_cleared_before_recheck_succeeds",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_update_parallel_inventory.py::ParallelUpdateInventory.test_bounded_pool_keeps_all_roots_and_propagates_failure",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -13202,10 +13202,10 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "not-applicable": 18,
-   "partial": 674,
-   "ported": 366,
-   "unported": 804
+   "not-applicable": 90,
+   "partial": 792,
+   "ported": 401,
+   "unported": 579
   }
  }
 }

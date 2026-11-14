@@ -14,6 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use support::{
+    installed_runtime::installed_runtime,
     record_fixtures,
     world::{RunOptions, World},
 };
@@ -223,63 +224,6 @@ fn transaction_route_is_declared_in_baseline_position_and_has_native_parser() {
     assert!(result.result.stdout.contains("--files"));
 }
 const POLICY: &str = "# Synthetic policy 1\n\nIn the synthetic offline-queue environment, attempt delivery at most three times, retain every queued item after failure, and resume delivery only after the operator changes the environment to online.\n";
-fn installed_runtime(world: &World) -> (PathBuf, PathBuf) {
-    fn copy_assets(source: &Path, target: &Path) {
-        fs::create_dir_all(target).unwrap();
-        for entry in fs::read_dir(source).unwrap() {
-            let entry = entry.unwrap();
-            if entry.file_type().unwrap().is_dir() {
-                copy_assets(&entry.path(), &target.join(entry.file_name()));
-            } else if entry.file_type().unwrap().is_file() {
-                fs::copy(entry.path(), target.join(entry.file_name())).unwrap();
-            }
-        }
-    }
-    let source = world.inside("development-runtime").unwrap();
-    copy_assets(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-        &source.join("skills/agent-memory"),
-    );
-    for relative in ["target/release/am", "bin/am"] {
-        let binary = source.join(relative);
-        fs::create_dir_all(binary.parent().unwrap()).unwrap();
-        fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
-        fs::set_permissions(binary, fs::Permissions::from_mode(0o755)).unwrap();
-    }
-    let output = world
-        .am(vec![
-            OsString::from("--json"),
-            "install".into(),
-            "--development-source".into(),
-            source.into_os_string(),
-            "--mode".into(),
-            "link".into(),
-            "--presets".into(),
-            "none".into(),
-            "--no-guidance".into(),
-            "--bin-dir".into(),
-            world.inside("bin").unwrap().into_os_string(),
-        ])
-        .unwrap();
-    assert_eq!(output.status, agent_memory::process::Status::Code(0));
-    let receipt = json::decode_bytes(
-        &fs::read(
-            world
-                .inside("state/agent-memory/install/receipt.json")
-                .unwrap(),
-        )
-        .unwrap(),
-        Default::default(),
-    )
-    .unwrap();
-    let source = g(&receipt, "source");
-    let command = agent_memory::installation::source_binary(source).unwrap();
-    let pack = Path::new(t(source, "pack"));
-    (
-        pack.parent().unwrap().parent().unwrap().to_path_buf(),
-        command,
-    )
-}
 struct Fixture {
     world: World,
     repo: PathBuf,
@@ -364,6 +308,17 @@ impl Fixture {
         Self::with_checkpoint(false)
     }
     fn with_checkpoint(checkpoint: bool) -> Self {
+        Self::with_body(checkpoint, POLICY)
+    }
+    fn with_body(checkpoint: bool, body: &str) -> Self {
+        Self::configured(checkpoint, body, |_| {}, |_| {})
+    }
+    fn configured(
+        checkpoint: bool,
+        body: &str,
+        setup: impl FnOnce(&mut Self),
+        review: impl FnOnce(&mut Value),
+    ) -> Self {
         agent_memory::cli::register_providers().unwrap();
         let world = World::new().unwrap();
         let (runtime, command) = installed_runtime(&world);
@@ -410,7 +365,7 @@ impl Fixture {
         let native = g(&rendered, "files").clone();
         let scope = support::identity_fixtures::bind(&world, &repo).unwrap();
         let actor = t(&scope, "developer_id").to_owned();
-        fs::write(bank.join("handoff-prompt.md"), POLICY).unwrap();
+        fs::write(bank.join("handoff-prompt.md"), body).unwrap();
         let mut f = Self {
             world,
             repo,
@@ -424,10 +379,12 @@ impl Fixture {
             manifest: Value::Null,
             native,
         };
+        setup(&mut f);
         let observed = f.private_layout("inspect", vec![]);
         f.operation = t(&observed, "operation_id").to_owned();
         f.manifest = g(&observed, "manifest").clone();
-        let request = f.layout_request();
+        let mut request = f.layout_request();
+        review(&mut request);
         let proposal = f.private_layout(
             "prepare",
             vec![
@@ -475,6 +432,28 @@ impl Fixture {
         );
         let mut cursor = 0usize;
         let units=array(g(m,"sources")).iter().map(|source|{let path=t(source,"path");let count=g(source,"byte_count").as_int().unwrap().as_u64().unwrap() as usize;let pages=(count.div_ceil(24576)).max(1);let context=(cursor..cursor+pages).map(n).collect();cursor+=pages;let pending=path=="handoff-prompt.md";obj([("unit_id",s(uuid())),("source_ranges",Value::Array(vec![obj([("source_id",g(source,"source_id").clone()),("start",n(0)),("end",n(count))])])),("semantic_kind",s(if pending{"unadmitted-source"}else if path=="MEMORY.md"{"canonical-framing"}else{"canonical-guidance"})),("existing_record",Value::Null),("provenance",obj([("origin",s(if pending{"unknown"}else{"existing canonical fixture"})),("uncertainty",Value::Bool(pending))])),("disposition",s(if pending{"pending-admission"}else{"preserve"})),("targets",Value::Array(if pending{vec![]}else{vec![obj([("path",s(path)),("sha256",s(bytes_sha(t(&self.native,path).as_bytes())))])]})),("reason",s(if pending{"Unconfirmed candidate needs separate ordinary admission"}else{"Preserve complete synthetic meaning and conditions"})),("required_actions",Value::Array(if pending{vec![s("Confirm independent repository evidence before ordinary reviewed admission")]}else{vec![]})),("context_pages",Value::Array(context))])}).collect::<Vec<_>>();
+        let units = units
+            .into_iter()
+            .map(|mut unit| {
+                if let Some(path) = array(g(&unit, "targets")).first().map(|row| t(row, "path")) {
+                    if let Ok((_, metadata, _)) =
+                        agent_memory::records::parse(t(&self.native, path), &[])
+                    {
+                        if let Some(id) = metadata.get("id") {
+                            let identity = obj([
+                                ("id", id.clone()),
+                                (
+                                    "version",
+                                    metadata.get("version").cloned().unwrap_or(Value::Null),
+                                ),
+                            ]);
+                            set(&mut unit, "existing_record", identity);
+                        }
+                    }
+                }
+                unit
+            })
+            .collect::<Vec<_>>();
         let unit_map = obj([
             ("schema", s("agent-memory/layout-unit-map-v1")),
             ("operation_id", s(&self.operation)),
@@ -650,8 +629,16 @@ impl Fixture {
         }
     }
     fn admission(&self, full: bool) -> (Value, String, String) {
+        self.admission_selected(full, None, POLICY)
+    }
+    fn admission_selected(
+        &self,
+        full: bool,
+        selected: Option<&str>,
+        body: &str,
+    ) -> (Value, String, String) {
         let raw = record_fixtures::record_text_with_ids(
-            POLICY,
+            body,
             &self.project,
             record_fixtures::RecordOptions {
                 status: "candidate",
@@ -686,7 +673,7 @@ impl Fixture {
             ("project_id", s(&self.project)),
             (
                 "candidate",
-                obj([("metadata", metadata), ("body", s(POLICY))]),
+                obj([("metadata", metadata), ("body", s(body))]),
             ),
             ("source_class", s("verified-repository")),
             (
@@ -778,7 +765,23 @@ impl Fixture {
             t(g(g(g(captured, "request"), "candidate"), "metadata"), "id")
         );
         let metadata = g(g(g(captured, "request"), "candidate"), "metadata");
-        let pending=array(g(&view,"pending_matches")).iter().map(|row|{let claim=obj([("unit_id",g(row,"unit_id").clone()),("coverage",s(if full{"full"}else{"none"})),("covered_source_ranges",if full{g(row,"source_ranges").clone()}else{Value::Array(vec![])}),("target_record_refs",Value::Array(if full{vec![obj([("id",g(metadata,"id").clone()),("version",n(1)),("path",s(&target)),("resulting_sha256",s(bytes_sha(t(&intended,&target).as_bytes())))])]}else{vec![]}))]);obj([("unit_id",g(row,"unit_id").clone()),("classification",s("distinct-knowledge")),("rationale",s("Complete original source meaning and conditions reviewed independently.")),("coverage_claim",claim)])}).collect::<Vec<_>>();
+        let pending = array(g(&view,"pending_matches")).iter().map(|row| {
+            let credited = full && selected.is_none_or(|id| t(row,"unit_id") == id);
+            let claim = obj([
+                ("unit_id",g(row,"unit_id").clone()),
+                ("coverage",s(if credited {"full"} else {"none"})),
+                ("covered_source_ranges",if credited {g(row,"source_ranges").clone()} else {Value::Array(vec![])}),
+                ("target_record_refs",Value::Array(if credited {vec![obj([
+                    ("id",g(metadata,"id").clone()),("version",n(1)),("path",s(&target)),
+                    ("resulting_sha256",s(bytes_sha(t(&intended,&target).as_bytes()))),
+                ])]} else {vec![]})),
+            ]);
+            obj([
+                ("unit_id",g(row,"unit_id").clone()),("classification",s("distinct-knowledge")),
+                ("rationale",s("Complete original source meaning and conditions reviewed independently.")),
+                ("coverage_claim",claim),
+            ])
+        }).collect::<Vec<_>>();
         let judgment = obj([
             ("observation", g(&view, "observation").clone()),
             (
@@ -1617,3 +1620,6 @@ fn checkpoint_after_receipt_error() {
 fn checkpoint_after_receipt_exit() {
     checkpoint_fault(true, "exit");
 }
+
+#[path = "support/fanout_c_nested.rs"]
+mod fanout_c_nested;

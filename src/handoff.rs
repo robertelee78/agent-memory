@@ -9,31 +9,11 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::ffi::OsString;
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
 use std::path::{Component, Path};
-use std::sync::{Arc, RwLock};
 use unicode_normalization::UnicodeNormalization;
 
 pub const SECTION: &str = "Checkpoint evidence observations";
 pub const SCHEMA: &str = "agent-memory/checkpoint-evidence-v1";
 pub const MAX_SOURCE: usize = 65536;
-
-/// Offsets returned by the checkpoint parser are UTF-8 byte offsets into `body`.
-pub trait Checkpoint: Send + Sync {
-    fn headings(&self, body: &str) -> Result<Vec<(usize, usize, String)>>;
-    fn fields(&self) -> Vec<String>;
-    fn extra(&self) -> Vec<String>;
-    fn list_text(&self, references: &[String]) -> Result<String>;
-}
-static CHECKPOINT: RwLock<Option<Arc<dyn Checkpoint>>> = RwLock::new(None);
-pub fn register_checkpoint(provider: Option<Arc<dyn Checkpoint>>) {
-    *CHECKPOINT.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-fn checkpoint() -> Result<Arc<dyn Checkpoint>> {
-    CHECKPOINT
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| ContractError::new("Checkpoint dependency is not registered"))
-}
 
 fn invalid_authority(url: &str) -> bool {
     let authority = url
@@ -622,18 +602,23 @@ pub fn managed_cues(body: &str, names: &[String]) -> BTreeSet<usize> {
     }
     cues
 }
-pub fn sections_with(body: &str, checkpoint: &dyn Checkpoint) -> Result<BTreeMap<String, String>> {
-    let mut expected: HashSet<String> = checkpoint
-        .fields()
-        .into_iter()
-        .chain(checkpoint.extra())
+/// Checkpoint parser offsets are UTF-8 byte offsets into `body`.
+pub fn sections(body: &str) -> Result<BTreeMap<String, String>> {
+    let mut expected: HashSet<String> = crate::checkpoint::FIELDS
+        .iter()
+        .map(|(_, label)| (*label).to_owned())
+        .chain(
+            crate::checkpoint::EXTRA
+                .iter()
+                .map(|label| (*label).to_owned()),
+        )
         .collect();
     expected.insert(SECTION.to_owned());
     let cues = managed_cues(body, &expected.iter().cloned().collect::<Vec<_>>());
     if cues.is_empty() {
         return Ok(BTreeMap::new());
     }
-    let parsed = checkpoint.headings(body)?;
+    let parsed = crate::checkpoint::headings(body)?;
     let starts: BTreeSet<usize> = parsed
         .iter()
         .filter(|(_, _, t)| expected.contains(t))
@@ -663,9 +648,6 @@ pub fn sections_with(body: &str, checkpoint: &dyn Checkpoint) -> Result<BTreeMap
     }
     Ok(found)
 }
-pub fn sections(body: &str) -> Result<BTreeMap<String, String>> {
-    sections_with(body, checkpoint()?.as_ref())
-}
 pub fn json_section(value: &str) -> Result<Value> {
     let inner = value
         .strip_prefix("```json\n")
@@ -675,9 +657,9 @@ pub fn json_section(value: &str) -> Result<Value> {
         })?;
     load(inner.as_bytes())
 }
-pub fn reusable_with(base: &str, current: &Value, provider: &dyn Checkpoint) -> Value {
+pub fn reusable(base: &str, current: &Value) -> Value {
     let prior = (|| -> Result<Value> {
-        let sections = sections_with(base, provider)?;
+        let sections = sections(base)?;
         let v = json_section(sections.get(SECTION).map(String::as_str).unwrap_or(""))?;
         validate_observation(&v)?;
         Ok(v)
@@ -706,20 +688,16 @@ pub fn reusable_with(base: &str, current: &Value, provider: &dyn Checkpoint) -> 
     }
     current.clone()
 }
-pub fn reusable(base: &str, current: &Value) -> Result<Value> {
-    Ok(reusable_with(base, current, checkpoint()?.as_ref()))
-}
-pub fn assess_with(
+pub fn assess(
     body: &str,
     project: &Value,
     context: &Value,
     repo: &Path,
     bank: &Path,
     inspect_only: bool,
-    provider: &dyn Checkpoint,
 ) -> Result<Value> {
     let qualified = (|| -> Result<_> {
-        let found = sections_with(body, provider)?;
+        let found = sections(body)?;
         if found.is_empty() {
             return Ok(None);
         }
@@ -787,7 +765,7 @@ pub fn assess_with(
             .collect();
         if refs.iter().collect::<HashSet<_>>().len() != refs.len()
             || found.get("Checkpoint evidence").map(String::as_str)
-                != Some(provider.list_text(&refs)?.as_str())
+                != Some(crate::checkpoint::list_text(&refs)?.as_str())
         {
             return Err(ContractError::new(
                 "Evidence list differs from its historical observation",
@@ -840,22 +818,4 @@ fn set_pair(pairs: &mut [(String, Value)], key: &str, value: &str) {
     if let Some((_, slot)) = pairs.iter_mut().find(|(k, _)| k == key) {
         *slot = string(value);
     }
-}
-pub fn assess(
-    body: &str,
-    project: &Value,
-    context: &Value,
-    repo: &Path,
-    bank: &Path,
-    inspect_only: bool,
-) -> Result<Value> {
-    assess_with(
-        body,
-        project,
-        context,
-        repo,
-        bank,
-        inspect_only,
-        checkpoint()?.as_ref(),
-    )
 }

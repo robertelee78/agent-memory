@@ -256,7 +256,7 @@ fn run(
                         && c.mode.is_some()),
                 "Nested recovery preview requires the exact operation/nested UUID and mode",
             )?;
-            writes::recovery_transactions_provider()?.recover_nested(
+            crate::recovery_transactions::recover_nested(
                 c.repo,
                 c.operation_id,
                 c.nested,

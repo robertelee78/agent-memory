@@ -504,15 +504,6 @@ fn malformed_proposals_and_unregistered_operation_kinds_are_typed_refusals() {
     assert!(txn::proposal_value(&object([])).is_err());
     assert!(txn::register_transaction_validator("unknown", None).is_err());
     assert!(txn::file_hashes(&object([("a", Value::Bool(true))])).is_err());
-    let w = World::new();
-    let mut p = proposal(&w.root);
-    *p.get_mut("files").unwrap() = valid_files();
-    assert!(
-        txn::proposal_value(&p)
-            .unwrap_err()
-            .to_string()
-            .contains("scope_binding provider")
-    );
 }
 #[test]
 fn descriptor_directory_creation_is_exclusive_and_removal_is_empty_only() {
@@ -643,10 +634,6 @@ fn valid_receipt(w: &World, p: &Value, outcome: &str) -> Value {
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_complete_receipt_schema_and_bindings_govern_cleanup_and_historical_replay
 #[test]
 fn complete_receipt_schema_and_every_binding_are_required() {
-    agent_memory::repository_config::register_security_scan(Some(std::sync::Arc::new(
-        agent_memory::security::Security,
-    )))
-    .unwrap();
     let w = World::new();
     w.mkdir("repo/memory-bank");
     let p = proposal(&w.path("repo"));
@@ -722,15 +709,8 @@ fn transaction_bank_lock_uses_same_path_owner_metadata_and_exclusive_flock() {
     assert!(!lock.exists());
 }
 
-fn real_observer() {
-    contract::register_bank_observation(Some(std::sync::Arc::new(
-        agent_memory::bank_observation::BankObservation,
-    )));
-}
-
 #[test]
 fn real_replace_file_preserves_mode_creates_deletes_and_rechecks_the_entire_read_set() {
-    real_observer();
     let w = World::new();
     w.mkdir("bank");
     write_files(&w.path("bank"), &files());
@@ -854,7 +834,6 @@ fn real_replace_file_preserves_mode_creates_deletes_and_rechecks_the_entire_read
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_late_alias_at_replacement_boundary_stops_and_recovery_preserves_foreign_occupant
 #[test]
 fn real_replace_boundary_preserves_late_alias_and_unknown_marker() {
-    real_observer();
     for change in ["alias", "marker"] {
         let w = World::new();
         w.mkdir("bank/topics");
@@ -915,7 +894,6 @@ fn real_replace_boundary_preserves_late_alias_and_unknown_marker() {
 
 #[test]
 fn real_files_inventory_accepts_empty_bank_and_ignores_runtime_payloads() {
-    real_observer();
     let w = World::new();
     w.mkdir("bank");
     assert_eq!(txn::files_at(&w.path("bank")).unwrap(), object([]));
@@ -935,7 +913,6 @@ fn real_files_inventory_accepts_empty_bank_and_ignores_runtime_payloads() {
 #[test]
 #[ignore = "needs recovery_frontier registered"]
 fn real_partial_rename_converges_finish_and_rollback_at_every_file_boundary() {
-    real_observer();
     for mode in ["finish", "rollback"] {
         for completed in 0..=2 {
             let w = World::new();

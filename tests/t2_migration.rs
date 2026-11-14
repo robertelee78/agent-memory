@@ -16,7 +16,7 @@ use agent_memory::bank_contract;
 use agent_memory::codec::json::{self, DecodePolicy, Value};
 use agent_memory::developer_identity::{digest, encoded};
 use agent_memory::error::{ContractError, Result as DomainResult};
-use agent_memory::migration::{LocationAudit, Runtime};
+use agent_memory::migration::Runtime;
 use agent_memory::migration_codecs::{self, Compiled};
 use agent_memory::migration_contract::{Codecs, Converter, Validator};
 use agent_memory::process::Status;
@@ -149,8 +149,9 @@ fn migration_worker() {
     let root = PathBuf::from(std::env::var_os("AM_MIGRATION_RUNTIME").unwrap());
     let out = PathBuf::from(std::env::var_os("AM_MIGRATION_OUT").unwrap());
     agent_memory::cli::register_providers().unwrap();
-    // The runtime this child executes as: an explicit root, not the test binary.
-    agent_memory::security::register_migration_audit(Some(Arc::new(LocationAudit::at(&root))));
+    // dev-tools: the runtime this child executes as is an explicit root, not
+    // the test binary.
+    agent_memory::migration::use_development_runtime(Some(root.clone()));
     let result = if args.first().map(String::as_str) == Some("transaction-recover") {
         let repo = PathBuf::from(&args[1]);
         let outcome = agent_memory::bank_transactions::recover(&repo, None, None);

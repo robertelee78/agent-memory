@@ -16,7 +16,7 @@ use crate::error::{ContractError, Result};
 use crate::lifecycle::CommandResult;
 use parser::{Matches, Parser};
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 /// A typed handler: the parsed namespace of its helper parser.
 pub type Handler = fn(&Matches, &Context<'_>) -> CommandResult;
@@ -241,28 +241,28 @@ pub fn refusal(prog: &str, message: &str) -> CommandResult {
     }
 }
 
-/// Supplies the portable pack root of the running installation (the baseline
-/// derived it from `__file__`). Implemented by `installation`.
-pub trait PackRoot: Send + Sync {
-    fn pack_root(&self) -> Result<PathBuf>;
+#[cfg(feature = "dev-tools")]
+static DEVELOPMENT_PACK: std::sync::RwLock<Option<PathBuf>> = std::sync::RwLock::new(None);
+
+/// Dev-tools only: a test binary is not an installed runtime, so its source
+/// checkout's `skills/agent-memory` stands in for the installed pack.
+#[cfg(feature = "dev-tools")]
+pub fn use_development_pack(pack: Option<PathBuf>) {
+    *DEVELOPMENT_PACK.write().unwrap_or_else(|e| e.into_inner()) = pack;
 }
 
-static PACK_ROOT: RwLock<Option<Arc<dyn PackRoot>>> = RwLock::new(None);
-
-pub fn register_pack_root(provider: Option<Arc<dyn PackRoot>>) {
-    *PACK_ROOT.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-
-/// The `--pack` default: the registered runtime pack, or a typed refusal.
+/// The `--pack` default: the installed runtime pack of the running
+/// executable (the baseline derived it from `__file__`), or a typed refusal.
 pub fn pack_root() -> Result<PathBuf> {
-    let provider = PACK_ROOT
+    #[cfg(feature = "dev-tools")]
+    if let Some(pack) = DEVELOPMENT_PACK
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| {
-            ContractError::new("Pack location is not registered for this runtime; pass --pack PATH")
-        })?;
-    provider.pack_root()
+    {
+        return Ok(pack);
+    }
+    crate::installation::runtime_pack_root()
 }
 
 /// The executing runtime root: the directory holding `skills/agent-memory`
@@ -290,67 +290,12 @@ fn wired(result: Result<()>) -> std::result::Result<(), crate::pack_validation::
 /// in `tests/wiring-pending.txt`; `tests/wiring.rs` enforces that.
 /// Later lanes append their provider registrations at the end.
 pub fn register_providers() -> std::result::Result<(), crate::pack_validation::Invalid> {
-    let surface = surface::Declared::current()?;
-    crate::pack_validation::register_command_surface(Some(Arc::new(surface)))?;
-    wired(crate::artifact::register_migration_contract(Some(
-        Arc::new(crate::migration_contract::Bundled),
-    )))?;
-    crate::bank_contract::register_bank_observation(Some(Arc::new(
-        crate::bank_observation::BankObservation,
-    )));
-    crate::records::register_tombstone_parser(Some(Arc::new(crate::tombstones::TombstoneParser)));
-    crate::bank_transactions::register_project_identity(Some(Arc::new(wiring::ProjectStatus)));
-    wired(crate::project_identity::register_bank_observation(Some(
-        Arc::new(wiring::BankMarkers),
-    )))?;
-    wired(crate::project_identity::register_bank_writes(Some(
-        Arc::new(wiring::WriterOperations),
-    )))?;
-    crate::bank_writes::register_scope_binding(Some(Arc::new(crate::scope_binding::ScopeBinding)));
-    crate::cli::register_pack_root(Some(Arc::new(crate::installation::RuntimePackRoot)));
-    crate::console::register_installed_receipt(Some(Arc::new(
-        crate::installation::InstalledReceiptProvider,
-    )));
-    wired(
-        crate::cache_recovery::register_installation(Some(Arc::new(
-            crate::installation::CacheInstallation,
-        )))
-        .map_err(|error| ContractError::new(error.to_string())),
-    )?;
-    // Registered once per process; a repeated composition keeps the same provider.
-    let _ = crate::managed_source::register_installation(&crate::installation::MANAGED_SOURCE_INFO);
-    // Set-once registry: a repeated composition keeps the first provider.
-    let _ = crate::turn_check::register_scope_binding(Box::new(wiring::EnrollmentScope));
-    // Set-once registry: a repeated composition keeps the first provider.
-    let _ = crate::sharing_hold_mapping::register_hold_causes(Box::new(
-        crate::sharing_holds::HoldCauses,
-    ));
-    crate::bank_writes::register_turn_sources(Some(Arc::new(crate::turn_sources::TurnSources)));
-    wired(crate::turn_check::register_turn_sources(Box::new(
-        crate::turn_sources::TurnSources,
-    )))?;
     wired(
         crate::installation::seams::register_updating(Some(Arc::new(
             crate::updating::Runtime::process(),
         )))
         .map_err(|error| ContractError::new(error.to_string())),
     )?;
-    wired(crate::project_identity::register_layout_observation(Some(
-        Arc::new(crate::layout_recovery_observation::LayoutObservation),
-    )))?;
-    crate::bank_transactions::register_index_invalidation(Some(Arc::new(
-        crate::recall_catalog::IndexInvalidation,
-    )));
-    crate::bank_writes::register_security(Some(Arc::new(crate::security::Security)));
-    wired(crate::repository_config::register_security_scan(Some(
-        Arc::new(crate::security::Security),
-    )))?;
-    static SECURITY_SCAN: std::sync::LazyLock<std::result::Result<(), String>> =
-        std::sync::LazyLock::new(|| {
-            crate::sharing_hold_mapping::register_security_scan(Box::new(crate::security::Security))
-                .map_err(|error| error.to_string())
-        });
-    wired((*SECURITY_SCAN).clone().map_err(ContractError::new))?;
     wired(
         crate::installation::seams::register_private_state(Some(Arc::new(
             wiring::LifecyclePrivateState,
@@ -363,14 +308,9 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
         )))
         .map_err(|error| ContractError::new(error.to_string())),
     )?;
-    crate::omp_boundary::register_omp_stream(Some(Arc::new(crate::omp_boundary::InstalledStream)));
     crate::private_state::register_recovery_quiescence(Some(Arc::new(
         crate::recovery_quiescence::RecoveryQuiescence,
     )));
-    crate::security::register_migration_audit(Some(Arc::new(
-        crate::migration::LocationAudit::executable(),
-    )));
-    crate::doctor_fix::register_diagnostics(Some(Arc::new(crate::diagnostics::Runtime::process())));
     wired(crate::bank_transactions::register_transaction_validator(
         "initialize",
         Some(Arc::new(crate::initialization::Validator)),
@@ -379,19 +319,6 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
         "capture",
         Some(Arc::new(crate::admission::Admission)),
     ))?;
-    crate::private_state::register_private_state_hooks(Some(Arc::new(wiring::PrivateStateHooks)));
-    crate::sharing_recovery::register_sharing_boundary(Some(Arc::new(
-        crate::sharing_boundary::SharingBoundary,
-    )));
-    let checkpoint = Arc::new(crate::checkpoint::Checkpoint);
-    crate::bank_writes::register_checkpoint(Some(checkpoint.clone()));
-    crate::handoff::register_checkpoint(Some(checkpoint));
-    crate::bank_state::register_comparison_view(Some(Arc::new(crate::retrieval::ComparisonView)));
-    crate::diagnostics::register_projections(Some(Arc::new(crate::projections::Projections)));
-    crate::turn_sources::register_publication_gate(Some(Arc::new(crate::memory_publication::Gate)));
-    let transport = Arc::new(crate::omp_transport::Transport::installed());
-    crate::omp_boundary::register_omp_transport(Some(transport.clone()));
-    crate::omp_stream::register_omp_transport(Some(transport));
     // Without a resolvable running executable the activation stays
     // unregistered and every native operation refuses with MissingActivation.
     if let Ok(executable) = crate::host::current_executable() {
@@ -415,30 +342,24 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
         Some(Arc::new(crate::consolidation::Consolidation)),
     ))?;
     crate::admission::register_comparison(Some(Arc::new(crate::comparison::Comparison)));
-    crate::discovery::register_comparison(Some(Arc::new(crate::comparison::Comparison)));
     for operation in ["correct", "supersede", "revoke", "forget"] {
         wired(crate::bank_transactions::register_transaction_validator(
             operation,
             Some(Arc::new(crate::governance::Governance)),
         ))?;
     }
-    crate::bank_contract::register_route_table(Some(Arc::new(
-        helpers::layout_recovery::RouteTable,
-    )));
-    crate::layout_restore::register_layout_recovery(Some(Arc::new(
-        crate::layout_recovery::LayoutRecovery,
-    )));
-    static SEMANTIC_SHARING: std::sync::LazyLock<std::result::Result<(), String>> =
+    static MEMORY_REFRESH: std::sync::LazyLock<std::result::Result<(), String>> =
         std::sync::LazyLock::new(|| {
-            crate::sharing_hold_mapping::register_semantic_sharing(Box::new(
-                crate::semantic_sharing::SemanticSharing,
+            crate::turn_check::register_memory_refresh(Box::new(
+                crate::memory_refresh::MemoryRefresh,
             ))
             .map_err(|error| error.to_string())
         });
-    wired((*SEMANTIC_SHARING).clone().map_err(ContractError::new))?;
-    crate::bank_writes::register_recovery_transactions(Some(Arc::new(
-        crate::recovery_transactions::RecoveryTransactions,
-    )));
+    wired((*MEMORY_REFRESH).clone().map_err(ContractError::new))?;
+    wired(crate::bank_transactions::register_transaction_validator(
+        "refresh",
+        Some(Arc::new(crate::memory_refresh::MemoryRefresh)),
+    ))?;
     Ok(())
 }
 

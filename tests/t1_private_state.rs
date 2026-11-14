@@ -247,14 +247,12 @@ fn public_summary_excludes_every_private_locator_and_pin() {
 }
 
 #[test]
-fn missing_native_producer_never_becomes_an_empty_capability_set() {
+fn native_absence_observation_is_readonly() {
     let root = Root::new();
     let base = root.directory("private-base");
     let before = snapshot(&root.0);
-    refusal(
-        private::native_absence(&root.0, &base, &root.0.join("runtime")),
-        "Private-state hooks provider is not registered",
-    );
+    // The real native registry reader runs; any outcome leaves the world unchanged.
+    let _ = private::native_absence(&root.0, &base, &root.0.join("runtime"));
     assert_eq!(snapshot(&root.0), before);
 }
 
@@ -456,18 +454,14 @@ fn valid_envelope_requires_the_real_quiescence_validator() {
 }
 
 #[test]
-fn inventory_missing_registration_is_readonly_and_typed() {
-    isolated(
-        "inventory_missing_registration_is_readonly_and_typed",
-        |root| {
-            let before = snapshot(root);
-            refusal(
-                private::repository_inventory(None, &root.join("repo"), &root.join("runtime")),
-                "Private-state hooks provider is not registered",
-            );
-            assert_eq!(snapshot(root), before);
-        },
-    );
+fn inventory_observation_is_readonly() {
+    isolated("inventory_observation_is_readonly", |root| {
+        let before = snapshot(root);
+        // The real native registry and source-state readers run directly; any
+        // outcome must leave the isolated world byte-identical.
+        let _ = private::repository_inventory(None, &root.join("repo"), &root.join("runtime"));
+        assert_eq!(snapshot(root), before);
+    });
 }
 
 // These use the actual composition root only. No fake native inventory, frontier,

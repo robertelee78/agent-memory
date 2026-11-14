@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
 use std::path::Path;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 pub const SECTIONS: [&str; 11] = [
     "Use when",
@@ -1437,29 +1437,8 @@ pub trait CommandSurface: Send + Sync {
     /// Resolve a public command and its fixed helper prefix from the declaration.
     fn command(&self, name: &str) -> Result<Option<(Dispatch, Vec<String>)>>;
 }
-static COMMAND_SURFACE: RwLock<(u64, Option<Arc<dyn CommandSurface>>)> = RwLock::new((0, None));
 type InventoryKey = Vec<(String, u32, [u8; 32])>;
 static LAST_VALIDATION: RwLock<Option<(u64, InventoryKey, Value)>> = RwLock::new(None);
-pub fn register_command_surface(provider: Option<Arc<dyn CommandSurface>>) -> Result<()> {
-    let mut registry = COMMAND_SURFACE
-        .write()
-        .map_err(|_| malformed("Command surface registry is poisoned"))?;
-    registry.0 = registry
-        .0
-        .checked_add(1)
-        .ok_or_else(|| malformed("Command surface registry generation exhausted"))?;
-    registry.1 = provider;
-    *LAST_VALIDATION
-        .write()
-        .map_err(|_| malformed("Pack validation memo is poisoned"))? = None;
-    Ok(())
-}
-fn registered_surface() -> Result<(u64, Option<Arc<dyn CommandSurface>>)> {
-    Ok(COMMAND_SURFACE
-        .read()
-        .map_err(|_| malformed("Command surface registry is poisoned"))?
-        .clone())
-}
 
 fn array_strings(values: impl IntoIterator<Item = impl Into<String>>) -> Value {
     Value::Array(values.into_iter().map(string).collect())
@@ -2122,9 +2101,10 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
 }
 
 /// Brackets the caller's complete inspection, including later declaration reads.
+/// The surface is this binary's declared command table.
 pub fn with_validated<T>(pack: &Path, body: impl FnOnce(&Path, &Value) -> Result<T>) -> Result<T> {
-    let (generation, surface) = registered_surface()?;
-    validated_inner(pack, surface.as_deref(), Some(generation), body)
+    let surface = crate::cli::surface::Declared::current()?;
+    validated_inner(pack, Some(&surface), Some(0), body)
 }
 pub fn with_validated_surface<T>(
     pack: &Path,

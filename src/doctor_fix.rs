@@ -1,9 +1,8 @@
 //! Reconcile only independently verified, receipt-owned runtime faults.
 //!
-//! Baseline `doctor_fix.py` (`am doctor --fix`). Diagnostics is not ported
-//! yet: its `run` and `Report` are reached through the `Diagnostics` seam,
-//! whose absence is a typed refusal. Repairs reuse installation's journaled
-//! recovery and transaction; nothing changed by a user is replaced.
+//! Baseline `doctor_fix.py` (`am doctor --fix`): diagnostics inspects before
+//! and after. Repairs reuse installation's journaled recovery and
+//! transaction; nothing changed by a user is replaced.
 
 use crate::codec::json::Value;
 use crate::error::ContractError;
@@ -17,7 +16,6 @@ use crate::updating::merged;
 use std::cell::Cell;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
 
 /// Owned target kinds a doctor finding may report as failed.
 pub const TARGET_COMPONENTS: [&str; 7] = [
@@ -41,38 +39,6 @@ pub const RECREATABLE: [&str; 7] = [
 ];
 /// Baseline `migration.MAX_FILE` bound for the bank transaction marker.
 pub const MAX_MARKER: usize = 65536;
-
-/// Baseline `diagnostics` callees (`run`, `Report`). Implemented by `diagnostics`.
-pub trait Diagnostics: Send + Sync {
-    /// `diagnostics.run(operation, repo, projection)`: the finished report
-    /// (`checks`, `warnings`, `ok`, …) or a refusal (`diagnostics.ERRORS`).
-    fn run(&self, operation: &str, repo: &Path, projection: Option<&Path>) -> Result<Value>;
-    /// `Report(operation)` with one added finding, then `finish()`.
-    fn report(
-        &self,
-        operation: &str,
-        component: &str,
-        state: &str,
-        detail: &str,
-        repair: &str,
-    ) -> Result<Value>;
-}
-
-static DIAGNOSTICS: RwLock<Option<Arc<dyn Diagnostics>>> = RwLock::new(None);
-
-pub fn register_diagnostics(provider: Option<Arc<dyn Diagnostics>>) {
-    *DIAGNOSTICS
-        .write()
-        .unwrap_or_else(|error| error.into_inner()) = provider;
-}
-
-pub(crate) fn diagnostics_provider() -> Result<Arc<dyn Diagnostics>> {
-    DIAGNOSTICS
-        .read()
-        .unwrap_or_else(|error| error.into_inner())
-        .clone()
-        .ok_or(Error::Unregistered("Diagnostics (doctor report)"))
-}
 
 fn contract(message: impl Into<String>) -> Error {
     Error::Contract(ContractError::new(message.into()))
@@ -335,8 +301,9 @@ pub fn run(
     repo: &Path,
     projection: Option<&Path>,
 ) -> Result<Value> {
-    let diagnostics = diagnostics_provider()?;
-    let before = diagnostics.run("doctor", repo, projection)?;
+    let diagnose =
+        || crate::diagnostics::run(env, services, "doctor", repo, projection).map_err(Error::from);
+    let before = diagnose()?;
     let mut actions: Vec<Value> = Vec::new();
     let locations = install::locations(env)?;
     let acquired = Cell::new(false);
@@ -454,16 +421,22 @@ pub fn run(
             )),
         }
     }
-    let mut after = match diagnostics.run("doctor", repo, projection) {
+    let mut after = match diagnose() {
         Ok(after) => after,
         Err(Error::Unregistered(name)) => return Err(Error::Unregistered(name)),
-        Err(_) => diagnostics.report(
-            "doctor-fix",
-            "diagnostic.post_repair",
-            "failure",
-            "Post-repair inspection could not be completed.",
-            "Preserve the current state and rerun am doctor; inspect the receipt and journal if it still fails.",
-        )?,
+        Err(_) => {
+            let mut report = crate::diagnostics::Report::new("doctor-fix");
+            report.add(
+                "diagnostic.post_repair",
+                "failure",
+                "Post-repair inspection could not be completed.",
+                Some(
+                    "Preserve the current state and rerun am doctor; inspect the receipt and journal if it still fails.",
+                ),
+                None,
+            );
+            report.finish()
+        }
     };
     // Report every remaining actionable finding explicitly; neither a live
     // bank transaction's direction nor arbitrary projections are guessed.

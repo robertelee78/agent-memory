@@ -8,7 +8,7 @@ mod support;
 use agent_memory::claude_turns;
 use agent_memory::clock::Deadline;
 use agent_memory::codec::json::{self, DecodePolicy, Value};
-use agent_memory::error::{ContractError, Result};
+use agent_memory::error::Result;
 use agent_memory::{host, installation, omp_boundary as boundary, omp_installation, process};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
@@ -1160,21 +1160,4 @@ fn omp_boundary_route_reports_pending_work_and_argument_errors() {
         "{stderr}"
     );
     world.close().unwrap();
-}
-
-#[test]
-fn missing_transport_and_stream_registrations_are_typed_refusals() {
-    let missing = |error: ContractError| {
-        assert_eq!(error.kind(), &agent_memory::error::Kind::MissingProvider);
-    };
-    missing(
-        boundary::drain_inventory(Path::new("/nonexistent"), Path::new("/nonexistent"))
-            .unwrap_err(),
-    );
-    let result = boundary::stream(&[], "am omp-boundary");
-    assert_eq!(result.exit_code, 1);
-    assert_eq!(
-        result.stderr,
-        "am omp-boundary: omp_stream provider is not registered; native source work remains pending\n"
-    );
 }

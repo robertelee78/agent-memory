@@ -11,7 +11,6 @@ use std::fmt;
 use std::os::fd::AsFd;
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
-use std::sync::OnceLock;
 use std::time::Duration;
 
 pub const MAX_FILES: usize = 40_000;
@@ -59,25 +58,6 @@ fn payload_require(ok: bool, message: impl Into<String>) -> Result<()> {
     } else {
         Err(Error::PayloadMismatch(message.into()))
     }
-}
-
-/// Implemented by installation, whose source_info must verify payload before declaring clean.
-pub trait Installation: Send + Sync {
-    fn source_info(
-        &self,
-        root: &Path,
-        kind: &str,
-        remote: &str,
-        reference: &str,
-    ) -> crate::error::Result<Value>;
-}
-static INSTALLATION: OnceLock<&'static dyn Installation> = OnceLock::new();
-pub fn register_installation(
-    installation: &'static dyn Installation,
-) -> std::result::Result<(), &'static str> {
-    INSTALLATION
-        .set(installation)
-        .map_err(|_| "managed source installation already registered")
 }
 
 pub fn git(root: &Path, args: &[&str], input: Option<&[u8]>, maximum: usize) -> Result<Vec<u8>> {
@@ -593,10 +573,8 @@ pub fn verify(root: &Path, source: &Value) -> Result<Verification> {
             && std::str::from_utf8(&actual_ref).map_err(io)?.trim() == reference,
         "recorded channel differs",
     )?;
-    let installation = INSTALLATION
-        .get()
-        .ok_or_else(|| contract("installation integration is not registered"))?;
-    let observed = installation.source_info(root, "managed", remote, reference)?;
+    // Installation's source_info verifies the payload before declaring clean.
+    let observed = crate::installation::managed_source_info(root, "managed", remote, reference)?;
     require(
         crate::client_hooks::membership_equal(&observed, source),
         "revision, artifact, version or cleanliness differs from receipt",

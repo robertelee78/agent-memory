@@ -70,7 +70,7 @@ pub fn compact(content: &str) -> Result<Value> {
                 "# Inactive memory\n\nThis version is {status}; it is excluded from current guidance.\n"
             );
         records::parse(&rendered, &[])?;
-        let scan = crate::repository_config::security_scan_provider()?.scan(&rendered)?;
+        let scan = crate::security::scan(&string(&rendered), crate::security::LIMIT)?;
         let reasons = get(&scan, "reasons")
             .as_array()
             .ok_or_else(|| err(INVALID_INPUT))?;
@@ -209,7 +209,7 @@ pub fn filter_projection(repo: &Path, request: &Value) -> Result<Value> {
         ));
     }
     let operation_id = crate::host::uuid4()?;
-    let audit = writes::security_provider()?.audit_records(
+    let audit = crate::security::audit(
         &root,
         &operation_id,
         "retrieval",
@@ -219,6 +219,7 @@ pub fn filter_projection(repo: &Path, request: &Value) -> Result<Value> {
         &[],
         &record_ids.into_iter().collect::<Vec<_>>(),
         "policy-check",
+        None,
     )?;
     let discarded = rows.len() - remaining.len();
     Ok(object([

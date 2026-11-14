@@ -1990,7 +1990,6 @@ fn public_markdown_matrix_and_utf8_boundary_preserve_every_original_source() -> 
 
 #[test]
 fn security_audit_records_worker() -> Result<()> {
-    use agent_memory::bank_writes::Security;
     use std::os::unix::fs::PermissionsExt;
     let Some(repo) = std::env::var_os("AM_AUDIT_RECORDS_REPO") else {
         return Ok(());
@@ -2003,14 +2002,13 @@ fn security_audit_records_worker() -> Result<()> {
         ("project_id", string(PROJECT)),
         ("developer_id", string(DEVELOPER)),
     ]);
-    let provider = agent_memory::security::Security;
     let reasons = vec![
         "token".to_owned(),
         "credential".to_owned(),
         "token".to_owned(),
     ];
     let record_ids = vec![RECORD.to_owned(), PROJECT.to_owned(), RECORD.to_owned()];
-    let event = provider.audit_records(
+    let event = agent_memory::security::audit(
         &repo,
         RECORD,
         "retrieval",
@@ -2020,6 +2018,7 @@ fn security_audit_records_worker() -> Result<()> {
         &reasons,
         &record_ids,
         "policy-check",
+        None,
     )?;
     let path = PathBuf::from(
         get(&event, "path")
@@ -2037,7 +2036,7 @@ fn security_audit_records_worker() -> Result<()> {
     );
     assert_eq!(before, expected.as_bytes());
     assert_eq!(fs::metadata(&path)?.permissions().mode() & 0o777, 0o600);
-    let replay = provider.audit_records(
+    let replay = agent_memory::security::audit(
         &repo,
         RECORD,
         "retrieval",
@@ -2047,23 +2046,24 @@ fn security_audit_records_worker() -> Result<()> {
         &["credential".to_owned(), "token".to_owned()],
         &[PROJECT.to_owned(), RECORD.to_owned()],
         "policy-check",
+        None,
     )?;
     assert_eq!(get(&replay, "path"), get(&event, "path"));
     assert_eq!(fs::read(&path)?, before);
     assert!(
-        provider
-            .audit_records(
-                &repo,
-                RECORD,
-                "retrieval",
-                "checked",
-                &context,
-                &["external", "tool"],
-                &[],
-                &[PROJECT.to_owned(), RECORD.to_owned()],
-                "policy-check"
-            )
-            .is_err()
+        agent_memory::security::audit(
+            &repo,
+            RECORD,
+            "retrieval",
+            "checked",
+            &context,
+            &["external", "tool"],
+            &[],
+            &[PROJECT.to_owned(), RECORD.to_owned()],
+            "policy-check",
+            None,
+        )
+        .is_err()
     );
     assert_eq!(fs::read(&path)?, before);
     Ok(())

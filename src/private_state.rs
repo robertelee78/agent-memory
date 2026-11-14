@@ -1,5 +1,5 @@
 //! Fail-closed union of bank-local private runtime requirements.
-use crate::bank_writes::{self, CanonicalWriterBarrier};
+use crate::bank_writes;
 use crate::codec::json::Value;
 use crate::developer_identity::{digest, encoded};
 use crate::error::{ContractError, Result};
@@ -23,45 +23,6 @@ pub const TOKENS: &[&str] = &[
 pub const MAX_REPOSITORIES: usize = 1024;
 pub const MAX_RENEWAL_BYTES: usize = 65536;
 const LOCATOR_OPERATION: &str = "00000000-0000-4000-8000-000000000000";
-
-/// Composite production wiring: installation (receipt/targets), omp_boundary
-/// (protected native inventory/source evidence), admission (protected input).
-/// Every method is required: an unavailable native producer is never capable.
-pub trait PrivateStateHooks: Send + Sync {
-    fn native_registry(&self, runtime_root: &Path) -> Result<Value>;
-    fn native_source_state_bindings(
-        &self,
-        installation: Option<&Value>,
-        registered: &Value,
-        runtime_root: &Path,
-    ) -> Result<BTreeSet<PathBuf>>;
-    fn has_native_source_state(&self, base: &Path, runtime_root: &Path) -> Result<bool>;
-    fn shared_native_source_evidence(
-        &self,
-        repo: &Path,
-        base: &Path,
-        runtime_root: &Path,
-    ) -> Result<bool>;
-    fn required_source_capabilities(
-        &self,
-        repo: &Path,
-        runtime_root: &Path,
-    ) -> Result<BTreeSet<String>>;
-    fn read_receipt(&self, state: &Path, runtime_root: &Path) -> Result<Option<Value>>;
-    fn verify_targets(&self, targets: &Value, source: &Value, runtime_root: &Path) -> Result<()>;
-    fn read_input(&self, path: &Path, maximum: usize, runtime_root: &Path) -> Result<Value>;
-}
-static HOOKS: RwLock<Option<Arc<dyn PrivateStateHooks>>> = RwLock::new(None);
-pub fn register_private_state_hooks(provider: Option<Arc<dyn PrivateStateHooks>>) {
-    *HOOKS.write().unwrap_or_else(|error| error.into_inner()) = provider;
-}
-pub(crate) fn private_state_hooks_provider() -> Result<Arc<dyn PrivateStateHooks>> {
-    HOOKS
-        .read()
-        .unwrap_or_else(|error| error.into_inner())
-        .clone()
-        .ok_or_else(|| refusal("Private-state hooks provider is not registered"))
-}
 
 /// Implemented by recovery_quiescence, preserving its exact selected-attestation
 /// contract rather than treating an unregistered reader as an absent proof.
@@ -257,12 +218,14 @@ fn git(repo: &Path, args: &[&str]) -> Result<Option<String>> {
         .map(|value| host::text(&value, "private-state Git output").map(str::to_owned))
         .transpose()
 }
-/// The caller supplies its current repository and executing runtime explicitly;
-/// neither discovery nor layout containment guesses a pack or process directory.
+/// The caller supplies its current repository explicitly; neither discovery
+/// nor layout containment guesses a pack or process directory. The native
+/// registry is the installed one, so `_runtime_root` (kept for the lifecycle
+/// callers' signature) is not consulted.
 pub fn repository_inventory(
     installation: Option<&Value>,
     current_repo: &Path,
-    runtime_root: &Path,
+    _runtime_root: &Path,
 ) -> Result<RepositoryInventory> {
     let cwd = fs::canonical_path(current_repo, false)?;
     let current = match git(&cwd, &["rev-parse", "--show-toplevel"])? {
@@ -368,18 +331,16 @@ pub fn repository_inventory(
             }
         }
     }
-    let hooks = private_state_hooks_provider()?;
-    let registered = hooks.native_registry(runtime_root)?;
+    let registered = crate::omp_boundary::registry()?;
     let native_sha = sha(&registered)?;
     private_roots.extend(
         set(&registered, "repositories", false)?
             .into_iter()
             .map(PathBuf::from),
     );
-    private_roots.extend(hooks.native_source_state_bindings(
+    private_roots.extend(crate::omp_boundary::source_state_bindings(
         installation,
         &registered,
-        runtime_root,
     )?);
     required.extend(private_roots.iter().cloned());
     roots.extend(required.iter().cloned());
@@ -417,8 +378,7 @@ pub fn native_absence(root: &Path, base: &Path, runtime_root: &Path) -> Result<S
     if named(&lock)?.is_some() {
         return Err(refusal("Native source barrier appeared during observation"));
     }
-    let hooks = private_state_hooks_provider()?;
-    let registered = hooks.native_registry(runtime_root)?;
+    let registered = crate::omp_boundary::registry()?;
     let repositories = set(&registered, "repositories", false)?;
     let private_bases = get(&registered, "private_bases")
         .as_object()
@@ -426,9 +386,9 @@ pub fn native_absence(root: &Path, base: &Path, runtime_root: &Path) -> Result<S
     let root_text = text(root)?;
     if repositories.contains(root_text)
         || private_bases.iter().any(|(repo, _)| repo == root_text)
-        || hooks.has_native_source_state(base, runtime_root)?
+        || crate::omp_boundary::has_native_source_state(base)?
         || (named(&base.join("turn-sources-v2"))?.is_some()
-            && hooks.shared_native_source_evidence(root, base, runtime_root)?)
+            && crate::omp_boundary::shared_native_source_evidence(root, base, runtime_root)?)
     {
         return Err(refusal(
             "Retained source state lacks its required source barrier",
@@ -441,7 +401,7 @@ pub fn native_absence(root: &Path, base: &Path, runtime_root: &Path) -> Result<S
 }
 
 enum ObservationBarrier {
-    Held(Box<dyn CanonicalWriterBarrier>),
+    Held(crate::turn_sources::SourceBarrier),
     Absent {
         root: PathBuf,
         base: PathBuf,
@@ -450,8 +410,7 @@ enum ObservationBarrier {
 }
 impl ObservationBarrier {
     fn acquire(root: &Path, runtime_root: &Path) -> Result<Self> {
-        let location = bank_writes::scope_binding_provider()?
-            .observe_enrollment_location(root, runtime_root)?;
+        let location = crate::scope_binding::observe_enrollment_location(root, None, runtime_root)?;
         let (_, _, recovery_base, _) = match location {
             Some(location) => location,
             None => state::paths(root, None, runtime_root)?,
@@ -460,14 +419,13 @@ impl ObservationBarrier {
             .parent()
             .ok_or_else(|| refusal("Recovery state has no private parent"))?;
         if named(&base.join("source-barrier.lock"))?.is_some() {
-            Ok(Self::Held(
-                bank_writes::turn_sources_provider()?.source_barrier(
-                    root,
-                    true,
-                    true,
-                    runtime_root,
-                )?,
-            ))
+            Ok(Self::Held(crate::turn_sources::source_barrier(
+                root,
+                true,
+                true,
+                None,
+                runtime_root,
+            )?))
         } else {
             Ok(Self::Absent {
                 root: root.to_path_buf(),
@@ -496,6 +454,24 @@ impl ObservationBarrier {
             }
         }
     }
+}
+/// Baseline installation.read_receipt(state) in the process environment.
+fn installed_receipt(state: &Path) -> Result<Option<Value>> {
+    crate::installation::read_receipt(&crate::installation::Environment::process(), state)
+        .map_err(crate::installation::into_contract)
+}
+/// Baseline installation.verify_targets(targets, source) with the registered services.
+fn verify_installed_targets(targets: &Value, source: &Value) -> Result<()> {
+    let targets: Vec<&Value> = targets
+        .as_array()
+        .ok_or_else(|| ContractError::new("Installation receipt targets are malformed"))?
+        .iter()
+        .collect();
+    let services =
+        crate::installation::Services::registered().map_err(crate::installation::into_contract)?;
+    crate::installation::verify_targets(&services, &targets, Some(source), false)
+        .map(|_| ())
+        .map_err(crate::installation::into_contract)
 }
 /// Read-only observation never creates a source barrier. Ordinary errors still
 /// recheck absence; Rust unwinding bypasses rechecks and releases owned guards.
@@ -548,9 +524,10 @@ fn observe_bank(
         .ok_or_else(|| refusal("Private operations have no parent"))?;
     let mut capabilities = BTreeSet::new();
     if native_pin.is_none() {
-        capabilities.extend(
-            private_state_hooks_provider()?.required_source_capabilities(&root, runtime_root)?,
-        );
+        capabilities.extend(crate::omp_boundary::required_source_capabilities(
+            &root,
+            runtime_root,
+        )?);
     }
     let frontier = bank_writes::recovery_frontier_provider()?;
     let token = frontier.observe_bank(&root, &bank, None, None, false, runtime_root)?;
@@ -813,8 +790,7 @@ pub fn required_private_state_capabilities(
         let parent = path.parent().ok_or_else(|| {
             refusal("Selected preserved capable runtime receipt changed or is no longer active")
         })?;
-        let hooks = private_state_hooks_provider()?;
-        let other = hooks.read_receipt(parent, runtime_root)?;
+        let other = installed_receipt(parent)?;
         let raw = state::read_bytes(path, crate::sharing_limits::MAX_PRIVATE, false)?;
         if other.as_ref().is_none_or(|other| {
             get(get(other, "source"), "artifact_digest") != get(target, "artifact_digest")
@@ -826,7 +802,7 @@ pub fn required_private_state_capabilities(
             ));
         }
         if let Some(other) = other {
-            hooks.verify_targets(get(&other, "targets"), get(&other, "source"), runtime_root)?;
+            verify_installed_targets(get(&other, "targets"), get(&other, "source"))?;
         }
     }
     let mut missing: BTreeSet<_> = required.difference(&supported).cloned().collect();
@@ -923,10 +899,11 @@ pub fn activation_guard<T, E: From<ContractError>>(
             }
             let settings = repository_config::recovery_settings(root)?;
             if named(&root.join(settings.bank_root))?.is_some_and(|info| info.is_directory()) {
-                guards.push(bank_writes::turn_sources_provider()?.source_barrier(
+                guards.push(crate::turn_sources::source_barrier(
                     root,
                     true,
                     false,
+                    None,
                     runtime_root,
                 )?);
             }
@@ -1076,11 +1053,7 @@ pub fn prepare_lifecycle(plan: &Value, check: bool, runtime_root: &Path) -> Resu
         let path = Path::new(path.as_str().ok_or_else(|| {
             refusal("Lifecycle quiescence inputs must be explicit protected-file paths")
         })?);
-        renewals.push(private_state_hooks_provider()?.read_input(
-            path,
-            MAX_RENEWAL_BYTES,
-            runtime_root,
-        )?);
+        renewals.push(crate::admission::read_input(path, MAX_RENEWAL_BYTES)?);
     }
     if check {
         if let Some(values) = plan.get("native_layout_quiescence_overrides") {

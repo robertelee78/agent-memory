@@ -11,32 +11,10 @@ use crate::process::{self, Input, Output, Refusal, Spec, Status, Target};
 use std::collections::BTreeSet;
 use std::ffi::OsString;
 use std::path::Path;
-use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 pub const MAX_GIT_CONTEXT_OUTPUT: usize = 16 * 1024 * 1024;
 pub const GIT_CONTEXT_TIMEOUT: Duration = Duration::from_secs(10);
-/// Recall's retrieval implementation resolves checkout context from fresh evidence.
-/// Shared upward seam: comparison/layout/frontier callers extend this one definition.
-pub trait ComparisonView: Send + Sync {
-    /// Baseline retrieval.observed_context(root, request).
-    fn observed_context(&self, root: &Path, request: &Value) -> Result<(Value, Value)>;
-    fn invalidate_frontier_transition(&self, repo: &Path) -> Result<String>;
-    fn safe_text(&self, value: &Value, maximum: usize) -> Result<()>;
-}
-static COMPARISON: RwLock<Option<Arc<dyn ComparisonView>>> = RwLock::new(None);
-pub fn register_comparison_view(provider: Option<Arc<dyn ComparisonView>>) {
-    *COMPARISON
-        .write()
-        .unwrap_or_else(|error| error.into_inner()) = provider;
-}
-pub(crate) fn comparison_view_provider() -> Result<Arc<dyn ComparisonView>> {
-    COMPARISON
-        .read()
-        .unwrap_or_else(|error| error.into_inner())
-        .clone()
-        .ok_or_else(|| err("ComparisonView provider is not registered"))
-}
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
@@ -335,9 +313,8 @@ pub fn inspect_context(
         ));
     }
     let scope = provider.require_scope(root, get(checked, "project_id"), None)?;
-    let comparison = comparison_view_provider()?;
     let request = Value::Object(Vec::new());
-    let (context, _) = comparison.observed_context(root, &request)?;
+    let (context, _) = crate::retrieval::observed_context(root, &request)?;
     let raw = crate::bank_observation::read_source(bank, path, crate::sharing_limits::MAX_FILE)
         .map_err(|error| {
             if matches!(error.kind(), crate::error::Kind::BankCapacity { .. }) {
@@ -350,7 +327,7 @@ pub fn inspect_context(
         return Err(err("Context is oversized or changed during inspection"));
     }
     let body = std::str::from_utf8(&raw).map_err(|_| err("Canonical context must be UTF-8"))?;
-    let scanned = crate::repository_config::security_scan_provider()?.scan(body)?;
+    let scanned = crate::security::scan(&string(body), crate::security::LIMIT)?;
     let mut value = object([
         ("schema", string("agent-memory/context-inspection-v1")),
         ("operation", string("inspect")),
@@ -402,7 +379,7 @@ pub fn inspect_context(
         )?;
     }
     if writes::snapshot(root, None)?.1 != *observed
-        || comparison.observed_context(root, &request)?.0 != context
+        || crate::retrieval::observed_context(root, &request)?.0 != context
     {
         return Err(err("Bank or checkout changed during historical inspection"));
     }

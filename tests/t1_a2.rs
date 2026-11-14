@@ -2550,24 +2550,8 @@ mod handoff_contract {
     fn handoff_reusable_does_not_treat_missing_identity_as_null() {
         use agent_memory::{
             codec::json::{DecodePolicy, Value, decode},
-            error::Result,
-            handoff::{self, Checkpoint},
+            handoff,
         };
-        struct Parser;
-        impl Checkpoint for Parser {
-            fn headings(&self, body: &str) -> Result<Vec<(usize, usize, String)>> {
-                Ok(vec![(0, body.len(), handoff::SECTION.to_owned())])
-            }
-            fn fields(&self) -> Vec<String> {
-                vec![]
-            }
-            fn extra(&self) -> Vec<String> {
-                vec![]
-            }
-            fn list_text(&self, _: &[String]) -> Result<String> {
-                Ok(String::new())
-            }
-        }
         let prior = r#"{"schema":"agent-memory/checkpoint-evidence-v1","references":[{"ref":"x","kind":"unavailable","sha256":null,"bytes":null,"commit":null,"blob":null}],"observed_checkout":{"head":null,"branch":null},"publication_verified":false,"identity_authenticated":false}"#;
         let body = format!("## {}\n```json\n{}\n```", handoff::SECTION, prior);
         let current = decode(
@@ -2575,7 +2559,7 @@ mod handoff_contract {
             DecodePolicy::default(),
         )
         .unwrap();
-        let result: Value = handoff::reusable_with(&body, &current, &Parser);
+        let result: Value = handoff::reusable(&body, &current);
         assert_eq!(result, current);
     }
 }
@@ -2796,12 +2780,10 @@ mod records_slice {
                 ("reason-class".into(), s("sensitive")),
             ]);
             assert_eq!(
-                records::validate_with_parser(&marker, "", &[], None)
-                    .unwrap_err()
-                    .message(),
-                "Tombstone parser is not registered"
+                records::validate(&marker, "", &[]).unwrap(),
+                ("tombstone".into(), marker.clone())
             );
-            assert!(records::validate_with_parser(&marker, "", &["confidence"], None).is_err());
+            assert!(records::validate(&marker, "", &["confidence"]).is_err());
         }
 
         // Baseline records.py:79-85: every evidence string is validated before duplicates.

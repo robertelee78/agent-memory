@@ -63,6 +63,17 @@ pub enum Kind {
     DiscoveryFailure { code: String, repair: String },
     /// Explicit private semantic artifact output refused without clobbering.
     PrivateOutput,
+    /// Fixed, content-free quick refresh diagnostics.
+    RefreshCurrent {
+        code: String,
+        component: String,
+        repair: String,
+        path: Option<String>,
+    },
+    /// A changed outer refresh preparation cannot authorize an inner proposal.
+    RefreshPreparedEnvelope,
+    /// Untracked memory has no verified complete imported-snapshot witness.
+    UntrackedCanonicalMemory,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -196,14 +207,6 @@ impl ContractError {
         }
     }
 
-    pub(crate) fn missing_source_publication() -> Self {
-        Self {
-            kind: Kind::SourcePublicationUnavailable,
-            message: "PublicationGate provider is not registered; publication remains pending"
-                .into(),
-        }
-    }
-
     pub(crate) fn source_lock_busy(message: &str) -> Self {
         Self {
             kind: Kind::SourceTransportBusy {
@@ -294,6 +297,41 @@ impl ContractError {
         Self {
             kind: Kind::PrivateOutput,
             message: message.into(),
+        }
+    }
+}
+
+impl ContractError {
+    pub(crate) fn refresh_current(
+        code: &str,
+        component: &str,
+        message: &str,
+        repair: &str,
+        path: Option<String>,
+    ) -> Self {
+        Self {
+            kind: Kind::RefreshCurrent {
+                code: code.into(),
+                component: component.into(),
+                repair: repair.into(),
+                path,
+            },
+            message: message.into(),
+        }
+    }
+
+    pub(crate) fn refresh_prepared_envelope() -> Self {
+        Self {
+            kind: Kind::RefreshPreparedEnvelope,
+            message: "Prepared refresh report metadata is inconsistent with its retained proposal."
+                .into(),
+        }
+    }
+
+    pub(crate) fn untracked_canonical_memory() -> Self {
+        Self {
+            kind: Kind::UntrackedCanonicalMemory,
+            message: "Locally untracked canonical memory requires full review.".into(),
         }
     }
 }

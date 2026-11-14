@@ -326,20 +326,18 @@ fn frontier_request_pages_and_edge_bounds_are_explicit() {
 }
 
 use agent_memory::semantic_sharing as semantic;
-struct SourcePack;
-impl agent_memory::cli::PackRoot for SourcePack {
-    fn pack_root(&self) -> agent_memory::error::Result<std::path::PathBuf> {
-        agent_memory::fs::canonical_path(
-            &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-            true,
-        )
-    }
-}
 fn registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         agent_memory::cli::register_providers().unwrap();
-        agent_memory::cli::register_pack_root(Some(std::sync::Arc::new(SourcePack)));
+        // dev-tools: the test binary is not an installed runtime.
+        agent_memory::cli::use_development_pack(Some(
+            agent_memory::fs::canonical_path(
+                &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+                true,
+            )
+            .unwrap(),
+        ));
     });
 }
 fn files() -> Value {

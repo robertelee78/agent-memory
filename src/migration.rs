@@ -159,8 +159,28 @@ fn layout(executable: &Path) -> Result<(PathBuf, PathBuf)> {
     Ok((root, binary))
 }
 
+#[cfg(feature = "dev-tools")]
+static DEVELOPMENT_RUNTIME: std::sync::RwLock<Option<PathBuf>> = std::sync::RwLock::new(None);
+
+/// Dev-tools only: a test binary is not an installed runtime, so a test
+/// selects the runtime root its migration audit checks against.
+#[cfg(feature = "dev-tools")]
+pub fn use_development_runtime(root: Option<PathBuf>) {
+    *DEVELOPMENT_RUNTIME
+        .write()
+        .unwrap_or_else(|e| e.into_inner()) = root;
+}
+
 /// The runtime root of the running executable (baseline `runtime_root`).
 pub fn executable_root() -> Result<PathBuf> {
+    #[cfg(feature = "dev-tools")]
+    if let Some(root) = DEVELOPMENT_RUNTIME
+        .read()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone()
+    {
+        return Ok(root);
+    }
     let executable =
         std::env::current_exe().map_err(|error| ContractError::new(error.to_string()))?;
     Ok(layout(&executable)?.0)
@@ -845,37 +865,13 @@ pub(crate) fn audit(
 }
 
 /// Security's migration audit check: the bank is the actual existing
-/// locator's and the operation's private locations are safe for the
-/// runtime rooted at `runtime_root` (the running executable's when `None`).
-pub struct LocationAudit {
-    runtime_root: Option<PathBuf>,
-}
-
-impl LocationAudit {
-    /// The production check for the running executable's runtime.
-    pub fn executable() -> Self {
-        Self { runtime_root: None }
-    }
-
-    /// The check for an explicitly selected runtime root.
-    pub fn at(runtime_root: &Path) -> Self {
-        Self {
-            runtime_root: Some(runtime_root.to_path_buf()),
-        }
-    }
-}
-
-impl crate::security::MigrationAudit for LocationAudit {
-    fn validate_location(&self, root: &Path, bank: &Path, operation_id: &str) -> Result<()> {
-        let (located_root, located_bank) = locate(root)?;
-        require(
-            located_root == root && located_bank == bank,
-            "Migration audit must use the actual existing bank locator",
-        )?;
-        let runtime_root = match &self.runtime_root {
-            Some(runtime_root) => runtime_root.clone(),
-            None => executable_root()?,
-        };
-        locations_at(&runtime_root, root, bank, &string(operation_id)).map(|_| ())
-    }
+/// locator's and the operation's private locations are safe for the running
+/// executable's runtime.
+pub(crate) fn validate_audit_location(root: &Path, bank: &Path, operation_id: &str) -> Result<()> {
+    let (located_root, located_bank) = locate(root)?;
+    require(
+        located_root == root && located_bank == bank,
+        "Migration audit must use the actual existing bank locator",
+    )?;
+    locations_at(&executable_root()?, root, bank, &string(operation_id)).map(|_| ())
 }

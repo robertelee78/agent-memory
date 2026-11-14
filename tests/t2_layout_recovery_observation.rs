@@ -649,25 +649,9 @@ fn no_follow_parent_bindings_and_project_provider_use_the_real_raw_reader() {
             .to_string(),
         "Raw source binding/type/permissions changed; preserve evidence"
     );
-    let provider = raw::LayoutObservation;
-    assert_eq!(
-        project_identity::LayoutObservation::read_source(
-            &provider,
-            &bank,
-            Path::new("nested/file"),
-            3
-        )
-        .unwrap(),
-        b"raw"
-    );
+    assert_eq!(raw::read_source(&bank, "nested/file", 3).unwrap().0, b"raw");
     capacity(
-        &project_identity::LayoutObservation::read_source(
-            &provider,
-            &bank,
-            Path::new("nested/file"),
-            2,
-        )
-        .unwrap_err(),
+        &raw::read_source(&bank, "nested/file", 2).unwrap_err(),
         "source-bytes",
         2,
         3,
@@ -885,7 +869,7 @@ fn darwin_provenance_is_exact_and_foreign_xattrs_acl_and_flags_refuse() {
 }
 
 #[test]
-#[ignore = "needs the am capture route (admission) registered"]
+
 fn complete_observation_retains_private_evidence_and_rechecks_every_pin() {
     isolated(
         "complete_observation_retains_private_evidence_and_rechecks_every_pin",

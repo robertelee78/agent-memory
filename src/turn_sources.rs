@@ -1,5 +1,5 @@
 //! Private append-only source observations; coverage never establishes truth.
-use crate::bank_writes::{self as writes, CanonicalWriterBarrier};
+use crate::bank_writes as writes;
 use crate::codec::json::Value;
 use crate::developer_identity::{load_with_limit, sha256_hex, uuid_valid};
 use crate::error::{ContractError, Kind, Result};
@@ -10,7 +10,7 @@ use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock, Weak};
+use std::sync::{Arc, Weak};
 use std::thread::ThreadId;
 use std::time::Duration;
 
@@ -26,22 +26,6 @@ pub const UNIDENTIFIED_SCHEMA: &str = "agent-memory/unidentified-private-input-v
 const MAX_NAMESPACES: usize = 65536;
 const MAX_BACKLOG: usize = 60000;
 
-/// T2c must validate the real publication request and replay authority, not flags.
-pub trait PublicationGate: Send + Sync {
-    fn request_value(&self, repo: &Path, request: &Value) -> Result<()>;
-    fn replay(&self, repo: &Path, request: &Value, quarantine_records: bool) -> Result<Value>;
-}
-static PUBLICATION: RwLock<Option<Arc<dyn PublicationGate>>> = RwLock::new(None);
-pub fn register_publication_gate(provider: Option<Arc<dyn PublicationGate>>) {
-    *PUBLICATION.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn publication_gate_provider() -> Result<Arc<dyn PublicationGate>> {
-    PUBLICATION
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| ContractError::missing_source_publication())
-}
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
@@ -346,8 +330,10 @@ impl Drop for SourceBarrier {
         }
     }
 }
-impl CanonicalWriterBarrier for SourceBarrier {
-    fn finish(&mut self) -> Result<()> {
+/// The barrier is released on Drop, including refusal paths; `finish`
+/// rechecks it before a successful release.
+impl SourceBarrier {
+    pub fn finish(&mut self) -> Result<()> {
         self.recheck()
     }
 }
@@ -1809,14 +1795,13 @@ pub fn verify_assessment(
                 if !assessment_text(get(value, "assessment")) {
                     return Err(err("Published completion requires a bounded assessment"));
                 }
-                let gate = publication_gate_provider()?;
                 let request = get(value, "publication_request");
-                gate.request_value(repo, request)?;
+                crate::memory_publication::request_value(repo, request)?;
                 let proof = get(request, "proof");
                 if truthy(get(proof, "blocked_paths")) || truthy(get(proof, "blocked_components")) {
                     return Err(err("Conflicted publication remains pending"));
                 }
-                let replay = gate.replay(
+                let replay = crate::sharing_recovery::replay(
                     repo,
                     &object([
                         ("base", get(request, "base").clone()),
@@ -2401,31 +2386,28 @@ pub fn pending_notice(
                 context: &context,
                 path,
             };
-            crate::turn_check::NoticeStore::replace(&mut store, &value, MAX_SOURCE)
-                .map_err(ContractError::from)?;
+            store.replace(&value, MAX_SOURCE)?;
             scope::recheck_private_enrollment(&context)?;
             Ok(Some(summary))
         })
     })
 }
 
+/// A locked notice namespace. Every mutation rechecks private enrollment
+/// before and after, durably syncs its change and preserves corrupt state;
+/// `read` enforces the supplied byte limit.
 pub struct NoticeStore<'a> {
     context: &'a PrivateEnrollmentContext,
     path: PathBuf,
 }
-impl crate::turn_check::NoticeStore for NoticeStore<'_> {
-    fn read(&mut self, maximum: usize) -> crate::turn_check::CompletionResult<Option<Value>> {
-        Ok(read(&self.path, maximum)?)
+impl NoticeStore<'_> {
+    pub fn read(&mut self, maximum: usize) -> Result<Option<Value>> {
+        read(&self.path, maximum)
     }
-    fn replace(
-        &mut self,
-        value: &Value,
-        maximum: usize,
-    ) -> crate::turn_check::CompletionResult<()> {
-        notice_replace(self.context, &self.path, value, maximum)?;
-        Ok(())
+    pub fn replace(&mut self, value: &Value, maximum: usize) -> Result<()> {
+        notice_replace(self.context, &self.path, value, maximum)
     }
-    fn remove(&mut self) -> crate::turn_check::CompletionResult<()> {
+    pub fn remove(&mut self) -> Result<()> {
         scope::recheck_private_enrollment(self.context)?;
         if let Some(raw) = read_bytes(&self.path, MAX_SOURCE)? {
             remove_observed(&self.path, &raw, MAX_SOURCE)?;
@@ -2434,75 +2416,32 @@ impl crate::turn_check::NoticeStore for NoticeStore<'_> {
         Ok(())
     }
 }
-/// Both callee traits are implemented by one real source provider.
-pub struct TurnSources;
-impl writes::TurnSources for TurnSources {
-    fn canonical_writer_barrier(&self, repo: &Path) -> Result<Box<dyn CanonicalWriterBarrier>> {
-        Ok(Box::new(canonical_writer_barrier(
+/// Runs `action` under the source barrier and the private refresh-notice
+/// namespace lock, in that order, with this module's own private enrollment
+/// context (as the baseline private_namespace does).
+pub fn with_notice_store(
+    repo: &Path,
+    harness: &str,
+    session: &str,
+    action: &mut dyn FnMut(&mut NoticeStore<'_>) -> Result<bool>,
+) -> Result<bool> {
+    operation(repo, &crate::cli::pack_root()?, || {
+        let (ns, context) = private_namespace(
             repo,
-            None,
+            harness,
+            session,
+            "refresh-notice",
+            true,
             &crate::cli::pack_root()?,
-        )?))
-    }
-    fn canonical_transaction_barrier(
-        &self,
-        repo: &Path,
-        ordinary_bank: Option<&Path>,
-    ) -> Result<Box<dyn CanonicalWriterBarrier>> {
-        Ok(Box::new(canonical_writer_barrier(
-            repo,
-            ordinary_bank,
-            &crate::cli::pack_root()?,
-        )?))
-    }
-    fn source_barrier(
-        &self,
-        repo: &Path,
-        exclusive: bool,
-        existing_only: bool,
-        runtime_root: &Path,
-    ) -> Result<Box<dyn CanonicalWriterBarrier>> {
-        Ok(Box::new(source_barrier(
-            repo,
-            exclusive,
-            existing_only,
-            None,
-            runtime_root,
-        )?))
-    }
-    fn check_source_compatibility(&self, base: &Path) -> Result<()> {
-        check_source_compatibility(base)
-    }
-    fn source_barrier_held(&self, base: &Path) -> Result<bool> {
-        Ok(source_barrier_held(base))
-    }
-}
-impl crate::turn_check::TurnSources for TurnSources {
-    fn with_notice_store(
-        &self,
-        repo: &Path,
-        harness: &str,
-        session: &str,
-        action: &mut dyn FnMut(&mut dyn crate::turn_check::NoticeStore) -> Result<bool>,
-    ) -> crate::turn_check::CompletionResult<bool> {
-        Ok(operation(repo, &crate::cli::pack_root()?, || {
-            let (ns, context) = private_namespace(
-                repo,
-                harness,
-                session,
-                "refresh-notice",
-                true,
-                &crate::cli::pack_root()?,
-            )?;
-            locked(&ns.directory, || {
-                let mut store = NoticeStore {
-                    context: &context,
-                    path: ns.directory.join("notice.json"),
-                };
-                action(&mut store)
-            })
-        })?)
-    }
+        )?;
+        locked(&ns.directory, || {
+            let mut store = NoticeStore {
+                context: &context,
+                path: ns.directory.join("notice.json"),
+            };
+            action(&mut store)
+        })
+    })
 }
 
 fn notice_replace(

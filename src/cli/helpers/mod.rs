@@ -25,6 +25,7 @@ pub mod installation;
 pub mod layout_recovery;
 pub mod lifecycle;
 pub mod memory_publication;
+pub mod memory_refresh;
 pub mod migration;
 pub mod omp_boundary;
 pub mod pack_validation;

@@ -4,83 +4,7 @@ use crate::codec::json::Value;
 use crate::error::{ContractError, Result};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
-use std::sync::OnceLock;
 
-/// Implemented by `sharing_holds` when that module is wired into the runtime.
-pub trait HoldCauses: Send + Sync {
-    fn cause_id(&self, cause: &Value) -> Result<String>;
-}
-/// Implemented by `semantic_sharing` when that module is wired into the runtime.
-pub trait SemanticSharing: Send + Sync {
-    fn safe_text(&self, value: &Value) -> Result<()>;
-    fn disjoint(&self, left: &Value, right: &Value) -> Result<bool>;
-    fn qualified_sources(
-        &self,
-        value: &Value,
-        root: &Path,
-        project_id: &str,
-    ) -> Result<BTreeSet<String>>;
-    /// Baseline semantic_sharing.check(repo, proof, owned_lock=).
-    fn check(&self, repo: &Path, proof: &Value, owned_lock: Option<&[u8]>) -> Result<Value>;
-    /// Baseline semantic_sharing.final_sources(root, observation, binding, owned_lock=).
-    fn final_sources(
-        &self,
-        root: &Path,
-        observation: &Value,
-        binding: &Value,
-        owned_lock: Option<&[u8]>,
-    ) -> Result<()>;
-    /// Baseline semantic_sharing.read_input(path, version2=).
-    fn read_input(&self, path: &Path, version2: bool) -> Result<Value>;
-    fn inspect(&self, repo: &Path, base: Option<&str>) -> Result<Value>;
-    fn snapshots(
-        &self,
-        repo: &Path,
-        base: Option<&str>,
-        quarantine_records: bool,
-    ) -> Result<(std::path::PathBuf, Value, Value, Value, Value)>;
-}
-/// Implemented by `security` when that module is wired into the runtime.
-pub trait SecurityScan: Send + Sync {
-    fn has_reasons(&self, body: &Value) -> Result<bool>;
-}
-static HOLDS: OnceLock<Box<dyn HoldCauses>> = OnceLock::new();
-static SEMANTIC: OnceLock<Box<dyn SemanticSharing>> = OnceLock::new();
-static SECURITY: OnceLock<Box<dyn SecurityScan>> = OnceLock::new();
-
-pub fn register_hold_causes(provider: Box<dyn HoldCauses>) -> Result<()> {
-    HOLDS
-        .set(provider)
-        .map_err(|_| ContractError::new("Hold causes already registered"))
-}
-pub fn register_semantic_sharing(provider: Box<dyn SemanticSharing>) -> Result<()> {
-    SEMANTIC
-        .set(provider)
-        .map_err(|_| ContractError::new("Semantic sharing already registered"))
-}
-/// The registered semantic_sharing provider; absence is a typed MissingProvider.
-pub(crate) fn semantic_sharing_provider() -> Result<&'static dyn SemanticSharing> {
-    SEMANTIC.get().map(Box::as_ref).ok_or_else(|| {
-        ContractError::missing_provider("semantic_sharing provider is not registered")
-    })
-}
-pub fn register_security_scan(provider: Box<dyn SecurityScan>) -> Result<()> {
-    SECURITY
-        .set(provider)
-        .map_err(|_| ContractError::new("Security scan already registered"))
-}
-fn semantic() -> Result<&'static dyn SemanticSharing> {
-    SEMANTIC
-        .get()
-        .map(Box::as_ref)
-        .ok_or_else(|| ContractError::new("Semantic sharing is not registered"))
-}
-fn security() -> Result<&'static dyn SecurityScan> {
-    SECURITY
-        .get()
-        .map(Box::as_ref)
-        .ok_or_else(|| ContractError::new("Security scan is not registered"))
-}
 fn malformed() -> ContractError {
     ContractError::new("Malformed known dispute source")
 }
@@ -204,9 +128,6 @@ pub fn successors(reference: &Value, index: &SourceIndex) -> Result<Vec<String>>
     Ok(found.into_iter().collect())
 }
 pub fn describe(record: &Value, rows: &Rows, index: Option<&SourceIndex>) -> Result<Value> {
-    let provider = HOLDS
-        .get()
-        .ok_or_else(|| ContractError::new("Hold causes are not registered"))?;
     let owned;
     let index = match index {
         Some(index) => index,
@@ -231,7 +152,10 @@ pub fn describe(record: &Value, rows: &Rows, index: Option<&SourceIndex>) -> Res
     }
     let cause = field(record, "cause")?;
     Ok(Value::Object(vec![
-        ("id".into(), Value::String(provider.cause_id(cause)?)),
+        (
+            "id".into(),
+            Value::String(crate::sharing_holds::cause_id(cause)?),
+        ),
         ("cause".into(), cause.clone()),
         ("references".into(), field(record, "references")?.clone()),
         ("endpoint_sources".into(), Value::Object(endpoints)),
@@ -252,8 +176,6 @@ pub fn validate_resolution(
     qualified: &BTreeSet<String>,
     stored: bool,
 ) -> Result<Value> {
-    let semantic = semantic()?;
-    let security = security()?;
     let invalid = || {
         ContractError::new("A known dispute needs an explicit bounded stronger-evidence resolution")
     };
@@ -291,7 +213,7 @@ pub fn validate_resolution(
             return Err(invalid());
         }
     }
-    semantic.safe_text(field(value, "reason")?)?;
+    crate::semantic_sharing::safe_text(field(value, "reason")?, 4096)?;
     if stored
         && !equal(
             field(value, "endpoint_sources")?,
@@ -314,7 +236,7 @@ pub fn validate_resolution(
                 "Withheld assertions cannot silently resolve a known dispute",
             ));
         }
-        if security.has_reasons(field(row, "body")?)? {
+        if crate::security::has_reasons(field(row, "body")?)? {
             return Err(ContractError::new(
                 "Unsafe resolution evidence needs source clarification",
             ));
@@ -366,7 +288,7 @@ pub fn validate_resolution(
                         let right = rows
                             .get(b.as_str().ok_or_else(malformed)?)
                             .ok_or_else(malformed)?;
-                        if !semantic.disjoint(left, right)? {
+                        if !crate::semantic_sharing::disjoint(left, right)? {
                             disjoint = false;
                         }
                     }
@@ -442,12 +364,11 @@ pub fn qualified_current(
     root: &Path,
     project_id: &str,
 ) -> Result<BTreeSet<String>> {
-    let semantic = semantic()?;
     let mut paths = BTreeMap::new();
     for side in ["local", "landed"] {
         paths.insert(
             side,
-            semantic.qualified_sources(field(values, side)?, root, project_id)?,
+            crate::semantic_sharing::qualified_sources(field(values, side)?, root, project_id)?,
         );
     }
     let mut result = BTreeSet::new();
@@ -466,8 +387,5 @@ pub fn cached(known: &Value, rows: &Rows, qualified: &BTreeSet<String>) -> Resul
     let Some(resolution) = present(known.get("resolution")) else {
         return Ok(false);
     };
-    // Missing providers are integration failures, not an invalid cached resolution.
-    semantic()?;
-    security()?;
     Ok(validate_resolution(resolution, known, rows, qualified, true).is_ok())
 }

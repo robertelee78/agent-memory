@@ -18,7 +18,6 @@ use crate::updating::merged;
 use std::collections::BTreeMap;
 use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
 
 pub const SCHEMA: &str = "agent-memory/diagnostic-result-v1";
 pub const RECOVER: &str = "Use a trusted complete package outside the affected targets: run its verified am binary with recover; inspect its result before retrying.";
@@ -123,34 +122,6 @@ fn require(condition: bool, message: &str) -> Outcome<()> {
     } else {
         Err(ContractError::new(message).into())
     }
-}
-
-// ----- seams -----
-
-/// Baseline `projections` callees (`MAX_BYTES`, `value`). Implemented by `projections`.
-pub trait Projections: Send + Sync {
-    /// Baseline `projections.MAX_BYTES`.
-    fn max_bytes(&self) -> usize;
-    /// Baseline `projections.value(data)`: the validated reference projection.
-    fn value(&self, data: &Value) -> crate::error::Result<Value>;
-}
-
-static PROJECTIONS: RwLock<Option<Arc<dyn Projections>>> = RwLock::new(None);
-
-pub fn register_projections(provider: Option<Arc<dyn Projections>>) {
-    *PROJECTIONS
-        .write()
-        .unwrap_or_else(|error| error.into_inner()) = provider;
-}
-
-pub(crate) fn projections_provider() -> install::Result<Arc<dyn Projections>> {
-    PROJECTIONS
-        .read()
-        .unwrap_or_else(|error| error.into_inner())
-        .clone()
-        .ok_or(install::Error::Unregistered(
-            "Projections (reference projection reader)",
-        ))
 }
 
 // ----- small helpers -----
@@ -1844,8 +1815,8 @@ fn check_projection(
     checked: &Value,
     hashes: &Value,
 ) -> Outcome<()> {
-    let provider = projections_provider()?;
-    let value = provider.value(&record(projection, provider.max_bytes())?)?;
+    let data = record(projection, crate::projections::MAX_BYTES)?;
+    let value = crate::projections::value(&data)?.clone();
     let active: Vec<Value> = get(checked, "entries")
         .as_array()
         .unwrap_or(&[])
@@ -2535,53 +2506,5 @@ pub fn command(env: &Environment, services: &Services, request: &Request) -> Com
             stdout: String::new(),
             stderr: format!("{error}\n"),
         },
-    }
-}
-
-/// `doctor_fix::Diagnostics` over this module: the process environment and
-/// registered services, or an explicit pair (isolated worlds).
-pub struct Runtime {
-    explicit: Option<(Environment, Services)>,
-}
-
-impl Runtime {
-    pub fn new(env: Environment, services: Services) -> Self {
-        Self {
-            explicit: Some((env, services)),
-        }
-    }
-    /// Resolved at each call: the process environment and current registrations.
-    pub fn process() -> Self {
-        Self { explicit: None }
-    }
-    fn resolved(&self) -> install::Result<(Environment, Services)> {
-        match &self.explicit {
-            Some((env, services)) => Ok((env.clone(), services.clone())),
-            None => Ok((Environment::process(), Services::registered()?)),
-        }
-    }
-}
-
-impl crate::doctor_fix::Diagnostics for Runtime {
-    fn run(
-        &self,
-        operation: &str,
-        repo: &Path,
-        projection: Option<&Path>,
-    ) -> install::Result<Value> {
-        let (env, services) = self.resolved()?;
-        run(&env, &services, operation, repo, projection).map_err(install::Error::from)
-    }
-    fn report(
-        &self,
-        operation: &str,
-        component: &str,
-        state: &str,
-        detail: &str,
-        repair: &str,
-    ) -> install::Result<Value> {
-        let mut report = Report::new(operation);
-        report.add(component, state, detail, Some(repair), None);
-        Ok(report.finish())
     }
 }

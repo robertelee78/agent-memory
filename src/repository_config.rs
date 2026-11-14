@@ -1,42 +1,12 @@
 //! Repository bank location validation and security-review boundary.
 use crate::error::{ContractError, Result};
-use std::sync::{Arc, RwLock};
 
 pub const MAX_ROUTERS: usize = 64;
 pub const MAX_DISCOVERY_ENTRIES: usize = 1_000_000;
 pub const ROUTER_FIELDS: &[&str] = &["schema", "project-id", "router-updated", "canonical-remote"];
 
-/// The security tier supplies the same scan used by the Python lazy import.
-pub trait SecurityScan: Send + Sync {
-    fn has_reasons(&self, value: &str) -> Result<bool>;
-    /// Baseline security.scan(body), including its content-free reasons.
-    fn scan(&self, body: &str) -> Result<crate::codec::json::Value>;
-}
-static SCANNER: RwLock<Option<Arc<dyn SecurityScan>>> = RwLock::new(None);
-pub fn register_security_scan(provider: Option<Arc<dyn SecurityScan>>) -> Result<()> {
-    *SCANNER
-        .write()
-        .map_err(|_| ContractError::new("Security scan registry is poisoned"))? = provider;
-    Ok(())
-}
-pub(crate) fn security_scan_provider() -> Result<Arc<dyn SecurityScan>> {
-    SCANNER
-        .read()
-        .map_err(|_| ContractError::new("Security scan registry is poisoned"))?
-        .clone()
-        .ok_or_else(|| {
-            ContractError::new("Repository boundary security scan provider is not registered")
-        })
-}
 pub fn safe_label(value: &str) -> Result<()> {
-    let scanner = SCANNER
-        .read()
-        .map_err(|_| ContractError::new("Security scan registry is poisoned"))?
-        .clone()
-        .ok_or_else(|| {
-            ContractError::new("Repository boundary security scan provider is not registered")
-        })?;
-    if scanner.has_reasons(value)? {
+    if crate::security::has_reasons(&crate::lifecycle::string(value))? {
         return Err(ContractError::new(
             "Repository boundary label requires safety review; preserve it without echoing its value",
         ));

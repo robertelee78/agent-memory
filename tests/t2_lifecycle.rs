@@ -681,16 +681,10 @@ fn child_entry() {
             },
         ),
         "doctor-fix" => {
-            // Diagnostics over this World with the production security tier.
+            // Diagnostics over this World with the production security tier;
+            // doctor_fix inspects with the same environment and services.
             let env = installed.world.env();
             let services = installed.running_services();
-            agent_memory::doctor_fix::register_diagnostics(Some(Arc::new(
-                agent_memory::diagnostics::Runtime::new(env.clone(), services.clone()),
-            )));
-            agent_memory::repository_config::register_security_scan(Some(Arc::new(
-                agent_memory::security::Security,
-            )))
-            .unwrap();
             agent_memory::diagnostics::command(
                 &env,
                 &services,
@@ -1362,6 +1356,12 @@ fn replay_update(phase: &str) {
         .map(|r| text(r, "point").to_owned())
         .collect();
     assert_eq!(executed, expected);
+    fault_partitions::emit(
+        &format!("update-write-{phase}"),
+        &selected,
+        &executed,
+        &digest,
+    );
 }
 
 // obligation: tests/contracts/test_update_write_before.py::UpdateWriteBeforeContract.test_actual_logical_writes_in_partition_0
@@ -1925,6 +1925,8 @@ fn replay_uninstall(install_mode: Mode, phase: &str) {
     );
     let memory = snapshot(&world.path("repo/memory-bank"));
     let installation_id = text(&installed.receipt(), "installation_id").to_owned();
+    let partition_artifact =
+        text(get(&installed.receipt(), "source"), "artifact_digest").to_owned();
     let saved = save_parts(world);
     let trace = world.path("clean-trace.jsonl");
     let clean = child(
@@ -1993,6 +1995,17 @@ fn replay_uninstall(install_mode: Mode, phase: &str) {
         .map(|r| text(r, "point").to_owned())
         .collect();
     assert_eq!(executed, all);
+    let mode = if install_mode == Mode::Copy {
+        "copy"
+    } else {
+        "link"
+    };
+    fault_partitions::emit(
+        &format!("uninstall-write-{mode}-{phase}"),
+        &selected,
+        &executed,
+        &partition_artifact,
+    );
 }
 
 // obligation: tests/contracts/test_uninstall_write_copy_before.py::UninstallCopyBeforePart0Contract.test_actual_logical_writes_in_partition_0
@@ -2258,20 +2271,24 @@ fn broad_path_preview_confirm_and_repeat_purge_only_the_confirmed_bank() {
 }
 
 #[test]
-fn purge_refuses_with_typed_missing_providers_before_writes() {
+fn purge_refuses_without_touching_the_bank_outside_an_installed_runtime() {
     let world = World::new();
     let bank = small_bank(&world);
     let repo = world.path("repo");
-    let before = snapshot(&world.root);
-    // The bank locator needs the repository security scan and the exact
-    // preview the private recovery frontier: both are typed refusals until
-    // `security` and `recovery_frontier` are registered.
+    let before = snapshot(&repo);
+    // The purge child is a test binary, not the installed runtime: after the
+    // lifecycle lock (whose lock/owner files persist by design) its canonical
+    // writer barrier cannot locate the runtime pack, so both phases refuse
+    // before any repository or bank write.
     for (check, confirm) in [(true, None), (false, Some("0".repeat(64)))] {
         let (code, refusal) = purge(&world, &repo, &bank, check, confirm.as_deref());
         let error = refused(code, &refusal);
-        assert!(error.ends_with("provider is not registered"), "{error}");
+        assert!(
+            error.ends_with("pass --pack PATH") || error.ends_with("provider is not registered"),
+            "{error}"
+        );
     }
-    assert_eq!(snapshot(&world.root), before);
+    assert_eq!(snapshot(&repo), before);
 }
 
 // ======================================================================
@@ -2401,17 +2418,17 @@ fn trusted_receipt_refuses_another_executing_package_and_python_era_receipts() {
 }
 
 #[test]
-fn doctor_fix_refuses_while_diagnostics_is_unregistered() {
+fn doctor_fix_on_a_healthy_installation_repairs_nothing() {
     let installed = Installed::new(Mode::Copy);
     let before = snapshot(&installed.world.root);
-    let error = agent_memory::doctor_fix::run(
+    let result = agent_memory::doctor_fix::run(
         &installed.world.env(),
         &installed.running_services(),
         &installed.world.path("repo"),
         None,
     )
-    .unwrap_err();
-    assert!(matches!(error, install::Error::Unregistered(_)), "{error}");
+    .unwrap();
+    assert_eq!(get(&result, "repairs_performed"), &Value::Bool(false));
     assert_eq!(snapshot(&installed.world.root), before);
 }
 
@@ -2572,3 +2589,6 @@ fn writers_quiesced_checks_hand_the_plan_transition_to_the_native_boundary() {
     assert!(plan.get("preserved").is_some());
     assert_eq!(snapshot(&installed.world.root), before);
 }
+
+#[path = "support/fault_partitions.rs"]
+mod fault_partitions;

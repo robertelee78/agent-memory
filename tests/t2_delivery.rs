@@ -911,18 +911,6 @@ fn cache_exact_count_limit_accepts_256_and_refuses_257() {
     assert!(cache::qualify_with(&root, &receipt, &FixtureInstallation, &p.signers).is_err());
 }
 
-#[test]
-fn missing_installation_registration_is_an_explicit_refusal() {
-    cache::register_installation(None).unwrap();
-    let p = Publisher::new();
-    assert!(
-        cache::observe(&p.scratch.path)
-            .unwrap_err()
-            .to_string()
-            .contains("not registered")
-    );
-}
-
 fn transport_environment(p: &Publisher, mode: &str) -> Vec<(OsString, OsString)> {
     let script = br#"#!/bin/sh
 n=0

@@ -67,18 +67,8 @@ pub trait TransactionValidator: Send + Sync {
     fn validate_transaction(&self, proposal: &Value, owned_lock: Option<&[u8]>) -> Result<()>;
     fn check_sources(&self, proposal: &Value, owner: &[u8], marker: &[u8]) -> Result<()>;
 }
-/// Optional, non-authoritative recall_catalog cache maintenance.
-pub trait IndexInvalidation: Send + Sync {
-    fn invalidate_after_change(&self, repo: &Path, hashes: &Value) -> Result<Value>;
-}
-/// project_identity's current canonical-remote evidence, not a second identity resolver.
-pub trait ProjectIdentity: Send + Sync {
-    fn status(&self, repo: &Path) -> Result<Value>;
-}
 static VALIDATORS: RwLock<BTreeMap<String, Arc<dyn TransactionValidator>>> =
     RwLock::new(BTreeMap::new());
-static INDEX: RwLock<Option<Arc<dyn IndexInvalidation>>> = RwLock::new(None);
-static PROJECT: RwLock<Option<Arc<dyn ProjectIdentity>>> = RwLock::new(None);
 pub fn register_transaction_validator(
     operation: &str,
     provider: Option<Arc<dyn TransactionValidator>>,
@@ -93,9 +83,6 @@ pub fn register_transaction_validator(
         registry.remove(operation);
     }
     Ok(())
-}
-pub fn register_index_invalidation(provider: Option<Arc<dyn IndexInvalidation>>) {
-    *INDEX.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
 /// Shared lookup for recovery_transactions; missing governed kinds fail closed.
 pub fn transaction_validator(operation: &str) -> Result<Arc<dyn TransactionValidator>> {
@@ -116,9 +103,6 @@ pub fn validate_operation(proposal: &Value, owned_lock: Option<&[u8]>) -> Result
         validator(proposal)?.validate_transaction(proposal, owned_lock)?;
     }
     Ok(())
-}
-pub fn register_project_identity(provider: Option<Arc<dyn ProjectIdentity>>) {
-    *PROJECT.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
 fn validator(p: &Value) -> Result<Arc<dyn TransactionValidator>> {
     transaction_validator(text(p, "operation")?)
@@ -275,7 +259,7 @@ pub fn file_hashes(files: &Value) -> Result<Value> {
     ))
 }
 pub fn files_at(bank: &Path) -> Result<Value> {
-    let (physical, observed, sources) = contract::scan_sources(bank)?;
+    let (physical, observed, sources) = crate::bank_observation::scan_sources(bank)?;
     let files = Value::Object(
         sources
             .into_iter()
@@ -290,7 +274,7 @@ pub fn files_at(bank: &Path) -> Result<Value> {
             })
             .collect::<Result<_>>()?,
     );
-    let (after_physical, after, _) = contract::scan_sources(bank)?;
+    let (after_physical, after, _) = crate::bank_observation::scan_sources(bank)?;
     if !same(&file_hashes(&files)?, &observed)
         || !same(&after, &observed)
         || !same(&after_physical, &physical)
@@ -356,8 +340,7 @@ pub fn proposal_value(prepared: &Value) -> Result<&Value> {
         }
     }
     let checked = contract::validate_files(get(p, "files"), None)?;
-    writes::scope_binding_provider()?
-        .context_value_for_initialization(get(p, "scope_context"), first_bank(p))?;
+    crate::scope_binding::context_value(get(p, "scope_context"), first_bank(p))?;
     if op == "checkpoint" {
         return Err(err(
             "Checkpoint must use the single-file activeContext replacement",
@@ -396,7 +379,7 @@ pub fn proposal_value(prepared: &Value) -> Result<&Value> {
         ));
     }
     if p.get("checkpoint_evidence").is_some() {
-        writes::checkpoint_provider()?.validate_preparation(p, false)?;
+        crate::checkpoint::validate_preparation(p, false)?;
     }
     Ok(p)
 }
@@ -931,13 +914,17 @@ pub fn allowed_partial(p: &Value, observed: &Value) -> Result<()> {
     }
     Ok(())
 }
+/// Optional, non-authoritative recall_catalog cache maintenance, not admission
+/// authority: no cache error can turn a completed canonical transaction into
+/// a failure.
 pub fn invalidate_optional_indexes(root: &Path, hashes: &Value) -> Value {
-    INDEX
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .and_then(|provider| provider.invalidate_after_change(root, hashes).ok())
-        .unwrap_or_else(|| string("deferred-to-canonical-fallback"))
+    let state = match crate::cli::pack_root() {
+        Ok(runtime_root) => {
+            crate::recall_catalog::invalidate_after_change(root, hashes, &runtime_root)
+        }
+        Err(_) => "deferred-to-canonical-fallback",
+    };
+    string(state)
 }
 pub fn validate_outcome(
     root: &Path,
@@ -950,7 +937,7 @@ pub fn validate_outcome(
 ) -> Result<Value> {
     if admission_sources && same(desired, get(p, "files")) {
         if p.get("checkpoint_evidence").is_some() {
-            writes::checkpoint_provider()?.validate_preparation(p, true)?;
+            crate::checkpoint::validate_preparation(p, true)?;
         }
         if [
             "admission_evidence",
@@ -1134,13 +1121,14 @@ pub fn apply_with_identity_and_environment(
     let (root, bank) = writes::bank_path(Path::new(text(p, "repo_root")?))?;
     let (journal, receipt_path) =
         locations_with_environment(&root, &bank, text(p, "operation_id")?, environment)?;
-    let mut barrier = writes::turn_sources_provider()?.canonical_transaction_barrier(
+    let mut barrier = crate::turn_sources::canonical_writer_barrier(
         &root,
         if text(p, "operation")? == "initialize" {
             Some(&bank)
         } else {
             None
         },
+        &crate::cli::pack_root()?,
     )?;
     let outcome = storage::exclusive(
         &bank.join(".agent-memory.lock"),
@@ -1327,7 +1315,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
             "hold_sha256",
         ) != &Value::Null
     {
-        return writes::recovery_transactions_provider()?.apply_transaction(p);
+        return crate::recovery_transactions::apply_transaction(p, &crate::cli::runtime_root()?);
     }
     if operation == "bind" {
         return Err(err(
@@ -1346,7 +1334,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
             validate_operation(p, owner)?;
         }
         if p.get("checkpoint_evidence").is_some() {
-            writes::checkpoint_provider()?.validate_preparation(p, !exists(&receipt_path)?)?;
+            crate::checkpoint::validate_preparation(p, !exists(&receipt_path)?)?;
         }
         Ok(())
     };
@@ -1358,8 +1346,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         "initialization_only",
         Value::Bool(initializing),
     )?;
-    let scope = writes::scope_binding_provider()?;
-    let context = scope.require_transaction(
+    let context = require_scope(
         root,
         get(p, "project_id"),
         Some(&pinned),
@@ -1367,25 +1354,22 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         None,
         initializing,
     )?;
-    let project = PROJECT
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| err("project_identity provider is not registered"))?;
     let router = text(get(p, "files"), "MEMORY.md")?;
     let (metadata, _, _) = contract::parse_router(router)?;
     if get(&metadata, "canonical-remote")
-        != get(get(&project.status(root)?, "evidence"), "canonical_remote")
+        != get(
+            get(&crate::project_identity::status(root)?, "evidence"),
+            "canonical_remote",
+        )
     {
         return Err(err(
             "Authority identity changes require explicit scope binding, including during initialization",
         ));
     }
-    let security = writes::security_provider()?;
     let classes = source_classes(p)?;
     let classes: Vec<_> = classes.iter().map(String::as_str).collect();
     let check = |owner: &[u8]| -> Result<()> {
-        scope.require_transaction(
+        require_scope(
             root,
             get(p, "project_id"),
             Some(&context),
@@ -1397,7 +1381,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         if governed(p) || p.get("checkpoint_evidence").is_some() {
             let complete_refresh = get(get(get(p, "refresh_evidence"), "proof"), "schema").as_str()
                 == Some("agent-memory/semantic-sharing-proof-v2");
-            security.guarded_start_transaction(
+            crate::security::guarded_start(
                 root,
                 text(p, "operation_id")?,
                 &context,
@@ -1411,14 +1395,17 @@ pub fn apply(prepared: &Value) -> Result<Value> {
                 complete_refresh,
             )?;
         } else {
-            security.audit(
+            crate::security::audit(
                 root,
                 text(p, "operation_id")?,
                 "mutation",
                 "started",
                 &context,
                 &classes,
+                &[],
+                &[],
                 operation,
+                None,
             )?;
         }
         Ok(())
@@ -1428,14 +1415,17 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         put(
             &mut receipt,
             "security_audit",
-            security.audit(
+            crate::security::audit(
                 root,
                 text(p, "operation_id")?,
                 "mutation",
                 "completed",
                 &context,
                 &classes,
+                &[],
+                &[],
                 operation,
+                None,
             )?,
         )?;
     }
@@ -1481,8 +1471,11 @@ pub fn recover_with_identity_and_environment(
         {
             return Err(err("Invalid transaction recovery proposal"));
         }
-        let mut barrier = writes::turn_sources_provider()?
-            .canonical_transaction_barrier(&root, if initializing { Some(&bank) } else { None })?;
+        let mut barrier = crate::turn_sources::canonical_writer_barrier(
+            &root,
+            if initializing { Some(&bank) } else { None },
+            &crate::cli::pack_root()?,
+        )?;
         let outcome = storage::exclusive(
             &bank.join(".agent-memory.lock"),
             text(r, "operation_id")?,
@@ -1562,7 +1555,7 @@ pub fn recover_with_identity_and_environment(
     let known = receipt_value(&receipt_path, &p)?;
     admission_recovery(&p, mode, known.as_ref())?;
     if mode == "finish" && p.get("checkpoint_evidence").is_some() {
-        writes::checkpoint_provider()?.validate_preparation(&p, known.is_none())?;
+        crate::checkpoint::validate_preparation(&p, known.is_none())?;
     }
     if mode == "finish" && text(&p, "operation")? == "initialize" {
         validator(&p)?.validate_transaction(&p, None)?;
@@ -1634,8 +1627,7 @@ pub fn recover(repo: &Path, mode: Option<&str>, prepared: Option<&Value>) -> Res
     }
     let marker = marker_bytes(&p)?;
     let initializing = text(&p, "operation")? == "initialize" && !exists(&bank.join("MEMORY.md"))?;
-    let scope = writes::scope_binding_provider()?;
-    let context = scope.require_transaction(
+    let context = require_scope(
         &root,
         get(&p, "project_id"),
         None,
@@ -1643,10 +1635,9 @@ pub fn recover(repo: &Path, mode: Option<&str>, prepared: Option<&Value>) -> Res
         Some(&marker),
         initializing,
     )?;
-    let security = writes::security_provider()?;
     let action = format!("recover-{mode}");
     let check = |owner: &[u8], marker: &[u8]| -> Result<()> {
-        scope.require_transaction(
+        require_scope(
             &root,
             get(&p, "project_id"),
             Some(&context),
@@ -1658,12 +1649,14 @@ pub fn recover(repo: &Path, mode: Option<&str>, prepared: Option<&Value>) -> Res
             && (p.get("checkpoint_evidence").is_some() || text(&p, "operation")? == "initialize")
         {
             if p.get("checkpoint_evidence").is_some() {
-                writes::checkpoint_provider()?
-                    .validate_preparation(&p, receipt_value(&receipt_path, &p)?.is_none())?;
+                crate::checkpoint::validate_preparation(
+                    &p,
+                    receipt_value(&receipt_path, &p)?.is_none(),
+                )?;
             } else {
                 validator(&p)?.validate_transaction(&p, None)?;
             }
-            security.guarded_start_transaction(
+            crate::security::guarded_start(
                 &root,
                 text(&p, "operation_id")?,
                 &context,
@@ -1673,14 +1666,17 @@ pub fn recover(repo: &Path, mode: Option<&str>, prepared: Option<&Value>) -> Res
                 false,
             )?;
         } else {
-            security.audit(
+            crate::security::audit(
                 &root,
                 text(&p, "operation_id")?,
                 "mutation",
                 "started",
                 &context,
                 &["tool"],
+                &[],
+                &[],
                 &action,
+                None,
             )?;
         }
         Ok(())
@@ -1695,18 +1691,42 @@ pub fn recover(repo: &Path, mode: Option<&str>, prepared: Option<&Value>) -> Res
     put(
         &mut receipt,
         "security_audit",
-        security.audit(
+        crate::security::audit(
             &root,
             text(&p, "operation_id")?,
             "mutation",
             "completed",
             &context,
             &["tool"],
+            &[],
+            &[],
             &action,
+            None,
         )?,
     )?;
     put(&mut receipt, "resolved_scope", context)?;
     Ok(receipt)
+}
+/// Baseline scope_binding.require with a proposal's project ID (JSON null for none).
+fn require_scope(
+    repo: &Path,
+    project_id: &Value,
+    expected: Option<&Value>,
+    owned_lock: Option<&[u8]>,
+    owned_transaction: Option<&[u8]>,
+    initialize: bool,
+) -> Result<Value> {
+    crate::scope_binding::require(
+        repo,
+        crate::scope_binding::optional_project(project_id)?,
+        crate::scope_binding::RequireOptions {
+            expected,
+            initialize,
+            owned_lock,
+            owned_transaction,
+            migration_reader: None,
+        },
+    )
 }
 pub fn command_result(operation: &str, outcome: Result<Value>) -> crate::lifecycle::CommandResult {
     let (value, exit_code, style) = match outcome {

@@ -1013,8 +1013,11 @@ pub fn run(env: &Environment, services: &Services, request: &PurgeRequest) -> Re
                     return Ok(settled);
                 }
             }
-            let mut barrier = crate::bank_writes::turn_sources_provider()?
-                .canonical_writer_barrier(&selection.repo)?;
+            let mut barrier = crate::turn_sources::canonical_writer_barrier(
+                &selection.repo,
+                None,
+                &crate::cli::pack_root()?,
+            )?;
             let result = bank_lock(&selection.bank, None, |owner| {
                 detach(record, &record_path, &records, &selection, &confirm, owner)
             });

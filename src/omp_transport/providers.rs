@@ -1,8 +1,8 @@
 //! Registered implementations: the boundary and stream transport seams, the
 //! installed observer scope and the T2f half of the OMP activation interface.
-use super::inventory::{complete, list_pending, pending_inventory};
+use super::inventory::{list_pending, pending_inventory};
 use super::observe::{Observation, ObserverScope, context_value, drain_after_response, observe};
-use super::{MAX_PAYLOAD, Site, all_segments, err, lexists, native_disposition_ids};
+use super::{Site, all_segments, err, lexists, native_disposition_ids};
 use crate::codec::json::Value;
 use crate::error::{ContractError, Result};
 use crate::lifecycle::string;
@@ -90,42 +90,35 @@ impl Transport {
     }
 }
 
-impl omp_boundary::OmpTransport for Transport {
-    fn pending_inventory(
-        &self,
-        repo: &Path,
-        runtime_root: &Path,
-    ) -> Result<(Vec<Value>, Vec<Value>)> {
-        let (rows, faults) = pending_inventory(&Site::new(repo, runtime_root))?;
-        Ok((rows, faults.into_iter().map(string).collect()))
-    }
-    fn all_segments(&self, repo: &Path, runtime_root: &Path) -> Result<Vec<(PathBuf, Value)>> {
-        all_segments(&Site::new(repo, runtime_root), None)?
-            .into_iter()
-            .map(|segment| Ok((segment.directory.clone(), segment.snapshot()?)))
-            .collect()
-    }
-    fn max_payload(&self) -> usize {
-        MAX_PAYLOAD
-    }
-    fn list_pending(&self, repo: &Path, offset: i64, runtime_root: &Path) -> Result<Value> {
-        list_pending(repo, runtime_root, offset)
-    }
-    fn source(
-        &self,
-        repo: &Path,
-        session: Option<&str>,
-        lifecycle: Option<&str>,
-        identifier: &str,
-        runtime_root: &Path,
-    ) -> Result<Value> {
-        let session = session.ok_or_else(|| err("Invalid bounded source identifier"))?;
-        let lifecycle = lifecycle.ok_or_else(|| err("Use a canonical native lifecycle UUID"))?;
-        super::inventory::source(repo, runtime_root, session, lifecycle, identifier)
-    }
-    fn complete(&self, repo: &Path, value: &Value, runtime_root: &Path) -> Result<Value> {
-        complete(repo, runtime_root, value)
-    }
+/// `pending_inventory(repo)` for omp_boundary: `(rows, faults)`.
+pub(crate) fn boundary_pending_inventory(
+    repo: &Path,
+    runtime_root: &Path,
+) -> Result<(Vec<Value>, Vec<Value>)> {
+    let (rows, faults) = pending_inventory(&Site::new(repo, runtime_root))?;
+    Ok((rows, faults.into_iter().map(string).collect()))
+}
+/// `all_segments(repo)` for omp_boundary: `(segment directory, cursor)` pairs.
+pub(crate) fn boundary_all_segments(
+    repo: &Path,
+    runtime_root: &Path,
+) -> Result<Vec<(PathBuf, Value)>> {
+    all_segments(&Site::new(repo, runtime_root), None)?
+        .into_iter()
+        .map(|segment| Ok((segment.directory.clone(), segment.snapshot()?)))
+        .collect()
+}
+/// omp_boundary's `--source` read: session and lifecycle are required.
+pub(crate) fn boundary_source(
+    repo: &Path,
+    session: Option<&str>,
+    lifecycle: Option<&str>,
+    identifier: &str,
+    runtime_root: &Path,
+) -> Result<Value> {
+    let session = session.ok_or_else(|| err("Invalid bounded source identifier"))?;
+    let lifecycle = lifecycle.ok_or_else(|| err("Use a canonical native lifecycle UUID"))?;
+    super::inventory::source(repo, runtime_root, session, lifecycle, identifier)
 }
 
 impl omp_stream::OmpTransport for Transport {

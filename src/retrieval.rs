@@ -166,19 +166,6 @@ pub fn observed_context(root: &Path, supplied: &Value) -> Result<(Value, Value)>
     bank_contract::merge(&mut actual, &known)?;
     Ok((actual, known))
 }
-pub struct ComparisonView;
-impl crate::bank_state::ComparisonView for ComparisonView {
-    fn observed_context(&self, root: &Path, request: &Value) -> Result<(Value, Value)> {
-        observed_context(root, request)
-    }
-    fn invalidate_frontier_transition(&self, repo: &Path) -> Result<String> {
-        crate::recall_catalog::invalidate_frontier_transition(repo, &crate::cli::pack_root()?)
-            .map(str::to_owned)
-    }
-    fn safe_text(&self, value: &Value, maximum: usize) -> Result<()> {
-        discovery::comparison_provider()?.safe_text(value, maximum)
-    }
-}
 pub fn scope_reasons(project: &Value, entry: &Value, context: &Value) -> Result<Vec<String>> {
     let mut reasons = Vec::new();
     for scope in array(get(entry, "scope_chain")) {

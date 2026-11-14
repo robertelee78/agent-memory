@@ -7,7 +7,7 @@ use crate::layout_resolution::{
     operation_row, publish_index, range_key, read_optional, read_value,
     require_completed_resolutions, require_hold, same, set, sha, text, unit_ids, uuid, with,
 };
-use crate::layout_restore::{Operation, layout_recovery_provider};
+use crate::layout_restore::Operation;
 use crate::lifecycle::{get, object, string};
 use crate::{
     bank_transactions as tx, bank_writes as writes, host, layout_recovery_state as state,
@@ -90,7 +90,6 @@ fn same_ranges(a: &Value, b: &Value) -> Result<bool> {
 
 /// Apply reviewed replacements: each parent becomes superseded by ≥2 children.
 pub fn revised(current: &Value, unit_map: &Value, replacements: &Value) -> Result<(Value, Value)> {
-    let recovery = layout_recovery_provider()?;
     let replacements = replacements
         .as_array()
         .filter(|values| !values.is_empty())
@@ -103,7 +102,7 @@ pub fn revised(current: &Value, unit_map: &Value, replacements: &Value) -> Resul
     }
     let mut parents = BTreeSet::new();
     for replacement in replacements {
-        recovery.fields(
+        crate::layout_recovery::fields(
             replacement,
             &[
                 "parent_unit_id",
@@ -146,7 +145,7 @@ pub fn revised(current: &Value, unit_map: &Value, replacements: &Value) -> Resul
         let mut children = Vec::new();
         let mut ranges = Vec::new();
         for child in items(field(replacement, "new_units")?)? {
-            recovery.fields(
+            crate::layout_recovery::fields(
                 child,
                 &[
                     "unit_id",
@@ -282,10 +281,9 @@ fn preview_locked(
     owner: &[u8],
     runtime_root: &Path,
 ) -> Result<Value> {
-    let recovery = layout_recovery_provider()?;
     let owner = Some(owner);
     require_completed_resolutions(repo, None, runtime_root)?;
-    recovery.fields(
+    crate::layout_recovery::fields(
         request,
         &["schema", "operation_id", "replacements", "review"],
         Some(REQUEST_SCHEMA),
@@ -304,7 +302,7 @@ fn preview_locked(
         directory,
         manifest,
         ..
-    } = recovery.operation(repo, operation_id, runtime_root)?;
+    } = crate::layout_recovery::operation(repo, operation_id, runtime_root)?;
     let index = state::index(&root, runtime_root)?;
     let indexed = operation_row(&index, operation_id)?;
     let (_, head, current) = frontier.ledger(&root, operation_id, indexed, &bank, runtime_root)?;
@@ -316,10 +314,15 @@ fn preview_locked(
             .join("proposals")
             .join(format!("{}.json", text(indexed, "proposal_id")?)),
     )?;
-    recovery.unit_map_value(&new_map, &manifest, field(&original, "intended_files")?)?;
+    crate::layout_recovery::unit_map_value(
+        &new_map,
+        &manifest,
+        field(&original, "intended_files")?,
+        None,
+    )?;
     let review = field(request, "review")?;
-    recovery.fields(review, REVIEW_FIELDS, Some(REVIEW_SCHEMA))?;
-    recovery.independent(field(review, "author")?, field(review, "reviewer")?)?;
+    crate::layout_recovery::fields(review, REVIEW_FIELDS, Some(REVIEW_SCHEMA))?;
+    crate::layout_recovery::independent(field(review, "author")?, field(review, "reviewer")?)?;
     lifecycle::time_value(get(review, "reviewed_at"))?;
     if !uuid(get(review, "review_id"))
         || get(review, "operation_id").as_str() != Some(operation_id)
@@ -346,7 +349,7 @@ fn preview_locked(
         .into_iter()
         .filter(|row| get(row, "operation_id").as_str() != Some(operation_id))
         .collect();
-    let mut rows = recovery.pending_rows(&directory, &manifest, &pending)?;
+    let mut rows = crate::layout_recovery::pending_rows(&directory, &manifest, &pending)?;
     rows.extend(other_rows);
     let token = frontier.successor_token(held.token(), &row_ids(&rows)?, operation_id, true)?;
     frontier.reservation(&files, &rows, &token)?;
@@ -405,7 +408,7 @@ fn preview_locked(
     frontier.check(held.token(), &root, owner, None)?;
     let pending_ids = field(&token, "unit_ids")?.clone();
     let count = items(&pending_ids)?.len();
-    recovery.result(
+    Ok(crate::layout_recovery::result(
         "revise-units",
         Some(operation_id),
         vec![
@@ -417,7 +420,7 @@ fn preview_locked(
             ("pending_unit_ids", pending_ids),
             ("pending_units", number(count)),
         ],
-    )
+    ))
 }
 
 /// Python truthiness of a decoded JSON value.
@@ -435,9 +438,8 @@ fn truthy(value: &Value) -> bool {
 
 /// Apply one exact retained unit revision preview.
 pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value> {
-    let recovery = layout_recovery_provider()?;
     let proposal = supplied.get("proposal").unwrap_or(supplied);
-    recovery.fields(proposal, FIELDS, Some(SCHEMA))?;
+    crate::layout_recovery::fields(proposal, FIELDS, Some(SCHEMA))?;
     if !uuid(get(proposal, "revision_id")) || !uuid(get(proposal, "operation_id")) {
         return Err(err("Unit revision requires stable UUIDv4 identities"));
     }
@@ -448,7 +450,7 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
         base,
         directory,
         manifest,
-    } = recovery.operation(repo, operation_id, runtime_root)?;
+    } = crate::layout_recovery::operation(repo, operation_id, runtime_root)?;
     let revision_id = text(proposal, "revision_id")?;
     let location = directory.join("revisions").join(revision_id);
     if !same(&read_value(&location.join("proposal.json"))?, proposal) {
@@ -460,7 +462,7 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
         {
             return Err(err("Unit revision historical receipt is corrupt"));
         }
-        return recovery.result(
+        return Ok(crate::layout_recovery::result(
             "revise-units",
             Some(operation_id),
             vec![
@@ -470,7 +472,7 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
                 ("receipt_is_historical", Value::Bool(true)),
                 ("already_applied", Value::Bool(true)),
             ],
-        );
+        ));
     }
     let journal = read_value(&location.join("journal.json"))?;
     let review = read_value(&location.join("review.json"))?;
@@ -521,7 +523,7 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
                 .into_iter()
                 .filter(|row| get(row, "operation_id").as_str() != Some(operation_id))
                 .collect();
-            let mut rows = recovery.pending_rows(&directory, &manifest, &pending)?;
+            let mut rows = crate::layout_recovery::pending_rows(&directory, &manifest, &pending)?;
             rows.extend(others);
             let token =
                 frontier.successor_token(held.token(), &row_ids(&rows)?, operation_id, true)?;
@@ -574,7 +576,7 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
         Ok((receipt, held))
     })?;
     let ids = unit_ids(held.token())?;
-    recovery.result(
+    Ok(crate::layout_recovery::result(
         "revise-units",
         Some(operation_id),
         vec![
@@ -586,5 +588,5 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
             ("private_artifact_writes_performed", Value::Bool(true)),
             ("temporary_lock_writes_performed", Value::Bool(true)),
         ],
-    )
+    ))
 }

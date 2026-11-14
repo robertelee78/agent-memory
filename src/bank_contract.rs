@@ -48,7 +48,7 @@ pub const MAX_PHYSICAL_DEPTH: usize = 256;
 pub type ParsedRecords = BTreeMap<String, (String, Value, String)>;
 pub type ParsedRouter = (Value, Vec<Value>, Value);
 
-/// A source-stable observation, implemented by bank_observation.
+/// A source-stable observation, produced by bank_observation.
 #[derive(Clone, Debug)]
 pub struct Observation {
     pub checked: Value,
@@ -56,40 +56,10 @@ pub struct Observation {
     pub sources: BTreeMap<String, Vec<u8>>,
     pub recovery_frontier: Value,
 }
-pub trait BankObservation: Send + Sync {
-    fn observe(
-        &self,
-        repo: &Path,
-        owner: Option<&[u8]>,
-        transaction: Option<&[u8]>,
-    ) -> Result<Observation>;
-    fn scan_hashes(&self, bank: &Path) -> Result<Value>;
-    /// Baseline scan(read_sources=True, require_router=False): physical map
-    /// (including runtime entries, path -> directory/file/other), observed hashes,
-    /// and exact canonical source bytes, with no router required.
-    fn scan_sources(&self, bank: &Path) -> Result<(Value, Value, BTreeMap<String, Vec<u8>>)>;
-}
 pub trait RecoveryCoverage: Send + Sync {
     fn public_coverage(&self, frontier: &Value) -> Result<Value>;
 }
-/// CLI-owned recover-layout route; domain code never imports or launches a script.
-pub trait RouteTable: Send + Sync {
-    fn execute(&self, route: &str, arguments: &[String])
-    -> Result<crate::lifecycle::CommandResult>;
-}
-static OBSERVATION: RwLock<Option<Arc<dyn BankObservation>>> = RwLock::new(None);
 static COVERAGE: RwLock<Option<Arc<dyn RecoveryCoverage>>> = RwLock::new(None);
-static ROUTES: RwLock<Option<Arc<dyn RouteTable>>> = RwLock::new(None);
-pub fn register_bank_observation(provider: Option<Arc<dyn BankObservation>>) {
-    *OBSERVATION.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn bank_observation_provider() -> Result<Arc<dyn BankObservation>> {
-    OBSERVATION
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| missing("bank_observation provider is not registered"))
-}
 pub fn register_recovery_coverage(provider: Option<Arc<dyn RecoveryCoverage>>) {
     *COVERAGE.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
@@ -99,30 +69,6 @@ pub(crate) fn recovery_coverage_provider() -> Result<Arc<dyn RecoveryCoverage>> 
         .unwrap_or_else(|e| e.into_inner())
         .clone()
         .ok_or_else(|| missing("recovery_frontier coverage provider is not registered"))
-}
-pub fn register_route_table(provider: Option<Arc<dyn RouteTable>>) {
-    *ROUTES.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub fn observe(
-    repo: &Path,
-    owner: Option<&[u8]>,
-    transaction: Option<&[u8]>,
-) -> Result<Observation> {
-    bank_observation_provider()?.observe(repo, owner, transaction)
-}
-pub fn scan_hashes(bank: &Path) -> Result<Value> {
-    bank_observation_provider()?.scan_hashes(bank)
-}
-pub fn scan_sources(bank: &Path) -> Result<(Value, Value, BTreeMap<String, Vec<u8>>)> {
-    bank_observation_provider()?.scan_sources(bank)
-}
-pub fn recover_layout(arguments: &[String]) -> Result<crate::lifecycle::CommandResult> {
-    let provider = ROUTES
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| missing("RouteTable provider is not registered"))?;
-    provider.execute("recover-layout", arguments)
 }
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
@@ -1005,7 +951,8 @@ pub fn validate(
     owned_lock: Option<&[u8]>,
     owned_transaction: Option<&[u8]>,
 ) -> Result<Value> {
-    let observed = observe(repo, owned_lock, owned_transaction)?;
+    let observed =
+        crate::bank_observation::observe(repo, owned_lock, owned_transaction)?.into_contract();
     let provider = recovery_coverage_provider()?;
     let mut report = observed.checked;
     *report

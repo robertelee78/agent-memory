@@ -7,13 +7,12 @@ use agent_memory::error::{ContractError, Kind, Result};
 use agent_memory::scope_binding::{self as scope, RequireOptions};
 use agent_memory::{
     bank_contract as bank, bank_layout, bank_transactions as txn, bank_writes as writes, cli,
-    clock::Deadline, host, process, project_identity as project, records, tombstones,
+    clock::Deadline, host, process, project_identity as project,
 };
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::time::Duration;
 
 const ID: &str = "75b38e17-c36e-4fab-8ba9-5fa51f25de91";
@@ -120,7 +119,6 @@ fn record(identity: &str) -> String {
         + "# Lesson\n\nConditional source-backed observation.\n"
 }
 fn extended_files(identity: &str) -> (Value, String, String, String) {
-    records::register_tombstone_parser(Some(Arc::new(tombstones::TombstoneParser)));
     let mut files = files(identity, None);
     let record = record(identity);
     let index = bank_layout::render_index(&obj([
@@ -1289,22 +1287,13 @@ fn migration_cannot_initialize_or_rebind_identity_and_never_calls_reader() {
 
 #[test]
 fn production_scope_adapter_preserves_initialization_and_live_locator_boundaries() {
-    use writes::ScopeBinding;
-    let provider = scope::ScopeBinding;
-    provider.context_value(&context(false)).unwrap();
-    assert!(provider.context_value(&context(true)).is_err());
-    provider
-        .context_value_for_initialization(&context(true), true)
-        .unwrap();
-    assert!(
-        provider
-            .context_value_for_initialization(&context(false), true)
-            .is_err()
-    );
+    scope::context_value(&context(false), false).unwrap();
+    assert!(scope::context_value(&context(true), false).is_err());
+    scope::context_value(&context(true), true).unwrap();
+    assert!(scope::context_value(&context(false), true).is_err());
     let root = std::fs::canonicalize(std::env::temp_dir()).unwrap();
     assert!(
-        provider
-            .observe_enrollment_location(&root, &root)
+        scope::observe_enrollment_location(&root, None, &root)
             .unwrap()
             .is_none()
     );

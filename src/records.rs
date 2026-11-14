@@ -7,7 +7,7 @@ use crate::developer_identity::uuid_valid;
 use crate::error::{ContractError, Result};
 use crate::lifecycle::{get, object, string, time_value};
 use crate::scopes;
-use std::sync::{Arc, LazyLock, RwLock};
+use std::sync::LazyLock;
 
 fn schema(s: &str) -> Value {
     // Invariant: every caller passes a schema compiled in from the pack (decoded by tests).
@@ -34,14 +34,6 @@ pub static TOMBSTONE: LazyLock<Value> = LazyLock::new(|| {
     ))
 });
 
-/// Later-tier tombstone parser; registration is required before tombstone dispatch.
-pub trait TombstoneParser: Send + Sync {
-    fn parse(&self, content: &str) -> Result<Value>;
-}
-static TOMBSTONE_PARSER: RwLock<Option<Arc<dyn TombstoneParser>>> = RwLock::new(None);
-pub fn register_tombstone_parser(parser: Option<Arc<dyn TombstoneParser>>) {
-    *TOMBSTONE_PARSER.write().unwrap_or_else(|e| e.into_inner()) = parser;
-}
 fn err(s: &str) -> ContractError {
     ContractError::new(s)
 }
@@ -352,11 +344,10 @@ pub fn event(metadata: &Value) -> Result<&Value> {
     evidence(get(metadata, "evidence"))?;
     Ok(metadata)
 }
-pub fn validate_with_parser(
+pub fn validate(
     metadata: &Value,
     body: &str,
     required_metadata: &[&str],
-    parser: Option<&dyn TombstoneParser>,
 ) -> Result<(String, Value)> {
     let entries = metadata
         .as_object()
@@ -373,11 +364,9 @@ pub fn validate_with_parser(
                 "Tombstones must not retain policy or provenance fields",
             ));
         }
-        let parser = parser
-            .ok_or_else(|| ContractError::missing_provider("Tombstone parser is not registered"))?;
         return Ok((
             "tombstone".into(),
-            parser.parse(&(frontmatter::write(entries)? + body))?,
+            crate::tombstones::parse(&(frontmatter::write(entries)? + body))?,
         ));
     }
     if get(metadata, "schema") == get(&EVENT, "$id") {
@@ -397,17 +386,6 @@ pub fn validate_with_parser(
         "standalone-record".into(),
         record(metadata, required_metadata)?.clone(),
     ))
-}
-pub fn validate(
-    metadata: &Value,
-    body: &str,
-    required_metadata: &[&str],
-) -> Result<(String, Value)> {
-    let parser = TOMBSTONE_PARSER
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone();
-    validate_with_parser(metadata, body, required_metadata, parser.as_deref())
 }
 pub fn parse(content: &str, required_metadata: &[&str]) -> Result<(String, Value, String)> {
     let mut allowed = Vec::new();

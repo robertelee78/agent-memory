@@ -786,14 +786,6 @@ impl crate::admission::Comparison for Comparison {
         check(repo, request, proof, owner)
     }
 }
-impl discovery::Comparison for Comparison {
-    fn inspect(&self, repo: &Path, request: &Value) -> Result<Value> {
-        inspect(repo, request, None)
-    }
-    fn safe_text(&self, value: &Value, maximum: usize) -> Result<()> {
-        safe_text(value, maximum).map(|_| ())
-    }
-}
 pub fn command_result(outcome: Result<Value>) -> crate::lifecycle::CommandResult {
     match outcome {
         Ok(value) => crate::lifecycle::CommandResult::json(value, 0, json::INDENT2_UTF8),

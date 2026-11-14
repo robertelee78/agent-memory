@@ -60,30 +60,9 @@ fn capacity(error: ContractError, expected: &str, amount: usize, limit: usize) {
     assert!(repair.contains("cannot retain"));
     assert!(repair.contains("recovery and identical retries do not increase capacity"));
 }
-struct FixtureLabels;
-impl agent_memory::repository_config::SecurityScan for FixtureLabels {
-    fn has_reasons(&self, value: &str) -> agent_memory::error::Result<bool> {
-        // A constrained test input, not an implementation of security scanning.
-        assert_eq!(value, "memory-bank");
-        Ok(false)
-    }
-    fn scan(&self, _body: &str) -> agent_memory::error::Result<Value> {
-        Err(ContractError::new(
-            "Security body scan is not available in this label fixture",
-        ))
-    }
-}
-
 struct World(PathBuf);
 impl World {
     fn new() -> Self {
-        static SETUP: std::sync::Once = std::sync::Once::new();
-        SETUP.call_once(|| {
-            agent_memory::repository_config::register_security_scan(Some(std::sync::Arc::new(
-                FixtureLabels,
-            )))
-            .unwrap();
-        });
         let root = std::env::temp_dir().join(format!("am-holds-{}", host::uuid4().unwrap()));
         std::fs::DirBuilder::new()
             .mode(0o700)

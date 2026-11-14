@@ -9,12 +9,6 @@ use std::time::{Duration, Instant};
 use support::cutover::*;
 use support::{RunOptions, World};
 
-struct SourcePack;
-impl agent_memory::cli::PackRoot for SourcePack {
-    fn pack_root(&self) -> agent_memory::error::Result<PathBuf> {
-        Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"))
-    }
-}
 fn fixture() -> Recall {
     let r = Recall::new();
     r.world
@@ -111,7 +105,9 @@ fn repository_worker() {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
-    agent_memory::cli::register_pack_root(Some(std::sync::Arc::new(SourcePack)));
+    agent_memory::cli::use_development_pack(Some(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+    ));
     let request = json::decode_bytes(&fs::read(input).unwrap(), Default::default()).unwrap();
     let repo = Path::new(string(&request, "repo"));
     let mode = string(&request, "mode");

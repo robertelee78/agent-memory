@@ -15,7 +15,6 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
-use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 pub const MAX_FILES: usize = limits::MAX_FILES;
@@ -26,23 +25,6 @@ pub const MAX_REQUEST: usize = 65536;
 pub const AUTHORITY_REPAIR: &str = "Check connectivity and access for the configured authority remote and local Git metadata. Preserve the bank, feature work and pending evidence; repeat the original refresh inspection after the issue clears. Do not reset/reinitialize memory or remove unknown locks.";
 const CLEANUP_MESSAGE: &str = "Private observation ref cleanup failed; preserve Git metadata and inspect repository permissions before retrying.";
 
-/// sharing_boundary supplies the exact local inspection, including its observation digest.
-pub trait SharingBoundary: Send + Sync {
-    fn inspect(&self, repo: &Path, owned_lock: Option<&[u8]>) -> Result<Value>;
-}
-static BOUNDARY: RwLock<Option<Arc<dyn SharingBoundary>>> = RwLock::new(None);
-pub fn register_sharing_boundary(provider: Option<Arc<dyn SharingBoundary>>) {
-    *BOUNDARY.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn sharing_boundary_provider() -> Result<Arc<dyn SharingBoundary>> {
-    BOUNDARY
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| {
-            ContractError::missing_provider("sharing_boundary provider is not registered")
-        })
-}
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
@@ -697,8 +679,7 @@ pub fn observe(repo: &Path, owned_lock: Option<&[u8]>, quarantine_records: bool)
             ..RequireOptions::default()
         },
     )?;
-    let provider = sharing_boundary_provider()?;
-    let boundary = provider.inspect(&root, owned_lock)?;
+    let boundary = crate::sharing_boundary::inspect(&root, owned_lock)?;
     let mut allowed = BTreeSet::from(["canonical-memory-is-not-tracked"]);
     if quarantine_records
         && !rows(get(&boundary, "safety_reasons"))?
@@ -785,8 +766,10 @@ pub fn observe(repo: &Path, owned_lock: Option<&[u8]>, quarantine_records: bool)
                 ..RequireOptions::default()
             },
         )?;
-        if !same(&provider.inspect(&root, owned_lock)?, &boundary)?
-            || query(&root, &["rev-parse", "--verify", "HEAD"])?.trim() != local_head
+        if !same(
+            &crate::sharing_boundary::inspect(&root, owned_lock)?,
+            &boundary,
+        )? || query(&root, &["rev-parse", "--verify", "HEAD"])?.trim() != local_head
         {
             return Err(err(
                 "Local memory or boundary changed during remote observation",
@@ -831,7 +814,7 @@ pub fn result(operation: &str, values: Value) -> Result<Value> {
     Ok(value)
 }
 pub fn inspect(repo: &Path, fetch: bool) -> Result<Value> {
-    let boundary = sharing_boundary_provider()?.inspect(repo, None)?;
+    let boundary = crate::sharing_boundary::inspect(repo, None)?;
     if !fetch {
         return result(
             "inspect",
@@ -1439,7 +1422,7 @@ pub fn reconcile(repo: &Path, base: Option<&str>) -> Result<Value> {
         ]),
     )
 }
-/// memory_publication's PublicationGate implementation forwards its replay method here.
+/// Authority-mainline replay; turn_sources and the boundary ledger call it for published completions.
 pub fn replay(repo: &Path, request: &Value, quarantine_records: bool) -> Result<Value> {
     if !request.as_object().is_some_and(|v| {
         v.len() == 2 && request.get("base").is_some() && request.get("candidate").is_some()

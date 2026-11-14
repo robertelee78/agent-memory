@@ -100,8 +100,8 @@ fn common_cli_reuses_the_same_validated_catalog() {
     let (r, path, request, _) = ready();
     let before = physical(&r.bank);
     let code = r.code();
-    // Test PackRoot registers the same source-checkout runtime as an installed
-    // binary, without fabricating an installation ownership receipt.
+    // The dispatch worker uses the source checkout's pack as the installed
+    // runtime pack, without fabricating an installation ownership receipt.
     for _ in 0..2 {
         let input = save(&r.world, &request, "catalog-request.json");
         let (exit, stdout, stderr) = dispatch(

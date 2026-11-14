@@ -1016,10 +1016,30 @@ fn pending_runtime_and_bank_transactions_are_observed_without_recovery() {
     )
     .unwrap();
     let before = snapshot(&installed.world.root);
-    // memory_refresh is not ported: its local-prerequisite check is a failure.
-    let value = installed.doctor(1);
-    assert!(!component(&value, "runtime.transaction").is_empty());
-    assert!(!component(&value, "bank.transaction").is_empty());
+    // Baseline call defaults to exit 0: retained markers warn, not fail.
+    let value = installed.doctor(0);
+    for name in ["runtime.transaction", "bank.transaction"] {
+        assert!(!component(&value, name).is_empty());
+        assert!(
+            component(&value, name)
+                .iter()
+                .all(|check| text(check, "state") == "warning")
+        );
+        assert!(names(&value, "warnings").iter().any(|item| item == name));
+    }
+    assert!(names(&value, "failures").is_empty());
+    assert_eq!(
+        text(component(&value, "bank.refresh_prerequisites")[0], "state"),
+        "pass"
+    );
+    assert_eq!(
+        text(get(&value, "refresh"), "remote_check"),
+        "not-exercised"
+    );
+    assert_eq!(
+        get(get(&value, "refresh"), "remote_freshness_verified"),
+        &Value::Bool(false)
+    );
     assert_eq!(text(get(&value, "bank"), "state"), "busy_or_interrupted");
     assert_eq!(snapshot(&installed.world.root), before);
 }
@@ -1385,9 +1405,8 @@ fn am(world: &World, args: &[&str]) -> (i32, String) {
     )
 }
 
-/// `am version|status|doctor` run natively against a disposable bank. The
-/// test binary is neither installed nor a development build, and
-/// `memory_refresh` is not ported, so version/doctor report those failures.
+/// Native diagnostics keep uninstalled-runtime and recovery-frontier failures
+/// independent of the available local-only refresh check.
 #[test]
 fn am_diagnostics_run_natively_against_a_disposable_bank() {
     let world = World::new();
@@ -1411,16 +1430,25 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
     assert_eq!(text(get(&status, "bank"), "project_id"), PROJECT);
     assert_eq!(text(get(&status, "setup"), "state"), "binding_required");
     let doctor = run(&["--json", "doctor", "--repo", repo_text], 1);
-    // memory_refresh and recovery_frontier (canonical bank observation) are
-    // not ported: those components fail instead of validating the bank.
+    // The baseline local-only refresh prerequisite succeeds before deep inventory.
+    // The uninstalled runtime and unported recovery-frontier still refuse separately.
     assert_eq!(
         names(&doctor, "failures"),
-        [
-            "runtime.executing_artifact",
-            "bank.refresh_prerequisites",
-            "bank.inspection"
-        ]
+        ["runtime.executing_artifact", "bank.inspection"]
     );
+    assert_eq!(
+        text(component(&doctor, "bank.refresh_prerequisites")[0], "state"),
+        "pass"
+    );
+    assert_eq!(
+        text(get(&doctor, "refresh"), "remote_check"),
+        "not-exercised"
+    );
+    assert_eq!(
+        get(get(&doctor, "refresh"), "remote_freshness_verified"),
+        &Value::Bool(false)
+    );
+    assert!(!names(&doctor, "warnings").is_empty());
     assert_eq!(
         text(get(&doctor, "bank"), "path"),
         repo.join("memory-bank").to_str().unwrap()
@@ -1592,7 +1620,7 @@ fn missing_and_intentionally_disabled_hook_targets() {
 
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_selected_projection_current_and_stale_do_not_create_audit_or_cache
 #[test]
-#[ignore = "needs projections registered"]
+#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn selected_projection_current_and_stale_do_not_create_audit_or_cache() {
     let world = World::new();
     bank(&world.path("repo"));
@@ -1910,24 +1938,14 @@ fn native_omp_doctor_distinguishes_extension_and_launchers() {
     }
 }
 
-/// The development source pack as the executing runtime pack of the
-/// installing process (the production provider needs an installed receipt).
-struct DevelopmentPack(PathBuf);
-impl agent_memory::cli::PackRoot for DevelopmentPack {
-    fn pack_root(&self) -> agent_memory::error::Result<PathBuf> {
-        Ok(self.0.clone())
-    }
-}
-
 /// Child: install a development source with the native omp preset through
 /// the production `omp_boundary` installation seam.
 fn native_install_child(request: &str) {
     agent_memory::cli::register_providers().unwrap();
     let request = json::decode(request, Default::default()).unwrap();
     let source = PathBuf::from(text(&request, "source"));
-    agent_memory::cli::register_pack_root(Some(Arc::new(DevelopmentPack(
-        source.join("skills/agent-memory"),
-    ))));
+    // dev-tools: the development source pack as the installing process's pack.
+    agent_memory::cli::use_development_pack(Some(source.join("skills/agent-memory")));
     let mut services = services(Some(source.join("target/release/am")));
     services.omp_boundary = Some(Arc::new(agent_memory::omp_boundary::InstallationBoundary));
     let install_mode = if text(&request, "mode") == "copy" {

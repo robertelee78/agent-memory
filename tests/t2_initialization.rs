@@ -78,16 +78,6 @@ impl Drop for World {
     }
 }
 
-/// The runtime pack of a source-checkout run (baseline `artifact.PACK` when
-/// the helpers execute from this repository): the test binary is not an
-/// installed runtime, so the receipt-based production provider refuses.
-struct SourcePack;
-impl agent_memory::cli::PackRoot for SourcePack {
-    fn pack_root(&self) -> agent_memory::error::Result<PathBuf> {
-        Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"))
-    }
-}
-
 /// Child entry: one `am` command through the real dispatch, in the World
 /// named by the environment. Inert in parents.
 #[test]
@@ -96,7 +86,11 @@ fn child_entry() {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
-    agent_memory::cli::register_pack_root(Some(std::sync::Arc::new(SourcePack)));
+    // dev-tools: the runtime pack of a source-checkout run (baseline
+    // `artifact.PACK` from this repository); the test binary is not installed.
+    agent_memory::cli::use_development_pack(Some(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+    ));
     let args: Vec<String> = match json::decode(&arguments, Default::default()).unwrap() {
         Value::Array(items) => items
             .into_iter()

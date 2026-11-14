@@ -1,7 +1,6 @@
-//! Installation's side of other modules' seams: the CLI pack root, the
+//! Installation functions other modules call directly: the CLI pack root, the
 //! console receipt reader, private-state installation inventory, the
-//! installation half of `OmpActivation`, `managed_source::Installation` and
-//! `cache_recovery::Installation`.
+//! installation half of `OmpActivation` and managed-source records.
 use super::filesystem::canonical;
 use super::plan::{activation, activation_template, source_info};
 use super::records::{read_receipt, receipt_is_rust_era};
@@ -43,13 +42,10 @@ pub fn pack_root(env: &Environment, executable: &Path) -> Result<PathBuf> {
     Ok(PathBuf::from(text(source, "pack").unwrap_or_default()))
 }
 
-/// `cli::PackRoot` for the running executable in the process environment.
-pub struct RuntimePackRoot;
-impl crate::cli::PackRoot for RuntimePackRoot {
-    fn pack_root(&self) -> crate::error::Result<PathBuf> {
-        let executable = crate::host::current_executable()?;
-        pack_root(&Environment::process(), &executable).map_err(into_contract)
-    }
+/// The installed pack of the running executable in the process environment.
+pub(crate) fn runtime_pack_root() -> crate::error::Result<PathBuf> {
+    let executable = crate::host::current_executable()?;
+    pack_root(&Environment::process(), &executable).map_err(into_contract)
 }
 
 pub(crate) fn into_contract(error: super::Error) -> ContractError {
@@ -59,17 +55,15 @@ pub(crate) fn into_contract(error: super::Error) -> ContractError {
     }
 }
 
-/// `console::InstalledReceipt`: `locations()` + `read_receipt(state)`.
-pub struct InstalledReceiptProvider;
-impl crate::console::InstalledReceipt for InstalledReceiptProvider {
-    fn receipt(&self) -> crate::error::Result<Option<Value>> {
-        let env = Environment::process();
-        let state = locations(&env).map_err(into_contract)?.state;
-        read_receipt(&env, &state).map_err(into_contract)
-    }
+/// The installed receipt the console bootstrap consults: `locations()` +
+/// `read_receipt(state)`.
+pub(crate) fn installed_receipt() -> crate::error::Result<Option<Value>> {
+    let env = Environment::process();
+    let state = locations(&env).map_err(into_contract)?.state;
+    read_receipt(&env, &state).map_err(into_contract)
 }
 
-/// `PrivateStateHooks` installation inventory: the saved bank inventory
+/// Private-state installation inventory: the saved bank inventory
 /// fields of the current receipt (`private_state.repository_inventory`).
 pub fn installation_inventory(env: &Environment) -> Result<Option<Value>> {
     let state = locations(env)?.state;
@@ -175,49 +169,32 @@ impl<H: OmpHarness> OmpActivation for InstallationActivation<H> {
     }
 }
 
-/// `managed_source::Installation`: Python-era managed source records,
-/// verified (payload before cleanliness) for read-only legacy checkouts.
-pub struct ManagedSourceInfo;
-impl crate::managed_source::Installation for ManagedSourceInfo {
-    fn source_info(
-        &self,
-        root: &Path,
-        kind: &str,
-        remote: &str,
-        reference: &str,
-    ) -> crate::error::Result<Value> {
-        let services = Services {
-            updating: None,
-            private_state: None,
-            omp_boundary: None,
-            artifacts: Arc::new(RegisteredArtifacts),
-            release: Default::default(),
-            executable: None,
-        };
-        let info = source_info(&services, root, kind).map_err(into_contract)?;
-        let mut value = info.value;
-        if let Value::Object(fields) = &mut value {
-            for (key, field) in fields.iter_mut() {
-                if key == "remote" {
-                    *field = Value::String(remote.to_owned());
-                } else if key == "ref" {
-                    *field = Value::String(reference.to_owned());
-                }
+/// Python-era managed source records, verified (payload before cleanliness)
+/// for read-only legacy checkouts.
+pub(crate) fn managed_source_info(
+    root: &Path,
+    kind: &str,
+    remote: &str,
+    reference: &str,
+) -> crate::error::Result<Value> {
+    let services = Services {
+        updating: None,
+        private_state: None,
+        omp_boundary: None,
+        artifacts: Arc::new(RegisteredArtifacts),
+        release: Default::default(),
+        executable: None,
+    };
+    let info = source_info(&services, root, kind).map_err(into_contract)?;
+    let mut value = info.value;
+    if let Value::Object(fields) = &mut value {
+        for (key, field) in fields.iter_mut() {
+            if key == "remote" {
+                *field = Value::String(remote.to_owned());
+            } else if key == "ref" {
+                *field = Value::String(reference.to_owned());
             }
         }
-        Ok(value)
     }
-}
-/// The one `'static` managed-source provider the composition root registers.
-pub static MANAGED_SOURCE_INFO: ManagedSourceInfo = ManagedSourceInfo;
-
-/// `cache_recovery::Installation`: fault points and clean-pack inspection.
-pub struct CacheInstallation;
-impl crate::cache_recovery::Installation for CacheInstallation {
-    fn fault(&self, point: &str) -> crate::release_distribution::Result<()> {
-        Ok(crate::bank_writes::fault(point)?)
-    }
-    fn inspect_package(&self, pack: &Path) -> crate::release_distribution::Result<Value> {
-        Ok(crate::artifact::inspect(pack)?)
-    }
+    Ok(value)
 }

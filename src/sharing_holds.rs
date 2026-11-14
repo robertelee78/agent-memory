@@ -95,9 +95,6 @@ fn equivalent(left: &Value, right: &Value) -> Result<bool> {
 pub fn recovery_needed(code: &str, reason: &str) -> ContractError {
     ContractError::hold_failure(code, reason, RECOVERY_REPAIR)
 }
-/// Registration adapter for sharing_hold_mapping once that module is linked.
-pub struct HoldCauses;
-
 pub fn cause_id(cause: &Value) -> Result<String> {
     let mut sources = rows(get(cause, "sources"))?
         .iter()
@@ -737,7 +734,8 @@ pub fn bank_owner<T>(
         }
         return body(owner);
     }
-    let mut barrier = writes::turn_sources_provider()?.canonical_writer_barrier(root)?;
+    let mut barrier =
+        crate::turn_sources::canonical_writer_barrier(root, None, &crate::cli::pack_root()?)?;
     let outcome = storage::exclusive(
         &bank.join(".agent-memory.lock"),
         operation_id,
@@ -1087,14 +1085,13 @@ pub fn recover_with_environment(
         None
     };
     // Scope is established before mkdir or clearing either ownership marker.
-    let scope = writes::scope_binding_provider()?;
-    let expected = scope.require_transaction(
+    let expected = crate::scope_binding::require(
         &paths.root,
-        &string(project_id),
-        None,
-        stale.as_deref(),
-        None,
-        false,
+        Some(project_id),
+        crate::scope_binding::RequireOptions {
+            owned_lock: stale.as_deref(),
+            ..Default::default()
+        },
     )?;
     prepare_directory(&paths.directory)?;
     for (registry, lock, operations) in [
@@ -1117,13 +1114,14 @@ pub fn recover_with_environment(
     }
     let operation = host::uuid4()?;
     bank_owner(&paths.root, &operation, None, |bank_token| {
-        scope.require_transaction(
+        crate::scope_binding::require(
             &paths.root,
-            &string(project_id),
-            Some(&expected),
-            Some(bank_token),
-            None,
-            false,
+            Some(project_id),
+            crate::scope_binding::RequireOptions {
+                expected: Some(&expected),
+                owned_lock: Some(bank_token),
+                ..Default::default()
+            },
         )?;
         storage::exclusive(
             &paths.directory.join("lock"),
@@ -1141,10 +1139,4 @@ pub fn recover_with_environment(
         ("source_observation_current", Value::Bool(false)),
         ("requires_fresh_review", Value::Bool(true)),
     ]))
-}
-
-impl crate::sharing_hold_mapping::HoldCauses for HoldCauses {
-    fn cause_id(&self, cause: &Value) -> Result<String> {
-        cause_id(cause)
-    }
 }

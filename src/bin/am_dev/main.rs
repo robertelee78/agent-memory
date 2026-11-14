@@ -1,6 +1,10 @@
 //! Developer-only tooling; never shipped. Built with `--features dev-tools`.
+mod capture_examples;
+mod guide_evidence;
+mod incidents;
 #[allow(dead_code)]
 mod obligations;
+mod omp_smoke;
 
 use agent_memory::error::ContractError;
 use agent_memory::release_builder as release;
@@ -23,11 +27,28 @@ fn register_release_providers() -> Result<()> {
 
 fn main() {
     let arguments: Vec<String> = std::env::args().skip(1).collect();
+    if let Some((command, rest)) = arguments.split_first() {
+        match command.as_str() {
+            "capture-guide-examples" => std::process::exit(capture_examples::run(rest)),
+            "run-incident" => std::process::exit(incidents::entry(rest)),
+            _ => {}
+        }
+    }
+    if let Some((command, rest)) = arguments.split_first()
+        && command == "guide-evidence"
+    {
+        std::process::exit(guide_evidence::run(rest));
+    }
     if let Some((command, rest)) = arguments.split_first()
         && command == "obligations"
     {
         let code = obligations::run(rest, Path::new(env!("CARGO_MANIFEST_DIR")));
         std::process::exit(code);
+    }
+    if let Some((command, rest)) = arguments.split_first()
+        && command == "omp-smoke"
+    {
+        std::process::exit(omp_smoke::run(rest));
     }
     match register_release_providers().and_then(|()| entry()) {
         Ok(value) => match agent_memory::codec::json::encode(

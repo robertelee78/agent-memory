@@ -1,5 +1,4 @@
 //! Typed held transactions; ordinary legacy recovery never consumes these journals.
-use crate::bank_writes::CanonicalWriterBarrier;
 use crate::codec::json::Value;
 use crate::developer_identity::{encoded, sha256_hex as digest, uuid_valid};
 use crate::error::Result;
@@ -485,13 +484,14 @@ pub fn apply_transaction(prepared: &Value, runtime: &Path) -> Result<Value> {
                 }));
             let classes = tx::source_classes(p)?;
             let class_refs = classes.iter().map(String::as_str).collect::<Vec<_>>();
-            writes::security_provider()?.guarded_start(
+            crate::security::guarded_start(
                 &root,
                 nested,
                 held.scope(),
                 &changed_files,
                 &class_refs,
                 text(p, "operation")?,
+                false,
             )?;
             let marker = marker_for(&held, nested)?;
             let marker_raw = encoded(&marker)?;
@@ -1388,13 +1388,14 @@ pub fn apply_checkpoint(prepared: &Value, runtime: &Path) -> Result<Value> {
                 .join("nested")
                 .join(nested);
             state::write_once(&dir.join("journal.json"), &journal)?;
-            writes::security_provider()?.guarded_start(
+            crate::security::guarded_start(
                 &root,
                 nested,
                 held.scope(),
                 &object([(text(write, "path")?, field(write, "content")?.clone())]),
                 &["assistant"],
                 "checkpoint",
+                false,
             )?;
             resolution::atomic_marker(&bank, Some(held.marker()), &marker_raw, Some(owner))?;
             let before = || {
@@ -1471,35 +1472,4 @@ pub fn apply_checkpoint(prepared: &Value, runtime: &Path) -> Result<Value> {
     let value = result?;
     finished?;
     Ok(value)
-}
-// Match the layout CLI's runtime-root convention until cli::runtime_root lands.
-fn runtime_root() -> Result<PathBuf> {
-    crate::cli::pack_root()?
-        .parent()
-        .and_then(Path::parent)
-        .map(Path::to_path_buf)
-        .ok_or_else(|| err("Cannot locate installed runtime root"))
-}
-pub struct RecoveryTransactions;
-impl writes::RecoveryTransactions for RecoveryTransactions {
-    fn apply_checkpoint(&self, proposal: &Value) -> Result<Value> {
-        apply_checkpoint(proposal, &runtime_root()?)
-    }
-    fn apply_transaction(&self, proposal: &Value) -> Result<Value> {
-        apply_transaction(proposal, &runtime_root()?)
-    }
-    fn nested_receipt(&self, journal: &Value, path: &Path) -> Result<Option<Value>> {
-        nested_receipt(journal, path)
-    }
-    fn recover_nested(
-        &self,
-        repo: &Path,
-        operation_id: Option<&str>,
-        nested_id: Option<&str>,
-        mode: Option<&str>,
-        proposal: Option<&Value>,
-        runtime_root: &Path,
-    ) -> Result<Value> {
-        recover_nested(repo, operation_id, nested_id, mode, proposal, runtime_root)
-    }
 }

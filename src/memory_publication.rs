@@ -1218,10 +1218,6 @@ pub fn candidate(
     Ok(Some(recovery::oid(commit.trim())?.to_owned()))
 }
 
-/// The registered semantic_sharing provider (typed refusal when absent).
-fn semantic() -> Result<&'static dyn crate::sharing_hold_mapping::SemanticSharing> {
-    crate::sharing_hold_mapping::semantic_sharing_provider()
-}
 fn require_complete(repo: &Path) -> Result<Value> {
     writes::recovery_frontier_provider()?.require_complete(repo, None, None)
 }
@@ -1231,7 +1227,7 @@ fn quarantine(proof: &Value) -> bool {
 
 pub fn prepare(repo: &Path, proof: &Value) -> Result<Value> {
     require_complete(repo)?;
-    let reviewed = semantic()?.check(repo, proof, None)?;
+    let reviewed = crate::semantic_sharing::check(repo, proof, None)?;
     let binding = get(get(proof, "judgment"), "binding");
     let root = PathBuf::from(text(
         get(binding, "repo_root"),
@@ -1266,7 +1262,7 @@ pub fn prepare(repo: &Path, proof: &Value) -> Result<Value> {
         get(&reviewed, "publish_files"),
         quarantine(proof),
     )?;
-    semantic()?.final_sources(&root, binding, binding, None)?;
+    crate::semantic_sharing::final_sources(&root, binding, binding, None)?;
     if index_bytes(&root)? != original_index {
         return Err(err(
             "Original index changed during publication preparation; inspect without overwriting it",
@@ -1414,7 +1410,7 @@ pub fn publication_sources(
     recovery_context: Option<&RecoveryPublicationContext>,
 ) -> Result<()> {
     match recovery_context {
-        None => semantic()?.final_sources(root, binding, binding, None),
+        None => crate::semantic_sharing::final_sources(root, binding, binding, None),
         Some(context) => context.check(root, binding),
     }
 }
@@ -1879,7 +1875,7 @@ pub fn land(repo: &Path, request: &Value) -> Result<Value> {
             ]),
         );
     }
-    let reviewed = match semantic()?.check(&root, proof, None) {
+    let reviewed = match crate::semantic_sharing::check(&root, proof, None) {
         Ok(reviewed) => reviewed,
         Err(error) if propagates(&error) => return Err(error),
         Err(_) => {
@@ -1951,7 +1947,7 @@ pub fn land(repo: &Path, request: &Value) -> Result<Value> {
     }
     writes::fault("publication-before-final-review")?;
     // Repeat semantic comparison/deduplication and policy immediately before push.
-    semantic()?.check(&root, proof, None)?;
+    crate::semantic_sharing::check(&root, proof, None)?;
     if !same(&policy(&root, &binding)?, &observed_policy)? || index_bytes(&root)? != original_index
     {
         return Err(err(
@@ -1966,7 +1962,7 @@ pub fn land(repo: &Path, request: &Value) -> Result<Value> {
         proposed = merged;
         pr_url = string(url);
     }
-    semantic()?.final_sources(&root, &binding, &binding, None)?;
+    crate::semantic_sharing::final_sources(&root, &binding, &binding, None)?;
     writes::fault("publication-before-push")?;
     let remote = text(
         get(&binding, "authority_remote"),
@@ -2062,9 +2058,7 @@ fn run(
         }
         None => None,
     };
-    let value = semantic()
-        .and_then(|provider| provider.read_input(input, version2))
-        .map_err(Failure::Other)?;
+    let value = crate::semantic_sharing::read_input(input, version2).map_err(Failure::Other)?;
     let outcome = if operation == "prepare" {
         prepare(repo, &value)
     } else {
@@ -2167,16 +2161,4 @@ pub fn command_result(
             },
         }
     })
-}
-
-/// `turn_sources::PublicationGate`: the real request validation, and
-/// authority-mainline replay through `sharing_recovery`.
-pub struct Gate;
-impl crate::turn_sources::PublicationGate for Gate {
-    fn request_value(&self, repo: &Path, request: &Value) -> Result<()> {
-        request_value(repo, request).map(|_| ())
-    }
-    fn replay(&self, repo: &Path, request: &Value, quarantine_records: bool) -> Result<Value> {
-        recovery::replay(repo, request, quarantine_records)
-    }
 }

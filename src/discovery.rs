@@ -13,7 +13,6 @@ use crate::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
 
 pub const SCHEMA: &str = "agent-memory/discovery-v1";
 pub const MAX_INPUT: usize = 65536;
@@ -38,25 +37,6 @@ const BINDING: &[&str] = &[
     "inventory_sha256",
     "recovery_frontier",
 ];
-/// comparison.inspect, required only for comparison-intent qualification.
-pub trait Comparison: Send + Sync {
-    fn inspect(&self, repo: &Path, request: &Value) -> Result<Value>;
-    /// comparison.safe_text is also consumed by the shared ComparisonView seam.
-    fn safe_text(&self, value: &Value, maximum: usize) -> Result<()>;
-}
-static COMPARISON: RwLock<Option<Arc<dyn Comparison>>> = RwLock::new(None);
-pub fn register_comparison(provider: Option<Arc<dyn Comparison>>) {
-    *COMPARISON.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn comparison_provider() -> Result<Arc<dyn Comparison>> {
-    COMPARISON
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| {
-            ContractError::missing_provider("comparison.inspect provider is not registered")
-        })
-}
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
@@ -792,7 +772,7 @@ pub fn qualified_read(
             ("canonical_writes_performed", Value::Bool(false)),
         ]));
     }
-    let result = comparison_provider()?.inspect(&nav.root, &request)?;
+    let result = crate::comparison::inspect(&nav.root, &request, None)?;
     Ok(object([
         ("schema", string("agent-memory/discovery-result-v1")),
         ("operation", string("read")),

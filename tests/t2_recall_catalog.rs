@@ -2,10 +2,9 @@ use agent_memory::bank_observation;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::error::Kind;
 use agent_memory::recall_catalog as catalog;
-use agent_memory::{artifact, bank_contract, bank_transactions, host, migration_contract};
+use agent_memory::{artifact, bank_contract, bank_transactions, host};
 use std::os::unix::fs::{DirBuilderExt, PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Once};
 
 const ROOT: &str = "/repo";
 const BANK: &str = "/repo/memory-bank";
@@ -55,11 +54,6 @@ impl World {
         );
     }
     fn runtime(&self) -> catalog::Runtime {
-        static ONCE: Once = Once::new();
-        ONCE.call_once(|| {
-            artifact::register_migration_contract(Some(Arc::new(migration_contract::Bundled)))
-                .unwrap()
-        });
         self.write("pack/SKILL.md", "---\nname: agent-memory\ndescription: Bounded portable contract fixture\nmetadata: {\"version\":\"0.0.14\"}\n---\n\n## Route\n| Inspect | [bank](bank/GUIDE.md) | [inspect](inspect/GUIDE.md) |\n");
         self.write(
             "pack/bank/GUIDE.md",
@@ -415,11 +409,8 @@ fn oversized_cleanup_header_is_bounded_and_transaction_hook_defers() {
     assert_eq!(error.kind(), &Kind::RecallCatalogMiss);
     assert_eq!(error.to_string(), "catalog header bound");
     assert_eq!(std::fs::read(world.0.join(NAME)).unwrap(), raw.as_bytes());
-    use bank_transactions::IndexInvalidation;
     assert_eq!(
-        catalog::IndexInvalidation
-            .invalidate_after_change(&world.0, &Value::Null)
-            .unwrap(),
+        bank_transactions::invalidate_optional_indexes(&world.0, &Value::Null),
         s("deferred-to-canonical-fallback")
     );
 }

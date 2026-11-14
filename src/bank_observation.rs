@@ -486,30 +486,23 @@ pub fn observe(
     Ok(observed)
 }
 
-pub struct BankObservation;
-impl contract::BankObservation for BankObservation {
-    fn observe(
-        &self,
-        repo: &Path,
-        owner: Option<&[u8]>,
-        transaction: Option<&[u8]>,
-    ) -> Result<contract::Observation> {
-        observe(repo, owner, transaction).map(Observation::into_contract)
-    }
-    fn scan_hashes(&self, bank: &Path) -> Result<Value> {
-        Ok(scan(bank, false, false)?.hashes)
-    }
-    fn scan_sources(&self, bank: &Path) -> Result<(Value, Value, BTreeMap<String, Vec<u8>>)> {
-        let scanned = scan(bank, true, false)?;
-        Ok((
-            object(
-                scanned
-                    .physical
-                    .into_iter()
-                    .map(|(path, kind)| (path, string(kind))),
-            ),
-            scanned.hashes,
-            scanned.sources,
-        ))
-    }
+/// Observed canonical hashes, without source bytes and with no router required.
+pub fn scan_hashes(bank: &Path) -> Result<Value> {
+    Ok(scan(bank, false, false)?.hashes)
+}
+/// Baseline scan(read_sources=True, require_router=False): physical map
+/// (including runtime entries, path -> directory/file/other), observed hashes,
+/// and exact canonical source bytes, with no router required.
+pub fn scan_sources(bank: &Path) -> Result<(Value, Value, BTreeMap<String, Vec<u8>>)> {
+    let scanned = scan(bank, true, false)?;
+    Ok((
+        object(
+            scanned
+                .physical
+                .into_iter()
+                .map(|(path, kind)| (path, string(kind))),
+        ),
+        scanned.hashes,
+        scanned.sources,
+    ))
 }

@@ -59,6 +59,7 @@ pub mod lifecycle;
 pub mod local_registry;
 pub mod managed_source;
 pub mod memory_publication;
+pub mod memory_refresh;
 pub mod migration;
 pub mod migration_codecs;
 pub mod migration_contract;

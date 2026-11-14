@@ -36,6 +36,7 @@ pub use observe::{
     Observation, ObserverScope, checked_payload_coverage, observe, resolve_tool_result, wake,
 };
 pub use providers::{Harness, InstalledScope, Transport};
+pub(crate) use providers::{boundary_all_segments, boundary_pending_inventory, boundary_source};
 
 /// Retained snapshot and manifest read bound (baseline `16 * 1024 * 1024`).
 pub const MAX_PAYLOAD: usize = 16 * 1024 * 1024;

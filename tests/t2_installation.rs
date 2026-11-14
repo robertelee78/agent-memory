@@ -2238,6 +2238,12 @@ fn replay_install(install_mode: &str, phase: &str) {
             "partition {partition} of {install_mode}-{phase} is empty"
         );
     }
+    fault_partitions::emit(
+        &format!("install-write-{install_mode}-{phase}"),
+        &selected,
+        &executed,
+        text(get(&expected, "source"), "artifact_digest"),
+    );
 }
 
 // obligation: tests/contracts/test_install_write_copy_before.py::InstallCopyBeforeContract.test_actual_logical_writes_in_partition_0
@@ -2330,22 +2336,19 @@ fn install_response_is_lost_after_real_receipt_and_targets_commit() {
 
 // ----- console bootstrap rewrite: only a Rust-era receipt selects update -----
 
-static BOOTSTRAP_RECEIPT: std::sync::Mutex<Option<Result<Option<String>, String>>> =
-    std::sync::Mutex::new(None);
-struct FixtureReceipt;
-impl agent_memory::console::InstalledReceipt for FixtureReceipt {
-    fn receipt(&self) -> agent_memory::error::Result<Option<Value>> {
-        match BOOTSTRAP_RECEIPT.lock().unwrap().clone().unwrap() {
-            Ok(Some(raw)) => Ok(Some(json::decode(&raw, Default::default()).unwrap())),
-            Ok(None) => Ok(None),
-            Err(message) => Err(agent_memory::error::ContractError::new(message)),
-        }
+/// A fixture installed-receipt read: raw receipt JSON, none, or a read failure.
+fn fixture_receipt(
+    provided: &Result<Option<String>, String>,
+) -> agent_memory::error::Result<Option<Value>> {
+    match provided {
+        Ok(Some(raw)) => Ok(Some(json::decode(raw, Default::default()).unwrap())),
+        Ok(None) => Ok(None),
+        Err(message) => Err(agent_memory::error::ContractError::new(message.clone())),
     }
 }
 
 #[test]
 fn bootstrap_rewrites_to_update_only_for_rust_era_receipts() {
-    agent_memory::console::register_installed_receipt(Some(Arc::new(FixtureReceipt)));
     let args = |tail: &[&str]| -> Vec<String> {
         ["install", "--bootstrap-binary", "/x/am"]
             .iter()
@@ -2407,21 +2410,21 @@ fn bootstrap_rewrites_to_update_only_for_rust_era_receipts() {
         ),
     ];
     for (provided, tail, expected) in cases {
-        *BOOTSTRAP_RECEIPT.lock().unwrap() = Some(provided.clone());
         assert_eq!(
-            agent_memory::console::bootstrap_command(args(tail)).unwrap(),
+            agent_memory::console::bootstrap_command_with(args(tail), || fixture_receipt(
+                &provided
+            ))
+            .unwrap(),
             expected,
             "{provided:?}"
         );
     }
     // A different channel on a v3 receipt keeps the explicit install.
-    *BOOTSTRAP_RECEIPT.lock().unwrap() = Some(Ok(Some(receipt(
-        "agent-memory/install-receipt-v3",
-        "release",
-    ))));
+    let v3 = Ok(Some(receipt("agent-memory/install-receipt-v3", "release")));
     let other = args(&["--ref", "main"]);
     assert_eq!(
-        agent_memory::console::bootstrap_command(other.clone()).unwrap(),
+        agent_memory::console::bootstrap_command_with(other.clone(), || fixture_receipt(&v3))
+            .unwrap(),
         other
     );
 }
@@ -3698,3 +3701,6 @@ fn repeated_development_bootstrap_does_not_stage_an_ignored_release() {
         &receipt
     ));
 }
+
+#[path = "support/fault_partitions.rs"]
+mod fault_partitions;

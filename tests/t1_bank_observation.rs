@@ -12,7 +12,6 @@ use std::ffi::OsString;
 use std::io::{Read, Write};
 use std::os::unix::fs::{DirBuilderExt, PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Once};
 
 const PROJECT: &str = "8e0b66aa-2be5-4fa3-b47f-1245474aa7dd";
 const ID: &str = "a9abac6f-c33e-44c9-b40f-7b2ebafda860";
@@ -22,13 +21,6 @@ fn s(value: impl Into<String>) -> Value {
 }
 fn obj<const N: usize>(entries: [(&str, Value); N]) -> Value {
     Value::Object(entries.into_iter().map(|(k, v)| (k.into(), v)).collect())
-}
-fn setup() {
-    static ONCE: Once = Once::new();
-    ONCE.call_once(|| {
-        bank_contract::register_bank_observation(Some(Arc::new(obs::BankObservation)));
-        records::register_tombstone_parser(Some(Arc::new(tombstones::TombstoneParser)));
-    });
 }
 struct World(PathBuf);
 impl World {
@@ -131,14 +123,12 @@ fn exact_five_field_format_roundtrips_with_committed_contract_bytes() {
 // obligation: tests/contracts/test_records.py::RecordContract.test_copied_artifact_and_five_field_tombstone_exception_require_no_harness_or_state
 #[test]
 fn real_tombstone_parser_dispatches_without_policy_or_harness() {
-    setup();
     let (kind, actual, body) = records::parse(&marker(), &[]).unwrap();
     assert_eq!(kind, "tombstone");
     assert_eq!(actual, metadata());
     assert_eq!(body, "");
     assert_eq!(
-        records::validate_with_parser(&metadata(), "", &[], Some(&tombstones::TombstoneParser))
-            .unwrap(),
+        records::validate(&metadata(), "", &[]).unwrap(),
         ("tombstone".into(), metadata())
     );
     for required in ["confidence", "trust", "provenance"] {
@@ -620,11 +610,10 @@ fn owned_marker_replacement_is_detected_by_pinned_read() {
 }
 #[test]
 fn runtime_topology_is_included_but_runtime_markdown_is_not_payload() {
-    setup();
     let world = World::new();
     world.write(".agent-memory-work/nested/ignored.md", "not canonical");
     world.write("source.md", "abc");
-    let (physical, hashes, sources) = bank_contract::scan_sources(&world.0).unwrap();
+    let (physical, hashes, sources) = obs::scan_sources(&world.0).unwrap();
     assert_eq!(physical.get(".agent-memory-work"), Some(&s("directory")));
     assert_eq!(
         physical.get(".agent-memory-work/nested/ignored.md"),
@@ -634,9 +623,9 @@ fn runtime_topology_is_included_but_runtime_markdown_is_not_payload() {
     assert_eq!(hashes.as_object().unwrap().len(), 1);
     assert_eq!(sources.len(), 1);
     assert!(sources.contains_key("source.md"));
-    assert_eq!(bank_contract::scan_hashes(&world.0).unwrap(), hashes);
+    assert_eq!(obs::scan_hashes(&world.0).unwrap(), hashes);
     world.write(".agent-memory-work/other.txt", "topology change");
-    assert_ne!(bank_contract::scan_sources(&world.0).unwrap().0, physical);
+    assert_ne!(obs::scan_sources(&world.0).unwrap().0, physical);
 }
 #[test]
 fn scanner_checks_runtime_symlinks_and_finite_physical_inventory() {
@@ -697,13 +686,12 @@ fn physical_history_contract_refuses_portable_aliases_and_bad_kinds() {
 }
 #[test]
 fn absent_domain_provider_is_explicit_refusal_not_a_silent_fallback() {
-    setup();
     let world = World::new();
     std::fs::create_dir(world.0.join("memory-bank")).unwrap();
     let error = obs::observe(&world.0, None, None).unwrap_err();
     assert_eq!(
         error.message(),
-        "Repository boundary security scan provider is not registered"
+        "recovery_frontier provider is not registered"
     );
     let result = bank_state::command_inspect(&world.0, None);
     assert_eq!(result.exit_code, 1);
@@ -788,7 +776,6 @@ fn structured_command_errors_retain_capacity_and_tombstone_errors_never_echo() {
 // obligation: tests/contracts/test_bank_layout.py::LayoutContract.test_tombstones_and_duplicate_record_versions_cannot_hide_or_recreate_current_content
 #[test]
 fn real_tombstone_parser_allows_safe_bank_and_refuses_resurrection() {
-    setup();
     let mut proposal = json::decode(
         include_str!("../skills/agent-memory/templates/router-proposal.example.json"),
         json::DecodePolicy::default(),

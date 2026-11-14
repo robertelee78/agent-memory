@@ -51,7 +51,7 @@ pub use linux_image::{
 pub use run::{RunOptions, STREAM_PARSER, Startup, StreamStartup, Timing, main, run};
 use std::ffi::OsStr;
 use std::path::{Component, Path, PathBuf};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::Mutex;
 pub use wake::{wake_decision_directory, wake_decision_summary, wake_decisions};
 
 pub const MAX_FRAME: usize = 16 * 1024 * 1024;
@@ -586,21 +586,4 @@ pub fn preload(receipt: Option<&Value>) -> Result<()> {
             Ok(())
         }
     }
-}
-
-/// Seam registration for `omp_transport` (registered by CLI wiring once ported).
-static TRANSPORT: RwLock<Option<Arc<dyn OmpTransport>>> = RwLock::new(None);
-pub fn register_omp_transport(provider: Option<Arc<dyn OmpTransport>>) {
-    *TRANSPORT.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn omp_transport_provider() -> Result<Arc<dyn OmpTransport>> {
-    TRANSPORT
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| {
-            ContractError::missing_provider(
-                "OmpTransport provider is not registered; finite sources remain pending",
-            )
-        })
 }

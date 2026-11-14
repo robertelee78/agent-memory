@@ -28,7 +28,6 @@ use std::ffi::{OsStr, OsString};
 use std::io::Read;
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Component, Path, PathBuf};
-use std::sync::{Arc, RwLock};
 
 pub const HISTORICAL_CAPABILITY: &str = "omp-harness-v1";
 pub const CAPABILITY: &str = "omp-stored-source-v2";
@@ -65,76 +64,6 @@ const NATIVE_STATE: [&str; 5] = [
 ];
 const STREAM_STATE: [&str; 2] = ["omp-stream-v1", "omp-stream-session-locks"];
 const FAILURE_REASON: &str = "Native source work remains pending; inspect owned installation, binding and retained sources. No completion is inferred.";
-
-/// Baseline `omp_transport` callees. Implemented by `omp_transport`.
-pub trait OmpTransport: Send + Sync {
-    /// `pending_inventory(repo)`: `(rows, faults)`.
-    fn pending_inventory(
-        &self,
-        repo: &Path,
-        runtime_root: &Path,
-    ) -> Result<(Vec<Value>, Vec<Value>)>;
-    /// `all_segments(repo)`: `(segment directory, cursor)` pairs.
-    fn all_segments(&self, repo: &Path, runtime_root: &Path) -> Result<Vec<(PathBuf, Value)>>;
-    /// `MAX_PAYLOAD`: the per-file read bound of retained transport evidence.
-    fn max_payload(&self) -> usize;
-    fn list_pending(&self, repo: &Path, offset: i64, runtime_root: &Path) -> Result<Value>;
-    fn source(
-        &self,
-        repo: &Path,
-        session: Option<&str>,
-        lifecycle: Option<&str>,
-        identifier: &str,
-        runtime_root: &Path,
-    ) -> Result<Value>;
-    fn complete(&self, repo: &Path, value: &Value, runtime_root: &Path) -> Result<Value>;
-}
-static TRANSPORT: RwLock<Option<Arc<dyn OmpTransport>>> = RwLock::new(None);
-pub fn register_omp_transport(provider: Option<Arc<dyn OmpTransport>>) {
-    *TRANSPORT.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn omp_transport_provider() -> Result<Arc<dyn OmpTransport>> {
-    TRANSPORT
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| {
-            ContractError::missing_provider(
-                "omp_transport provider is not registered; native source work remains pending",
-            )
-        })
-}
-
-/// Baseline `omp_stream` callees. Implemented by `omp_stream`.
-pub trait OmpStream: Send + Sync {
-    /// `drain_state(repo, base=base, read_only=…)`: the finite stream inventory
-    /// with `pending` and `inventory_sha256`.
-    fn drain_state(
-        &self,
-        repo: &Path,
-        base: &Path,
-        read_only: bool,
-        runtime_root: &Path,
-    ) -> Result<Value>;
-    /// `main(argv)` for `omp-boundary --stream` (the flag already removed);
-    /// frames go to the process stdout directly.
-    fn main(&self, argv: &[String], prog: &str) -> CommandResult;
-}
-static STREAM: RwLock<Option<Arc<dyn OmpStream>>> = RwLock::new(None);
-pub fn register_omp_stream(provider: Option<Arc<dyn OmpStream>>) {
-    *STREAM.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn omp_stream_provider() -> Result<Arc<dyn OmpStream>> {
-    STREAM
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| {
-            ContractError::missing_provider(
-                "omp_stream provider is not registered; native source work remains pending",
-            )
-        })
-}
 
 fn err(message: impl Into<String>) -> ContractError {
     ContractError::new(message)
@@ -1094,9 +1023,8 @@ fn walk_evidence(
 /// Baseline `_drain_inventory(repo)`: the bound complete evidence enumeration,
 /// including orphan shared namespaces, and its digest.
 pub fn drain_inventory(repo: &Path, runtime_root: &Path) -> Result<(Value, String)> {
-    let transport = omp_transport_provider()?;
     let base = base(repo)?;
-    let (mut rows, faults) = transport.pending_inventory(repo, runtime_root)?;
+    let (mut rows, faults) = crate::omp_transport::boundary_pending_inventory(repo, runtime_root)?;
     let mut pins = Vec::new();
     let binding_path = base.join(BINDING_FILE);
     if lexists(&binding_path)? {
@@ -1138,7 +1066,7 @@ pub fn drain_inventory(repo: &Path, runtime_root: &Path) -> Result<(Value, Strin
         }
     }
     let mut roots = BTreeSet::from([base.join("omp-source-v1")]);
-    for (_, cursor) in transport.all_segments(repo, runtime_root)? {
+    for (_, cursor) in crate::omp_transport::boundary_all_segments(repo, runtime_root)? {
         let session =
             text(&cursor, "session").ok_or_else(|| err("Unverifiable drain source namespace"))?;
         let lifecycle =
@@ -1153,7 +1081,7 @@ pub fn drain_inventory(repo: &Path, runtime_root: &Path) -> Result<(Value, Strin
             roots.insert(directory);
         }
     }
-    let maximum = transport.max_payload();
+    let maximum = crate::omp_transport::MAX_PAYLOAD;
     let mut count = 0;
     for root in roots {
         if !lexists(&root)? {
@@ -1333,7 +1261,7 @@ fn stream_proof(repo: &Path, base: &Path, inventory: &Value) -> Result<Value> {
 
 /// Baseline `_verify_stream_drain(repo, base)`.
 fn verify_stream_drain(repo: &Path, base: &Path, runtime_root: &Path) -> Result<Value> {
-    let inventory = omp_stream_provider()?.drain_state(repo, base, true, runtime_root)?;
+    let inventory = stream_state(repo, base, true, runtime_root)?;
     let expected = stream_proof(repo, base, &inventory)?;
     let target = base
         .join("omp-stream-drains")
@@ -1433,7 +1361,7 @@ fn drain_body(repo: &Path, base: &Path, check: bool, runtime_root: &Path) -> Res
         cleanup_completed(&namespaces)?;
     }
     let (binding, digest) = drain_inventory(repo, runtime_root)?;
-    let streams = omp_stream_provider()?.drain_state(repo, base, check, runtime_root)?;
+    let streams = stream_state(repo, base, check, runtime_root)?;
     let drainable = !truthy(get(&binding, "pending"))
         && !truthy(get(&binding, "faults"))
         && !truthy(get(&streams, "pending"));
@@ -2328,27 +2256,16 @@ impl crate::omp_stream::StreamStartup for BoundaryStartup {
     }
 }
 
-/// The production `OmpStream`: the installed stream authority of the
-/// executing runtime and the real finite stream entry.
-pub struct InstalledStream;
-impl OmpStream for InstalledStream {
-    fn drain_state(
-        &self,
-        repo: &Path,
-        base: &Path,
-        read_only: bool,
-        runtime_root: &Path,
-    ) -> Result<Value> {
-        crate::omp_stream::drain_state(
-            &crate::omp_stream::Installed::new(runtime_root),
-            repo,
-            Some(base),
-            read_only,
-        )
-    }
-    fn main(&self, argv: &[String], prog: &str) -> CommandResult {
-        crate::omp_stream::main(argv, prog, &BoundaryStartup)
-    }
+/// The installed stream authority of the executing runtime: `drain_state(repo,
+/// base=base, read_only=…)`, the finite inventory with `pending` and
+/// `inventory_sha256`.
+fn stream_state(repo: &Path, base: &Path, read_only: bool, runtime_root: &Path) -> Result<Value> {
+    crate::omp_stream::drain_state(
+        &crate::omp_stream::Installed::new(runtime_root),
+        repo,
+        Some(base),
+        read_only,
+    )
 }
 
 /// One `am omp-boundary` invocation (baseline argparse namespace).
@@ -2374,9 +2291,8 @@ fn assessment(request: &Request<'_>, input: &mut dyn Read, runtime_root: &Path) 
         return Err(err("Native boundary input exceeds bound"));
     }
     let value = crate::developer_identity::load(&raw)?;
-    let transport = omp_transport_provider()?;
     if !request.refresh {
-        return transport.complete(request.repo, &value, runtime_root);
+        return crate::omp_transport::complete(request.repo, runtime_root, &value);
     }
     let fields = [
         "session",
@@ -2399,7 +2315,7 @@ fn assessment(request: &Request<'_>, input: &mut dyn Read, runtime_root: &Path) 
     crate::turn_check::check(
         request.repo,
         &value,
-        |repo, value| Ok(transport.complete(repo, value, runtime_root)?),
+        |repo, value| Ok(crate::omp_transport::complete(repo, runtime_root, value)?),
         "omp",
     )
 }
@@ -2419,10 +2335,10 @@ fn operation(request: &Request<'_>, input: &mut dyn Read) -> Result<Value> {
         if request.refresh || request.stdin {
             return Err(err("Pending inventory cannot acknowledge or refresh"));
         }
-        return omp_transport_provider()?.list_pending(request.repo, request.offset, &runtime_root);
+        return crate::omp_transport::list_pending(request.repo, &runtime_root, request.offset);
     }
     if let Some(source) = source {
-        return omp_transport_provider()?.source(
+        return crate::omp_transport::boundary_source(
             request.repo,
             request.session,
             request.lifecycle,
@@ -2475,10 +2391,8 @@ fn failure(quiet: bool) -> CommandResult {
     }
 }
 
-/// `omp-boundary --stream`: delegated to the registered `omp_stream.main`.
+/// `omp-boundary --stream` (the flag already removed): the real finite stream
+/// entry; frames go to the process stdout directly.
 pub fn stream(argv: &[String], prog: &str) -> CommandResult {
-    match omp_stream_provider() {
-        Ok(provider) => provider.main(argv, prog),
-        Err(error) => crate::cli::refusal(prog, error.message()),
-    }
+    crate::omp_stream::main(argv, prog, &BoundaryStartup)
 }

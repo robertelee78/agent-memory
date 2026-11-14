@@ -513,7 +513,7 @@ fn transient_redundant_source_and_tracker_copies_are_discarded() {
 }
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_user_correction_admits_small_record_and_history_automatically_without_git_changes
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
+#[ignore = "needs recovery_frontier registered"]
 fn user_correction_admits_and_replays_without_git_changes() {
     support::in_world(
         "user_correction_admits_and_replays_without_git_changes",
@@ -644,7 +644,7 @@ fn draft_fills_identity_without_deciding_or_writing() {
 }
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_start_keeps_semantic_review_pending_and_never_writes_bank
 #[test]
-#[ignore = "needs recovery_frontier, comparison, discovery registered"]
+#[ignore = "needs recovery_frontier registered"]
 fn start_keeps_semantic_review_pending_and_never_writes_bank() {
     support::in_world(
         "start_keeps_semantic_review_pending_and_never_writes_bank",

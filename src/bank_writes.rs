@@ -41,39 +41,6 @@ pub const MAX_RECEIPT_BYTES: usize = 64 * 1024 * 1024;
 pub const MAX_FAULT_WORLD_BYTES: usize = 1024 * 1024;
 pub const FAULT_PAUSE_SECONDS: f64 = 10.0;
 
-/// Implemented by scope_binding; contexts are freshly resolved before and under lock.
-pub trait ScopeBinding: Send + Sync {
-    fn context_value(&self, context: &Value) -> Result<()>;
-    fn require(
-        &self,
-        repo: &Path,
-        project_id: &Value,
-        expected: &Value,
-        owned_lock: Option<&[u8]>,
-    ) -> Result<Value>;
-    /// Baseline scope_binding.context_value(..., initialize=...).
-    fn context_value_for_initialization(&self, context: &Value, initialize: bool) -> Result<()>;
-    /// Baseline scope_binding.require with initialization and owned marker.
-    fn require_transaction(
-        &self,
-        repo: &Path,
-        project_id: &Value,
-        expected: Option<&Value>,
-        owned_lock: Option<&[u8]>,
-        owned_transaction: Option<&[u8]>,
-        initialize: bool,
-    ) -> Result<Value>;
-    /// Read-only locator reuse inside the exact live private-enrollment context.
-    fn observe_enrollment_location(
-        &self,
-        repo: &Path,
-        runtime_root: &Path,
-    ) -> Result<Option<crate::layout_recovery_state::RecoveryPaths>>;
-}
-pub trait Checkpoint: Send + Sync {
-    fn validate_write(&self, proposal: &Value, sources: bool) -> Result<()>;
-    fn validate_preparation(&self, proposal: &Value, sources: bool) -> Result<()>;
-}
 pub trait RecoveryFrontier: Send + Sync {
     fn capture_scope(&self, repo: &Path) -> Result<Value>;
     fn observe(&self, repo: &Path) -> Result<Value>;
@@ -279,144 +246,12 @@ pub const HOLD: &str = "agent-memory/layout-frontier-hold-v1";
 pub const NESTED: &str = "agent-memory/layout-frontier-transaction-v1";
 pub const TRANSACTION: &str = "agent-memory/layout-recovery-transaction-v1";
 pub const SENTINEL: &str = "agent-memory/layout-recovery-sentinel-v1";
-pub trait RecoveryTransactions: Send + Sync {
-    fn apply_checkpoint(&self, proposal: &Value) -> Result<Value>;
-    /// Baseline recovery_transactions.apply_transaction.
-    fn apply_transaction(&self, proposal: &Value) -> Result<Value>;
-    fn nested_receipt(&self, journal: &Value, path: &Path) -> Result<Option<Value>>;
-    fn recover_nested(
-        &self,
-        repo: &Path,
-        operation_id: Option<&str>,
-        nested_id: Option<&str>,
-        mode: Option<&str>,
-        proposal: Option<&Value>,
-        runtime_root: &Path,
-    ) -> Result<Value>;
-}
-pub trait Security: Send + Sync {
-    fn guarded_start(
-        &self,
-        repo: &Path,
-        operation_id: &str,
-        context: &Value,
-        files: &Value,
-        source_kinds: &[&str],
-        action: &str,
-    ) -> Result<()>;
-    fn audit(
-        &self,
-        repo: &Path,
-        operation_id: &str,
-        category: &str,
-        outcome: &str,
-        context: &Value,
-        source_kinds: &[&str],
-        action: &str,
-    ) -> Result<Value>;
-    /// Baseline security.guarded_start(..., complete_refresh=...).
-    fn guarded_start_transaction(
-        &self,
-        repo: &Path,
-        operation_id: &str,
-        context: &Value,
-        files: &Value,
-        source_kinds: &[&str],
-        action: &str,
-        complete_refresh: bool,
-    ) -> Result<()>;
-    /// Baseline security.audit with explicit reasons, record IDs and action.
-    fn audit_records(
-        &self,
-        repo: &Path,
-        operation_id: &str,
-        category: &str,
-        phase: &str,
-        context: &Value,
-        source_kinds: &[&str],
-        reasons: &[String],
-        record_ids: &[String],
-        action: &str,
-    ) -> Result<Value>;
-}
-/// The implementing guard releases its barrier on Drop, including refusal paths.
-pub trait CanonicalWriterBarrier: Send {
-    fn finish(&mut self) -> Result<()>;
-}
-pub trait TurnSources: Send + Sync {
-    fn canonical_writer_barrier(&self, repo: &Path) -> Result<Box<dyn CanonicalWriterBarrier>>;
-    /// Baseline turn_sources.canonical_writer_barrier(..., ordinary_bank=...).
-    fn canonical_transaction_barrier(
-        &self,
-        repo: &Path,
-        ordinary_bank: Option<&Path>,
-    ) -> Result<Box<dyn CanonicalWriterBarrier>>;
-    /// Existing-only observation must never create or enroll a missing lock.
-    fn source_barrier(
-        &self,
-        repo: &Path,
-        exclusive: bool,
-        existing_only: bool,
-        runtime_root: &Path,
-    ) -> Result<Box<dyn CanonicalWriterBarrier>>;
-    fn check_source_compatibility(&self, state_base: &Path) -> Result<()>;
-    fn source_barrier_held(&self, state_base: &Path) -> Result<bool>;
-}
-static SCOPE: RwLock<Option<Arc<dyn ScopeBinding>>> = RwLock::new(None);
-static CHECKPOINT: RwLock<Option<Arc<dyn Checkpoint>>> = RwLock::new(None);
 static FRONTIER: RwLock<Option<Arc<dyn RecoveryFrontier>>> = RwLock::new(None);
-static RECOVERY: RwLock<Option<Arc<dyn RecoveryTransactions>>> = RwLock::new(None);
-static SECURITY: RwLock<Option<Arc<dyn Security>>> = RwLock::new(None);
-static TURN_SOURCES: RwLock<Option<Arc<dyn TurnSources>>> = RwLock::new(None);
-pub fn register_scope_binding(provider: Option<Arc<dyn ScopeBinding>>) {
-    *SCOPE.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn scope_binding_provider() -> Result<Arc<dyn ScopeBinding>> {
-    scope()
-}
-pub fn register_checkpoint(provider: Option<Arc<dyn Checkpoint>>) {
-    *CHECKPOINT.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn checkpoint_provider() -> Result<Arc<dyn Checkpoint>> {
-    checkpoint()
-}
 pub fn register_recovery_frontier(provider: Option<Arc<dyn RecoveryFrontier>>) {
     *FRONTIER.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
 pub(crate) fn recovery_frontier_provider() -> Result<Arc<dyn RecoveryFrontier>> {
     frontier()
-}
-pub fn register_recovery_transactions(provider: Option<Arc<dyn RecoveryTransactions>>) {
-    *RECOVERY.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn recovery_transactions_provider() -> Result<Arc<dyn RecoveryTransactions>> {
-    recovery()
-}
-pub fn register_security(provider: Option<Arc<dyn Security>>) {
-    *SECURITY.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn security_provider() -> Result<Arc<dyn Security>> {
-    security()
-}
-pub fn register_turn_sources(provider: Option<Arc<dyn TurnSources>>) {
-    *TURN_SOURCES.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
-pub(crate) fn turn_sources_provider() -> Result<Arc<dyn TurnSources>> {
-    turn_sources()
-}
-fn scope() -> Result<Arc<dyn ScopeBinding>> {
-    SCOPE
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| missing("scope_binding provider is not registered"))
-}
-fn checkpoint() -> Result<Arc<dyn Checkpoint>> {
-    CHECKPOINT
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| missing("checkpoint provider is not registered"))
 }
 fn frontier() -> Result<Arc<dyn RecoveryFrontier>> {
     FRONTIER
@@ -424,27 +259,6 @@ fn frontier() -> Result<Arc<dyn RecoveryFrontier>> {
         .unwrap_or_else(|e| e.into_inner())
         .clone()
         .ok_or_else(|| missing("recovery_frontier provider is not registered"))
-}
-fn recovery() -> Result<Arc<dyn RecoveryTransactions>> {
-    RECOVERY
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| missing("recovery_transactions provider is not registered"))
-}
-fn security() -> Result<Arc<dyn Security>> {
-    SECURITY
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| missing("security provider is not registered"))
-}
-fn turn_sources() -> Result<Arc<dyn TurnSources>> {
-    TURN_SOURCES
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| missing("turn_sources provider is not registered"))
 }
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
@@ -487,10 +301,10 @@ pub fn runtime(path: &str) -> bool {
     contract::runtime_path(path)
 }
 pub fn hashes(bank: &Path) -> Result<Value> {
-    contract::scan_hashes(bank)
+    crate::bank_observation::scan_hashes(bank)
 }
 pub fn snapshot(repo: &Path, owned_lock: Option<&[u8]>) -> Result<(Value, Value)> {
-    let observed = contract::observe(repo, owned_lock, None)?;
+    let observed = crate::bank_observation::observe(repo, owned_lock, None)?;
     Ok((observed.checked, observed.hashes))
 }
 /// Explicit environment injection avoids global environment mutation in callers/tests.
@@ -654,7 +468,7 @@ pub fn preview_with_sources(
     sources: Sources,
 ) -> Result<Value> {
     let (root, _) = bank_path(repo)?;
-    let observed = contract::observe(&root, None, None)?;
+    let observed = crate::bank_observation::observe(&root, None, None)?.into_contract();
     let proposal = object([
         ("schema", string("agent-memory/write-proposal-v1")),
         ("operation_id", string((sources.uuid4)()?)),
@@ -701,7 +515,7 @@ pub fn proposal_value(prepared: &Value) -> Result<&Value> {
         return Err(invalid());
     }
     contract::path_value(get(proposal, "path"))?;
-    scope()?.context_value(get(proposal, "scope_context"))?;
+    crate::scope_binding::context_value(get(proposal, "scope_context"), false)?;
     if get(proposal, "path").as_str() == Some("MEMORY.md") {
         return Err(err(
             "Router/identity changes require the governed multi-file or binding operation",
@@ -740,7 +554,7 @@ pub fn proposal_value(prepared: &Value) -> Result<&Value> {
         }
     }
     if proposal.get("checkpoint_evidence").is_some() {
-        checkpoint()?.validate_write(proposal, false)?;
+        crate::checkpoint::validate_write(proposal, false)?;
     }
     Ok(proposal)
 }
@@ -872,7 +686,7 @@ fn checkpoint_sources(proposal: &Value) -> Result<()> {
     if proposal.get("checkpoint_evidence").is_some() {
         let (root, bank) = bank_path(Path::new(proposal_text(proposal, "repo_root")?))?;
         let (_, receipt) = state_paths(&root, &bank, proposal_text(proposal, "operation_id")?)?;
-        checkpoint()?.validate_write(proposal, !exists(&receipt)?)?;
+        crate::checkpoint::validate_write(proposal, !exists(&receipt)?)?;
     }
     Ok(())
 }
@@ -885,29 +699,36 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         .ok_or_else(|| err("Recovery frontier lacks hold coverage"))?
         != &Value::Null
     {
-        return recovery()?.apply_checkpoint(proposal);
+        return crate::recovery_transactions::apply_checkpoint(
+            proposal,
+            &crate::cli::runtime_root()?,
+        );
     }
     if get(proposal, "scope_context") == &Value::Null {
         return Err(err(
             "Proposal has no resolved scope; finish identity setup and preview again",
         ));
     }
-    let scope = scope()?;
-    let context = scope.require(
-        root,
-        get(proposal, "project_id"),
-        get(proposal, "scope_context"),
-        None,
-    )?;
+    let require = |expected: &Value, owned_lock: Option<&[u8]>| -> Result<Value> {
+        crate::scope_binding::require(
+            root,
+            crate::scope_binding::optional_project(get(proposal, "project_id"))?,
+            crate::scope_binding::RequireOptions {
+                expected: (expected != &Value::Null).then_some(expected),
+                owned_lock,
+                ..Default::default()
+            },
+        )
+    };
+    let context = require(get(proposal, "scope_context"), None)?;
     checkpoint_sources(proposal)?;
-    let security = security()?;
     let operation = proposal_text(proposal, "operation")?;
     let operation_id = proposal_text(proposal, "operation_id")?;
     let check = |owner: &[u8]| -> Result<()> {
-        scope.require(root, get(proposal, "project_id"), &context, Some(owner))?;
+        require(&context, Some(owner))?;
         checkpoint_sources(proposal)?;
         if operation == "checkpoint" {
-            security.guarded_start(
+            crate::security::guarded_start(
                 root,
                 operation_id,
                 &context,
@@ -917,22 +738,26 @@ pub fn apply(prepared: &Value) -> Result<Value> {
                 )]),
                 &["assistant"],
                 "checkpoint",
+                false,
             )?;
         } else {
-            security.audit(
+            crate::security::audit(
                 root,
                 operation_id,
                 "mutation",
                 "started",
                 &context,
                 &["external"],
+                &[],
+                &[],
                 operation,
+                None,
             )?;
         }
         Ok(())
     };
     let mut receipt = apply_with_identity(proposal, check)?;
-    let audit = security.audit(
+    let audit = crate::security::audit(
         root,
         operation_id,
         "mutation",
@@ -943,7 +768,10 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         } else {
             &["external"]
         },
+        &[],
+        &[],
         operation,
+        None,
     )?;
     contract::merge(
         &mut receipt,
@@ -1022,7 +850,8 @@ pub fn apply_with_identity_and_environment(
         &object([(path, hash_value(content.as_bytes()))]),
     )?;
     // No inventory or receipt is read before canonical barrier + exclusive bank lock.
-    let mut barrier = turn_sources()?.canonical_writer_barrier(&root)?;
+    let mut barrier =
+        crate::turn_sources::canonical_writer_barrier(&root, None, &crate::cli::pack_root()?)?;
     let outcome = storage::exclusive(
         &bank.join(".agent-memory.lock"),
         proposal_text(proposal, "operation_id")?,
@@ -1031,7 +860,8 @@ pub fn apply_with_identity_and_environment(
         |owner| {
             fault("locked-before-inventory")?;
             check_identity(owner)?;
-            let observation = contract::observe(&root, Some(owner), None)?;
+            let observation =
+                crate::bank_observation::observe(&root, Some(owner), None)?.into_contract();
             if get(&observation.checked, "project_id") != get(proposal, "project_id") {
                 return Err(err("Bank project identity changed after preview"));
             }

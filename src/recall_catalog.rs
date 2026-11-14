@@ -1102,16 +1102,3 @@ pub fn publish_with_environment(
 pub fn optional_failure(_: &ContractError) -> bool {
     true
 }
-
-/// The transaction hook is maintenance, not admission authority. No cache error
-/// can turn a completed canonical transaction into a failure.
-pub struct IndexInvalidation;
-impl crate::bank_transactions::IndexInvalidation for IndexInvalidation {
-    fn invalidate_after_change(&self, repo: &Path, hashes: &Value) -> Result<Value> {
-        let state = match crate::cli::pack_root() {
-            Ok(runtime_root) => invalidate_after_change(repo, hashes, &runtime_root),
-            Err(_) => "deferred-to-canonical-fallback",
-        };
-        Ok(s(state))
-    }
-}

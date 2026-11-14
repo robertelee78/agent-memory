@@ -2229,49 +2229,6 @@ pub fn compact_review(repo: &Path, manifest: &Value, decisions: &Value) -> Resul
     }
     review(repo, &judgment, None)
 }
-pub struct SemanticSharing;
-impl crate::sharing_hold_mapping::SemanticSharing for SemanticSharing {
-    fn safe_text(&self, value: &Value) -> Result<()> {
-        safe_text(value, 4096).map(|_| ())
-    }
-    fn disjoint(&self, left: &Value, right: &Value) -> Result<bool> {
-        disjoint(left, right)
-    }
-    fn qualified_sources(
-        &self,
-        files: &Value,
-        root: &Path,
-        project_id: &str,
-    ) -> Result<BTreeSet<String>> {
-        qualified_sources(files, root, project_id)
-    }
-    fn check(&self, repo: &Path, proof: &Value, owned_lock: Option<&[u8]>) -> Result<Value> {
-        check(repo, proof, owned_lock)
-    }
-    fn final_sources(
-        &self,
-        root: &Path,
-        observation: &Value,
-        binding: &Value,
-        owned_lock: Option<&[u8]>,
-    ) -> Result<()> {
-        final_sources(root, observation, binding, owned_lock)
-    }
-    fn read_input(&self, path: &Path, version2: bool) -> Result<Value> {
-        read_input(path, version2)
-    }
-    fn inspect(&self, repo: &Path, base: Option<&str>) -> Result<Value> {
-        inspect(repo, base, None)
-    }
-    fn snapshots(
-        &self,
-        repo: &Path,
-        base: Option<&str>,
-        quarantine_records: bool,
-    ) -> Result<(PathBuf, Value, Value, Value, Value)> {
-        snapshots(repo, base, None, quarantine_records)
-    }
-}
 
 pub fn command_result(operation: &str, outcome: Result<Value>) -> lifecycle::CommandResult {
     use crate::error::Kind;

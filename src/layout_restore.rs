@@ -1,7 +1,7 @@
 //! Distinct child restoration of an exact completed layout outcome.
 use crate::codec::json::Value;
 use crate::developer_identity::{encoded, load};
-use crate::error::{ContractError, Result};
+use crate::error::Result;
 use crate::fs::Descriptor;
 use crate::host::Sources;
 use crate::layout_recovery_context::RecoveryReadSet;
@@ -18,7 +18,6 @@ use crate::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
 
 pub const SCHEMA: &str = "agent-memory/layout-child-restore-v1";
 pub const FIELDS: &[&str] = &[
@@ -76,107 +75,6 @@ pub struct RecoverySource {
     pub operation: Operation,
     pub proposal: Value,
     pub journal: Value,
-}
-
-/// The layout_recovery functions these modules call. Implemented by
-/// layout_recovery; every method is required and an unregistered provider is
-/// a typed MissingProvider refusal, never an absent proof.
-pub trait LayoutRecovery: Send + Sync {
-    /// Baseline layout_recovery.fields(value, names, schema).
-    fn fields(&self, value: &Value, names: &[&str], schema: Option<&str>) -> Result<()>;
-    /// Baseline layout_recovery.independent(author, reviewer).
-    fn independent(&self, author: &Value, reviewer: &Value) -> Result<()>;
-    /// Baseline layout_recovery.result(operation, operation_id, **values).
-    fn result(
-        &self,
-        operation: &str,
-        operation_id: Option<&str>,
-        values: Vec<(&'static str, Value)>,
-    ) -> Result<Value>;
-    fn operation(&self, repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<Operation>;
-    fn recovery_source(
-        &self,
-        repo: &Path,
-        operation_id: &str,
-        runtime_root: &Path,
-    ) -> Result<RecoverySource>;
-    fn receipt_value(&self, directory: &Path, proposal: &Value) -> Result<Option<Value>>;
-    /// Baseline layout_recovery.recover(repo, operation_id, mode).
-    fn recover(
-        &self,
-        repo: &Path,
-        operation_id: &str,
-        mode: &str,
-        runtime_root: &Path,
-    ) -> Result<Value>;
-    fn hold(&self, proposal: &Value) -> Result<Vec<u8>>;
-    fn view(&self, bank: &Path, ignore: &[String]) -> Result<Vec<Value>>;
-    fn expected_result(&self, proposal: &Value, manifest: &Value, current: &[Value]) -> Result<()>;
-    fn ledger_value(&self, proposal: &Value) -> Result<Value>;
-    fn manifest_view(&self, manifest: &Value) -> Result<Vec<Value>>;
-    fn rebind(
-        &self,
-        root: &Path,
-        manifest: &Value,
-        owner: Option<&[u8]>,
-        transaction: Option<&[u8]>,
-        runtime_root: &Path,
-    ) -> Result<()>;
-    /// Baseline layout_recovery.atomic_marker(target, before, after, owner).
-    fn atomic_marker(
-        &self,
-        bank: &Path,
-        before: Option<&[u8]>,
-        after: &[u8],
-        owner: Option<&[u8]>,
-    ) -> Result<()>;
-    fn new_directories(&self, bank: &Path, proposal: &Value) -> Result<()>;
-    #[allow(clippy::too_many_arguments)]
-    fn replace_source(
-        &self,
-        root: &Path,
-        bank: &Path,
-        path: &str,
-        body: Option<&[u8]>,
-        facts: Option<&Value>,
-        running: &[Value],
-        context: &RecoveryReadSet,
-        runtime_root: &Path,
-    ) -> Result<()>;
-    /// Baseline layout_recovery.eligibility(repo, owner, transaction): true, false or "unavailable".
-    fn eligibility(
-        &self,
-        repo: &Path,
-        owner: Option<&[u8]>,
-        transaction: Option<&[u8]>,
-    ) -> Result<Value>;
-    fn proposal_value(&self, repo: &Path, proposal: &Value, runtime_root: &Path) -> Result<()>;
-    fn partial_boundary(
-        &self,
-        proposal: &Value,
-        manifest: &Value,
-        current: &[Value],
-    ) -> Result<usize>;
-    fn unit_map_value(&self, value: &Value, manifest: &Value, intended: &Value) -> Result<()>;
-    fn pending_rows(
-        &self,
-        directory: &Path,
-        manifest: &Value,
-        units: &[Value],
-    ) -> Result<Vec<Value>>;
-}
-static LAYOUT_RECOVERY: RwLock<Option<Arc<dyn LayoutRecovery>>> = RwLock::new(None);
-pub fn register_layout_recovery(provider: Option<Arc<dyn LayoutRecovery>>) {
-    *LAYOUT_RECOVERY
-        .write()
-        .unwrap_or_else(|error| error.into_inner()) = provider;
-}
-pub(crate) fn layout_recovery_provider() -> Result<Arc<dyn LayoutRecovery>> {
-    LAYOUT_RECOVERY
-        .read()
-        .unwrap_or_else(|error| error.into_inner())
-        .clone()
-        .ok_or_else(|| ContractError::missing_provider("LayoutRecovery provider is not registered"))
 }
 
 fn by_path(rows: &[Value]) -> BTreeMap<String, &Value> {
@@ -259,9 +157,8 @@ fn option_sha(value: Option<&[u8]>) -> Value {
 
 /// Check an exact retained child-restore proposal.
 pub fn value(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value> {
-    let recovery = layout_recovery_provider()?;
     let p = supplied.get("proposal").unwrap_or(supplied);
-    recovery.fields(p, FIELDS, Some(SCHEMA))?;
+    crate::layout_recovery::fields(p, FIELDS, Some(SCHEMA))?;
     if ![
         "operation_id",
         "proposal_id",
@@ -388,8 +285,7 @@ pub fn boundary(p: &Value, current: &[Value], plan: Option<&Value>) -> Result<us
 
 /// Prepare a child restore of an exact completed repair.
 pub fn preview(repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<Value> {
-    let recovery = layout_recovery_provider()?;
-    let source = recovery.recovery_source(repo, operation_id, runtime_root)?;
+    let source = crate::layout_recovery::recovery_source(repo, operation_id, runtime_root)?;
     let RecoverySource {
         operation:
             Operation {
@@ -402,8 +298,14 @@ pub fn preview(repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<V
         proposal: original,
         ..
     } = source;
-    let Some(receipt) = recovery.receipt_value(&parent_dir, &original)? else {
-        return recovery.recover(repo, operation_id, "rollback", runtime_root);
+    let Some(receipt) = crate::layout_recovery::receipt_value(&parent_dir, &original)? else {
+        return crate::layout_recovery::recover(
+            repo,
+            Some(operation_id),
+            Some("rollback"),
+            None,
+            runtime_root,
+        );
     };
     if get(&receipt, "outcome").as_str() != Some("layout-restored") {
         return Err(err("Only a completed repair has a child restore"));
@@ -411,15 +313,15 @@ pub fn preview(repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<V
     let frontier = frontier()?;
     let existing_marker = frontier.marker_bytes(&bank, tx::MARKER, None)?;
     bank_observation::markers(&bank, None, existing_marker.as_deref())?;
-    let hold = recovery.hold(&original)?;
+    let hold = crate::layout_recovery::hold(&original)?;
     if existing_marker
         .as_ref()
         .is_some_and(|marker| *marker != hold)
     {
         return Err(err("Finish known marker cleanup before child restore"));
     }
-    let current = recovery.view(&bank, &[])?;
-    recovery.expected_result(&original, &manifest, &current)?;
+    let current = crate::layout_recovery::view(&bank, &[])?;
+    crate::layout_recovery::expected_result(&original, &manifest, &current, false)?;
     let indexed_state = state::index(&root, runtime_root)?;
     let indexed = get(&indexed_state, "operations")
         .get(operation_id)
@@ -428,7 +330,7 @@ pub fn preview(repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<V
         .clone();
     let (_, head, ledger) = frontier.ledger(&root, operation_id, &indexed, &bank, runtime_root)?;
     if int(get(&head, "generation")) != Some(0)
-        || !same(&ledger, &recovery.ledger_value(&original)?)
+        || !same(&ledger, &crate::layout_recovery::ledger_value(&original)?)
     {
         return Err(err(
             "Later admission/governance/revision depends on the repaired bank",
@@ -466,7 +368,7 @@ pub fn preview(repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<V
         let old = by_path(rows(field(&manifest, "sources")?)?);
         let now = by_path(rows(field(&observed, "sources")?)?);
         let before = source_files(&current);
-        let desired_view = recovery.manifest_view(&manifest)?;
+        let desired_view = crate::layout_recovery::manifest_view(&manifest)?;
         let after = source_files(&desired_view);
         let keys = ["sha256", "uid", "gid", "mode", "xattrs"];
         let mut actions = Vec::new();
@@ -526,7 +428,7 @@ pub fn preview(repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<V
         )?;
         Ok(p)
     })?;
-    recovery.result(
+    Ok(crate::layout_recovery::result(
         "rollback",
         Some(&child),
         vec![
@@ -537,7 +439,7 @@ pub fn preview(repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<V
             ("private_artifact_writes_performed", Value::Bool(true)),
             ("temporary_lock_writes_performed", Value::Bool(true)),
         ],
-    )
+    ))
 }
 
 /// Journal-derived temporaries this child restore may have left in the bank.
@@ -606,7 +508,6 @@ pub fn recover(
     proposal: Option<&Value>,
     runtime_root: &Path,
 ) -> Result<Value> {
-    let recovery = layout_recovery_provider()?;
     let Some(proposal) = proposal else {
         let operation_id = operation_id
             .ok_or_else(|| err("Recovery operations require canonical UUIDv4 identifiers"))?;
@@ -615,7 +516,7 @@ pub fn recover(
             bank,
             directory,
             ..
-        } = recovery.operation(repo, operation_id, runtime_root)?;
+        } = crate::layout_recovery::operation(repo, operation_id, runtime_root)?;
         let journal = read_value(&directory.join("journal.json"))?;
         let p = value(
             &root,
@@ -661,7 +562,7 @@ pub fn recover(
             .chain(&probe_entries)
             .map(|pin| text(pin, "path").map(str::to_owned))
             .collect::<Result<_>>()?;
-        let current = recovery.view(&bank, &ignored)?;
+        let current = crate::layout_recovery::view(&bank, &ignored)?;
         match &known {
             None => {
                 let active = read_optional(&directory.join("child-rollback-plan.json"))?;
@@ -707,7 +608,7 @@ pub fn recover(
                 .join(format!("{}.json", text(&plan, "recovery_id")?)),
             &plan,
         )?;
-        return recovery.result(
+        return Ok(crate::layout_recovery::result(
             "recover",
             Some(operation_id),
             vec![
@@ -716,10 +617,10 @@ pub fn recover(
                 ("proposal", plan),
                 ("private_artifact_writes_performed", Value::Bool(true)),
             ],
-        );
+        ));
     };
     let plan = proposal.get("proposal").unwrap_or(proposal);
-    recovery.fields(plan, CHILD_RECOVERY_FIELDS, Some(CHILD_RECOVERY))?;
+    crate::layout_recovery::fields(plan, CHILD_RECOVERY_FIELDS, Some(CHILD_RECOVERY))?;
     let operation_id = text(plan, "operation_id")?;
     let (root, _, _, directory) = operation_paths(repo, operation_id, runtime_root)?;
     let plan_path = directory
@@ -744,7 +645,7 @@ pub fn recover(
             text(&p, "project_id")?,
             runtime_root,
         )?;
-        return recovery.result(
+        return Ok(crate::layout_recovery::result(
             "recover",
             Some(text(&p, "operation_id")?),
             vec![
@@ -754,9 +655,9 @@ pub fn recover(
                 ("receipt_is_historical", Value::Bool(true)),
                 ("already_applied", Value::Bool(true)),
             ],
-        );
+        ));
     }
-    recovery.operation(&root, operation_id, runtime_root)?;
+    crate::layout_recovery::operation(&root, operation_id, runtime_root)?;
     let journal = read_value(&directory.join("journal.json"))?;
     let p = value(
         &root,
@@ -776,12 +677,7 @@ pub fn recover(
 }
 
 /// Remove an emptied reviewed new directory relative to its held parent.
-fn remove_directory(
-    bank: &Path,
-    path: &str,
-    base_view: &[Value],
-    recovery: &dyn LayoutRecovery,
-) -> Result<()> {
+fn remove_directory(bank: &Path, path: &str, base_view: &[Value]) -> Result<()> {
     let location = bank.join(path);
     let Some(info) = lstat(&location)? else {
         return Ok(());
@@ -795,7 +691,7 @@ fn remove_directory(
         .iter()
         .find(|row| get(row, "path").as_str() == Some(path))
         .ok_or_else(|| err(MALFORMED))?;
-    let current = recovery.view(bank, &[])?;
+    let current = crate::layout_recovery::view(bank, &[])?;
     let actual = current
         .iter()
         .find(|row| get(row, "path").as_str() == Some(path));
@@ -841,7 +737,6 @@ pub fn apply(
     plan: Option<&Value>,
     runtime_root: &Path,
 ) -> Result<Value> {
-    let recovery = layout_recovery_provider()?;
     let p = value(repo, supplied, runtime_root)?;
     let operation_id = text(&p, "operation_id")?;
     let (root, bank, base, directory) = operation_paths(repo, operation_id, runtime_root)?;
@@ -854,7 +749,7 @@ pub fn apply(
             return Err(err("Child historical receipt is corrupt"));
         }
         layout_history::check(&root, field(&p, "scope_context")?, project_id, runtime_root)?;
-        return recovery.result(
+        return Ok(crate::layout_recovery::result(
             "rollback",
             Some(operation_id),
             vec![
@@ -864,17 +759,15 @@ pub fn apply(
                 ("receipt_is_historical", Value::Bool(true)),
                 ("already_applied", Value::Bool(true)),
             ],
-        );
+        ));
     }
-    let observed = recovery
-        .operation(&root, operation_id, runtime_root)?
-        .manifest;
+    let observed = crate::layout_recovery::operation(&root, operation_id, runtime_root)?.manifest;
     let parent_operation = text(&p, "parent_operation_id")?;
-    let parent = recovery.recovery_source(&root, parent_operation, runtime_root)?;
+    let parent = crate::layout_recovery::recovery_source(&root, parent_operation, runtime_root)?;
     let parent_dir = parent.operation.directory.clone();
     let manifest = parent.operation.manifest.clone();
     let original = parent.proposal.clone();
-    let parent_receipt = recovery.receipt_value(&parent_dir, &original)?;
+    let parent_receipt = crate::layout_recovery::receipt_value(&parent_dir, &original)?;
     let parent_receipt_sha = match &parent_receipt {
         Some(receipt) => sha(receipt)?,
         None => sha(&Value::Null)?,
@@ -903,7 +796,7 @@ pub fn apply(
             Some(plan) => pin_paths(plan)?,
             None => Vec::new(),
         };
-        let mut current = recovery.view(&bank, &ignored)?;
+        let mut current = crate::layout_recovery::view(&bank, &ignored)?;
         if let Some(plan) = plan {
             let journal = read_value(&directory.join("journal.json"))?;
             let receipt_sha = match &known {
@@ -949,7 +842,7 @@ pub fn apply(
         if get(&p, "parent_ledger_head_sha256").as_str() != Some(sha(&head)?.as_str()) {
             return Err(err("Child restore has a later pending-ledger dependency"));
         }
-        recovery.rebind(
+        crate::layout_recovery::rebind(
             &root,
             &observed,
             owner,
@@ -970,7 +863,7 @@ pub fn apply(
                 owner,
                 current_marker.as_deref(),
             )?;
-            current = recovery.view(&bank, &[])?;
+            current = crate::layout_recovery::view(&bank, &[])?;
         }
         if let Some(known) = &known {
             if !same(
@@ -1059,7 +952,7 @@ pub fn apply(
                 )?;
             }
             if !same(
-                &Value::Array(recovery.view(&bank, &[])?),
+                &Value::Array(crate::layout_recovery::view(&bank, &[])?),
                 &Value::Array(current.clone()),
             ) || frontier.marker_bytes(&bank, tx::MARKER, None)? != current_marker
             {
@@ -1077,7 +970,14 @@ pub fn apply(
             runtime_root,
         )?;
         if current_marker.as_deref() != Some(transaction.as_slice()) {
-            recovery.atomic_marker(&bank, current_marker.as_deref(), &transaction, owner)?;
+            crate::layout_recovery::atomic_marker(
+                &bank,
+                current_marker.as_deref(),
+                &transaction,
+                owner,
+                crate::layout_recovery::MARKER,
+                None,
+            )?;
         }
         if known.is_none() {
             let context =
@@ -1127,7 +1027,7 @@ pub fn apply(
                 };
                 let position = boundary(&p, &current, Some(&reverse))?;
                 let actions = rows(field(&reverse, "actions")?)?;
-                recovery.new_directories(
+                crate::layout_recovery::new_directories(
                     &bank,
                     &object([(
                         "metadata_plan",
@@ -1142,7 +1042,7 @@ pub fn apply(
             };
             let sources = by_path(rows(field(&desired_manifest, "sources")?)?);
             let facts = by_path(rows(field(&desired_manifest, "physical_entries")?)?);
-            let mut running = recovery.view(&bank, &[])?;
+            let mut running = crate::layout_recovery::view(&bank, &[])?;
             for action in &actions {
                 let path = text(action, "path")?;
                 let body = match sources.get(path) {
@@ -1160,7 +1060,7 @@ pub fn apply(
                     Some(row) => Some(required_facts(row)?),
                     None => None,
                 };
-                recovery.replace_source(
+                crate::layout_recovery::replace_source(
                     &root,
                     &bank,
                     path,
@@ -1171,18 +1071,13 @@ pub fn apply(
                     runtime_root,
                 )?;
                 mutated = true;
-                running = recovery.view(&bank, &[])?;
+                running = crate::layout_recovery::view(&bank, &[])?;
             }
             if mode == "finish" {
                 let mut ordered = directory_names(field(&p, "directories_to_remove")?);
                 ordered.sort_by_key(|path| std::cmp::Reverse(Path::new(path).components().count()));
                 for path in ordered {
-                    remove_directory(
-                        &bank,
-                        &path,
-                        rows(field(&p, "base_view")?)?,
-                        recovery.as_ref(),
-                    )?;
+                    remove_directory(&bank, &path, rows(field(&p, "base_view")?)?)?;
                 }
             }
             let final_view = if mode == "finish" {
@@ -1190,7 +1085,7 @@ pub fn apply(
             } else {
                 rows(field(&p, "base_view")?)?
             };
-            let resulting = recovery.view(&bank, &[])?;
+            let resulting = crate::layout_recovery::view(&bank, &[])?;
             readback(final_view, &resulting)?;
             context.check(runtime_root)?;
             let receipt = object([
@@ -1220,7 +1115,7 @@ pub fn apply(
                 ("exact_xattr_readback_verified", Value::Bool(true)),
                 (
                     "canonical_eligibility_at_commit",
-                    recovery.eligibility(&root, owner, Some(&transaction))?,
+                    crate::layout_recovery::eligibility(&root, owner, Some(&transaction)),
                 ),
                 ("semantic_recovery_complete_at_commit", Value::Bool(false)),
                 (
@@ -1263,7 +1158,14 @@ pub fn apply(
         )?;
         match &starting_marker {
             Some(starting) if mode == "rollback" || pending => {
-                recovery.atomic_marker(&bank, Some(&transaction), starting, owner)?;
+                crate::layout_recovery::atomic_marker(
+                    &bank,
+                    Some(&transaction),
+                    starting,
+                    owner,
+                    crate::layout_recovery::MARKER,
+                    None,
+                )?;
             }
             _ => {
                 tx::check_marker(&bank, &transaction)?;
@@ -1297,7 +1199,7 @@ pub fn apply(
         }
         Ok((known, mutated))
     })?;
-    recovery.result(
+    Ok(crate::layout_recovery::result(
         "rollback",
         Some(operation_id),
         vec![
@@ -1313,5 +1215,5 @@ pub fn apply(
             ("private_artifact_writes_performed", Value::Bool(true)),
             ("temporary_lock_writes_performed", Value::Bool(true)),
         ],
-    )
+    ))
 }

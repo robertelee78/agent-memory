@@ -624,21 +624,16 @@ impl Recall {
     }
 }
 
-struct SourcePack;
-impl agent_memory::cli::PackRoot for SourcePack {
-    fn pack_root(&self) -> agent_memory::error::Result<PathBuf> {
-        Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"))
-    }
-}
-
-/// Re-executed `am` library dispatch with only the approved test PackRoot.
+/// Re-executed `am` library dispatch with the source checkout's pack.
 /// Tests using this helper define `cutover_dispatch_worker` and delegate to it.
 pub fn dispatch_worker() {
     let Some(input) = std::env::var_os("AGENT_MEMORY_FAULT_DISPATCH_INPUT") else {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
-    agent_memory::cli::register_pack_root(Some(std::sync::Arc::new(SourcePack)));
+    agent_memory::cli::use_development_pack(Some(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+    ));
     let request = json::decode_bytes(&fs::read(input).unwrap(), Default::default()).unwrap();
     let args: Vec<_> = get(&request, "args")
         .as_array()

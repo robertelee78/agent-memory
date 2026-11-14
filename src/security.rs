@@ -11,7 +11,6 @@ use crate::{
 use std::collections::BTreeSet;
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
-use std::sync::{Arc, RwLock};
 
 pub const CLASSES: &[&str] = &[
     "assistant",
@@ -431,14 +430,6 @@ fn scan_uncached(content: &Value, maximum: usize) -> Result<Value> {
     ]))
 }
 
-/// Migration owns both the actual existing locator and its location checks.
-pub trait MigrationAudit: Send + Sync {
-    fn validate_location(&self, root: &Path, bank: &Path, operation_id: &str) -> Result<()>;
-}
-static MIGRATION: RwLock<Option<Arc<dyn MigrationAudit>>> = RwLock::new(None);
-pub fn register_migration_audit(provider: Option<Arc<dyn MigrationAudit>>) {
-    *MIGRATION.write().unwrap_or_else(|e| e.into_inner()) = provider;
-}
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
@@ -523,12 +514,7 @@ pub fn audit(
                 "Migration audit must use the actual existing bank locator",
             ));
         }
-        let provider = MIGRATION
-            .read()
-            .unwrap_or_else(|e| e.into_inner())
-            .clone()
-            .ok_or_else(|| err("Migration audit provider is not registered"))?;
-        provider.validate_location(&root, bank, operation_id)?;
+        crate::migration::validate_audit_location(&root, bank, operation_id)?;
         bank.to_path_buf()
     } else {
         repository_config::bank_path(&root)?
@@ -1063,93 +1049,9 @@ pub fn evaluate(
     Ok(result)
 }
 
-/// One production implementation of the three pre-existing security seams.
-pub struct Security;
-impl repository_config::SecurityScan for Security {
-    fn has_reasons(&self, body: &str) -> Result<bool> {
-        Ok(!collect_reasons([scan(&string(body), LIMIT)])?.is_empty())
-    }
-    fn scan(&self, body: &str) -> Result<Value> {
-        scan(&string(body), LIMIT)
-    }
-}
-impl crate::sharing_hold_mapping::SecurityScan for Security {
-    fn has_reasons(&self, body: &Value) -> Result<bool> {
-        Ok(!collect_reasons([scan(body, LIMIT)])?.is_empty())
-    }
-}
-impl bank_writes::Security for Security {
-    fn guarded_start(
-        &self,
-        repo: &Path,
-        id: &str,
-        context: &Value,
-        files: &Value,
-        sources: &[&str],
-        action: &str,
-    ) -> Result<()> {
-        guarded_start(repo, id, context, files, sources, action, false).map(|_| ())
-    }
-    fn audit(
-        &self,
-        repo: &Path,
-        id: &str,
-        category: &str,
-        phase: &str,
-        context: &Value,
-        sources: &[&str],
-        action: &str,
-    ) -> Result<Value> {
-        audit(
-            repo,
-            id,
-            category,
-            phase,
-            context,
-            sources,
-            &[],
-            &[],
-            action,
-            None,
-        )
-    }
-    fn guarded_start_transaction(
-        &self,
-        repo: &Path,
-        id: &str,
-        context: &Value,
-        files: &Value,
-        sources: &[&str],
-        action: &str,
-        complete: bool,
-    ) -> Result<()> {
-        guarded_start(repo, id, context, files, sources, action, complete).map(|_| ())
-    }
-    fn audit_records(
-        &self,
-        repo: &Path,
-        operation_id: &str,
-        category: &str,
-        phase: &str,
-        context: &Value,
-        source_kinds: &[&str],
-        reasons: &[String],
-        record_ids: &[String],
-        action: &str,
-    ) -> Result<Value> {
-        audit(
-            repo,
-            operation_id,
-            category,
-            phase,
-            context,
-            source_kinds,
-            reasons,
-            record_ids,
-            action,
-            None,
-        )
-    }
+/// Whether the bounded scan of `body` reports any security reason.
+pub fn has_reasons(body: &Value) -> Result<bool> {
+    Ok(!collect_reasons([scan(body, LIMIT)])?.is_empty())
 }
 
 pub fn command_result(outcome: Result<Value>) -> crate::lifecycle::CommandResult {

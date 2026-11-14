@@ -372,7 +372,6 @@ fn source_index_locations_reject_controls_and_preserve_ordinary_unicode_and_spac
 #[test]
 fn missing_provider_refuses_without_claiming_bank_validation() -> Result<()> {
     assert!(bank::validate(std::path::Path::new("/"), None, None).is_err());
-    assert!(bank::recover_layout(&[]).is_err());
     Ok(())
 }
 
@@ -947,7 +946,7 @@ fn receipts_are_private_observed_and_never_overwrite_unexpected_bytes() {
     assert_eq!(std::fs::read(receipt).unwrap(), payload);
 }
 #[test]
-fn write_proposals_refuse_missing_scope_provider_and_invalid_paths() {
+fn write_proposals_accept_unresolved_scope_and_refuse_invalid_paths() {
     let world = World::new();
     let proposal = obj([
         ("schema", s("agent-memory/write-proposal-v1")),
@@ -966,12 +965,8 @@ fn write_proposals_refuse_missing_scope_provider_and_invalid_paths() {
         ("content", s("# Updated\n")),
         ("scope_context", Value::Null),
     ]);
-    assert_eq!(
-        agent_memory::bank_writes::proposal_value(&proposal)
-            .unwrap_err()
-            .to_string(),
-        "scope_binding provider is not registered"
-    );
+    // A null scope context is a valid unresolved proposal; apply refuses it later.
+    agent_memory::bank_writes::proposal_value(&proposal).unwrap();
     for (path, expected) in [
         (
             "../outside.md",
@@ -1332,8 +1327,7 @@ fn state_root_resolves_unset_empty_and_explicit_home_without_creating_it() {
 }
 
 #[test]
-fn missing_tombstone_registration_is_not_user_file_corruption_even_when_nested() {
-    use agent_memory::error::Kind;
+fn tombstone_routes_dispatch_to_the_real_parser_even_when_nested() {
     let id = "b3dcae21-f5f3-40ac-bcfe-e845a3d2868b";
     let path = format!("history/tombstones/{id}.md");
     let metadata = obj([
@@ -1356,19 +1350,8 @@ fn missing_tombstone_registration_is_not_user_file_corruption_even_when_nested()
         } else {
             root_route(&mut f, &tombstone_route);
         }
-        let error = bank::validate_files(&f, None).unwrap_err();
-        assert_eq!(error.kind(), &Kind::MissingProvider);
-        assert_eq!(error.to_string(), "Tombstone parser is not registered");
+        bank::validate_files(&f, None).unwrap();
     }
-}
-
-fn register_observation() {
-    static REGISTER: std::sync::Once = std::sync::Once::new();
-    REGISTER.call_once(|| {
-        bank::register_bank_observation(Some(std::sync::Arc::new(
-            agent_memory::bank_observation::BankObservation,
-        )))
-    });
 }
 
 struct WriterWorld {
@@ -1378,7 +1361,6 @@ struct WriterWorld {
 impl WriterWorld {
     fn new() -> Self {
         use std::os::unix::fs::PermissionsExt;
-        register_observation();
         let world = World::new();
         world.mkdir("repo/memory-bank");
         for (path, text) in files(false).as_object().unwrap() {
@@ -1412,7 +1394,10 @@ impl WriterWorld {
             ("operation", s("replace")),
             ("repo_root", s(self.repo().to_str().unwrap())),
             ("project_id", s(PROJECT)),
-            ("observed_hashes", bank::scan_hashes(&self.bank()).unwrap()),
+            (
+                "observed_hashes",
+                agent_memory::bank_observation::scan_hashes(&self.bank()).unwrap(),
+            ),
             ("path", s("projectbrief.md")),
             ("content", s("# Revised project\n\nVerified new context.\n")),
             ("scope_context", Value::Null),
@@ -1460,12 +1445,16 @@ impl WriterWorld {
 }
 
 #[test]
-fn real_observation_scans_sources_and_write_protocol_refuses_missing_providers_without_writes() {
+fn real_observation_scans_sources_and_write_protocol_refuses_without_frontier_or_writes() {
     let fixture = WriterWorld::new();
     let original = std::fs::read(fixture.bank().join("projectbrief.md")).unwrap();
-    let (physical, hashes, sources) = bank::scan_sources(&fixture.bank()).unwrap();
+    let (physical, hashes, sources) =
+        agent_memory::bank_observation::scan_sources(&fixture.bank()).unwrap();
     assert_eq!(physical.as_object().unwrap().len(), 2);
-    assert_eq!(hashes, bank::scan_hashes(&fixture.bank()).unwrap());
+    assert_eq!(
+        hashes,
+        agent_memory::bank_observation::scan_hashes(&fixture.bank()).unwrap()
+    );
     assert_eq!(sources["projectbrief.md"], original);
     assert_eq!(
         agent_memory::bank_writes::preview(
@@ -1476,15 +1465,11 @@ fn real_observation_scans_sources_and_write_protocol_refuses_missing_providers_w
         )
         .unwrap_err()
         .to_string(),
-        "Repository boundary security scan provider is not registered"
+        "recovery_frontier provider is not registered"
     );
     let prepared = fixture.prepared();
     let error = fixture.apply(&prepared).unwrap_err();
-    assert_eq!(error.kind(), &agent_memory::error::Kind::MissingProvider);
-    assert_eq!(
-        error.to_string(),
-        "scope_binding provider is not registered"
-    );
+    assert!(error.to_string().ends_with("pass --pack PATH"), "{error}");
     assert_eq!(
         std::fs::read(fixture.bank().join("projectbrief.md")).unwrap(),
         original
@@ -1591,7 +1576,6 @@ fn isolated_bank_fault_child() {
     if action == "fault" {
         agent_memory::bank_writes::fault("regression/pause").unwrap();
     } else {
-        register_observation();
         let root = std::path::PathBuf::from(std::env::var_os("AGENT_MEMORY_TEST_ROOT").unwrap());
         let fixture = WriterWorld {
             world: World { root: root.clone() },

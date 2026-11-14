@@ -706,7 +706,10 @@ fn request(f: &Fixture, observed: &Value) -> Value {
                         .map_or(Value::Null, |(_, metadata, _)| {
                             obj([
                                 ("id", g(&metadata, "id").clone()),
-                                ("version", g(&metadata, "version").clone()),
+                                (
+                                    "version",
+                                    metadata.get("version").cloned().unwrap_or(Value::Null),
+                                ),
                             ])
                         }),
                 ),
@@ -1811,3 +1814,6 @@ fn publication_judgment_matches_python_strip_without_rewriting_padded_value() {
         "A bounded explicit source-preservation judgment is required"
     );
 }
+
+#[path = "support/fanout_c.rs"]
+mod fanout_c;
