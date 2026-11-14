@@ -339,6 +339,9 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
                 .map_err(|error| error.to_string())
         });
     wired((*SECURITY_SCAN).clone().map_err(ContractError::new))?;
+    let checkpoint = Arc::new(crate::checkpoint::Checkpoint);
+    crate::bank_writes::register_checkpoint(Some(checkpoint.clone()));
+    crate::handoff::register_checkpoint(Some(checkpoint));
     Ok(())
 }
 

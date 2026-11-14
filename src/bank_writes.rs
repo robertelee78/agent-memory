@@ -72,6 +72,7 @@ pub trait ScopeBinding: Send + Sync {
 }
 pub trait Checkpoint: Send + Sync {
     fn validate_write(&self, proposal: &Value, sources: bool) -> Result<()>;
+    fn validate_preparation(&self, proposal: &Value, sources: bool) -> Result<()>;
 }
 pub trait RecoveryFrontier: Send + Sync {
     fn capture_scope(&self, repo: &Path) -> Result<Value>;
@@ -196,6 +197,19 @@ pub trait Security: Send + Sync {
         action: &str,
         complete_refresh: bool,
     ) -> Result<()>;
+    /// Baseline security.audit with explicit reasons, record IDs and action.
+    fn audit_records(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        category: &str,
+        phase: &str,
+        context: &Value,
+        source_kinds: &[&str],
+        reasons: &[String],
+        record_ids: &[String],
+        action: &str,
+    ) -> Result<Value>;
 }
 /// The implementing guard releases its barrier on Drop, including refusal paths.
 pub trait CanonicalWriterBarrier: Send {

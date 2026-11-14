@@ -2564,8 +2564,8 @@ mod handoff_contract {
             fn extra(&self) -> Vec<String> {
                 vec![]
             }
-            fn list_text(&self, _: &[String]) -> String {
-                String::new()
+            fn list_text(&self, _: &[String]) -> Result<String> {
+                Ok(String::new())
             }
         }
         let prior = r#"{"schema":"agent-memory/checkpoint-evidence-v1","references":[{"ref":"x","kind":"unavailable","sha256":null,"bytes":null,"commit":null,"blob":null}],"observed_checkout":{"head":null,"branch":null},"publication_verified":false,"identity_authenticated":false}"#;

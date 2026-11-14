@@ -21,7 +21,7 @@ pub trait Checkpoint: Send + Sync {
     fn headings(&self, body: &str) -> Result<Vec<(usize, usize, String)>>;
     fn fields(&self) -> Vec<String>;
     fn extra(&self) -> Vec<String>;
-    fn list_text(&self, references: &[String]) -> String;
+    fn list_text(&self, references: &[String]) -> Result<String>;
 }
 static CHECKPOINT: RwLock<Option<Arc<dyn Checkpoint>>> = RwLock::new(None);
 pub fn register_checkpoint(provider: Option<Arc<dyn Checkpoint>>) {
@@ -787,7 +787,7 @@ pub fn assess_with(
             .collect();
         if refs.iter().collect::<HashSet<_>>().len() != refs.len()
             || found.get("Checkpoint evidence").map(String::as_str)
-                != Some(provider.list_text(&refs).as_str())
+                != Some(provider.list_text(&refs)?.as_str())
         {
             return Err(ContractError::new(
                 "Evidence list differs from its historical observation",
