@@ -28,3 +28,5 @@ sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
 turn_check::register_memory_refresh waits for memory_refresh
 turn_check::register_scope_binding waits for scope_binding
 turn_check::register_turn_sources waits for turn_sources
+private_state::register_private_state_hooks waits for installation, omp_boundary, admission
+private_state::register_recovery_quiescence waits for recovery_quiescence

@@ -63,6 +63,12 @@ pub trait ScopeBinding: Send + Sync {
         owned_transaction: Option<&[u8]>,
         initialize: bool,
     ) -> Result<Value>;
+    /// Read-only locator reuse inside the exact live private-enrollment context.
+    fn observe_enrollment_location(
+        &self,
+        repo: &Path,
+        runtime_root: &Path,
+    ) -> Result<Option<crate::layout_recovery_state::RecoveryPaths>>;
 }
 pub trait Checkpoint: Send + Sync {
     fn validate_write(&self, proposal: &Value, sources: bool) -> Result<()>;
@@ -94,6 +100,47 @@ pub trait RecoveryFrontier: Send + Sync {
         project: &Value,
         expected: Option<&Value>,
     ) -> Result<Value>;
+    /// Read-only frontier observation at an already checked bank location.
+    fn observe_bank(
+        &self,
+        repo: &Path,
+        bank: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        require_identity: bool,
+        runtime_root: &Path,
+    ) -> Result<Value>;
+    /// Exact retained ledger: operation directory, head and current generation.
+    fn ledger(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        row: &Value,
+        bank: &Path,
+        runtime_root: &Path,
+    ) -> Result<(std::path::PathBuf, Value, Value)>;
+    fn evidence(
+        &self,
+        directory: &Path,
+        current: &Value,
+        row: &Value,
+        runtime_root: &Path,
+    ) -> Result<(Value, Value)>;
+    fn validate_quiescence(
+        &self,
+        repo: &Path,
+        value: &Value,
+        runtime_artifact_digest: Option<&str>,
+        required_routes: &[String],
+        publish: bool,
+        runtime_root: &Path,
+    ) -> Result<Value>;
+    fn verified_hold_for_runtime(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Vec<u8>>;
 }
 pub trait RecoveryTransactions: Send + Sync {
     fn apply_checkpoint(&self, proposal: &Value) -> Result<Value>;
@@ -143,6 +190,14 @@ pub trait TurnSources: Send + Sync {
         &self,
         repo: &Path,
         ordinary_bank: Option<&Path>,
+    ) -> Result<Box<dyn CanonicalWriterBarrier>>;
+    /// Existing-only observation must never create or enroll a missing lock.
+    fn source_barrier(
+        &self,
+        repo: &Path,
+        exclusive: bool,
+        existing_only: bool,
+        runtime_root: &Path,
     ) -> Result<Box<dyn CanonicalWriterBarrier>>;
 }
 static SCOPE: RwLock<Option<Arc<dyn ScopeBinding>>> = RwLock::new(None);
