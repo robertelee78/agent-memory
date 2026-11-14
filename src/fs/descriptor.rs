@@ -631,7 +631,19 @@ impl Descriptor {
         Ok(Some(names))
     }
 
-    /// Set permission bits on this held inode, never on a re-resolved path.
+    /// Exclusively create a symbolic link named `name` whose text is `target`.
+    pub fn symlink_at(&self, name: &OsStr, target: &OsStr) -> io::Result<()> {
+        let target = c_path(target)?;
+        status(unsafe {
+            libc::symlinkat(
+                target.as_ptr(),
+                self.as_raw_fd(),
+                child_name(name)?.as_ptr(),
+            )
+        })
+    }
+
+    /// Set ordinary permission bits on the held descriptor (`fchmod`), never by name.
     pub fn set_mode(&self, mode: u32) -> io::Result<()> {
         if mode > 0o7777 {
             return Err(io::Error::new(

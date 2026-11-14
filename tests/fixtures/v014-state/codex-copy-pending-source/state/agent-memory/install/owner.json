@@ -1,0 +1,6 @@
+{
+  "lock_path": "@WORLD@/state/agent-memory/install/lock",
+  "pid": 39569,
+  "schema": "agent-memory/lifecycle-owner-v1",
+  "started_at": "2026-11-13T21:50:53.113895+00:00"
+}

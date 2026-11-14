@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh @WORLD@/data/agent-memory/source/skills/agent-memory/hooks/python3.sh @WORLD@/data/agent-memory/source/skills/agent-memory/hooks/turn_hook.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh @WORLD@/data/agent-memory/source/skills/agent-memory/hooks/python3.sh @WORLD@/data/agent-memory/source/skills/agent-memory/hooks/claude_stop.py",
+            "asyncRewake": true
+          }
+        ]
+      }
+    ]
+  }
+}

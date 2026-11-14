@@ -2941,224 +2941,224 @@
   {
    "id": "tests/contracts/test_install_write_copy_after.py::LifecycleWriteContract.test_actual_logical_writes_in_partition_0",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_after.py::LifecycleWriteContract.test_actual_logical_writes_in_partition_4",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_after_part_1.py::LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_after_part_1.py::LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_5",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_after_part_2.py::LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_after_part_2.py::LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_6",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_after_part_3.py::LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_after_part_3.py::LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_7",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_before.py::InstallCopyBeforeContract.test_actual_logical_writes_in_partition_0",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_before.py::InstallCopyBeforeContract.test_actual_logical_writes_in_partition_4",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_before_part_1.py::InstallCopyBeforePart1Contract.test_actual_logical_writes_in_partition_1",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_before_part_1.py::InstallCopyBeforePart1Contract.test_actual_logical_writes_in_partition_5",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_before_part_2.py::InstallCopyBeforePart2Contract.test_actual_logical_writes_in_partition_2",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_before_part_2.py::InstallCopyBeforePart2Contract.test_actual_logical_writes_in_partition_6",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_before_part_3.py::InstallCopyBeforePart3Contract.test_actual_logical_writes_in_partition_3",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_copy_before_part_3.py::InstallCopyBeforePart3Contract.test_actual_logical_writes_in_partition_7",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_after.py::LifecycleWriteContract.test_actual_logical_writes_in_partition_0",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_after.py::LifecycleWriteContract.test_actual_logical_writes_in_partition_4",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_after_part_1.py::LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_after_part_1.py::LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_5",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_after_part_2.py::LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_after_part_2.py::LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_6",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_after_part_3.py::LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_after_part_3.py::LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_7",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_before.py::LifecycleWriteContract.test_actual_logical_writes_in_partition_0",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_before.py::LifecycleWriteContract.test_actual_logical_writes_in_partition_4",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_before_part_1.py::LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_before_part_1.py::LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_5",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_before_part_2.py::LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_before_part_2.py::LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_6",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_before_part_3.py::LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_install_write_link_before_part_3.py::LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_7",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3207,28 +3207,28 @@
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_activation_outside_edits_survive_and_inside_edits_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_all_targets_preflight_before_activation_and_unrelated_types_are_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_bank_state_overlap_is_refused_before_any_bank_or_runtime_write",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_bootstrap_recovers_process_exit_before_wrapper_and_lost_commit_response",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3249,42 +3249,42 @@
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_completed_recovery_checks_the_actual_receipt_and_owned_targets",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_copy_replacement_backup_and_conversion_have_identical_artifact_identity",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_explicit_development_link_refresh_still_revalidates_new_content",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_failed_replacement_restores_existing_copies_and_the_exact_prior_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_fresh_plan_link_install_repeat_and_installed_command_preserve_source_and_user_config",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_interrupted_claude_stop_install_restores_original_settings",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3340,49 +3340,49 @@
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_other_clients_keep_shared_activation_without_omp_template",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_owned_client_hook_lifecycle_preserves_foreign_configuration",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_partial_activation_failure_rolls_back_and_retry_converges",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_recover_with_no_pending_transaction_is_read_only",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_recovery_preserves_edits_made_after_an_interruption",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_state_inside_development_source_refuses_before_creating_a_lock",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_unrelated_lock_and_linked_state_are_never_adopted",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3417,7 +3417,7 @@
   {
    "id": "tests/contracts/test_installer.py::MacOSCommandContract.test_interrupted_activation_recovers_both_owned_command_names",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3438,7 +3438,7 @@
   {
    "id": "tests/contracts/test_installer.py::MacOSCommandContract.test_unrelated_am_file_directory_or_link_refuses_without_activating_other_targets",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6540,21 +6540,21 @@
   {
    "id": "tests/contracts/test_lifecycle_lost_responses.py::LifecycleLostResponses.test_fault_trace_itself_cannot_escape_into_another_world",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_lost_responses.py::LifecycleLostResponses.test_fault_trace_refuses_another_world_target_before_bootstrap_writes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_lifecycle_lost_responses.py::LifecycleLostResponses.test_install_response_is_lost_after_real_receipt_and_targets_commit",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 160,
-   "ported": 76,
-   "unported": 1626
+   "partial": 162,
+   "ported": 128,
+   "unported": 1572
   }
  }
 }

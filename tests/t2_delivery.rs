@@ -623,7 +623,17 @@ fn recovery_fixture(p: &Publisher) -> (PathBuf, Value) {
         .unwrap();
     let receipt = object([
         ("source", source),
-        ("artifact_files", release::inventory_value(&files)),
+        // Receipt-v3 inventory: the pack plus the runtime binary entry.
+        (
+            "artifact_files",
+            agent_memory::artifact::runtime_digest(
+                &release::inventory_value(&files),
+                &release::digest(b"runtime"),
+                0o755,
+            )
+            .unwrap()
+            .0,
+        ),
         (
             "targets",
             Value::Array(vec![object([
@@ -713,6 +723,43 @@ fn cache_qualification_refuses_unrelated_unsigned_wrong_mode_and_signed_drift() 
         );
         assert!(path.symlink_metadata().is_ok());
     }
+}
+
+#[test]
+fn cache_qualification_binds_the_receipt_runtime_inventory_in_both_directions() {
+    let p = Publisher::new();
+    let (root, receipt) = recovery_fixture(&p);
+    add_cache(&root, "example.cpython-311", b"opaque");
+    assert!(cache::qualify_with(&root, &receipt, &FixtureInstallation, &p.signers).is_ok());
+    let swap = |name: &str, digest: &str| {
+        let mut changed = receipt.clone();
+        if let Some(Value::Object(files)) = changed.get_mut("artifact_files") {
+            for (key, value) in files.iter_mut() {
+                if key == name {
+                    *value = object([("mode", string("0o755")), ("sha256", string(digest))]);
+                }
+            }
+        }
+        changed
+    };
+    // A swapped binary entry no longer hashes to the per-target runtime digest.
+    let binary = swap("bin/am", &release::digest(b"swapped binary"));
+    assert!(cache::qualify_with(&root, &binary, &FixtureInstallation, &p.signers).is_err());
+    // A swapped pack entry changes both the pack-only and the runtime digest.
+    let first = receipt
+        .get("artifact_files")
+        .and_then(Value::as_object)
+        .and_then(|files| files.iter().find(|(name, _)| name != "bin/am"))
+        .map(|(name, _)| name.clone())
+        .unwrap();
+    let pack = swap(&first, &release::digest(b"swapped pack file"));
+    assert!(cache::qualify_with(&root, &pack, &FixtureInstallation, &p.signers).is_err());
+    // A pack-only inventory (Python-era shape) is not the runtime inventory.
+    let mut pack_only = receipt.clone();
+    if let Some(Value::Object(files)) = pack_only.get_mut("artifact_files") {
+        files.retain(|(name, _)| name != "bin/am");
+    }
+    assert!(cache::qualify_with(&root, &pack_only, &FixtureInstallation, &p.signers).is_err());
 }
 
 // obligation: tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_python_created_group_writable_cache_directories_below_private_source_recover

@@ -338,21 +338,46 @@ pub fn qualify_with(
     let raw_manifest = file(release::MANIFEST)?;
     let manifest =
         release::verify_manifest_with(raw_manifest, file(release::SIGNATURE)?, None, signers)?;
-    let expected = get(receipt, "artifact_files");
-    let expected_pairs = expected
+    // Receipt-v3 `artifact_files` is the runtime inventory: the pack plus `bin/am`.
+    // Its digest is the per-target runtime digest; without `bin/am` it is the
+    // signed pack-only inventory.
+    let runtime_files = get(receipt, "artifact_files");
+    let runtime_pairs = runtime_files
         .as_object()
         .ok_or_else(|| ContractError::new("Receipt payload inventory must be an object"))?;
-    require(
-        !expected_pairs.is_empty()
-            && expected_pairs.len() <= release::MAX_ENTRIES
-            && release::inventory_digest(expected)? == manifest.artifact_digest,
-        "receipt payload inventory is not authenticated by the signed manifest",
-    )?;
     let target_triple = text(source,"target").ok_or_else(|| ContractError::new("Signed runtime cache recovery requires the receipt target triple; re-bootstrap legacy receipts"))?;
     let binary = manifest
         .targets
         .get(target_triple)
         .ok_or_else(|| ContractError::new("Unsupported release target"))?;
+    let pack_only = Value::Object(
+        runtime_pairs
+            .iter()
+            .filter(|(name, _)| name != crate::artifact::BINARY_ENTRY)
+            .cloned()
+            .collect(),
+    );
+    let expected = &pack_only;
+    let expected_pairs = expected
+        .as_object()
+        .ok_or_else(|| ContractError::new("Receipt payload inventory must be an object"))?;
+    let binary_entry_declared = runtime_files.get(crate::artifact::BINARY_ENTRY);
+    require(
+        !expected_pairs.is_empty()
+            && expected_pairs.len() <= release::MAX_ENTRIES
+            && runtime_pairs.len() == expected_pairs.len() + 1
+            && binary_entry_declared.is_some_and(|entry| {
+                release::canonical(entry).ok()
+                    == release::canonical(&crate::pack_validation::file_entry(
+                        &binary.sha256,
+                        0o755,
+                    ))
+                    .ok()
+            })
+            && release::inventory_digest(runtime_files)? == binary.artifact_digest
+            && release::inventory_digest(expected)? == manifest.artifact_digest,
+        "receipt payload inventory is not authenticated by the signed manifest",
+    )?;
     require(
         text(source, "release_manifest_sha256") == Some(release::digest(raw_manifest).as_str())
             && text(source, "artifact_digest") == Some(binary.artifact_digest.as_str())

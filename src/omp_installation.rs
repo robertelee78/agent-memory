@@ -207,9 +207,19 @@ pub fn validate_receipt(receipt: &Value) -> Result<()> {
     require(
         matches!(
             schema,
-            Some("agent-memory/install-receipt-v1" | "agent-memory/install-receipt-v2")
+            Some(
+                "agent-memory/install-receipt-v1"
+                    | "agent-memory/install-receipt-v2"
+                    | "agent-memory/install-receipt-v3"
+            )
         ),
         "Unknown installation receipt schema",
+    )?;
+    // Rust-era receipt-v3 records the compiled runtime target of its source.
+    let rust_era = schema == Some("agent-memory/install-receipt-v3");
+    require(
+        !rust_era || text(get(receipt, "source"), "target").is_some(),
+        "Rust-era installation receipt lacks its runtime target",
     )?;
     let value = get(receipt, "omp_binding");
     let installed = *value != Value::Null;
@@ -230,12 +240,12 @@ pub fn validate_receipt(receipt: &Value) -> Result<()> {
     )?;
     if !installed {
         return require(
-            schema == Some("agent-memory/install-receipt-v1"),
+            rust_era || schema == Some("agent-memory/install-receipt-v1"),
             "Non-omp installs retain receipt-v1",
         );
     }
     require(
-        schema == Some("agent-memory/install-receipt-v2")
+        (rust_era || schema == Some("agent-memory/install-receipt-v2"))
             && value.as_object().is_some_and(|v| {
                 v.len() == FIELDS.len() && FIELDS.iter().all(|k| value.get(k).is_some())
             }),

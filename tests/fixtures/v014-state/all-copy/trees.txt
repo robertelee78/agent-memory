@@ -1,0 +1,5 @@
+source data/agent-memory/source
+copy home/.agents/skills/agent-memory
+copy codex/skills/agent-memory
+copy claude/skills/agent-memory
+copy config/opencode/skills/agent-memory

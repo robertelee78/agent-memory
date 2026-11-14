@@ -309,11 +309,21 @@ pub fn bootstrap_command(args: Vec<String>) -> Result<Vec<String>> {
     else {
         return Ok(args);
     };
-    let managed = get(source, "kind").and_then(Value::as_str) == Some("managed");
+    // Only a Rust-era receipt (v3) selects the guarded update. Python-era v1/v2
+    // receipts and unknown schemas fall through to install, which adopts or refuses.
+    let rust_era = old
+        .as_ref()
+        .and_then(|old| get(old, "schema"))
+        .and_then(Value::as_str)
+        == Some("agent-memory/install-receipt-v3");
+    let channel = matches!(
+        get(source, "kind").and_then(Value::as_str),
+        Some("release" | "managed")
+    );
     let same = overrides
         .iter()
         .all(|(key, value)| get(source, key).and_then(Value::as_str) == Some(*value));
-    if managed && same {
+    if rust_era && channel && same {
         let check = tail.iter().any(|v| v == "--check" || v == "--dry-run");
         let mut update = vec!["update".to_owned()];
         if check {

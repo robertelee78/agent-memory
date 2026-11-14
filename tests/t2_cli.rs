@@ -414,7 +414,9 @@ fn pack_default_without_registered_location_is_a_typed_refusal() {
         assert!(output.stdout.is_empty());
         assert_eq!(
             text(&output.stderr),
-            format!("{prog}: Pack location is not registered for this runtime; pass --pack PATH\n")
+            format!(
+                "{prog}: No installed Rust runtime receipt owns this executable; pass --pack PATH\n"
+            )
         );
     }
     let missing = dir.run("am", &["validate-pack", "--pack", "absent"]);
@@ -449,10 +451,14 @@ fn direct_bootstrap_and_non_utf8_modes() {
         "am-aarch64-apple-darwin",
         &["install", "--bootstrap-binary", "/x/am", "--check"],
     );
+    // A missing verified binary refuses before any download.
     assert_eq!(bootstrap.status.code(), Some(1));
-    assert_eq!(
-        text(&bootstrap.stderr),
-        "am: Installed receipt provider is not registered; bootstrap cannot select update\n"
+    assert!(
+        text(&bootstrap.stderr).starts_with(
+            "am: Bootstrap binary is unavailable or not an ordinary file; re-run the trusted bootstrap\n"
+        ),
+        "{}",
+        text(&bootstrap.stderr)
     );
     let reconfigure = dir.run(
         "am-aarch64-apple-darwin",
@@ -464,8 +470,8 @@ fn direct_bootstrap_and_non_utf8_modes() {
             "none",
         ],
     );
-    assert_eq!(reconfigure.status.code(), Some(2));
-    assert!(text(&reconfigure.stderr).contains("invalid choice: 'install'"));
+    assert_eq!(reconfigure.status.code(), Some(1));
+    assert!(text(&reconfigure.stderr).contains("Bootstrap binary is unavailable"));
     let output = dir
         .base("am", "/usr/bin:/bin")
         .arg(OsString::from_vec(b"scope-\xffpolicy".to_vec()))

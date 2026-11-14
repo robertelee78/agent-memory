@@ -295,6 +295,20 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
         Arc::new(wiring::WriterOperations),
     )))?;
     crate::bank_writes::register_scope_binding(Some(Arc::new(crate::scope_binding::ScopeBinding)));
+    crate::cli::register_pack_root(Some(Arc::new(crate::installation::RuntimePackRoot)));
+    crate::console::register_installed_receipt(Some(Arc::new(
+        crate::installation::InstalledReceiptProvider,
+    )));
+    wired(
+        crate::cache_recovery::register_installation(Some(Arc::new(
+            crate::installation::CacheInstallation,
+        )))
+        .map_err(|error| ContractError::new(error.to_string())),
+    )?;
+    // Registered once per process; a repeated composition keeps the same provider.
+    let _ = crate::managed_source::register_installation(&crate::installation::MANAGED_SOURCE_INFO);
+    // Set-once registry: a repeated composition keeps the first provider.
+    let _ = crate::turn_check::register_scope_binding(Box::new(wiring::EnrollmentScope));
     Ok(())
 }
 

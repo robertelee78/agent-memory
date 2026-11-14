@@ -6,7 +6,7 @@
   "migration_catalog": "schemas/migrations.json",
   "python_minimum": "3.11",
   "installed_commands": ["am", "agent-memory"],
-  "installation_receipt_schemas": ["agent-memory/install-receipt-v1", "agent-memory/install-receipt-v2"],
+  "installation_receipt_schemas": ["agent-memory/install-receipt-v1", "agent-memory/install-receipt-v2", "agent-memory/install-receipt-v3"],
   "git_required_for": ["governed-repository-operations", "git-sharing"],
   "required_python_packages": [],
   "required_agent_clients": [],

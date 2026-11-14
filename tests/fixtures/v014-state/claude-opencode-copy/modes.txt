@@ -1,0 +1,9 @@
+0600 state/agent-memory/install/receipt.json
+0600 state/agent-memory/install/journal.json
+0600 state/agent-memory/install/owner.json
+0600 state/agent-memory/install/lock
+0755 home/.local/bin/am
+0755 home/.local/bin/agent-memory
+0644 claude/settings.json
+0644 claude/CLAUDE.md
+0644 config/opencode/AGENTS.md

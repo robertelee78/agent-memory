@@ -1,0 +1,5 @@
+home/.agents/skills/agent-memory -> @WORLD@/data/agent-memory/source/skills/agent-memory
+codex/skills/agent-memory -> @WORLD@/data/agent-memory/source/skills/agent-memory
+claude/skills/agent-memory -> @WORLD@/data/agent-memory/source/skills/agent-memory
+config/opencode/skills/agent-memory -> @WORLD@/data/agent-memory/source/skills/agent-memory
+config/opencode/plugins/agent-memory.js -> @WORLD@/data/agent-memory/source/skills/agent-memory/hooks/opencode.js

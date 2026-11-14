@@ -1,0 +1,2 @@
+source data/agent-memory/source
+copy codex/skills/agent-memory

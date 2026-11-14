@@ -151,7 +151,9 @@ fn check_compatibility(spec: &Value) -> Result<()> {
             && members(receipts).iter().all(|v| {
                 matches!(
                     *v,
-                    "agent-memory/install-receipt-v1" | "agent-memory/install-receipt-v2"
+                    "agent-memory/install-receipt-v1"
+                        | "agent-memory/install-receipt-v2"
+                        | "agent-memory/install-receipt-v3"
                 )
             }),
         "Installation receipt readers must be explicit unique supported schemas",
