@@ -34,6 +34,8 @@ pub enum Kind {
     IdentityUnresolved,
     /// Canonical writer contention permits bounded rediscovery, never authority.
     SourceTransportBusy { initializing: bool },
+    /// Published source completion requires the registered T2c authority gate.
+    SourcePublicationUnavailable,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -144,6 +146,23 @@ impl ContractError {
             kind: Kind::SourceTransportBusy { initializing },
             message: "Canonical writer unavailable; preserve pending source work and rediscover"
                 .into(),
+        }
+    }
+
+    pub(crate) fn missing_source_publication() -> Self {
+        Self {
+            kind: Kind::SourcePublicationUnavailable,
+            message: "PublicationGate provider is not registered; publication remains pending"
+                .into(),
+        }
+    }
+
+    pub(crate) fn source_lock_busy(message: &str) -> Self {
+        Self {
+            kind: Kind::SourceTransportBusy {
+                initializing: false,
+            },
+            message: message.into(),
         }
     }
 }

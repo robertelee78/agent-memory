@@ -295,6 +295,10 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
         Arc::new(wiring::WriterOperations),
     )))?;
     crate::bank_writes::register_scope_binding(Some(Arc::new(crate::scope_binding::ScopeBinding)));
+    crate::bank_writes::register_turn_sources(Some(Arc::new(crate::turn_sources::TurnSources)));
+    wired(crate::turn_check::register_turn_sources(Box::new(
+        crate::turn_sources::TurnSources,
+    )))?;
     Ok(())
 }
 

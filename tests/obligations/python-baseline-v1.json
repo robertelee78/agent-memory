@@ -2276,7 +2276,7 @@
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_all_shared_readers_refuse_unknown_compatibility_before_source_index_access",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2339,7 +2339,7 @@
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_shared_source_barrier_reentrancy_and_lifecycle_contention_preserve_sources",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9362,7 +9362,7 @@
   {
    "id": "tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_both_contended_lock_families_raise_typed_busy_before_body",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12708,56 +12708,56 @@
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_caps_fault_and_new_turn_backlog",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_corrupt_receipt_and_cross_observation_assessment_cannot_complete",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_distinct_and_identical_submissions_and_idempotent_ack",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_encoded_completion_bound_and_wake_cap",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_fifo_read_refuses_without_waiting_and_bad_json_index_blocks_input",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_index_cleanup_restores_racing_append_and_unsafe_index_blocks",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_index_hole_does_not_hide_later_bad_reference",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_native_opaque_ids_and_private_reference",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12771,7 +12771,7 @@
   {
    "id": "tests/contracts/test_turn_sources.py::Sources.test_registration_ignores_completion_lock_and_partial_slot_is_pending",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 153,
+   "partial": 165,
    "ported": 76,
-   "unported": 1633
+   "unported": 1621
   }
  }
 }
