@@ -89,7 +89,6 @@ fn claude_stop_preserves_foreign_and_modified_owned_hooks() {
 
 // obligation: tests/contracts/test_installer.py::InstallerContract.test_opencode_versioned_hook_is_owned_and_removed
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn opencode_hook_is_owned_and_removed_without_touching_other_plugins() {
     for (name, version) in [("opencode", "1.19.3"), ("opencode2", "opencode v2.1.3")] {
         let mut world = World::new().unwrap();
@@ -105,7 +104,7 @@ fn opencode_hook_is_owned_and_removed_without_touching_other_plugins() {
             world.env[std::ffi::OsStr::new("PATH")].to_string_lossy()
         );
         world.env.insert("PATH".into(), path.into());
-        let plugin = world.paths["opencode"].join("plugins/agent-memory.js");
+        let plugin = world.paths["config"].join("opencode/plugins/agent-memory.js");
         std::fs::create_dir_all(plugin.parent().unwrap()).unwrap();
         let other = plugin.with_file_name("other.js");
         std::fs::write(&other, b"foreign plugin\n").unwrap();

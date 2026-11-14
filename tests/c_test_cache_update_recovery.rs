@@ -28,7 +28,6 @@ fn unchanged_except_owner(world: &World) -> std::collections::BTreeMap<PathBuf, 
 
 // obligation: tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_older_signed_runtime_upgrades_preserving_all_opaque_bytes
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn rust_signed_runtime_refuses_opaque_bytecode_without_qualification_or_execution() {
     let world = World::new().unwrap();
     let (channel, _, runtime) = setup(&world, "link");
@@ -46,7 +45,6 @@ fn rust_signed_runtime_refuses_opaque_bytecode_without_qualification_or_executio
 
 // obligation: tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_copy_client_drift_does_not_receive_source_qualification
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn copied_client_opaque_drift_never_receives_source_qualification() {
     let world = World::new().unwrap();
     let (channel, installed, runtime) = setup(&world, "copy");
@@ -71,7 +69,6 @@ fn copied_client_opaque_drift_never_receives_source_qualification() {
 
 // obligation: tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_reachable_writable_cache_directory_remains_refused
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn reachable_writable_opaque_cache_directory_remains_refused() {
     let world = World::new().unwrap();
     let (channel, _, runtime) = setup(&world, "link");
@@ -97,7 +94,6 @@ fn reachable_writable_opaque_cache_directory_remains_refused() {
 
 // obligation: tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_interrupted_activation_preserves_dirty_tree_as_pending_then_trusted_retry
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn opaque_bytecode_is_refused_before_activation_and_retained_on_trusted_retry() {
     let mut world = World::new().unwrap();
     let (channel, _, runtime) = setup(&world, "link");
@@ -133,7 +129,6 @@ fn opaque_bytecode_is_refused_before_activation_and_retained_on_trusted_retry() 
 
 // obligation: tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_concurrent_cache_writer_is_preserved_then_source_only_retry_converges
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn changed_opaque_cache_bytes_are_preserved_and_never_qualified_by_retry() {
     let world = World::new().unwrap();
     let (channel, _, runtime) = setup(&world, "link");

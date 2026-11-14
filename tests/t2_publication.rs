@@ -1914,7 +1914,7 @@ fn rev_parents(w: &World, repo: &Path, commit: &str) -> TestResult<Vec<String>> 
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_first_publication_excludes_feature_ancestry_and_preserves_original_files_index
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn first_publication_excludes_feature_ancestry_and_preserves_original_files_index() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, base) = bootstrap(&w)?;
@@ -1950,7 +1950,7 @@ fn first_publication_excludes_feature_ancestry_and_preserves_original_files_inde
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_required_human_review_and_checks_remain_pending_even_for_an_admin
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn required_human_review_and_checks_remain_pending_even_for_an_admin() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2009,7 +2009,7 @@ fn required_human_review_and_checks_remain_pending_even_for_an_admin() -> TestRe
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_first_bank_compares_real_absence_without_a_second_starter
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn first_bank_compares_real_absence_without_a_second_starter() -> TestResult {
     let w = World::new()?;
     let (repo, bank, base) = bootstrap(&w)?;
@@ -2057,7 +2057,7 @@ fn first_bank_compares_real_absence_without_a_second_starter() -> TestResult {
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit() -> TestResult {
     let w = World::new()?;
     let (repo, bank, _, _) = fixture(&w)?;
@@ -2098,7 +2098,7 @@ fn unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit() ->
 
 // obligation: tests/contracts/test_publication_policy.py::PublicationPolicyContract.test_rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2135,7 +2135,7 @@ fn rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed() ->
 
 // obligation: tests/contracts/test_publication_policy.py::PublicationPolicyContract.test_clean_rollup_cannot_substitute_for_missing_or_wrong_app_required_checks
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn clean_rollup_cannot_substitute_for_missing_or_wrong_app_required_checks() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2220,7 +2220,7 @@ fn restricted_publication(w: &mut World) -> TestResult<(PathBuf, PathBuf, PathBu
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_allowed_user_still_waits_for_reviews_and_checks_then_lands
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn allowed_user_still_waits_for_reviews_and_checks_then_lands() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2258,7 +2258,7 @@ fn allowed_user_still_waits_for_reviews_and_checks_then_lands() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_all_negative_identity_and_inventory_cases_refuse_prepare
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn all_negative_identity_and_inventory_cases_refuse_prepare() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2341,7 +2341,7 @@ fn all_negative_identity_and_inventory_cases_refuse_prepare() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_complete_later_page_succeeds_but_incomplete_chains_refuse
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn complete_later_page_succeeds_but_incomplete_chains_refuse() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2380,7 +2380,7 @@ fn complete_later_page_succeeds_but_incomplete_chains_refuse() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_actor_revoked_after_prepare_and_transport_rejection_stay_unpublished
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn actor_revoked_after_prepare_and_transport_rejection_stay_unpublished() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2413,7 +2413,7 @@ fn actor_revoked_after_prepare_and_transport_rejection_stay_unpublished() -> Tes
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_immediate_final_recheck_refuses_actor_allowlist_or_restriction_change
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn immediate_final_recheck_refuses_actor_allowlist_or_restriction_change() -> TestResult {
     for field in [
         "change_actor_at",
@@ -2450,7 +2450,7 @@ fn immediate_final_recheck_refuses_actor_allowlist_or_restriction_change() -> Te
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_bank
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_bank() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, _) = bootstrap(&w)?;
@@ -2522,7 +2522,7 @@ fn peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_ban
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_discarded_side_bank_is_not_invented_as_historical_authority_ownership
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn discarded_side_bank_is_not_invented_as_historical_authority_ownership() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, _) = bootstrap(&w)?;
@@ -2569,7 +2569,7 @@ fn discarded_side_bank_is_not_invented_as_historical_authority_ownership() -> Te
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_offline_permission_source_and_unsupported_policy_failures_keep_local_memory_pending
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn offline_permission_source_and_unsupported_policy_failures_keep_local_memory_pending()
 -> TestResult {
     let mut w = World::new()?;
@@ -2631,7 +2631,7 @@ fn offline_permission_source_and_unsupported_policy_failures_keep_local_memory_p
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_removed_authority_bank_is_not_treated_as_first_initialization
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn removed_authority_bank_is_not_treated_as_first_initialization() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2657,7 +2657,7 @@ fn removed_authority_bank_is_not_treated_as_first_initialization() -> TestResult
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_tampered_candidate_with_identical_memory_but_feature_code_is_refused
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn tampered_candidate_with_identical_memory_but_feature_code_is_refused() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2712,7 +2712,7 @@ fn tampered_candidate_with_identical_memory_but_feature_code_is_refused() -> Tes
 
 // obligation: tests/contracts/test_publication_recovery.py::PublicationRecoveryContract.test_lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&w)?;
@@ -2786,7 +2786,7 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
 
 // obligation: tests/contracts/test_publication_recovery.py::PublicationRecoveryContract.test_competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_authority_code
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_authority_code()
 -> TestResult {
     let mut w = World::new()?;
@@ -2850,7 +2850,7 @@ fn competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_au
 
 // obligation: tests/contracts/test_publication_worktree.py::PublicationWorktreeContract.test_linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, base) = bootstrap(&w)?;
@@ -2918,18 +2918,492 @@ fn linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags(
 
 // obligation: tests/contracts/test_publication_admission.py::PublicationAdmissionContract.test_admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history() -> TestResult {
-    deferred_body("the AdmissionContract request/prepared/apply fixture (admission lane)")
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&w)?;
+    github(&mut w, &repo, &bank, Some(&peer), false)?;
+    git(&w, &repo, &["checkout", "-b", "unfinished-experiment"])?;
+    git(&w, &repo, &["commit", "-m", "Unfinished feature ancestor"])?;
+    fs::write(
+        repo.join("code.py"),
+        "VALUE = 3  # additional staged unfinished code\n",
+    )?;
+    git(&w, &repo, &["add", "code.py"])?;
+    let evidence = b"# Isolated observed experiment\n\nUnder the named component conditions the measured retry cap is three.\n";
+    fs::write(repo.join("evidence.md"), evidence)?;
+    let scope = good(
+        &w,
+        "scope_binding.py",
+        &[os("status"), os("--repo"), repo.as_os_str()],
+    )?;
+    let project = get(&scope, "project_id").clone();
+    let actor = get(&scope, "developer_id").clone();
+    let mut candidate = json::decode(
+        include_str!("../skills/agent-memory/templates/record-proposal.example.json"),
+        DecodePolicy::default(),
+    )?;
+    set(
+        &mut candidate,
+        "body",
+        s("# Retry policy\n\nUse at most three attempts for this fixture.\n"),
+    );
+    let metadata = candidate.get_mut("metadata").unwrap();
+    set(metadata, "project-id", project.clone());
+    set(metadata, "id", s(agent_memory::host::uuid4()?));
+    set(metadata, "trust", s("reviewed"));
+    set(metadata, "visibility", s("visible"));
+    set(
+        metadata,
+        "admission-reason",
+        s("Disposable structural fixture; not real admission evidence"),
+    );
+    set(metadata, "evidence", Value::Array(vec![s("evidence.md")]));
+    set(metadata, "scope", s("repository"));
+    set(
+        metadata,
+        "source",
+        obj([
+            ("kind", s("verified-repository")),
+            ("actor", s("Explicit fixture source; not authenticated")),
+        ]),
+    );
+    set(
+        metadata,
+        "conditions",
+        obj([
+            ("component", s("code.py")),
+            ("branch", s("unfinished-experiment")),
+        ]),
+    );
+    let record_id = text(get(metadata, "id")).to_owned();
+    let origin = metadata.get_mut("origin").unwrap();
+    set(origin, "developer-id", actor);
+    set(origin, "code-state", s("unmerged"));
+    set(origin, "harness", s("custom-fixture"));
+    set(origin, "session", s("unfinished-experiment"));
+    let request = obj([
+        ("project_id", project.clone()),
+        ("candidate", candidate.clone()),
+        ("source_class", s("verified-repository")),
+        (
+            "repository_evidence",
+            obj([
+                ("path", s("evidence.md")),
+                (
+                    "sha256",
+                    s(agent_memory::release_distribution::digest(evidence)),
+                ),
+            ]),
+        ),
+        (
+            "assessment",
+            obj([
+                ("category", s("durable-discovery")),
+                (
+                    "utility",
+                    s("Prevent repeated excessive retries under these conditions."),
+                ),
+                ("durable", Value::Bool(true)),
+                ("evidence_confidence", s("confirmed")),
+                (
+                    "evidence_reason",
+                    s("The operator explicitly confirmed the correction."),
+                ),
+                ("confirmed", Value::Bool(true)),
+                ("source_redundant", Value::Bool(false)),
+                ("work_state_copy", Value::Bool(false)),
+                (
+                    "review",
+                    s(
+                        "Reviewed the actual fixture experiment and its component applicability; feature code remains unmerged.",
+                    ),
+                ),
+            ]),
+        ),
+    ]);
+    let request_path = save(&w, &request, "admission-request.json")?;
+    let capture = good(
+        &w,
+        "admit_learning.py",
+        &[
+            os("capture"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--request"),
+            request_path.as_os_str(),
+        ],
+    )?;
+    assert_eq!(get(&capture, "decision"), &s("eligible"));
+    let comparison = obj([
+        ("project_id", project),
+        ("candidate", candidate),
+        (
+            "searches",
+            Value::Array(vec![s("retry policy"), s("attempt cap")]),
+        ),
+        ("read_paths", Value::Array(vec![])),
+    ]);
+    let compared_path = save(&w, &comparison, "comparison-request.json")?;
+    let inspected = good(
+        &w,
+        "compare_learning.py",
+        &[
+            os("inspect"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--request"),
+            compared_path.as_os_str(),
+        ],
+    )?;
+    let decisions = get(&inspected, "matches")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            obj([
+                ("path", get(row, "path").clone()),
+                ("classification", s("distinct-knowledge")),
+                (
+                    "rationale",
+                    s("The fixture meaning has been assessed with its evidence and conditions."),
+                ),
+            ])
+        })
+        .collect();
+    let judgment = obj([
+        ("observation", get(&inspected, "observation").clone()),
+        ("decisions", Value::Array(decisions)),
+        ("pending_decisions", Value::Array(vec![])),
+        (
+            "rationale",
+            s("Read the actual bounded plausible sources before deciding novelty."),
+        ),
+    ]);
+    let judgment_path = save(&w, &judgment, "admission-judgment.json")?;
+    let reviewed = good(
+        &w,
+        "compare_learning.py",
+        &[
+            os("review"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--request"),
+            compared_path.as_os_str(),
+            os("--judgment"),
+            judgment_path.as_os_str(),
+        ],
+    )?;
+    let capture_path = save(&w, &capture, "admission-capture.json")?;
+    let proof_path = save(&w, &reviewed, "admission-proof.json")?;
+    let preview = good(
+        &w,
+        "admit_learning.py",
+        &[
+            os("preview"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--capture"),
+            capture_path.as_os_str(),
+            os("--request"),
+            compared_path.as_os_str(),
+            os("--proof"),
+            proof_path.as_os_str(),
+        ],
+    )?;
+    let proposal = save(&w, get(&preview, "proposal"), "admission-proposal.json")?;
+    let admitted = good(
+        &w,
+        "admit_learning.py",
+        &[os("apply"), os("--proposal"), proposal.as_os_str()],
+    )?;
+    assert_eq!(get(&admitted, "admission_verified"), &Value::Bool(true));
+    let before = state(&w, &repo, &bank)?;
+    let feature = git(&w, &repo, &["rev-parse", "HEAD"])?.trim().to_owned();
+    let request = get(&prepared(&w, &repo)?, "request").clone();
+    let landed = land(&w, &repo, &request)?;
+    assert_eq!(get(&landed, "publication_verified"), &Value::Bool(true));
+    assert_eq!(
+        get(&landed, "feature_code_freshness_verified"),
+        &Value::Bool(false)
+    );
+    let commit = text(get(&request, "candidate"));
+    for (path, content) in &before.0 {
+        let actual = git(
+            &w,
+            &repo,
+            &["show", &format!("{commit}:memory-bank/{path}")],
+        )?;
+        if path == "MEMORY.md" {
+            let fields = agent_memory::repository_config::ROUTER_FIELDS;
+            let (actual, _) = agent_memory::codec::frontmatter::read(&actual, fields)?;
+            let (expected, _) =
+                agent_memory::codec::frontmatter::read(std::str::from_utf8(content)?, fields)?;
+            assert!(agent_memory::installation::same(
+                &Value::Object(actual),
+                &Value::Object(expected)
+            ));
+        } else {
+            assert_eq!(actual.as_bytes(), content);
+        }
+    }
+    assert!(fs::read_to_string(bank.join(format!("topics/{record_id}.md")))?.contains("unmerged"));
+    assert!(
+        !git(&w, &repo, &["rev-list", commit])?
+            .lines()
+            .any(|line| line == feature)
+    );
+    assert_eq!(
+        git(&w, &repo, &["show", &format!("{commit}:code.py")])?,
+        "VALUE = 1\n"
+    );
+    assert_eq!(before, state(&w, &repo, &bank)?);
+    Ok(())
 }
 
 // obligation: tests/contracts/test_publication_hold_recovery.py::PublicationHoldRecoveryContract.test_missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work() -> TestResult {
-    deferred_body(
-        "the QuarantinedSharingVersionTwoContract versioned_review fixture (semantic_sharing lane)",
-    )
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&w)?;
+    github(&mut w, &repo, &bank, Some(&peer), false)?;
+    let marker = format!("sk-{}", "X".repeat(24));
+    let project =
+        support::record_fixtures::project_id(&fs::read_to_string(bank.join("MEMORY.md"))?)?;
+    let body = support::record_fixtures::record_text(
+        &format!("# Isolated evidence\n\n{marker}\n"),
+        project.as_str().unwrap(),
+    )?;
+    fs::create_dir_all(bank.join("topics"))?;
+    let held = "topics/isolated-local.md";
+    fs::write(bank.join(held), body)?;
+    let router = fs::read_to_string(bank.join("MEMORY.md"))?;
+    fs::write(bank.join("MEMORY.md"), router.replace("\n## Omitted contexts\n",
+        &format!("| [{held}](<{held}>) | Scoped reviewed lesson | repository | active | When conditions match |\n\n## Omitted contexts\n")))?;
+    fs::write(
+        bank.join("activeContext.md"),
+        "# Current focus\n\nIndependent local learning.\n",
+    )?;
+    fs::write(
+        peer.join("memory-bank/projectbrief.md"),
+        "# Project\n\nIndependent peer learning.\n",
+    )?;
+    git(&w, &peer, &["add", "memory-bank"])?;
+    git(&w, &peer, &["commit", "-m", "Independent peer learning"])?;
+    git(&w, &peer, &["push", "origin", "HEAD:main"])?;
+    let first_path = w.inside("first-inspection.json")?;
+    good(
+        &w,
+        "reconcile_memory.py",
+        &[
+            os("inspect-v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--output"),
+            first_path.as_os_str(),
+        ],
+    )?;
+    let first = decode(&fs::read(&first_path)?)?;
+    let rows: BTreeMap<_, _> = get(&first, "sources")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| (text(get(row, "key")), row))
+        .collect();
+    let mut request = get(&first, "request").clone();
+    let selections = get(&first, "changed")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|key| {
+            let key = text(key);
+            let row = rows[key];
+            let subject = get(row, "target_path")
+                .as_str()
+                .unwrap_or_else(|| text(get(row, "path")));
+            (
+                key.to_owned(),
+                obj([
+                    (
+                        "searches",
+                        Value::Array(vec![s(subject), s(subject.trim_end_matches(".md"))]),
+                    ),
+                    ("paths", Value::Array(vec![s(subject)])),
+                    ("ids", Value::Array(vec![])),
+                    ("complete", Value::Bool(true)),
+                    ("uncertain", Value::Bool(false)),
+                ]),
+            )
+        })
+        .collect();
+    set(&mut request, "selections", Value::Object(selections));
+    let request_path = save(&w, &request, "versioned-request.json")?;
+    let selected_path = w.inside("selected-inspection.json")?;
+    let selected = good(
+        &w,
+        "reconcile_memory.py",
+        &[
+            os("inspect-v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            request_path.as_os_str(),
+            os("--output"),
+            selected_path.as_os_str(),
+        ],
+    )?;
+    let view = decode(&fs::read(&selected_path)?)?;
+    let mut visible = vec![first.clone(), selected, view.clone()];
+    for page in get(&view, "pages").as_array().unwrap() {
+        let index = get(page, "index").as_int().unwrap().to_string();
+        visible.push(good(
+            &w,
+            "reconcile_memory.py",
+            &[
+                os("page-v2"),
+                os("--repo"),
+                repo.as_os_str(),
+                os("--input"),
+                selected_path.as_os_str(),
+                os("--page"),
+                os(&index),
+            ],
+        )?);
+    }
+    let mut review = judgment(&view)?;
+    set(
+        &mut review,
+        "schema",
+        s("agent-memory/semantic-sharing-judgment-v2"),
+    );
+    set(&mut review, "request", request);
+    set(
+        &mut review,
+        "manifest_sha256",
+        get(&view, "manifest_sha256").clone(),
+    );
+    set(
+        &mut review,
+        "pages",
+        Value::Array(
+            get(&view, "pages")
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|page| get(page, "sha256").clone())
+                .collect(),
+        ),
+    );
+    let input = save(&w, &review, "versioned-judgment.json")?;
+    let reviewed_path = w.inside("versioned-reviewed.json")?;
+    visible.push(good(
+        &w,
+        "reconcile_memory.py",
+        &[
+            os("review-v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            input.as_os_str(),
+            os("--output"),
+            reviewed_path.as_os_str(),
+        ],
+    )?);
+    let reviewed = decode(&fs::read(&reviewed_path)?)?;
+    let proof_path = save(&w, get(&reviewed, "proof"), "versioned-proof.json")?;
+    let checked = good(
+        &w,
+        "reconcile_memory.py",
+        &[
+            os("check"),
+            os("--v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            proof_path.as_os_str(),
+        ],
+    )?;
+    assert!(checked.get("refresh_files").is_none() && checked.get("publish_files").is_none());
+    visible.push(checked);
+    assert!(!encode(&Value::Array(visible))?.contains(&marker));
+    assert!(
+        !get(&view, "withheld_sources")
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(get(&reviewed, "conflicts_pending"), &Value::Bool(true));
+    let prepared = good(
+        &w,
+        "publish_memory.py",
+        &[
+            os("prepare"),
+            os("--v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            proof_path.as_os_str(),
+        ],
+    )?;
+    let mut private = BTreeMap::new();
+    files_below(&w.paths["state"], &w.paths["state"], &mut private)?;
+    let registry = private
+        .keys()
+        .find(|name| name.contains("semantic-holds/") && name.ends_with("/registry.json"))
+        .unwrap();
+    let registry = w.paths["state"].join(registry);
+    let original = fs::read(&registry)?;
+    let journal = registry.with_file_name("journal.json");
+    let input = save(&w, get(&prepared, "request"), "held-publication.json")?;
+    let request_bytes = fs::read(&input)?;
+    let before = state(&w, &repo, &bank)?;
+    fs::write(&journal, "pending review evidence")?;
+    for code in ["known-holds-interrupted", "known-holds-registry-missing"] {
+        let (exit, value) = call(
+            &w,
+            "publish_memory.py",
+            &[
+                os("land"),
+                os("--v2"),
+                os("--repo"),
+                repo.as_os_str(),
+                os("--input"),
+                input.as_os_str(),
+            ],
+        )?;
+        assert_eq!(exit, 1, "{value:?}");
+        assert_eq!(get(&value, "failure_component"), &s("known-dispute-state"));
+        assert_eq!(get(&value, "failure_code"), &s(code));
+        assert!(text(get(&value, "repair")).contains("recover-holds"));
+        assert_eq!(get(&value, "publication_verified"), &Value::Bool(false));
+        assert_eq!(before, state(&w, &repo, &bank)?);
+        assert_eq!(fs::read(&input)?, request_bytes);
+        if code == "known-holds-interrupted" {
+            assert!(journal.exists());
+            fs::remove_file(&journal)?;
+            fs::remove_file(&registry)?;
+        }
+    }
+    let project = text(
+        get(get(get(&reviewed, "proof"), "judgment"), "binding")
+            .get("project_id")
+            .unwrap(),
+    );
+    let recovered = good(
+        &w,
+        "reconcile_memory.py",
+        &[
+            os("recover-holds"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--project-id"),
+            os(project),
+        ],
+    )?;
+    assert_eq!(get(&recovered, "verified"), &Value::Bool(true));
+    assert_eq!(fs::read(&registry)?, original);
+    Ok(())
 }
 
 /// The body of an annotated, ignored obligation whose scenario fixture is
@@ -3653,3 +4127,6 @@ fn fanout_d_absent_route_baseline_never_chooses_conflicting_captions() -> TestRe
     assert_eq!(state(&w, &repo, &bank)?, before);
     Ok(())
 }
+
+#[path = "support/gaps_multi.rs"]
+mod gaps_multi;

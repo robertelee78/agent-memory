@@ -537,7 +537,7 @@ fn fixture_mapping_uses_real_registered_commands_and_refuses_unknown_helpers() {
 }
 
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregistered_binding() {
     let world = World::new().unwrap();
     let repo = world.repository("repo", false).unwrap();

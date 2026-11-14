@@ -1254,3 +1254,293 @@ fn source_digest_and_content_text_follow_baseline_canonical_bytes() {
         None
     );
 }
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_observer_verification_cannot_enroll_or_promote_legacy_marker
+fn gaps_observer_verification_cannot_enroll_or_promote_legacy_marker() {
+    isolated(
+        "gaps_observer_verification_cannot_enroll_or_promote_legacy_marker",
+        true,
+        |f| {
+            let base = agent_memory::omp_boundary::base(&f.repo).unwrap();
+            let marker = base.join("turn-sources-compat-v1.json");
+            let binding = base.join("omp-bank-binding-v1.json");
+            fs::remove_file(&marker).unwrap();
+            fs::remove_file(&binding).unwrap();
+            assert!(agent_memory::omp_boundary::verify_marker(&f.repo, &f.runtime).is_err());
+            assert!(!marker.exists());
+            assert!(!binding.exists());
+            agent_memory::omp_boundary::activate_marker(&f.repo, true, &f.runtime).unwrap();
+            let current = decode(&fs::read(&marker).unwrap());
+            let mut historical = current.clone();
+            set(&mut historical, "minimum_reader", s("omp-harness-v1"));
+            private(&marker, &historical);
+            let before = fs::read(&marker).unwrap();
+            assert!(agent_memory::omp_boundary::verify_marker(&f.repo, &f.runtime).is_err());
+            assert_eq!(fs::read(&marker).unwrap(), before);
+            assert_eq!(
+                agent_memory::omp_boundary::required_source_capabilities(&f.repo, &f.runtime)
+                    .unwrap(),
+                std::collections::BTreeSet::from(["omp-harness-v1".into()])
+            );
+            assert!(
+                agent_memory::omp_boundary::activate_marker(&f.repo, true, &f.runtime).is_err()
+            );
+            assert_eq!(fs::read(&marker).unwrap(), before);
+            agent_memory::omp_boundary::activate_marker(&f.repo, false, &f.runtime).unwrap();
+            assert_eq!(decode(&fs::read(&marker).unwrap()), current);
+            set(&mut historical, "minimum_reader", s("future-reader"));
+            private(&marker, &historical);
+            assert!(agent_memory::turn_sources::check_source_compatibility(&base).is_err());
+        },
+    );
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_real_binding_proof_rejects_forgery_and_mid_instance_drift_before_source
+fn gaps_real_binding_proof_rejects_forgery_and_mid_instance_drift() {
+    isolated(
+        "gaps_real_binding_proof_rejects_forgery_and_mid_instance_drift",
+        true,
+        |f| {
+            let artifact = t(get(&f.receipt, "source"), "artifact_digest");
+            let agent = t(get(&f.receipt, "omp_binding"), "agent_dir");
+            let proof = agent_memory::omp_installation::verified_observer_binding(
+                artifact,
+                agent,
+                Some(&f.receipt),
+            )
+            .unwrap();
+            agent_memory::omp_installation::verify_observer_binding(&f.repo, &f.receipt, &proof)
+                .unwrap();
+            let base = agent_memory::omp_boundary::base(&f.repo).unwrap();
+            assert!(!base.join("omp-source-v1").exists());
+            for (key, value) in [
+                ("installed_at", s("2030-01-01T00:00:00+00:00")),
+                ("artifact_digest", s("f".repeat(64))),
+            ] {
+                let mut other = f.receipt.clone();
+                if key == "artifact_digest" {
+                    set(other.get_mut("source").unwrap(), key, value);
+                } else {
+                    set(&mut other, key, value);
+                }
+                assert!(
+                    agent_memory::omp_installation::verify_observer_binding(
+                        &f.repo, &other, &proof
+                    )
+                    .is_err()
+                );
+            }
+            // The Rust proof is a sealed, non-deserializable, non-Clone type;
+            // untrusted lookalike JSON crosses the public observer request boundary.
+            let forged = obj([
+                ("verified_binding", obj([("_seal", Value::Bool(true))])),
+                ("schema", s("agent-memory/omp-observer-request-v2")),
+                ("action", s("hint")),
+                ("session", s(uuid())),
+                ("lifecycle", s(uuid())),
+                ("payload", obj([])),
+            ]);
+            let argv = [
+                f.am.as_os_str().to_owned(),
+                "omp-observer".into(),
+                "--repo".into(),
+                f.repo.as_os_str().to_owned(),
+                "--stdin".into(),
+            ];
+            let env = f
+                .env
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect::<Vec<_>>();
+            let raw = encoded(&forged);
+            let result = process::run(&Spec {
+                argv: &argv,
+                env: &env,
+                cwd: Some(&f.repo),
+                search_path: false,
+                stdin: Input::Bytes(&raw),
+                stdout: Target::Capture { limit: 65536 },
+                stderr: Target::Capture { limit: 65536 },
+                deadline: agent_memory::clock::Deadline::after(Duration::from_secs(20)).unwrap(),
+                new_session: false,
+                file_size_limit: None,
+                umask: None,
+                pass_fds: &[],
+            })
+            .unwrap();
+            assert_eq!(result.status, Status::Code(1));
+            assert!(!base.join("omp-source-v1").exists());
+            for kind in ["receipt", "marker", "bank-binding"] {
+                let path = match kind {
+                    "receipt" => f.receipt_path.clone(),
+                    "marker" => base.join("turn-sources-compat-v1.json"),
+                    _ => base.join("omp-bank-binding-v1.json"),
+                };
+                let original = fs::read(&path).unwrap();
+                let mut changed = decode(&original);
+                match kind {
+                    "receipt" => set(&mut changed, "installed_at", s("2030-01-01T00:00:00+00:00")),
+                    "marker" => set(&mut changed, "minimum_reader", s("future-reader")),
+                    _ => set(&mut changed, "project_id", s(uuid())),
+                }
+                private(&path, &changed);
+                assert!(
+                    agent_memory::omp_installation::verify_observer_binding(
+                        &f.repo, &f.receipt, &proof
+                    )
+                    .is_err(),
+                    "{kind}"
+                );
+                assert!(!base.join("omp-source-v1").exists());
+                fs::write(path, original).unwrap();
+                agent_memory::omp_installation::verify_observer_binding(
+                    &f.repo, &f.receipt, &proof,
+                )
+                .unwrap();
+            }
+        },
+    );
+}
+
+fn gaps_install_args(source: &Path, agent: &Path) -> Vec<OsString> {
+    vec![
+        "install".into(),
+        "--development-source".into(),
+        source.as_os_str().to_owned(),
+        "--presets".into(),
+        "omp".into(),
+        "--omp-agent-dir".into(),
+        agent.as_os_str().to_owned(),
+        "--omp-peers-upgraded".into(),
+        "--mode".into(),
+        "copy".into(),
+    ]
+}
+fn gaps_install_call(w: &World, args: &[OsString], fault: Option<(&str, &str)>) -> (i32, Value) {
+    let env = fault
+        .map(|(stage, mode)| {
+            vec![
+                ("AGENT_MEMORY_FAULT_STAGE".into(), stage.into()),
+                ("AGENT_MEMORY_FAULT_MODE".into(), mode.into()),
+            ]
+        })
+        .unwrap_or_default();
+    let output = w
+        .am_with(
+            std::iter::once(OsString::from("--json")).chain(args.iter().cloned()),
+            RunOptions {
+                env: &env,
+                check: false,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let Status::Code(code) = output.status else {
+        panic!("unexpected signal")
+    };
+    (
+        code,
+        if output.stdout.is_empty() {
+            Value::Null
+        } else {
+            decode(&output.stdout)
+        },
+    )
+}
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_receipt_commit_separates_bank_activation_from_rollback
+fn gaps_receipt_commit_separates_bank_activation_from_rollback() {
+    for (stage, mode, committed) in [
+        ("install-before-receipt", "exit", false),
+        ("install-after-receipt", "exit", true),
+        ("install-before-stored-source-activation", "error", true),
+    ] {
+        let r = support::cutover::Recall::new();
+        let w = &r.world;
+        let source = support::lifecycle::source(w);
+        let agent = w.root.join("explicit-omp");
+        fs::create_dir(&agent).unwrap();
+        let args = gaps_install_args(&source, &agent);
+        let (code, value) = gaps_install_call(w, &args, Some((stage, mode)));
+        assert_eq!(code, if mode == "exit" { 86 } else { 1 }, "{value:?}");
+        let base = w.paths["state"].join("agent-memory/writes").join(
+            agent_memory::developer_identity::digest(Some(r.bank.to_str().unwrap().as_bytes()))
+                .unwrap(),
+        );
+        let marker = base.join("turn-sources-compat-v1.json");
+        let binding = base.join("omp-bank-binding-v1.json");
+        assert!(!marker.exists());
+        assert!(!binding.exists());
+        let receipt = support::lifecycle::state(w).join("receipt.json");
+        assert_eq!(receipt.exists(), committed);
+        let old = committed.then(|| fs::read(&receipt).unwrap());
+        if mode == "error" {
+            assert_eq!(get(&value, "receipt_committed"), &Value::Bool(true));
+            assert_eq!(
+                get(&value, "stored_source_activation").as_str(),
+                Some("pending")
+            );
+        }
+        let (code, recovered) = gaps_install_call(w, &["recover".into()], None);
+        assert_eq!(code, 0, "{recovered:?}");
+        assert_eq!(get(&recovered, "verified"), &Value::Bool(true));
+        if committed {
+            assert_eq!(fs::read(&receipt).unwrap(), old.unwrap());
+            assert!(marker.exists());
+            assert!(binding.exists());
+            let (code, repeated) = gaps_install_call(w, &args, None);
+            assert_eq!(code, 0);
+            assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
+        } else {
+            assert_eq!(get(&recovered, "status").as_str(), Some("rolled-back"));
+            assert!(!marker.exists());
+            assert!(!binding.exists());
+            assert!(!receipt.exists());
+        }
+    }
+}
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_prior_committed_activation_recovers_after_a_later_install_rolls_back
+fn gaps_prior_committed_activation_recovers_after_later_install_rolls_back() {
+    let r = support::cutover::Recall::new();
+    let w = &r.world;
+    let first = support::lifecycle::source(w);
+    let second = w.root.join("second-source");
+    support::lifecycle::copy_tree(&first, &second);
+    let agent = w.root.join("explicit-omp");
+    fs::create_dir(&agent).unwrap();
+    let args = gaps_install_args(&first, &agent);
+    let (code, value) = gaps_install_call(
+        w,
+        &args,
+        Some(("install-before-stored-source-activation", "error")),
+    );
+    assert_eq!(code, 1);
+    assert_eq!(get(&value, "receipt_committed"), &Value::Bool(true));
+    let receipt = support::lifecycle::state(w).join("receipt.json");
+    let committed = fs::read(&receipt).unwrap();
+    let later = gaps_install_args(&second, &agent);
+    assert_eq!(
+        gaps_install_call(w, &later, Some(("install-before-receipt", "error"))).0,
+        1
+    );
+    assert_eq!(fs::read(&receipt).unwrap(), committed);
+    let (code, recovered) = gaps_install_call(w, &["recover".into()], None);
+    assert_eq!(code, 0);
+    assert_eq!(get(&recovered, "status").as_str(), Some("rolled-back"));
+    assert_eq!(
+        get(get(&recovered, "stored_source_activation"), "status").as_str(),
+        Some("activated")
+    );
+    assert_eq!(fs::read(&receipt).unwrap(), committed);
+    let (code, repeated) = gaps_install_call(w, &args, None);
+    assert_eq!(code, 0);
+    assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
+    assert_eq!(fs::read(receipt).unwrap(), committed);
+}

@@ -270,9 +270,13 @@ fn existing_wrapped_prohibition_cannot_be_mapped_to_positive_force() {
 #[test]
 fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
     let world = World::new().unwrap();
+    // Cargo's target-specific uplift may hard-link the executable. Release
+    // readers deliberately accept only a private, ordinary single-link input.
+    let binary = world.inside("guide-example-am").unwrap();
+    std::fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
     let value = call(
         &world,
-        &["capture-guide-examples", "--am", env!("CARGO_BIN_EXE_am")],
+        &["capture-guide-examples", "--am", binary.to_str().unwrap()],
         0,
     );
     let examples = get(&value, "examples").as_array().unwrap();

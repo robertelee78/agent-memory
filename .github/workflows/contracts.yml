@@ -49,7 +49,7 @@ jobs:
         run: cargo fmt --check
       - name: Test
         shell: sh
-        run: cargo test --locked --features dev-tools --target '${{ matrix.target }}'
+        run: cargo test --locked --no-fail-fast --features dev-tools --target '${{ matrix.target }}'
 
   musl:
     name: Static build (${{ matrix.target }})

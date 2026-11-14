@@ -116,7 +116,6 @@ fn failed_report_retention_never_replaces_the_primary_error() {
 
 // obligation: tests/contracts/test_download_diagnostics.py::BootstrapPreview.test_signed_preview_uses_packaged_guidance_and_preserves_profiles
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn signed_preview_uses_packaged_guidance_without_profile_changes() {
     let world = World::new().unwrap();
     let channel = support::distribution::Channel::new(&world);

@@ -835,14 +835,14 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_concurrent_cache_writer_is_preserved_then_source_only_retry_converges",
    "registered": false,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_copy_client_drift_does_not_receive_source_qualification",
    "registered": false,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -856,7 +856,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_interrupted_activation_preserves_dirty_tree_as_pending_then_trusted_retry",
    "registered": false,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -870,7 +870,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_older_signed_runtime_upgrades_preserving_all_opaque_bytes",
    "registered": false,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -884,7 +884,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_reachable_writable_cache_directory_remains_refused",
    "registered": false,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -1773,14 +1773,14 @@
   {
    "id": "tests/contracts/test_doctor_fix.py::DoctorFixContract.test_recover_committed_interrupted_update_from_recorded_journal",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_doctor_fix.py::DoctorFixContract.test_recover_update_interrupted_before_receipt",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -1794,7 +1794,7 @@
   {
    "id": "tests/contracts/test_download_diagnostics.py::BootstrapPreview.test_signed_preview_uses_packaged_guidance_and_preserves_profiles",
    "registered": false,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -2599,7 +2599,7 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_machinery_memory_and_runtime_errors_are_fatal_not_optional_absence",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -2627,7 +2627,7 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_partial_registration_failure_closes_previously_owned_children_and_selector",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3194,14 +3194,14 @@
   {
    "id": "tests/contracts/test_installed_layout.py::InstalledLayoutContract.test_custom_only_discovery_does_not_create_default_client_links_or_guidance",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_installed_layout.py::InstalledLayoutContract.test_no_client_mode_still_exposes_installed_lifecycle_without_a_bank_or_identity",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3334,7 +3334,7 @@
   {
    "id": "tests/contracts/test_installer.py::InstallerContract.test_opencode_versioned_hook_is_owned_and_removed",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6716,7 +6716,7 @@
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_actual_linked_worktree_relative_common_pointer_and_native_alias_work",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6730,7 +6730,7 @@
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_common_metadata_directory_with_real_trailing_space_is_not_rewritten",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6765,7 +6765,7 @@
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_parent_substitution_before_activation_preserves_targets_and_recovers",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6786,7 +6786,7 @@
   {
    "id": "tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_private_temp_barrier_native_alias_and_group_write_payloads_work",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6863,7 +6863,7 @@
   {
    "id": "tests/contracts/test_managed_source_ownership.py::ManagedSourceOwnershipContract.test_interrupted_switch_restores_exact_drifted_source_and_retries",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7073,7 +7073,7 @@
   {
    "id": "tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_managed_update_accepts_repository_under_symlinked_ancestor",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9755,7 +9755,7 @@
   {
    "id": "tests/contracts/test_portable_artifact.py::PortableArtifactContract.test_every_implemented_documented_helper_imports_and_dispatches_from_the_copy",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -10441,7 +10441,7 @@
   {
    "id": "tests/contracts/test_read_only_audits.py::ReadOnlyAudits.test_outside_receipt_aware_audit_refuses_and_preserves_inert_cache_drift",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -11729,14 +11729,14 @@
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_changed_owned_copy_update_retains_prior_payload_and_receipt_backups",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_competing_update_observes_the_live_lifecycle_lock",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -11785,7 +11785,7 @@
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_fast_forward_outside_the_pack_needs_no_client_restart",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -11820,14 +11820,14 @@
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_unchanged_channel_does_not_derive_a_new_artifact_from_a_different_umask",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_unchanged_revision_refreshes_allowed_outside_text_without_a_code_switch",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12464,7 +12464,7 @@
   {
    "id": "tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_missing_signature_verifier_refuses_before_lifecycle_state_is_created",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12478,7 +12478,7 @@
   {
    "id": "tests/contracts/test_signed_release_publisher.py::SignedPublisherContract.test_one_command_first_publish_exact_resume_and_harmless_descendant",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12492,7 +12492,7 @@
   {
    "id": "tests/contracts/test_signed_release_publisher.py::SignedPublisherContract.test_wrong_tags_and_incompatible_or_racing_main_never_claim_default_activation",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12527,7 +12527,7 @@
   {
    "id": "tests/contracts/test_skill_routes.py::SkillRouteContract.test_every_documented_helper_dispatch_also_accepts_real_public_help",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12912,7 +12912,7 @@
   {
    "id": "tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_available_repository_without_a_bank_stays_in_compatibility_rechecks",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12926,7 +12926,7 @@
   {
    "id": "tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_missing_explicit_repository_remains_an_error_and_preserves_targets",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -13203,9 +13203,9 @@
   "unregistered": 33,
   "by_status": {
    "not-applicable": 90,
-   "partial": 792,
-   "ported": 401,
-   "unported": 579
+   "partial": 772,
+   "ported": 431,
+   "unported": 569
   }
  }
 }

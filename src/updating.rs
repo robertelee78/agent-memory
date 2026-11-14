@@ -444,6 +444,8 @@ fn inspect_bank(
     };
     idle()?;
     let raw = read_router(&bank)?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("updating.migration.read_regular")?;
     let metadata = router_metadata(&raw)?
         .ok_or_else(|| contract("Discovered bank needs an explicit format header"))?;
     let schema = text(&metadata, "schema").unwrap_or_default().to_owned();

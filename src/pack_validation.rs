@@ -1614,7 +1614,10 @@ fn check_dispatch(
         .first()
         .map(|arg| arg.as_str())
         .ok_or_else(|| Invalid::new("dispatch", prose_path, "Missing documented am command"))?;
+    // Refusals name the documented command (baseline: the top-level helper);
+    // the readback row records the full delegated command path.
     let label = format!("am {name}");
+    let mut command = label.clone();
     let provider = surface.ok_or_else(|| {
         Invalid::new(
             "command-surface-unregistered",
@@ -1659,6 +1662,10 @@ fn check_dispatch(
             &format!("Unknown documented operation for {label}"),
         )?;
         if let Some(route) = verb.and_then(|value| current.routes.get(value)) {
+            if let Some(verb) = verb {
+                command.push(' ');
+                command.push_str(verb);
+            }
             require(
                 depth < 8,
                 "dispatch",
@@ -1689,7 +1696,7 @@ fn check_dispatch(
         )?;
         return Ok(object([
             ("guide", string(prose_path)),
-            ("command", string(label)),
+            ("command", string(command)),
             ("module", string(&current.module)),
             ("operation", verb.map_or(Value::Null, string)),
         ]));

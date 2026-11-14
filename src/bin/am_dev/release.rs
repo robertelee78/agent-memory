@@ -1525,3 +1525,7 @@ printf 200
         assert!(!output.exists());
     }
 }
+
+#[cfg(test)]
+#[path = "gaps_publisher.rs"]
+mod gaps_tests;

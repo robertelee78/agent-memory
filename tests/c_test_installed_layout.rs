@@ -46,7 +46,8 @@ fn layout(world: &World, receipt: &Value) {
                     assert!(!path.is_symlink());
                 }
                 let original = agent_memory::release_distribution::portable_files(&pack).unwrap();
-                let copied = agent_memory::release_distribution::portable_files(&path).unwrap();
+                let resolved = std::fs::canonicalize(&path).unwrap();
+                let copied = agent_memory::release_distribution::portable_files(&resolved).unwrap();
                 assert_eq!(copied, original);
             }
             "activation" => {
@@ -81,20 +82,29 @@ fn layout(world: &World, receipt: &Value) {
         assert!(path.exists());
     }
 }
-fn native(world: &World, cli: &Path, args: &[&str]) -> Value {
-    let output = world
-        .run(
-            std::iter::once(cli.to_str().unwrap())
-                .chain(["--json"])
-                .chain(args.iter().copied()),
-        )
-        .unwrap();
-    json::decode_bytes(&output.stdout, Default::default()).unwrap()
+fn native(world: &World, channel: &Channel, cli: &Path, args: &[&str]) -> Value {
+    if matches!(args.first(), Some(&"status" | &"doctor" | &"version")) {
+        assert_eq!(
+            std::fs::canonicalize(cli).unwrap(),
+            world.paths["data"].join("agent-memory/runtime/bin/am")
+        );
+        // The public API receives this disposable channel's real signing roots;
+        // the release binary correctly trusts only production roots.
+        channel.run(world, "diagnostic", args, 0)
+    } else {
+        let output = world
+            .run(
+                std::iter::once(cli.to_str().unwrap())
+                    .chain(["--json"])
+                    .chain(args.iter().copied()),
+            )
+            .unwrap();
+        json::decode_bytes(&output.stdout, Default::default()).unwrap()
+    }
 }
 
 // obligation: tests/contracts/test_installed_layout.py::InstalledLayoutContract.test_no_client_mode_still_exposes_installed_lifecycle_without_a_bank_or_identity
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn no_client_mode_exposes_lifecycle_without_bank_or_identity() {
     for mode in ["link", "copy"] {
         let world = World::new().unwrap();
@@ -117,11 +127,14 @@ fn no_client_mode_exposes_lifecycle_without_bank_or_identity() {
         );
         let cli = command(receipt);
         assert_eq!(
-            text(get(&native(&world, &cli, &["status"]), "bank"), "state"),
+            text(
+                get(&native(&world, &channel, &cli, &["status"]), "bank"),
+                "state"
+            ),
             "not_located"
         );
         assert_eq!(
-            get(&native(&world, &cli, &["doctor"]), "ok"),
+            get(&native(&world, &channel, &cli, &["doctor"]), "ok"),
             &Value::Bool(true)
         );
         assert_eq!(
@@ -147,7 +160,6 @@ fn no_client_mode_exposes_lifecycle_without_bank_or_identity() {
 
 // obligation: tests/contracts/test_installed_layout.py::InstalledLayoutContract.test_custom_only_discovery_does_not_create_default_client_links_or_guidance
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn custom_only_targets_never_create_default_client_links_or_guidance() {
     for mode in ["link", "copy"] {
         let world = World::new().unwrap();
@@ -193,7 +205,7 @@ fn custom_only_targets_never_create_default_client_links_or_guidance() {
                 .collect::<Vec<_>>(),
             before
         );
-        let version = native(&world, &command(receipt), &["version"]);
+        let version = native(&world, &channel, &command(receipt), &["version"]);
         assert_eq!(
             get(get(&version, "installation"), "enabled_adapters"),
             get(receipt, "enabled_adapters")
@@ -298,7 +310,7 @@ fn all_clients_share_one_artifact_and_lifecycle_preserves_distinct_data() {
             vec!["status", "--repo", fixture.repo.to_str().unwrap()],
         ] {
             let before = snapshot(&world.root);
-            native(&world, &cli, &args);
+            native(&world, &channel, &cli, &args);
             assert_eq!(snapshot(&world.root), before);
         }
         channel.publish("0.0.16", &"b".repeat(40));

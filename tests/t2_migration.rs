@@ -158,11 +158,14 @@ fn migration_worker() {
         agent_memory::bank_transactions::command_result("recover", outcome)
     } else {
         let compiled = std::env::var("AM_MIGRATION_CODECS").as_deref() == Ok("compiled");
-        let codecs: Arc<dyn Codecs + Send + Sync> = if compiled {
-            Arc::new(Compiled)
-        } else {
-            Arc::new(FixtureCodecs)
-        };
+        let codecs: Arc<dyn Codecs + Send + Sync> =
+            if std::env::var("AM_MIGRATION_CODECS").as_deref() == Ok("next") {
+                Arc::new(GapsNextCodecs)
+            } else if compiled {
+                Arc::new(Compiled)
+            } else {
+                Arc::new(FixtureCodecs)
+            };
         agent_memory::cli::helpers::migration::dispatch_with(&args, "am migrate", || {
             let surface = agent_memory::cli::surface::Declared::current()?;
             Ok(Runtime::new(
@@ -1109,4 +1112,288 @@ fn installed_migrate_route_refuses_outside_a_runtime_layout() {
         string(&value, "error"),
         "This executable is not inside a runtime with a portable pack; run the installed or retained am"
     );
+}
+
+const GAPS_NEXT: &str = "agent-memory/test-only-target";
+/// A real, reversible test-format transition through the same explicit Codecs
+/// parameter as the baseline fixture. No production codec or reader is replaced.
+struct GapsNextCodecs;
+impl Codecs for GapsNextCodecs {
+    fn validator(&self, name: &str) -> Option<Validator> {
+        match name {
+            "native" => Some(migration_codecs::native),
+            "next" => Some(gaps_next_validate),
+            _ => None,
+        }
+    }
+    fn converter(&self, name: &str) -> Option<Converter> {
+        match name {
+            "next" => Some(gaps_next_convert),
+            _ => None,
+        }
+    }
+}
+fn gaps_next_validate(files: &Value) -> DomainResult<Value> {
+    migration_codecs::native(&replaced(files, "MEMORY.md", GAPS_NEXT, NATIVE)?)
+}
+fn gaps_next_convert(files: &Value) -> DomainResult<Value> {
+    replaced(files, "MEMORY.md", NATIVE, GAPS_NEXT)
+}
+struct GapsNextMigration;
+impl agent_memory::artifact::MigrationContract for GapsNextMigration {
+    fn inspect(&self, root: &Path, compatibility: &Value, files: &Value) -> DomainResult<Value> {
+        agent_memory::migration_contract::inspect(root, compatibility, files, &GapsNextCodecs)
+    }
+}
+struct GapsNextArtifacts;
+impl agent_memory::installation::ArtifactInspection for GapsNextArtifacts {
+    fn inspect_runtime(
+        &self,
+        pack: &Path,
+        binary: &Path,
+    ) -> agent_memory::installation::Result<Value> {
+        let surface = agent_memory::cli::surface::Declared::current()?;
+        Ok(agent_memory::artifact::inspect_runtime_with(
+            pack,
+            binary,
+            Some(&surface),
+            Some(&GapsNextMigration),
+        )?)
+    }
+    fn inspect(&self, pack: &Path) -> agent_memory::installation::Result<Value> {
+        let surface = agent_memory::cli::surface::Declared::current()?;
+        Ok(agent_memory::artifact::inspect_with(
+            pack,
+            Some(&surface),
+            Some(&GapsNextMigration),
+        )?)
+    }
+}
+fn gaps_lifecycle(
+    w: &World,
+    channel: &support::distribution::Channel,
+    repo: &Path,
+    action: &str,
+    expected: i32,
+    fault: bool,
+) -> Value {
+    let request = Value::Object(vec![
+        (
+            "channel".into(),
+            Value::String(channel.root.to_str().unwrap().into()),
+        ),
+        (
+            "pack".into(),
+            Value::String(channel.pack.to_str().unwrap().into()),
+        ),
+        ("repo".into(), Value::String(repo.to_str().unwrap().into())),
+        ("action".into(), Value::String(action.into())),
+    ]);
+    let path = w.root.join("next-lifecycle.json");
+    std::fs::write(&path, encoded(&request).unwrap()).unwrap();
+    let mut env = vec![(
+        "AGENT_MEMORY_FAULT_GAPS_NEXT_LIFECYCLE".into(),
+        path.into_os_string(),
+    )];
+    if fault {
+        env.extend([
+            (
+                "AGENT_MEMORY_FAULT_STAGE".into(),
+                "update-after-activate-0".into(),
+            ),
+            ("AGENT_MEMORY_FAULT_MODE".into(), "exit".into()),
+        ]);
+    }
+    let output = w
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                "gaps_next_lifecycle_worker".into(),
+                "--nocapture".into(),
+            ],
+            RunOptions {
+                env: &env,
+                check: false,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    if expected == 86 {
+        assert_eq!(output.status, Status::Code(86));
+        return Value::Null;
+    }
+    assert_eq!(output.status, Status::Code(0), "{output:?}");
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let value = decode(
+        stdout
+            .lines()
+            .find_map(|line| line.strip_prefix("GAPS-NEXT:"))
+            .unwrap()
+            .as_bytes(),
+    );
+    assert_eq!(field(&value, "code"), &Value::Int(expected.into()));
+    field(&value, "value").clone()
+}
+#[test]
+fn gaps_next_lifecycle_worker() {
+    let Some(path) = std::env::var_os("AGENT_MEMORY_FAULT_GAPS_NEXT_LIFECYCLE") else {
+        return;
+    };
+    agent_memory::cli::register_providers().unwrap();
+    let request = decode(&std::fs::read(path).unwrap());
+    let channel = support::distribution::Channel {
+        root: PathBuf::from(string(&request, "channel")),
+        pack: PathBuf::from(string(&request, "pack")),
+    };
+    let env = agent_memory::installation::Environment::process();
+    let mut services = agent_memory::installation::Services::registered().unwrap();
+    services.artifacts = Arc::new(GapsNextArtifacts);
+    services.release = channel.access();
+    services.updating = Some(Arc::new(agent_memory::updating::Runtime::new(
+        env.clone(),
+        services.artifacts.clone(),
+        services.release.clone(),
+    )));
+    let result = if string(&request, "action") == "recover" {
+        agent_memory::installation::recover_command(&env, &services)
+    } else {
+        agent_memory::updating::update_command(
+            &env,
+            &services,
+            &agent_memory::updating::UpdateRequest {
+                check: string(&request, "action") == "check",
+                repo: vec![string(&request, "repo").to_owned()],
+                ..Default::default()
+            },
+        )
+    };
+    let value = decode(result.stdout.as_bytes());
+    println!(
+        "GAPS-NEXT:{}",
+        text(&Value::Object(vec![
+            ("code".into(), Value::Int(result.exit_code.into())),
+            ("value".into(), value)
+        ]))
+    );
+}
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// tests/contracts/test_migration_runtime_rollback.py::MigrationRuntimeRollbackContract.test_partial_runtime_update_requires_explicit_retained_backup_restoration_before_rollback
+fn gaps_partial_runtime_update_requires_retained_backup_restoration_before_rollback() {
+    let world = World::new().unwrap();
+    let channel = support::distribution::Channel::new(&world);
+    channel.publish(env!("CARGO_PKG_VERSION"), &"1".repeat(40));
+    let installed = channel.install(&world, "none", "copy");
+    let receipt = field(&installed, "receipt").clone();
+    let repo = world.repository("migration-consumer", false).unwrap();
+    let memory = bank(&world, &repo);
+    bind(&world, &repo).unwrap();
+    let before_bank = snapshot(&memory);
+    let targets = field(&receipt, "targets")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|target| {
+            let path = PathBuf::from(string(target, "path"));
+            let before = support::lifecycle::snapshot(&path);
+            (path, before)
+        })
+        .collect::<Vec<_>>();
+    let catalog = format!(
+        r#"{{"schema":"agent-memory/migration-catalog-v2","codecs":[{{"schema":"{NATIVE}","validator":{{"codec":"native"}}}},{{"schema":"{GAPS_NEXT}","validator":{{"codec":"next"}}}}],"steps":[{{"id":"test-only-native-transition","from":"{NATIVE}","to":"{GAPS_NEXT}","converter":{{"codec":"next"}}}}]}}"#
+    );
+    std::fs::write(channel.pack.join("schemas/migrations.json"), catalog).unwrap();
+    let compat_path = channel.pack.join("schemas/runtime-compatibility.json");
+    let mut compatibility = decode(&std::fs::read(&compat_path).unwrap());
+    *compatibility.get_mut("readable_bank_schemas").unwrap() =
+        Value::Array(vec![Value::String(GAPS_NEXT.into())]);
+    *compatibility.get_mut("migrator_source_schemas").unwrap() =
+        Value::Array(vec![Value::String(NATIVE.into())]);
+    std::fs::write(&compat_path, encoded(&compatibility).unwrap()).unwrap();
+    let router_path = channel.pack.join("schemas/bank-router.json");
+    let mut router = decode(&std::fs::read(&router_path).unwrap());
+    *router
+        .get_mut("properties")
+        .unwrap()
+        .get_mut("schema")
+        .unwrap()
+        .get_mut("const")
+        .unwrap() = Value::String(GAPS_NEXT.into());
+    std::fs::write(router_path, encoded(&router).unwrap()).unwrap();
+    channel.publish("99.0.0", &"2".repeat(40));
+    let check = gaps_lifecycle(&world, &channel, &repo, "check", 0, false);
+    assert!(truth(
+        &field(field(&check, "compatibility"), "banks")
+            .as_array()
+            .unwrap()[0],
+        "explicit_migration_required"
+    ));
+    assert!(!truth(
+        field(&check, "compatibility"),
+        "implicit_migration_performed"
+    ));
+    gaps_lifecycle(&world, &channel, &repo, "update", 86, true);
+    let runtime = PathBuf::from(string(field(&receipt, "source"), "path"));
+    let mut f = Fixture {
+        world,
+        source: runtime,
+        codecs: "next",
+        calls: 0,
+    };
+    let p = f.call(&["preview", "--repo", s(&repo), "--to", GAPS_NEXT], 0);
+    let done = f.apply(&p, 0);
+    assert!(read_text(&memory.join("MEMORY.md")).contains(GAPS_NEXT));
+    let files = agent_memory::bank_transactions::files_at(&memory).unwrap();
+    gaps_next_validate(&files).unwrap();
+    let refused_bank = snapshot(&memory);
+    let runtime_before = snapshot(&f.source);
+    gaps_lifecycle(&f.world, &channel, &repo, "recover", 1, false);
+    assert_eq!(snapshot(&memory), refused_bank);
+    assert_eq!(snapshot(&f.source), runtime_before);
+    let retained = PathBuf::from(string(&done, "retained_helper"));
+    let retained_root = retained.parent().unwrap().parent().unwrap().to_path_buf();
+    let retained_before = snapshot(&retained_root);
+    let operation = string(field(&done, "receipt"), "operation_id").to_owned();
+    let p = f.call_with(
+        &["restore", "--repo", s(&repo), "--operation", &operation],
+        0,
+        None,
+        Some(&retained_root),
+    );
+    let path = f.save(&p, "retained-restore.json");
+    let restored = f.call_with(
+        &["restore", "--repo", s(&repo), "--proposal", &path],
+        0,
+        None,
+        Some(&retained_root),
+    );
+    assert!(truth(&restored, "verified"));
+    assert!(!truth(
+        field(&restored, "receipt"),
+        "outcome_directly_readable"
+    ));
+    assert_eq!(snapshot(&memory), before_bank);
+    assert_eq!(snapshot(&retained_root), retained_before);
+    assert!(truth(
+        &gaps_lifecycle(&f.world, &channel, &repo, "recover", 0, false),
+        "verified"
+    ));
+    for (path, before) in targets {
+        assert_eq!(support::lifecycle::snapshot(&path), before);
+    }
+    assert_eq!(snapshot(&memory), before_bank);
+    let command = Path::new(string(&receipt, "bin_dir")).join("am");
+    let output = f
+        .world
+        .run([
+            command.as_os_str(),
+            std::ffi::OsStr::new("--json"),
+            std::ffi::OsStr::new("bank"),
+            std::ffi::OsStr::new("validate"),
+            std::ffi::OsStr::new("--repo"),
+            repo.as_os_str(),
+        ])
+        .unwrap();
+    assert_eq!(output.status, Status::Code(0));
 }

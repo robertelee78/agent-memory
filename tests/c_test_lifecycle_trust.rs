@@ -140,6 +140,9 @@ fn linked(world: &World) -> (std::path::PathBuf, std::path::PathBuf, std::path::
         &source,
         &["worktree", "add", "-b", "topic", linked.to_str().unwrap()],
     );
+    // Git restores executable files through the World's private umask (0700),
+    // whereas the native runtime contract requires the explicit release mode.
+    mode(&linked.join("target/release/am"), 0o755);
     let marker = std::fs::read_to_string(linked.join(".git")).unwrap();
     let metadata = std::path::PathBuf::from(
         marker
@@ -234,7 +237,6 @@ fn normal_git_common_pointer_is_checked_before_git() {
 
 // obligation: tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_actual_linked_worktree_relative_common_pointer_and_native_alias_work
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn linked_worktree_relative_common_pointer_and_native_alias_work() {
     let world = World::new().unwrap();
     let (_, linked, _) = linked(&world);
@@ -264,7 +266,6 @@ fn linked_worktree_relative_common_pointer_and_native_alias_work() {
 
 // obligation: tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_common_metadata_directory_with_real_trailing_space_is_not_rewritten
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn real_trailing_space_in_common_metadata_is_not_trimmed() {
     let world = World::new().unwrap();
     let (source, linked, _) = linked(&world);

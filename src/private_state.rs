@@ -419,6 +419,8 @@ impl ObservationBarrier {
             .parent()
             .ok_or_else(|| refusal("Recovery state has no private parent"))?;
         if named(&base.join("source-barrier.lock"))?.is_some() {
+            #[cfg(feature = "dev-tools")]
+            bank_writes::fault("private_state.turn_sources.private_lock")?;
             Ok(Self::Held(crate::turn_sources::source_barrier(
                 root,
                 true,
@@ -531,6 +533,8 @@ fn observe_bank(
     }
     let frontier = bank_writes::recovery_frontier_provider()?;
     let token = frontier.observe_bank(&root, &bank, None, None, false, runtime_root)?;
+    #[cfg(feature = "dev-tools")]
+    bank_writes::fault("private_state.recovery_frontier._observe_bank")?;
     let indexed = state::_index_for_bank(&root, &bank, runtime_root)?;
     let rows = get(&indexed, "operations")
         .as_object()
@@ -601,6 +605,8 @@ fn observe_bank(
                     target_digest,
                     runtime_root,
                 )?;
+                #[cfg(feature = "dev-tools")]
+                bank_writes::fault("private_state.recovery_quiescence._selected_attestation")?;
                 if selected.is_none() && override_value.is_none() {
                     return Err(refusal(
                         "Target capable runtime has no renewed bank-bound quiescence attestation",

@@ -54,11 +54,8 @@ impl Channel {
     }
     pub fn access(&self) -> ReleaseAccess {
         ReleaseAccess {
-            first_manifest_url: format!(
-                "file://{}",
-                self.root.join("latest").join(release::MANIFEST).display()
-            ),
-            assets: format!("file://{}", self.root.join("assets").display()),
+            first_manifest_url: file_url(&self.root.join("latest").join(release::MANIFEST)),
+            assets: file_url(&self.root.join("assets")),
             options: release::DownloadOptions {
                 allow_file: true,
                 json_response: false,
@@ -343,6 +340,9 @@ fn driver_entry() {
         services.artifacts.clone(),
         services.release.clone(),
     )));
+    if matches!(operation, "doctor" | "diagnostic") {
+        services.executable = Some(install::locations(&env).unwrap().runtime_binary());
+    }
     if operation == "inventory" {
         let compatibility =
             super::lifecycle::read(&channel.root.join("pack/schemas/runtime-compatibility.json"));
@@ -435,6 +435,14 @@ fn driver_entry() {
                             .map(str::to_owned)
                     })
                     .collect(),
+                layout_quiescence: args
+                    .iter()
+                    .filter_map(|arg| {
+                        arg.as_str()
+                            .and_then(|arg| arg.strip_prefix("layout="))
+                            .map(PathBuf::from)
+                    })
+                    .collect(),
                 ..Default::default()
             },
         ),
@@ -453,6 +461,20 @@ fn driver_entry() {
                 fix: true,
             },
         ),
+        "diagnostic" => agent_memory::diagnostics::command(
+            &env,
+            &services,
+            &agent_memory::diagnostics::Request {
+                operation: args[1].as_str().unwrap().into(),
+                repo: args
+                    .get(2)
+                    .and_then(Value::as_str)
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| std::env::current_dir().unwrap()),
+                projection: None,
+                fix: false,
+            },
+        ),
         "uninstall" => {
             agent_memory::uninstallation::uninstall_command(&env, &services, &Default::default())
         }
@@ -467,4 +489,87 @@ fn driver_entry() {
         "FANOUT-RESULT:{}",
         json::encode(&row, json::COMPACT_ASCII).unwrap()
     );
+}
+
+pub fn file_url(path: &Path) -> String {
+    use std::fmt::Write;
+    let mut url = String::from("file://");
+    for byte in path.as_os_str().as_encoded_bytes() {
+        if byte.is_ascii_alphanumeric() || b"/-._~".contains(byte) {
+            url.push(char::from(*byte));
+        } else {
+            write!(url, "%{byte:02X}").unwrap();
+        }
+    }
+    url
+}
+
+impl Channel {
+    pub fn run_with_umask(
+        &self,
+        world: &World,
+        operation: &str,
+        options: &[&str],
+        expected: i32,
+        mask: &str,
+    ) -> Value {
+        assert!(["002", "022"].contains(&mask));
+        let request = Value::Object(vec![
+            (
+                "channel".into(),
+                Value::String(self.root.to_str().unwrap().into()),
+            ),
+            (
+                "args".into(),
+                Value::Array(
+                    std::iter::once(operation)
+                        .chain(options.iter().copied())
+                        .map(|arg| Value::String(arg.into()))
+                        .collect(),
+                ),
+            ),
+        ]);
+        let env = [(
+            "AGENT_MEMORY_FAULT_FANOUT_REQUEST".into(),
+            json::encode(&request, json::DEFAULT).unwrap().into(),
+        )];
+        let output = world
+            .run_with(
+                [
+                    OsString::from("/bin/sh"),
+                    "-c".into(),
+                    "umask \"$1\"; shift; exec \"$@\"".into(),
+                    "native-mask".into(),
+                    mask.into(),
+                    std::env::current_exe().unwrap().into_os_string(),
+                    "support::distribution::driver_entry".into(),
+                    "--exact".into(),
+                    "--nocapture".into(),
+                ],
+                RunOptions {
+                    env: &env,
+                    check: false,
+                    timeout: Duration::from_secs(120),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            output.status,
+            agent_memory::process::Status::Code(0),
+            "{output:?}"
+        );
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let raw = stdout
+            .lines()
+            .find_map(|line| line.strip_prefix("FANOUT-RESULT:"))
+            .unwrap();
+        let result = json::decode(raw, Default::default()).unwrap();
+        assert_eq!(
+            get(&result, "code"),
+            &Value::Int(expected.into()),
+            "{result:?}"
+        );
+        get(&result, "value").clone()
+    }
 }

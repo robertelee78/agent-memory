@@ -68,6 +68,8 @@ am validate-pack --pack /path/to/candidate > /private/path/pack-check.json
 The session MUST read the complete result, including `valid`, `issues` on refusal,
 the successful file hashes/modes, `mandatory_loads`, `documented_commands`,
 `file_operations`, and the explicit limitations.
+Each `documented_commands` row retains its delegated command path separately
+from the final operation, so the reported form identifies the actual dispatch.
 
 ## Verify
 

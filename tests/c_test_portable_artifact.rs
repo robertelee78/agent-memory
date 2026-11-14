@@ -120,7 +120,6 @@ fn actual_byte_and_mode_changes_change_digest_without_authenticating_source() {
 
 // obligation: tests/contracts/test_portable_artifact.py::PortableArtifactContract.test_every_implemented_documented_helper_imports_and_dispatches_from_the_copy
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn every_documented_native_command_dispatches_from_a_complete_copy() {
     let world = World::new().unwrap();
     let source = source(&world);

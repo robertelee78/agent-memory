@@ -120,7 +120,41 @@ pub fn _run(
     glob_pathspecs: bool,
 ) -> std::result::Result<Output, ProcessError> {
     let invocation = _invocation(repo, args, glob_pathspecs);
-    run_invocation_for(&invocation, Duration::from_secs(10))
+    let result = run_invocation_for(&invocation, Duration::from_secs(10));
+    #[cfg(feature = "dev-tools")]
+    if args.first().is_some_and(|arg| arg == "remote")
+        && args.get(1).is_some_and(|arg| arg == "get-url")
+    {
+        if let Err(fault) =
+            crate::bank_writes::fault("project_identity.remote_get_url.Popen.stdout.close")
+        {
+            let mut error = match result {
+                Err(error) => error,
+                Ok(output) => ProcessError {
+                    reason: process::Refusal::Infrastructure,
+                    evidence: Some(process::Evidence {
+                        argv0: invocation.argv.first().cloned().unwrap_or_default(),
+                        pid: output.pid,
+                        elapsed_ns: output.elapsed_ns,
+                        launch_elapsed_ns: output.launch_elapsed_ns,
+                        stdout: output.stdout,
+                        stderr: output.stderr,
+                        killed: false,
+                        reaped: true,
+                        status: Some(output.status),
+                        poll_wakeups: output.poll_wakeups,
+                    }),
+                    source: None,
+                    cleanup_error: None,
+                    incomplete: false,
+                },
+            };
+            error.reason = process::Refusal::Infrastructure;
+            error.cleanup_error = Some(std::io::Error::other(fault.to_string()));
+            return Err(error);
+        }
+    }
+    result
 }
 /// Separate deadline/environment injection lets the caller retain its own fixed
 /// operation context; production `_run` always inherits the exact ambient non-GIT environment.

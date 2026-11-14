@@ -420,7 +420,7 @@ fn bounded_git_worker() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_offline_capture_stays_readable_and_online_observation_preserves_feature_state
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_offline_capture_stays_readable_and_online_observation_preserves_feature_state() {
     let f = Fixture::new("memory-bank");
     let before = f.state();
@@ -484,7 +484,7 @@ fn test_offline_capture_stays_readable_and_online_observation_preserves_feature_
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_fetched_capacity_preserves_typed_cause_and_local_feature_state
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_fetched_capacity_preserves_typed_cause_and_local_feature_state() {
     let f = Fixture::new("memory-bank");
     let body = format!("# PRIVATE_REMOTE_BODY_CANARY\n{}", "x".repeat(16356));
@@ -521,7 +521,7 @@ fn test_fetched_capacity_preserves_typed_cause_and_local_feature_state() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_lost_success_response_and_squash_readback_do_not_require_a_duplicate_push
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_lost_success_response_and_squash_readback_do_not_require_a_duplicate_push() {
     let f = Fixture::new("memory-bank");
     let before = f.state();
@@ -633,7 +633,7 @@ fn merged_publication(retain: bool) -> (Fixture, String, String) {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness() {
     let (f, candidate, _) = merged_publication(false);
     let before = f.state();
@@ -653,7 +653,7 @@ fn test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction() {
     let (f, candidate, landed) = merged_publication(true);
     let before = f.state();
@@ -673,7 +673,7 @@ fn test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correcti
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_later_correction_keeps_historical_publication_receipt_without_claiming_current_truth
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_later_correction_keeps_historical_publication_receipt_without_claiming_current_truth() {
     let f = Fixture::new("memory-bank");
     let candidate = f.publish("projectbrief.md", "# Project\n\nInitial actual learning.\n");
@@ -696,7 +696,7 @@ fn test_later_correction_keeps_historical_publication_receipt_without_claiming_c
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_changed_default_remote_history_and_unrelated_candidate_code_require_review
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_changed_default_remote_history_and_unrelated_candidate_code_require_review() {
     let f = Fixture::new("memory-bank");
     let before = f.state();
@@ -742,7 +742,7 @@ fn test_changed_default_remote_history_and_unrelated_candidate_code_require_revi
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_cursor_loss_combines_independent_edits_and_repeated_normal_merge_without_reversing_memory
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_cursor_loss_combines_independent_edits_and_repeated_normal_merge_without_reversing_memory()
 {
     let f = Fixture::new("memory-bank");
@@ -787,7 +787,7 @@ fn test_cursor_loss_combines_independent_edits_and_repeated_normal_merge_without
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_merge_or_cursor_loss
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_merge_or_cursor_loss()
 {
     let f = Fixture::new("memory-bank");
@@ -856,7 +856,7 @@ fn test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_me
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_last_observed_memory_base_does_not_require_importing_authority_code_ancestry
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_last_observed_memory_base_does_not_require_importing_authority_code_ancestry() {
     let f = Fixture::new("memory-bank");
     git(&f.w, &f.repo, &["checkout", "-b", "stale-feature"]);
@@ -917,7 +917,7 @@ fn test_last_observed_memory_base_does_not_require_importing_authority_code_ance
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_both_changed_same_prose_requires_meaning_review_without_choosing_landing_order
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_both_changed_same_prose_requires_meaning_review_without_choosing_landing_order() {
     let f = Fixture::new("memory-bank");
     fs::write(
@@ -935,7 +935,7 @@ fn test_both_changed_same_prose_requires_meaning_review_without_choosing_landing
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_normal_rebase_keeps_previously_imported_memory_once_and_local_feature_code
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_normal_rebase_keeps_previously_imported_memory_once_and_local_feature_code() {
     let f = Fixture::new("memory-bank");
     git(&f.w, &f.repo, &["checkout", "-b", "feature-rebase"]);
@@ -966,7 +966,7 @@ fn test_normal_rebase_keeps_previously_imported_memory_once_and_local_feature_co
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_current_untracked_admitted_record_does_not_block_fresh_remote_inventory
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_current_untracked_admitted_record_does_not_block_fresh_remote_inventory() {
     let f = Fixture::new("memory-bank");
     let project = support::record_fixtures::project_id(
@@ -990,7 +990,7 @@ fn test_current_untracked_admitted_record_does_not_block_fresh_remote_inventory(
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_inactive_stable_version_cannot_be_reactivated_by_an_older_working_copy
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_inactive_stable_version_cannot_be_reactivated_by_an_older_working_copy() {
     let f = Fixture::new("memory-bank");
     let (_, original) = f.add_record();
@@ -1030,7 +1030,7 @@ fn test_inactive_stable_version_cannot_be_reactivated_by_an_older_working_copy()
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_remote_advance_during_observation_requires_new_inventory
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_remote_advance_during_observation_requires_new_inventory() {
     let mut f = Fixture::new("memory-bank");
     let before = f.state();
@@ -1084,7 +1084,7 @@ fn test_remote_advance_during_observation_requires_new_inventory() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_nested_bank_observation_reconciliation_and_replay_use_same_configured_prefix
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_nested_bank_observation_reconciliation_and_replay_use_same_configured_prefix() {
     let f = Fixture::new("docs/shared memory");
     let candidate = f.publish(
@@ -1113,7 +1113,7 @@ fn test_nested_bank_observation_reconciliation_and_replay_use_same_configured_pr
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged() {
     let f = Fixture::new("memory-bank");
     let other = f.w.inside("parallel observer").unwrap();
@@ -1201,7 +1201,7 @@ fn test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_fetch_failure_after_real_advertisement_has_specific_safe_repair
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn test_fetch_failure_after_real_advertisement_has_specific_safe_repair() {
     use std::os::unix::fs::PermissionsExt;
     let mut f = Fixture::new("memory-bank");

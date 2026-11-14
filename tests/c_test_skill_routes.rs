@@ -83,7 +83,6 @@ fn complete_copied_pack_validates_without_changes() {
 
 // obligation: tests/contracts/test_skill_routes.py::SkillRouteContract.test_every_documented_helper_dispatch_also_accepts_real_public_help
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn every_documented_native_dispatch_accepts_real_public_help() {
     let world = World::new().unwrap();
     let pack = pack(&world);

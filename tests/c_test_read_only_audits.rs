@@ -1,5 +1,5 @@
 mod support;
-use agent_memory::codec::json::Value;
+use agent_memory::codec::json::{self, Value};
 use agent_memory::process::Status;
 use std::collections::BTreeMap;
 use std::fs;
@@ -114,7 +114,6 @@ fn repeated_installed_and_source_audits_preserve_all_runtime_bytes_and_modes() {
 
 #[test]
 // obligation: tests/contracts/test_read_only_audits.py::ReadOnlyAudits.test_outside_receipt_aware_audit_refuses_and_preserves_inert_cache_drift
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn outside_receipt_aware_audit_refuses_and_preserves_opaque_cache_drift() {
     let w = World::new().unwrap();
     let source = development_source(&w, "audit-source");
@@ -126,15 +125,23 @@ fn outside_receipt_aware_audit_refuses_and_preserves_opaque_cache_drift() {
             "--development-source".into(),
             source.as_os_str().to_owned(),
             "--presets".into(),
-            "none".into(),
+            "codex".into(),
+            "--mode".into(),
+            "copy".into(),
         ],
     );
     let receipt = get(&installed, "receipt");
-    let cache = source
-        .join("skills/agent-memory/scripts/agent_memory/__pycache__/unexpected.cpython-311.pyc");
+    let copy = get(receipt, "targets")
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|target| string(target, "kind") == "copy")
+        .unwrap();
+    let cache = std::path::Path::new(string(copy, "path"))
+        .join("scripts/agent_memory/__pycache__/unexpected.cpython-311.pyc");
     fs::create_dir_all(cache.parent().unwrap()).unwrap();
     fs::write(&cache, b"INERT_UNEXPECTED_CACHE_BYTES_DO_NOT_EXECUTE\n").unwrap();
-    let before = snapshot(&source);
+    let before = snapshot(&w.root);
     let cli = std::path::Path::new(string(receipt, "bin_dir")).join("am");
     let output = w
         .run_with(
@@ -146,7 +153,16 @@ fn outside_receipt_aware_audit_refuses_and_preserves_opaque_cache_drift() {
         )
         .unwrap();
     assert_eq!(output.status, Status::Code(1));
-    assert_eq!(snapshot(&source), before);
+    let diagnostic = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+    assert_eq!(get(&diagnostic, "writes_performed"), &Value::Bool(false));
+    assert!(
+        get(&diagnostic, "failures")
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|failure| string(failure, "component") == "runtime.target.copy")
+    );
+    assert_eq!(snapshot(&w.root), before);
     assert_eq!(
         fs::read(cache).unwrap(),
         b"INERT_UNEXPECTED_CACHE_BYTES_DO_NOT_EXECUTE\n"

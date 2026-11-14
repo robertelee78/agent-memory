@@ -82,7 +82,6 @@ fn deleted_registered_worktree_is_a_gap_not_a_fabricated_explicit_root() {
 
 // obligation: tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_missing_explicit_repository_remains_an_error_and_preserves_targets
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn missing_explicit_repository_is_an_error_and_preserves_targets() {
     let world = World::new().unwrap();
     let (channel, installed) = setup(&world, "copy");
@@ -123,7 +122,6 @@ fn missing_explicit_repository_is_an_error_and_preserves_targets() {
 
 // obligation: tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_available_repository_without_a_bank_stays_in_compatibility_rechecks
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn available_bankless_repository_remains_in_compatibility_rechecks() {
     let world = World::new().unwrap();
     let (channel, _) = setup(&world, "copy");

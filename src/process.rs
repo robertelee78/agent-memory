@@ -1637,7 +1637,11 @@ impl Active<'_> {
         let cancellation_error = self.owner.stop().err();
         let close_error = self.close_pipes().err();
         ProcessError {
-            reason,
+            reason: if interrupted() {
+                Refusal::Interrupted
+            } else {
+                reason
+            },
             source,
             cleanup_error: prior_cleanup
                 .or(input_error)
@@ -1731,7 +1735,18 @@ impl<'a> Group<'a> {
                 break;
             }
             match spawn(spec, timing) {
-                Ok(active) => group.queries[index].active = Some(active),
+                Ok(active) => {
+                    group.queries[index].active = Some(active);
+                    #[cfg(feature = "dev-tools")]
+                    if index == 1 {
+                        if let Err(error) =
+                            crate::bank_writes::fault("identity_git.selectors.register")
+                        {
+                            group.fail(io::Error::other(error.to_string()), Some(index));
+                            break;
+                        }
+                    }
+                }
                 Err(error) => {
                     let fault = if error.reason == Refusal::Infrastructure {
                         Some(
@@ -1919,6 +1934,16 @@ impl<'a> Group<'a> {
         }
         // A closed-pipe child still needs bounded waitpid sweeps; round positive
         // intervals up to a millisecond instead of spinning below 1ms.
+        #[cfg(feature = "dev-tools")]
+        for stage in [
+            "identity_git.selectors.select.MemoryError",
+            "identity_git.selectors.select.RuntimeError",
+        ] {
+            if let Err(error) = crate::bank_writes::fault(stage) {
+                self.fail(io::Error::other(error.to_string()), None);
+                return;
+            }
+        }
         let millis = remaining
             .as_nanos()
             .div_ceil(1_000_000)

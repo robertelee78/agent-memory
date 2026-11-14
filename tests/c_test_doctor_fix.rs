@@ -80,7 +80,6 @@ fn linked_and_oversized_markers_are_never_repaired() {
 
 // obligation: tests/contracts/test_doctor_fix.py::DoctorFixContract.test_recover_update_interrupted_before_receipt
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn doctor_rolls_back_update_interrupted_before_receipt() {
     let mut world = World::new().unwrap();
     let channel = setup(&world);
@@ -101,7 +100,6 @@ fn doctor_rolls_back_update_interrupted_before_receipt() {
 
 // obligation: tests/contracts/test_doctor_fix.py::DoctorFixContract.test_recover_committed_interrupted_update_from_recorded_journal
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn doctor_finishes_committed_interrupted_update_from_recorded_journal() {
     let mut world = World::new().unwrap();
     let channel = setup(&world);

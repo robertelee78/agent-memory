@@ -4,6 +4,8 @@
 //! identity locations never reach the user's HOME and parallel tests never
 //! share them. Installations use a development source with a stand-in `am`
 //! (the installer never runs Cargo), exactly as `t2_installation` does.
+#[allow(unused_imports)]
+mod support;
 use agent_memory::cache_recovery::Qualification;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::diagnostics::{self, Report, Request};
@@ -1620,12 +1622,85 @@ fn missing_and_intentionally_disabled_hook_targets() {
 
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_selected_projection_current_and_stale_do_not_create_audit_or_cache
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn selected_projection_current_and_stale_do_not_create_audit_or_cache() {
-    let world = World::new();
-    bank(&world.path("repo"));
-    let value = run(&world, "doctor", &world.path("repo"), None, 0);
-    assert!(!component(&value, "bank.projection").is_empty());
+    let world = support::World::new().unwrap();
+    let (_, binary) = support::installed_runtime::installed_runtime(&world);
+    let repo = world.repository("projection-repo", false).unwrap();
+    let directory = bank(&repo);
+    let hashes = walk(&directory)
+        .into_iter()
+        .filter(|path| path.is_file())
+        .map(|path| {
+            (
+                path.strip_prefix(&directory)
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned(),
+                text_value(&agent_memory::release_distribution::digest(
+                    &std::fs::read(path).unwrap(),
+                )),
+            )
+        })
+        .collect();
+    let projection = world.inside("reference-projection.json").unwrap();
+    std::fs::write(
+        &projection,
+        json::encode(
+            &Value::Object(vec![
+                (
+                    "schema".into(),
+                    text_value("agent-memory/reference-projection-v1"),
+                ),
+                ("project_id".into(), text_value(PROJECT)),
+                ("source_hashes".into(), Value::Object(hashes)),
+                ("records".into(), Value::Array(vec![])),
+            ]),
+            json::DEFAULT,
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    for stale in [false, true] {
+        if stale {
+            let context = directory.join("projectbrief.md");
+            let body = std::fs::read_to_string(&context).unwrap() + "\nNew context.\n";
+            std::fs::write(context, body).unwrap();
+        }
+        let before = snapshot(&world.root);
+        let output = world
+            .run_with(
+                [
+                    binary.as_os_str(),
+                    std::ffi::OsStr::new("--json"),
+                    std::ffi::OsStr::new("doctor"),
+                    std::ffi::OsStr::new("--repo"),
+                    repo.as_os_str(),
+                    std::ffi::OsStr::new("--projection"),
+                    projection.as_os_str(),
+                ],
+                support::RunOptions {
+                    check: false,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            output.status,
+            agent_memory::process::Status::Code(i32::from(stale))
+        );
+        let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+        let checks = component(&value, "bank.projection");
+        assert_eq!(checks.len(), 1);
+        assert_eq!(
+            text(checks[0], "state"),
+            if stale { "failure" } else { "pass" }
+        );
+        for key in ["writes_performed", "repairs_performed", "network_performed"] {
+            assert_eq!(get(&value, key), &Value::Bool(false));
+        }
+        assert_eq!(snapshot(&world.root), before);
+    }
 }
 
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_resolved_identity_and_custom_bank_follow_the_selected_worktree

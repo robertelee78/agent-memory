@@ -15,7 +15,6 @@ fn channel(world: &World) -> Channel {
 
 // obligation: tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_changed_owned_copy_update_retains_prior_payload_and_receipt_backups
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn changed_owned_copy_retains_payload_and_receipt_backups() {
     let world = World::new().unwrap();
     let channel = channel(&world);
@@ -105,7 +104,6 @@ fn discovered_and_explicit_banks_are_preserved_and_unknown_schema_refuses() {
 
 // obligation: tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_competing_update_observes_the_live_lifecycle_lock
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn competing_update_observes_live_lifecycle_lock() {
     let world = World::new().unwrap();
     let channel = channel(&world);
@@ -134,7 +132,6 @@ fn competing_update_observes_live_lifecycle_lock() {
 
 // obligation: tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_unchanged_revision_refreshes_allowed_outside_text_without_a_code_switch
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn unchanged_revision_preserves_outside_text_without_switching_code() {
     let world = World::new().unwrap();
     let channel = channel(&world);
@@ -165,7 +162,6 @@ fn unchanged_revision_preserves_outside_text_without_switching_code() {
 
 // obligation: tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_unchanged_channel_does_not_derive_a_new_artifact_from_a_different_umask
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn unchanged_signed_channel_does_not_rederive_artifact_under_private_umask() {
     let world = World::new().unwrap();
     let channel = channel(&world);

@@ -40,7 +40,7 @@ fn human_recovery_after_partial_activation_and_no_pending_transaction() {
 
 // obligation: tests/contracts/test_public_cli.py::PublicCLIContract.test_human_bootstrap_preview_repeat_update_and_uninstall_journey_under_temp_alias
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn human_signed_lifecycle_journey_under_native_temp_alias() {
     let mut world = World::new().unwrap();
     #[cfg(target_os = "macos")]

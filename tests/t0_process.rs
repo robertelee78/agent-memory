@@ -1785,7 +1785,9 @@ mod interrupt_reap {
         let error = group.value(0).unwrap_err();
         let returned_ns = monotonic_ns();
         assert_elapsed_after_signal(interrupt.sent_ns(), returned_ns);
-        assert_eq!(error.reason, Refusal::Deadline);
+        // Baseline identity_git.fault: an interrupt during cleanup replaces an
+        // ordinary primary (here the deadline) as the reported refusal.
+        assert_eq!(error.reason, Refusal::Interrupted);
         assert!(error.cleanup_error.is_none(), "{error}");
         let evidence = error.evidence.unwrap();
         assert!(evidence.killed && !evidence.reaped);

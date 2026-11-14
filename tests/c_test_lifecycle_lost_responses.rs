@@ -6,7 +6,7 @@ use support::lifecycle::*;
 
 // obligation: tests/contracts/test_lifecycle_lost_responses.py::LifecycleLostResponses.test_recovery_response_is_lost_after_real_rollback_is_durable
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "needs recovery_frontier registered"]
 fn recovery_response_loss_leaves_real_rollback_durable_and_repeatable() {
     let mut world = World::new().unwrap();
     let channel = Channel::new(&world);

@@ -1623,3 +1623,6 @@ fn checkpoint_after_receipt_exit() {
 
 #[path = "support/fanout_c_nested.rs"]
 mod fanout_c_nested;
+
+#[path = "support/gaps_recovery.rs"]
+mod gaps_recovery;
