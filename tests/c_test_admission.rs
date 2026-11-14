@@ -42,6 +42,9 @@ impl Admission {
                     ("actor", text("Explicit fixture source; not authenticated")),
                 ]),
             ),
+            // Baseline `ComparisonContract.candidate` retains the fixture's
+            // supporting repository path as record evidence.
+            ("evidence", Value::Array(vec![text("evidence.md")])),
         ] {
             put(metadata, key, value);
         }
@@ -250,7 +253,6 @@ impl Admission {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_repository_and_reviewed_tool_evidence_are_bound_to_actual_bytes_and_preserved
 fn reviewed_evidence_is_bound_to_actual_bytes_and_preserved() {
     for (source, category) in [
@@ -288,7 +290,6 @@ fn reviewed_evidence_is_bound_to_actual_bytes_and_preserved() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_arrived_learning_tampered_delta_and_changed_evidence_refuse_before_writing
 fn arrived_learning_tampered_delta_and_changed_evidence_refuse_before_writing() {
     for change in ["arrived", "tampered", "source"] {
@@ -325,7 +326,6 @@ fn arrived_learning_tampered_delta_and_changed_evidence_refuse_before_writing() 
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_duplicate_learning_defers_to_existing_identity_and_peer_conflict_to_detecting_developer
 fn duplicate_defers_to_existing_identity_and_peer_conflict_to_detector() {
     let a = Admission::new();
@@ -362,7 +362,6 @@ fn duplicate_defers_to_existing_identity_and_peer_conflict_to_detector() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_terminal_deleted_identity_and_derivations_are_quarantined_not_recaptured
 fn terminal_identity_and_derivations_are_quarantined_not_recaptured() {
     let a = Admission::new();
@@ -429,7 +428,6 @@ fn terminal_identity_and_derivations_are_quarantined_not_recaptured() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier and am transaction route registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_interrupted_admission_rolls_back_before_fresh_comparison_even_if_source_changed
 fn interrupted_admission_rolls_back_before_new_comparison_even_if_source_changed() {
     let a = Admission::new();
@@ -459,7 +457,6 @@ fn interrupted_admission_rolls_back_before_new_comparison_even_if_source_changed
 }
 
 #[test]
-#[ignore = "needs recovery_frontier and am transaction route registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_recorded_admission_recovers_lost_response_without_replaying_or_requiring_new_evidence
 fn recorded_admission_recovers_lost_response_without_requiring_new_evidence() {
     for stage in [
@@ -511,7 +508,6 @@ fn recorded_admission_recovers_lost_response_without_requiring_new_evidence() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier and am transaction route registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_completed_receipt_cleanup_does_not_trust_corrupt_receipts_or_overwrite_external_memory
 fn completed_receipt_cleanup_rejects_corruption_and_preserves_external_memory() {
     let a = Admission::new();
@@ -550,7 +546,6 @@ fn completed_receipt_cleanup_rejects_corruption_and_preserves_external_memory() 
 }
 
 #[test]
-#[ignore = "needs recovery_frontier and am transaction route registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_large_existing_inventory_admits_or_finishes_recovery_without_losing_prior_learning
 fn large_existing_inventory_admits_or_finishes_without_losing_prior_learning() {
     for interrupted in [false, true] {
@@ -603,7 +598,6 @@ fn large_existing_inventory_admits_or_finishes_without_losing_prior_learning() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier and am transaction route registered"]
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_evidence_change_at_final_readback_cannot_get_a_verified_admission_receipt
 fn final_readback_evidence_change_never_gets_verified_admission_receipt() {
     let a = Admission::new();
@@ -624,7 +618,7 @@ fn final_readback_evidence_change_never_gets_verified_admission_receipt() {
     let child = w
         .spawn_with(
             [
-                OsString::from(env!("CARGO_BIN_EXE_am")),
+                executable(w).into_os_string(),
                 "--json".into(),
                 "admission".into(),
                 "apply".into(),
@@ -638,9 +632,17 @@ fn final_readback_evidence_change_never_gets_verified_admission_receipt() {
             },
         )
         .unwrap();
-    let deadline = agent_memory::clock::Deadline::after(Duration::from_secs(8)).unwrap();
+    // Baseline waits at the actual readback barrier for as long as the child
+    // lives (bounded by its own deadline); a debug child on a loaded host can
+    // take well over 15s to get there. An early exit is reported with output.
+    let deadline = agent_memory::clock::Deadline::after(Duration::from_secs(120)).unwrap();
     while !pause.join(format!("{stage}.ready")).exists() {
-        assert!(!deadline.expired());
+        if deadline.expired() {
+            panic!(
+                "Admission exited before the readback barrier: {:?}",
+                child.wait()
+            );
+        }
         std::thread::sleep(Duration::from_millis(5));
     }
     fs::write(

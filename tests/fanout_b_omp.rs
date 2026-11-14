@@ -44,9 +44,38 @@ fn write(path: &Path, raw: impl AsRef<[u8]>, mode: u32) {
     std::fs::write(path, raw).unwrap();
     std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode)).unwrap();
 }
+/// In-process workers are not the installed `am`. Their frontier observes
+/// through the runtime pair the World's own (possibly later) installation
+/// records, and `pack(root)` is the development source every fixture installs.
+fn register_providers(root: &Path) {
+    fn installed_pair() -> agent_memory::error::Result<(PathBuf, PathBuf)> {
+        use agent_memory::error::ContractError;
+        let root = support::require_current_world()
+            .map_err(|error| ContractError::new(error.to_string()))?;
+        let raw = std::fs::read(root.join("state/agent-memory/install/receipt.json"))
+            .map_err(|error| ContractError::new(error.to_string()))?;
+        let receipt = json::decode_bytes(&raw, Default::default())?;
+        let binary = agent_memory::installation::source_binary(get(&receipt, "source"))
+            .map_err(|error| ContractError::new(error.to_string()))?;
+        agent_memory::installation::executing_runtime(
+            &agent_memory::installation::Environment::process(),
+            &binary,
+        )
+        .map_err(|error| ContractError::new(error.to_string()))
+    }
+    agent_memory::cli::register_providers().unwrap();
+    let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
+        installed_pair,
+    ));
+    agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
+    agent_memory::bank_contract::register_recovery_coverage(Some(frontier));
+    agent_memory::cli::use_development_pack(Some(
+        root.join("development-source/skills/agent-memory"),
+    ));
+}
 fn isolated(name: &str, body: impl FnOnce(&Path)) {
     if let Ok(root) = support::require_current_world() {
-        agent_memory::cli::register_providers().unwrap();
+        register_providers(&root);
         body(&root);
         return;
     }
@@ -383,7 +412,6 @@ fn borrowed_exit_rejects_actual_inode_swap() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checked_stored_user_is_sole_genuine_root_and_mapping_is_not_required
 #[test]
-#[ignore = "recovery_frontier"]
 fn checked_stored_user_is_sole_genuine_root() {
     isolated("checked_stored_user_is_sole_genuine_root", |root| {
         let f = Fixture::new(root);
@@ -444,7 +472,6 @@ fn acknowledge(f: &Fixture, row: &Value) -> Value {
 // frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_long_segment_uses_two_shared_observations_and_ingest_is_idempotent
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_public_observer_seal_and_no_learning_long_segment
 #[test]
-#[ignore = "recovery_frontier"]
 fn long_segment_registers_two_exact_sources_and_replays_idempotently() {
     isolated(
         "long_segment_registers_two_exact_sources_and_replays_idempotently",
@@ -494,7 +521,6 @@ fn long_segment_registers_two_exact_sources_and_replays_idempotently() {
 
 // frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_admission_requires_sealed_registered_segment
 #[test]
-#[ignore = "recovery_frontier"]
 fn admission_cannot_complete_an_open_segment() {
     isolated("admission_cannot_complete_an_open_segment", |root| {
         let f = Fixture::new(root);
@@ -527,7 +553,6 @@ fn admission_cannot_complete_an_open_segment() {
 
 // frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_gap_refuses_both_assessment_outcomes_and_preserves_marker
 #[test]
-#[ignore = "recovery_frontier"]
 fn gapped_source_refuses_both_assessment_outcomes() {
     isolated("gapped_source_refuses_both_assessment_outcomes", |root| {
         let f = Fixture::new(root);
@@ -580,7 +605,6 @@ fn gapped_source_refuses_both_assessment_outcomes() {
 
 // frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_manual_marker_delete_cannot_hide_unregistered_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn manual_marker_delete_cannot_hide_retained_source() {
     isolated("manual_marker_delete_cannot_hide_retained_source", |root| {
         let f = Fixture::new(root);
@@ -595,7 +619,6 @@ fn manual_marker_delete_cannot_hide_retained_source() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_notification_without_stored_human_has_no_origin_or_source_gap
 #[test]
-#[ignore = "recovery_frontier"]
 fn notifications_never_create_native_human_authority() {
     isolated(
         "notifications_never_create_native_human_authority",
@@ -627,7 +650,6 @@ fn notifications_never_create_native_human_authority() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_on_started_runs_once_after_preflight_before_source_write
 #[test]
-#[ignore = "recovery_frontier"]
 fn on_started_runs_once_before_native_source_write() {
     isolated("on_started_runs_once_before_native_source_write", |root| {
         let f = Fixture::new(root);
@@ -661,7 +683,6 @@ fn on_started_runs_once_before_native_source_write() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_legacy_notification_only_cursor_is_neither_reused_mutated_nor_sealed
 #[test]
-#[ignore = "recovery_frontier"]
 fn legacy_notification_cursor_stays_immutable_and_unsealed() {
     isolated(
         "legacy_notification_cursor_stays_immutable_and_unsealed",
@@ -692,7 +713,6 @@ fn legacy_notification_cursor_stays_immutable_and_unsealed() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_neutral_hint_keeps_sealed_parent_immutable
 #[test]
-#[ignore = "recovery_frontier"]
 fn neutral_hint_never_reopens_sealed_parent() {
     isolated("neutral_hint_never_reopens_sealed_parent", |root| {
         let f = Fixture::new(root);
@@ -710,7 +730,6 @@ fn neutral_hint_never_reopens_sealed_parent() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_missing_or_stale_receipt_is_not_a_production_fallback
 #[test]
-#[ignore = "recovery_frontier"]
 fn missing_or_stale_receipt_never_falls_back_to_marker() {
     isolated(
         "missing_or_stale_receipt_never_falls_back_to_marker",
@@ -766,7 +785,6 @@ fn removed_public_observer_flag_refuses_before_source_write() {
 
 // Installed source/transport contention regression.
 #[test]
-#[ignore = "recovery_frontier"]
 fn contended_source_and_transport_locks_refuse_before_started() {
     isolated(
         "contended_source_and_transport_locks_refuse_before_started",
@@ -912,7 +930,6 @@ fn queued_result(writer: &stream::ResponseWriter) -> Value {
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_missing_clock_commits_pending_refs_then_registers_after_response
 #[test]
-#[ignore = "recovery_frontier"]
 fn missing_clock_commits_refs_before_postresponse_registration() {
     isolated(
         "missing_clock_commits_refs_before_postresponse_registration",
@@ -981,7 +998,6 @@ fn missing_clock_commits_refs_before_postresponse_registration() {
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonarmed_and_direct_observation_keep_synchronous_registration
 #[test]
-#[ignore = "recovery_frontier"]
 fn nonarmed_and_direct_observations_register_synchronously() {
     isolated(
         "nonarmed_and_direct_observations_register_synchronously",
@@ -1023,7 +1039,6 @@ fn nonarmed_and_direct_observations_register_synchronously() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_exclusively_held_barrier_refuses_close_without_metadata_write
 #[test]
-#[ignore = "recovery_frontier"]
 fn exclusive_barrier_refuses_finite_close_without_metadata_write() {
     isolated(
         "exclusive_barrier_refuses_finite_close_without_metadata_write",
@@ -1654,7 +1669,6 @@ fn source_path(directory: &Path, reference: &str) -> PathBuf {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_empty_segment_does_not_observe_shared_namespace
 #[test]
-#[ignore = "recovery_frontier"]
 fn empty_segment_does_not_observe_corrupt_shared_namespace() {
     isolated(
         "empty_segment_does_not_observe_corrupt_shared_namespace",
@@ -1691,7 +1705,6 @@ fn empty_segment_does_not_observe_corrupt_shared_namespace() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_all_enrollments_are_validated_before_shared_namespace_observation
 #[test]
-#[ignore = "recovery_frontier"]
 fn invalid_enrollment_refuses_before_shared_namespace_observation() {
     isolated(
         "invalid_enrollment_refuses_before_shared_namespace_observation",
@@ -1717,7 +1730,6 @@ fn invalid_enrollment_refuses_before_shared_namespace_observation() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_distinct_sources_and_orphan_registration_retain_exact_identities
 #[test]
-#[ignore = "recovery_frontier"]
 fn distinct_sources_and_orphan_registration_retain_exact_identities() {
     isolated(
         "distinct_sources_and_orphan_registration_retain_exact_identities",
@@ -1782,7 +1794,6 @@ fn distinct_sources_and_orphan_registration_retain_exact_identities() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_duplicate_or_changed_digest_refuses_only_affected_lookup
 #[test]
-#[ignore = "recovery_frontier"]
 fn duplicate_or_changed_digest_refuses_only_affected_lookup() {
     isolated(
         "duplicate_or_changed_digest_refuses_only_affected_lookup",
@@ -1831,7 +1842,6 @@ fn duplicate_or_changed_digest_refuses_only_affected_lookup() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_ordinary_missing_source_retains_only_its_own_registration_fault
 #[test]
-#[ignore = "recovery_frontier"]
 fn ordinary_missing_source_retains_only_its_registration_fault() {
     isolated(
         "ordinary_missing_source_retains_only_its_registration_fault",
@@ -1875,7 +1885,6 @@ fn ordinary_missing_source_retains_only_its_registration_fault() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_missing_and_corrupt_attempts_are_not_confused_with_new_attempts
 #[test]
-#[ignore = "recovery_frontier"]
 fn corrupt_and_unknown_attempts_are_not_new_attempts() {
     isolated(
         "corrupt_and_unknown_attempts_are_not_new_attempts",
@@ -1971,7 +1980,6 @@ fn assert_source_retained(f: &Fixture, session: &str, observation: &Value) {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_sparse_pending_index_reads_last_slot_and_allocates_lowest_hole
 #[test]
-#[ignore = "recovery_frontier"]
 fn sparse_pending_index_reads_last_slot_and_allocates_lowest_hole() {
     isolated(
         "sparse_pending_index_reads_last_slot_and_allocates_lowest_hole",
@@ -2005,7 +2013,6 @@ fn sparse_pending_index_reads_last_slot_and_allocates_lowest_hole() {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_refuses_malformed_or_symlink_last_slot_before_new_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn pending_index_refuses_malformed_and_symlink_last_slot() {
     isolated(
         "pending_index_refuses_malformed_and_symlink_last_slot",
@@ -2061,7 +2068,6 @@ fn pending_index_refuses_malformed_and_symlink_last_slot() {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_full_pending_index_preserves_actual_4096_slot_capacity
 #[test]
-#[ignore = "recovery_frontier"]
 fn full_pending_index_preserves_actual_4096_slot_capacity() {
     isolated(
         "full_pending_index_preserves_actual_4096_slot_capacity",
@@ -2111,7 +2117,6 @@ fn full_pending_index_preserves_actual_4096_slot_capacity() {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_directory_overflow_retains_existing_source_without_allocating
 #[test]
-#[ignore = "recovery_frontier"]
 fn pending_directory_overflow_preserves_sources_without_allocating() {
     isolated(
         "pending_directory_overflow_preserves_sources_without_allocating",
@@ -2150,7 +2155,6 @@ fn pending_directory_overflow_preserves_sources_without_allocating() {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_next_mint_refuses_a_new_raw_only_bank_locator
 #[test]
-#[ignore = "recovery_frontier"]
 fn next_context_mint_refuses_new_raw_only_locator() {
     isolated("next_context_mint_refuses_new_raw_only_locator", |root| {
         let f = Fixture::new(root);
@@ -2173,7 +2177,6 @@ fn next_context_mint_refuses_new_raw_only_locator() {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_live_marker_context_cannot_escape_its_read_lifetime
 #[test]
-#[ignore = "recovery_frontier"]
 fn marker_context_cannot_escape_read_lifetime() {
     isolated("marker_context_cannot_escape_read_lifetime", |root| {
         let f = Fixture::new(root);
@@ -2221,7 +2224,8 @@ fn absence_guard<T>(
     body: impl FnOnce(&Path) -> agent_memory::error::Result<T>,
 ) -> agent_memory::error::Result<T> {
     if family == "native" {
-        agent_memory::private_state::observation_barrier(repo, runtime, |_| {
+        let authority = agent_memory::scope_binding::RuntimeAuthority::Executing(runtime);
+        agent_memory::private_state::observation_barrier(repo, authority, |_| {
             body(&base.join("source-barrier.lock"))
         })
     } else {
@@ -2295,7 +2299,7 @@ fn completion_absence_rechecks_normal_and_ordinary_errors() {
 }
 fn fatal_absence(name: &str, family: &str) {
     if let Ok(root) = support::require_current_world() {
-        agent_memory::cli::register_providers().unwrap();
+        register_providers(&root);
         let (repo, base, runtime) = absence_fixture(&root);
         let mode = std::env::var("AGENT_MEMORY_FAULT_EXIT_KIND").unwrap();
         let _: agent_memory::error::Result<()> =
@@ -2838,7 +2842,6 @@ fn held_fixture(root: &Path) -> HeldFixture {
 
 // frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_typed_context_exact_retry_and_no_ack_authority
 #[test]
-#[ignore = "recovery_frontier"]
 fn held_context_exact_retry_never_grants_acknowledgement_authority() {
     isolated(
         "held_context_exact_retry_never_grants_acknowledgement_authority",
@@ -2917,7 +2920,6 @@ fn held_context_exact_retry_never_grants_acknowledgement_authority() {
 
 // frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_unknown_missing_corrupt_hold_and_frontier_only_change_refuse
 #[test]
-#[ignore = "recovery_frontier"]
 fn missing_or_corrupt_hold_and_frontier_only_changes_refuse() {
     isolated(
         "missing_or_corrupt_hold_and_frontier_only_changes_refuse",
@@ -3088,8 +3090,8 @@ fn held_register_child() {
     let Some(repo) = std::env::var_os("AGENT_MEMORY_FAULT_REGISTER_REPO") else {
         return;
     };
-    support::require_current_world().unwrap();
-    agent_memory::cli::register_providers().unwrap();
+    let root = support::require_current_world().unwrap();
+    register_providers(&root);
     let runtime = PathBuf::from(std::env::var_os("AGENT_MEMORY_FAULT_REGISTER_RUNTIME").unwrap());
     let session = std::env::var("AGENT_MEMORY_FAULT_REGISTER_SESSION").unwrap();
     let life = std::env::var("AGENT_MEMORY_FAULT_REGISTER_LIFE").unwrap();
@@ -3193,7 +3195,6 @@ fn held_fault_boundaries(root: &Path, mode: &str, stages: &[&str]) {
 }
 // frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_error_before_source_boundaries_reconcile_one_original_observation
 #[test]
-#[ignore = "recovery_frontier"]
 fn error_before_source_boundaries_reconciles_original_observation() {
     isolated(
         "error_before_source_boundaries_reconciles_original_observation",
@@ -3208,7 +3209,6 @@ fn error_before_source_boundaries_reconciles_original_observation() {
 }
 // frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_error_source_publication_boundaries_reconcile_one_original_observation
 #[test]
-#[ignore = "recovery_frontier"]
 fn error_source_publication_boundaries_reconcile_original_observation() {
     isolated(
         "error_source_publication_boundaries_reconcile_original_observation",
@@ -3228,7 +3228,6 @@ fn error_source_publication_boundaries_reconcile_original_observation() {
 }
 // frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_hard_exit_before_source_boundaries_reconcile_one_original_observation
 #[test]
-#[ignore = "recovery_frontier"]
 fn hard_exit_before_source_boundaries_reconciles_original_observation() {
     isolated(
         "hard_exit_before_source_boundaries_reconciles_original_observation",
@@ -3243,7 +3242,6 @@ fn hard_exit_before_source_boundaries_reconciles_original_observation() {
 }
 // frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_hard_exit_source_publication_boundaries_reconcile_one_original_observation
 #[test]
-#[ignore = "recovery_frontier"]
 fn hard_exit_source_publication_boundaries_reconcile_original_observation() {
     isolated(
         "hard_exit_source_publication_boundaries_reconcile_original_observation",
@@ -3264,7 +3262,6 @@ fn hard_exit_source_publication_boundaries_reconcile_original_observation() {
 
 // frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_all_shared_readers_refuse_unknown_compatibility_before_source_index_access
 #[test]
-#[ignore = "recovery_frontier"]
 fn every_shared_reader_refuses_unknown_compatibility_before_index_access() {
     isolated(
         "every_shared_reader_refuses_unknown_compatibility_before_index_access",
@@ -3396,7 +3393,6 @@ fn execute_seal(
 
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_not_armed_is_distinct_from_armed_without_nonce
 #[test]
-#[ignore = "recovery_frontier"]
 fn not_armed_differs_from_armed_without_nonce() {
     isolated("not_armed_differs_from_armed_without_nonce", |root| {
         let f = Fixture::new(root);
@@ -3434,7 +3430,6 @@ fn not_armed_differs_from_armed_without_nonce() {
 
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_empty_verified_seal_reports_wake_not_evaluated
 #[test]
-#[ignore = "recovery_frontier"]
 fn empty_verified_seal_reports_wake_not_evaluated() {
     isolated("empty_verified_seal_reports_wake_not_evaluated", |root| {
         let f = Fixture::new(root);
@@ -3472,7 +3467,6 @@ fn empty_verified_seal_reports_wake_not_evaluated() {
 
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_conflicting_existing_record_is_never_rewritten_or_replayed
 #[test]
-#[ignore = "recovery_frontier"]
 fn conflicting_optional_record_never_rewrites_or_replays_source() {
     isolated(
         "conflicting_optional_record_never_rewrites_or_replays_source",
@@ -3519,7 +3513,6 @@ fn conflicting_optional_record_never_rewrites_or_replays_source() {
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_false_observed_send_leaves_decision_unrecorded
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_failed_observed_send_leaves_decision_unrecorded_and_still_drains
 #[test]
-#[ignore = "recovery_frontier"]
 fn real_closed_writer_leaves_decision_unrecorded_and_still_drains() {
     isolated(
         "real_closed_writer_leaves_decision_unrecorded_and_still_drains",
@@ -3568,7 +3561,6 @@ fn real_closed_writer_leaves_decision_unrecorded_and_still_drains() {
 
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_optional_writer_failure_after_response_preserves_source_root_and_drain
 #[test]
-#[ignore = "recovery_frontier"]
 fn non_directory_optional_writer_failure_preserves_verified_source_and_drain() {
     isolated(
         "non_directory_optional_writer_failure_preserves_verified_source_and_drain",
@@ -3711,7 +3703,7 @@ fn native_operation_child() {
         return;
     };
     let root = support::require_current_world().unwrap();
-    agent_memory::cli::register_providers().unwrap();
+    register_providers(&root);
     if operation.starts_with("registry-") {
         registry_operation(&root, &operation);
         return;
@@ -4058,7 +4050,6 @@ fn no_verified_response(root: &Path) {
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonbusy_outcome_failure_never_writes_second_outcome_or_verified_response
 #[test]
-#[ignore = "recovery_frontier"]
 fn nonbusy_outcome_exit_failure_never_publishes_verified_response() {
     isolated(
         "nonbusy_outcome_exit_failure_never_publishes_verified_response",
@@ -4104,7 +4095,6 @@ fn nonbusy_outcome_exit_failure_never_publishes_verified_response() {
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_captured_source_checkpoint_failure_does_not_verify_or_schedule_drain
 #[test]
-#[ignore = "recovery_frontier"]
 fn captured_source_checkpoint_failure_never_verifies_or_drains() {
     isolated(
         "captured_source_checkpoint_failure_never_verifies_or_drains",
@@ -4175,7 +4165,6 @@ fn checkpoint_swap(root: &Path, name: &str) {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_executor_barrier_fd_swap
 #[test]
-#[ignore = "recovery_frontier"]
 fn checkpoint_rejects_actual_executor_barrier_inode_swap() {
     isolated(
         "checkpoint_rejects_actual_executor_barrier_inode_swap",
@@ -4184,7 +4173,6 @@ fn checkpoint_rejects_actual_executor_barrier_inode_swap() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_transport_fd_swap
 #[test]
-#[ignore = "recovery_frontier"]
 fn checkpoint_rejects_actual_transport_inode_swap() {
     isolated("checkpoint_rejects_actual_transport_inode_swap", |root| {
         checkpoint_swap(root, "omp-transport.lock")
@@ -4264,7 +4252,6 @@ fn assert_verified_pending_source(f: &Fixture, directory: &Path) {
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_ack_after_source_started_resolves_only_at_reservation
 #[test]
-#[ignore = "recovery_frontier"]
 fn late_real_clock_ack_is_resolved_at_reservation() {
     isolated("late_real_clock_ack_is_resolved_at_reservation", |root| {
         let f = Fixture::new(root);
@@ -4277,7 +4264,6 @@ fn late_real_clock_ack_is_resolved_at_reservation() {
 
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_binds_actual_root_after_response_without_changing_old_evidence
 #[test]
-#[ignore = "recovery_frontier"]
 fn offered_decision_binds_actual_root_and_preserves_old_evidence() {
     isolated(
         "offered_decision_binds_actual_root_and_preserves_old_evidence",
@@ -4354,7 +4340,6 @@ fn offered_decision_binds_actual_root_and_preserves_old_evidence() {
 
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_spoofed_record_keys_types_digests_and_status_are_unbound_without_contents
 #[test]
-#[ignore = "recovery_frontier"]
 fn spoofed_diagnostic_keys_types_digests_and_status_are_unbound() {
     isolated(
         "spoofed_diagnostic_keys_types_digests_and_status_are_unbound",
@@ -4430,7 +4415,6 @@ fn spoofed_diagnostic_keys_types_digests_and_status_are_unbound() {
 
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_canonical_parsed_evidence_digests_survive_noncanonical_json_encoding
 #[test]
-#[ignore = "recovery_frontier"]
 fn parsed_evidence_digests_survive_noncanonical_json_encoding() {
     isolated(
         "parsed_evidence_digests_survive_noncanonical_json_encoding",
@@ -4471,7 +4455,6 @@ fn parsed_evidence_digests_survive_noncanonical_json_encoding() {
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_root_write_failure_after_actual_reservation_is_unknown_not_replayed
 #[test]
-#[ignore = "recovery_frontier"]
 fn real_root_write_failure_after_reservation_stays_unknown() {
     isolated(
         "real_root_write_failure_after_reservation_stays_unknown",
@@ -4505,7 +4488,6 @@ fn real_root_write_failure_after_reservation_stays_unknown() {
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_real_transport_lock_exit_swap_maps_committed_reservation_to_unknown
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_wake_and_observer_unwind_faults_preserve_source_and_actual_reservation_fact
 #[test]
-#[ignore = "recovery_frontier"]
 fn real_transport_exit_swap_preserves_committed_source_and_spent_reservation() {
     isolated(
         "real_transport_exit_swap_preserves_committed_source_and_spent_reservation",
@@ -4598,7 +4580,6 @@ fn sampled_attempt_mutation(root: &Path, deleted: bool) {
 }
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn changed_sampled_attempt_refuses_even_matching_registered_source() {
     isolated(
         "changed_sampled_attempt_refuses_even_matching_registered_source",
@@ -4607,7 +4588,6 @@ fn changed_sampled_attempt_refuses_even_matching_registered_source() {
 }
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn deleted_sampled_attempt_refuses_even_matching_registered_source() {
     isolated(
         "deleted_sampled_attempt_refuses_even_matching_registered_source",
@@ -4617,7 +4597,6 @@ fn deleted_sampled_attempt_refuses_even_matching_registered_source() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_observation_failure_is_local_memoized_and_fault_lists_are_independent
 #[test]
-#[ignore = "recovery_frontier"]
 fn observation_failure_is_local_memoized_and_fault_lists_are_independent() {
     isolated(
         "observation_failure_is_local_memoized_and_fault_lists_are_independent",
@@ -4670,7 +4649,6 @@ fn observation_failure_is_local_memoized_and_fault_lists_are_independent() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_registration_between_row_lookups_cannot_invent_retained_attempt_fault
 #[test]
-#[ignore = "recovery_frontier"]
 fn registration_between_lookups_cannot_invent_retained_attempt_fault() {
     isolated(
         "registration_between_lookups_cannot_invent_retained_attempt_fault",
@@ -4723,7 +4701,6 @@ fn registration_between_lookups_cannot_invent_retained_attempt_fault() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_namespace_change_between_both_locked_passes_refuses_every_row
 #[test]
-#[ignore = "recovery_frontier"]
 fn namespace_change_between_locked_passes_refuses_every_row() {
     isolated(
         "namespace_change_between_locked_passes_refuses_every_row",
@@ -4898,7 +4875,6 @@ fn held_unknown_foreign_malformed_and_unsafe_owners_never_become_busy() {
 
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::AnswerFirstQualification.test_no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status
 #[test]
-#[ignore = "recovery_frontier"]
 fn no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status() {
     isolated(
         "no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status",
@@ -5180,7 +5156,6 @@ fn stored_batch_controls_keep_foreign_companions_and_humans_as_source() {
 
 // frontier obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_observer_verification_cannot_enroll_or_promote_legacy_marker
 #[test]
-#[ignore = "recovery_frontier"]
 fn observer_verification_never_enrolls_or_promotes_legacy_marker() {
     isolated(
         "observer_verification_never_enrolls_or_promotes_legacy_marker",
@@ -5232,7 +5207,6 @@ fn observer_verification_never_enrolls_or_promotes_legacy_marker() {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_transaction_local_read_reuse_requires_exact_live_context_and_preserves_inventory
 #[test]
-#[ignore = "recovery_frontier"]
 fn transaction_local_read_reuse_requires_exact_live_context() {
     isolated(
         "transaction_local_read_reuse_requires_exact_live_context",
@@ -5320,7 +5294,6 @@ fn transaction_local_read_reuse_requires_exact_live_context() {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_changed_configured_bank_before_reused_registration_writes_neither_namespace
 #[test]
-#[ignore = "recovery_frontier"]
 fn changed_configured_bank_before_reused_registration_writes_neither_namespace() {
     isolated(
         "changed_configured_bank_before_reused_registration_writes_neither_namespace",
@@ -5389,7 +5362,6 @@ fn changed_configured_bank_before_reused_registration_writes_neither_namespace()
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_transaction_end_fresh_recheck_refuses_late_config_after_read_only_reuse
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_live_marker_observation_refuses_late_authority_change_without_private_writes
 #[test]
-#[ignore = "recovery_frontier"]
 fn transaction_exit_freshly_refuses_late_authority_config_without_private_writes() {
     isolated(
         "transaction_exit_freshly_refuses_late_authority_config_without_private_writes",
@@ -5437,7 +5409,6 @@ fn transaction_exit_freshly_refuses_late_authority_config_without_private_writes
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postcommit_pre_reservation_fault_has_no_second_outcome
 #[test]
-#[ignore = "recovery_frontier"]
 fn postcommit_prereservation_refusal_has_no_second_outcome() {
     isolated(
         "postcommit_prereservation_refusal_has_no_second_outcome",
@@ -5468,7 +5439,6 @@ fn postcommit_prereservation_refusal_has_no_second_outcome() {
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_plain_prereserve_open_read_refuses_drift_after_verified_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn prereserve_open_read_refuses_drift_after_verified_source() {
     isolated(
         "prereserve_open_read_refuses_drift_after_verified_source",
@@ -5504,7 +5474,6 @@ fn prereserve_open_read_refuses_drift_after_verified_source() {
 // frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_retained_root_after_cursor_failure_stays_unknown_and_rootless
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_wake_failure_after_reservation_preserves_verified_seal_and_single_budget
 #[test]
-#[ignore = "recovery_frontier"]
 fn retained_root_after_cursor_failure_stays_unknown_and_rootless() {
     isolated(
         "retained_root_after_cursor_failure_stays_unknown_and_rootless",
@@ -5565,7 +5534,6 @@ fn retained_root_after_cursor_failure_stays_unknown_and_rootless() {
 
 // frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_rechecks_normal_and_ordinary_failures
 #[test]
-#[ignore = "recovery_frontier"]
 fn public_readonly_drain_rechecks_raced_transport_absence() {
     isolated(
         "public_readonly_drain_rechecks_raced_transport_absence",
@@ -5600,7 +5568,6 @@ fn public_readonly_drain_rechecks_raced_transport_absence() {
 // frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_preserves_interrupts_and_fatal_failures
 // frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_native_drain_preserves_interrupts_and_releases_source_barrier
 #[test]
-#[ignore = "recovery_frontier"]
 fn public_native_drain_preserves_real_sigint_and_releases_barrier() {
     isolated(
         "public_native_drain_preserves_real_sigint_and_releases_barrier",
@@ -5851,7 +5818,6 @@ fn assert_capture_succeeds(child: OperationChild) {
 
 // frontier obligation: tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_public_capture_cannot_interpose_before_verified_outcome
 #[test]
-#[ignore = "recovery_frontier"]
 fn public_capture_cannot_interpose_before_verified_finite_outcome() {
     isolated(
         "public_capture_cannot_interpose_before_verified_finite_outcome",
@@ -5914,7 +5880,6 @@ fn public_capture_cannot_interpose_before_verified_finite_outcome() {
 
 // frontier obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_exhausts_real_shared_barrier_without_canonical_write
 #[test]
-#[ignore = "recovery_frontier"]
 fn public_capture_exhausts_real_shared_barrier_without_canonical_write() {
     isolated(
         "public_capture_exhausts_real_shared_barrier_without_canonical_write",
@@ -5959,7 +5924,6 @@ fn public_capture_exhausts_real_shared_barrier_without_canonical_write() {
 
 // frontier obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_refuses_unknown_marker_and_shared_upgrade
 #[test]
-#[ignore = "recovery_frontier"]
 fn public_capture_refuses_unknown_marker_and_shared_barrier_upgrade() {
     isolated(
         "public_capture_refuses_unknown_marker_and_shared_barrier_upgrade",
@@ -6068,7 +6032,6 @@ fn writer_and_observer_order(root: &Path, writer_first: bool) {
 }
 // frontier obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders
 #[test]
-#[ignore = "recovery_frontier"]
 fn actual_capture_before_real_observer_retains_fence_order() {
     isolated(
         "actual_capture_before_real_observer_retains_fence_order",
@@ -6077,7 +6040,6 @@ fn actual_capture_before_real_observer_retains_fence_order() {
 }
 // frontier obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders
 #[test]
-#[ignore = "recovery_frontier"]
 fn actual_observer_before_real_capture_retains_fence_order() {
     isolated(
         "actual_observer_before_real_capture_retains_fence_order",
@@ -6140,7 +6102,6 @@ fn persistence_truncation_is_never_literal_complete_learning() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_active_unavailable_tail_is_real_gap_not_a_notification_gap
 #[test]
-#[ignore = "recovery_frontier"]
 fn active_unavailable_tail_is_real_gap_not_notification_gap() {
     isolated(
         "active_unavailable_tail_is_real_gap_not_notification_gap",
@@ -6178,7 +6139,6 @@ fn active_unavailable_tail_is_real_gap_not_notification_gap() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity
 #[test]
-#[ignore = "recovery_frontier"]
 fn retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity() {
     isolated(
         "retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity",
@@ -6222,7 +6182,6 @@ fn retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_new_truncated_entry_keeps_gap_and_prevents_complete_source_claim
 #[test]
-#[ignore = "recovery_frontier"]
 fn retired_new_truncated_entry_keeps_gap_and_prevents_complete_claim() {
     isolated(
         "retired_new_truncated_entry_keeps_gap_and_prevents_complete_claim",
@@ -6268,7 +6227,6 @@ fn retired_new_truncated_entry_keeps_gap_and_prevents_complete_claim() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_resumed_fork_postfork_human_is_not_blanket_inherited
 #[test]
-#[ignore = "recovery_frontier"]
 fn resumed_fork_postfork_human_is_not_blanket_inherited() {
     isolated(
         "resumed_fork_postfork_human_is_not_blanket_inherited",
@@ -6321,7 +6279,6 @@ fn resumed_fork_postfork_human_is_not_blanket_inherited() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_fork_without_time_evidence_retains_nonhuman_source_with_explicit_gap
 #[test]
-#[ignore = "recovery_frontier"]
 fn fork_without_time_evidence_retains_nonhuman_source_with_gap() {
     isolated(
         "fork_without_time_evidence_retains_nonhuman_source_with_gap",
@@ -6360,7 +6317,6 @@ fn fork_without_time_evidence_retains_nonhuman_source_with_gap() {
 // frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_late_native_tool_result_recovers_original_sealed_gap_without_reopening
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_resolved_sealed_tool_gap_does_not_leave_stale_tool_pending_or_block_drain
 #[test]
-#[ignore = "recovery_frontier"]
 fn exact_late_tool_result_recovers_sealed_gap_without_reopening_or_stale_pending() {
     isolated(
         "exact_late_tool_result_recovers_sealed_gap_without_reopening_or_stale_pending",
@@ -6466,7 +6422,6 @@ fn exact_late_tool_result_recovers_sealed_gap_without_reopening_or_stale_pending
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_foreign_tool_call_id_cannot_resolve_actual_sealed_tool_gap
 #[test]
-#[ignore = "recovery_frontier"]
 fn foreign_tool_call_id_never_resolves_actual_sealed_gap() {
     isolated(
         "foreign_tool_call_id_never_resolves_actual_sealed_gap",
@@ -6531,7 +6486,6 @@ fn foreign_tool_call_id_never_resolves_actual_sealed_gap() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_unsafe_exact_recovery_does_not_append_gap_to_sealed_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn unsafe_exact_recovery_never_mutates_sealed_source() {
     isolated(
         "unsafe_exact_recovery_never_mutates_sealed_source",
@@ -6561,7 +6515,6 @@ fn unsafe_exact_recovery_never_mutates_sealed_source() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_manager_subdirectory_same_bank_accepts_and_native_root_identity_stays_canonical
 #[test]
-#[ignore = "recovery_frontier"]
 fn manager_subdirectory_accepts_only_canonical_bank_root_identity() {
     isolated(
         "manager_subdirectory_accepts_only_canonical_bank_root_identity",
@@ -6689,7 +6642,6 @@ fn response_frames(path: &Path) -> Vec<(String, u64, Value)> {
 
 // frontier obligation: tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_contended_entry_refuses_current_frame_and_stops
 #[test]
-#[ignore = "recovery_frontier"]
 fn contended_entry_refuses_current_frame_and_stops_with_open_input() {
     use std::io::Write;
     isolated(
@@ -6921,7 +6873,6 @@ fn with_window(f: &Fixture, value: &Value, clocks: &stream::ClockWindows, nonce:
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_delayed_old_checked_view_refuses_new_session_and_real_new_human_has_one_root
 #[test]
-#[ignore = "recovery_frontier"]
 fn delayed_old_view_never_creates_new_session_authority() {
     isolated(
         "delayed_old_view_never_creates_new_session_authority",
@@ -7019,7 +6970,6 @@ fn delayed_old_view_never_creates_new_session_authority() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_invalid_views_refuse_before_real_transport_contention_and_bad_receipt
 #[test]
-#[ignore = "recovery_frontier"]
 fn invalid_view_precedes_contended_transport_and_bad_receipt() {
     isolated(
         "invalid_view_precedes_contended_transport_and_bad_receipt",
@@ -7093,7 +7043,6 @@ fn invalid_view_precedes_contended_transport_and_bad_receipt() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_completed_historical_origin_exact_replay_is_read_only_and_changed_request_refuses
 #[test]
-#[ignore = "recovery_frontier"]
 fn completed_historical_origin_allows_only_exact_readonly_replay() {
     isolated(
         "completed_historical_origin_allows_only_exact_readonly_replay",
@@ -7137,7 +7086,6 @@ fn completed_historical_origin_allows_only_exact_readonly_replay() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_same_role_position_decoy_never_resolves_real_event_gap
 #[test]
-#[ignore = "recovery_frontier"]
 fn adjacent_role_decoy_cannot_resolve_exact_event_gap() {
     isolated(
         "adjacent_role_decoy_cannot_resolve_exact_event_gap",
@@ -7205,7 +7153,6 @@ fn adjacent_role_decoy_cannot_resolve_exact_event_gap() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_weak_historical_event_resolution_does_not_authorize_new_acknowledgement
 #[test]
-#[ignore = "recovery_frontier"]
 fn weak_historical_event_resolution_never_grants_new_completion() {
     isolated(
         "weak_historical_event_resolution_never_grants_new_completion",
@@ -7280,7 +7227,6 @@ fn weak_historical_event_resolution_never_grants_new_completion() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_malformed_wake_state_suppresses_reservation_but_retains_and_enrolls_real_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn malformed_wake_namespace_preserves_sources_without_spending_window() {
     isolated(
         "malformed_wake_namespace_preserves_sources_without_spending_window",
@@ -7321,7 +7267,6 @@ fn malformed_wake_namespace_preserves_sources_without_spending_window() {
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_no_active_resume_paths_never_append_to_previously_sealed_instance_segment
 #[test]
-#[ignore = "recovery_frontier"]
 fn resumed_carrier_message_and_unavailable_tail_never_append_to_sealed_parent() {
     scenarios(
         "resumed_carrier_message_and_unavailable_tail_never_append_to_sealed_parent",
@@ -7384,7 +7329,6 @@ fn resumed_carrier_message_and_unavailable_tail_never_append_to_sealed_parent() 
 
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_expired_internal_delivery_window_never_reserves_root_wake
 #[test]
-#[ignore = "recovery_frontier"]
 fn expired_real_window_does_not_spend_native_human_budget() {
     isolated(
         "expired_real_window_does_not_spend_native_human_budget",
@@ -7418,7 +7362,6 @@ fn expired_real_window_does_not_spend_native_human_budget() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_held_and_gapped_segments_do_not_gain_completion_authority
 #[test]
-#[ignore = "recovery_frontier"]
 fn held_and_gapped_segment_rows_never_authorize_completion() {
     scenarios(
         "held_and_gapped_segment_rows_never_authorize_completion",
@@ -7468,7 +7411,6 @@ fn held_and_gapped_segment_rows_never_authorize_completion() {
 
 // frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_missing_corrupt_source_and_completion_faults_remain_visible
 #[test]
-#[ignore = "recovery_frontier"]
 fn missing_corrupt_source_and_completion_records_remain_visible() {
     scenarios(
         "missing_corrupt_source_and_completion_records_remain_visible",
@@ -7941,7 +7883,6 @@ fn has_gap(directory: &Path, native: &str, reason: &str) -> bool {
 
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_fresh_capture_preserves_surrounding_source_and_retries
 #[test]
-#[ignore = "recovery_frontier"]
 fn fresh_owned_capture_preserves_surrounding_source_in_both_install_modes() {
     scenarios(
         "fresh_owned_capture_preserves_surrounding_source_in_both_install_modes",
@@ -7981,7 +7922,6 @@ fn fresh_owned_capture_preserves_surrounding_source_in_both_install_modes() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_nonread_result_never_mints_manual_witness
 #[test]
-#[ignore = "recovery_frontier"]
 fn nonread_tool_output_remains_ordinary_learning_source() {
     isolated(
         "nonread_tool_output_remains_ordinary_learning_source",
@@ -8021,7 +7961,6 @@ fn nonread_tool_output_remains_ordinary_learning_source() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_screened_invocation_does_not_hide_following_answer
 #[test]
-#[ignore = "recovery_frontier"]
 fn screened_read_invocation_cannot_hide_following_answer() {
     isolated(
         "screened_read_invocation_cannot_hide_following_answer",
@@ -8129,7 +8068,6 @@ fn orphan_manual_snapshot(root: &Path, mismatched: bool) {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_snapshot_publication_recovery_survives_uninstall_and_retry
 #[test]
-#[ignore = "recovery_frontier"]
 fn orphan_owned_snapshot_recovers_after_manual_removal_without_reclassification() {
     isolated(
         "orphan_owned_snapshot_recovers_after_manual_removal_without_reclassification",
@@ -8138,7 +8076,6 @@ fn orphan_owned_snapshot_recovers_after_manual_removal_without_reclassification(
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_mismatched_orphan_snapshot_is_integrity_failure
 #[test]
-#[ignore = "recovery_frontier"]
 fn mismatched_orphan_owned_snapshot_refuses_without_overwrite() {
     isolated(
         "mismatched_orphan_owned_snapshot_refuses_without_overwrite",
@@ -8147,7 +8084,6 @@ fn mismatched_orphan_owned_snapshot_refuses_without_overwrite() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_preexisting_native_gap_is_not_reclassified
 #[test]
-#[ignore = "recovery_frontier"]
 fn preexisting_unsafe_native_gap_cannot_become_owned_instruction() {
     isolated(
         "preexisting_unsafe_native_gap_cannot_become_owned_instruction",
@@ -8252,7 +8188,6 @@ fn sealed_manual_gap(root: &Path, same_sweep: bool) {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_sealed_tool_gap_does_not_authorize_late_classification
 #[test]
-#[ignore = "recovery_frontier"]
 fn sealed_tool_gap_never_lends_late_owned_instruction_authority() {
     isolated(
         "sealed_tool_gap_never_lends_late_owned_instruction_authority",
@@ -8261,7 +8196,6 @@ fn sealed_tool_gap_never_lends_late_owned_instruction_authority() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_same_sweep_human_boundary_preserves_sealed_tool_gap
 #[test]
-#[ignore = "recovery_frontier"]
 fn same_sweep_human_boundary_preserves_original_tool_gap() {
     isolated(
         "same_sweep_human_boundary_preserves_original_tool_gap",
@@ -8270,7 +8204,6 @@ fn same_sweep_human_boundary_preserves_original_tool_gap() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_protected_private_root_cannot_silently_move_or_lose_binding
 #[test]
-#[ignore = "recovery_frontier"]
 fn protected_private_root_cannot_lose_native_binding_silently() {
     isolated(
         "protected_private_root_cannot_lose_native_binding_silently",
@@ -8291,7 +8224,6 @@ fn protected_private_root_cannot_lose_native_binding_silently() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn native_root_wake_is_once_and_next_human_includes_old_unassessed_sources() {
     isolated(
         "native_root_wake_is_once_and_next_human_includes_old_unassessed_sources",
@@ -8341,7 +8273,7 @@ fn native_root_wake_is_once_and_next_human_includes_old_unassessed_sources() {
 
 fn scenarios(name: &str, choices: &[&str], body: impl Fn(&Path, &str)) {
     if let Ok(root) = support::require_current_world() {
-        agent_memory::cli::register_providers().unwrap();
+        register_providers(&root);
         let choice = std::env::var("AGENT_MEMORY_FAULT_CASE").unwrap();
         body(&root, &choice);
         return;
@@ -8478,7 +8410,6 @@ fn finish_enrollment(root: &Path, child: OperationChild, stage: &str) -> Value {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival
 #[test]
-#[ignore = "recovery_frontier"]
 fn bounded_sweeps_enroll_oldest_without_losing_new_arrivals() {
     isolated(
         "bounded_sweeps_enroll_oldest_without_losing_new_arrivals",
@@ -8547,7 +8478,6 @@ fn bounded_sweeps_enroll_oldest_without_losing_new_arrivals() {
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried
 #[test]
-#[ignore = "recovery_frontier"]
 fn lost_registration_response_recovers_only_actual_original_shared_source() {
     scenarios(
         "lost_registration_response_recovers_only_actual_original_shared_source",
@@ -8637,7 +8567,6 @@ fn lost_registration_response_recovers_only_actual_original_shared_source() {
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_shared_fault_retained_across_later_observer_progress
 #[test]
-#[ignore = "recovery_frontier"]
 fn actual_shared_source_capacity_fault_remains_retained_across_observer_progress() {
     isolated(
         "actual_shared_source_capacity_fault_remains_retained_across_observer_progress",
@@ -8697,7 +8626,6 @@ fn actual_shared_source_capacity_fault_remains_retained_across_observer_progress
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_resolves_regular_and_newline_worktree_identity
 #[test]
-#[ignore = "recovery_frontier"]
 fn fresh_context_resolves_regular_and_newline_linked_worktree_identity() {
     isolated(
         "fresh_context_resolves_regular_and_newline_linked_worktree_identity",
@@ -8737,7 +8665,6 @@ fn fresh_context_resolves_regular_and_newline_linked_worktree_identity() {
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_foreign_bank_identity_without_private_writes
 #[test]
-#[ignore = "recovery_frontier"]
 fn fresh_context_refuses_physical_foreign_bank_identity_without_private_writes() {
     isolated(
         "fresh_context_refuses_physical_foreign_bank_identity_without_private_writes",
@@ -8769,7 +8696,6 @@ fn fresh_context_refuses_physical_foreign_bank_identity_without_private_writes()
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_bank_drift_after_actual_scope_read
 #[test]
-#[ignore = "recovery_frontier"]
 fn fresh_context_refuses_competing_bank_added_after_actual_scope_read() {
     isolated(
         "fresh_context_refuses_competing_bank_added_after_actual_scope_read",
@@ -8866,7 +8792,6 @@ fn raw_locator_refusal(root: &Path, held: bool, kind: &str, late: bool) {
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_raw_nonrouter_refusal_with_and_without_verified_hold
 #[test]
-#[ignore = "recovery_frontier"]
 fn raw_nonrouter_context_refusal_preserves_held_and_ordinary_banks() {
     scenarios(
         "raw_nonrouter_context_refusal_preserves_held_and_ordinary_banks",
@@ -8876,7 +8801,6 @@ fn raw_nonrouter_context_refusal_preserves_held_and_ordinary_banks() {
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_committed_raw_locator_refusal_with_and_without_verified_hold
 #[test]
-#[ignore = "recovery_frontier"]
 fn committed_missing_raw_locator_refusal_preserves_held_and_ordinary_banks() {
     scenarios(
         "committed_missing_raw_locator_refusal_preserves_held_and_ordinary_banks",
@@ -8886,7 +8810,6 @@ fn committed_missing_raw_locator_refusal_preserves_held_and_ordinary_banks() {
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_symlink_locator_refusal_with_and_without_verified_hold
 #[test]
-#[ignore = "recovery_frontier"]
 fn symlink_raw_locator_refusal_preserves_held_and_ordinary_banks() {
     scenarios(
         "symlink_raw_locator_refusal_preserves_held_and_ordinary_banks",
@@ -8896,7 +8819,6 @@ fn symlink_raw_locator_refusal_preserves_held_and_ordinary_banks() {
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_late_raw_locator_refusal_with_and_without_verified_hold
 #[test]
-#[ignore = "recovery_frontier"]
 fn late_raw_locator_after_real_scope_read_refuses_held_and_ordinary_contexts() {
     scenarios(
         "late_raw_locator_after_real_scope_read_refuses_held_and_ordinary_contexts",
@@ -8906,7 +8828,6 @@ fn late_raw_locator_after_real_scope_read_refuses_held_and_ordinary_contexts() {
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_successful_but_disagreeing_bank_locators
 #[test]
-#[ignore = "recovery_frontier"]
 fn successful_but_disagreeing_raw_and_ordinary_bank_locators_never_mint_context() {
     isolated(
         "successful_but_disagreeing_raw_and_ordinary_bank_locators_never_mint_context",
@@ -8940,7 +8861,6 @@ fn successful_but_disagreeing_raw_and_ordinary_bank_locators_never_mint_context(
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_reused_locator_keeps_post_source_mutation_scope_check_and_original_fault
 #[test]
-#[ignore = "recovery_frontier"]
 fn reused_locator_rechecks_scope_after_actual_source_publication_and_retains_fault() {
     isolated(
         "reused_locator_rechecks_scope_after_actual_source_publication_and_retains_fault",
@@ -8980,7 +8900,6 @@ fn reused_locator_rechecks_scope_after_actual_source_publication_and_retains_fau
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_concurrent_slot_creation_keeps_both_sources_and_next_hole
 #[test]
-#[ignore = "recovery_frontier"]
 fn concurrent_real_pending_slot_creation_keeps_both_sources_and_next_hole() {
     isolated(
         "concurrent_real_pending_slot_creation_keeps_both_sources_and_next_hole",
@@ -9018,7 +8937,6 @@ fn concurrent_real_pending_slot_creation_keeps_both_sources_and_next_hole() {
 
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_retries_transient_scan_change_and_refuses_persistent_churn
 #[test]
-#[ignore = "recovery_frontier"]
 fn pending_index_retries_real_transient_change_and_refuses_real_persistent_churn() {
     scenarios(
         "pending_index_retries_real_transient_change_and_refuses_real_persistent_churn",
@@ -9101,7 +9019,6 @@ fn pending_index_retries_real_transient_change_and_refuses_real_persistent_churn
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_held_read_reuse_keeps_exact_intent_pins_and_refuses_changed_hold_without_new_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn held_read_reuse_keeps_exact_intent_pins_and_refuses_new_source_after_hold_change() {
     isolated(
         "held_read_reuse_keeps_exact_intent_pins_and_refuses_new_source_after_hold_change",
@@ -9187,7 +9104,6 @@ fn held_read_reuse_keeps_exact_intent_pins_and_refuses_new_source_after_hold_cha
 }
 // frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_observe_bank_drift_keeps_original_captures_refuses_final_and_next_frame_freshly_locates
 #[test]
-#[ignore = "recovery_frontier"]
 fn observer_bank_drift_retains_both_original_captures_and_next_frame_freshly_locates() {
     isolated(
         "observer_bank_drift_retains_both_original_captures_and_next_frame_freshly_locates",
@@ -9363,7 +9279,6 @@ fn configured_bank_phase(root: &Path, action: &str, writer: bool) {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_ingest_refuses_without_retirement_or_new_private_state
 #[test]
-#[ignore = "recovery_frontier"]
 fn configured_bank_ingest_drift_refuses_without_retirement_or_new_namespace() {
     isolated(
         "configured_bank_ingest_drift_refuses_without_retirement_or_new_namespace",
@@ -9372,7 +9287,6 @@ fn configured_bank_ingest_drift_refuses_without_retirement_or_new_namespace() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_seal_refuses_without_new_private_state
 #[test]
-#[ignore = "recovery_frontier"]
 fn configured_bank_seal_drift_refuses_without_new_namespace() {
     isolated(
         "configured_bank_seal_drift_refuses_without_new_namespace",
@@ -9381,7 +9295,6 @@ fn configured_bank_seal_drift_refuses_without_new_namespace() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_ingest_canonical_writer_is_busy_before_binding_refusal
 #[test]
-#[ignore = "recovery_frontier"]
 fn configured_bank_ingest_writer_busy_precedes_binding_refusal() {
     isolated(
         "configured_bank_ingest_writer_busy_precedes_binding_refusal",
@@ -9390,7 +9303,6 @@ fn configured_bank_ingest_writer_busy_precedes_binding_refusal() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_seal_canonical_writer_is_busy_before_binding_refusal
 #[test]
-#[ignore = "recovery_frontier"]
 fn configured_bank_seal_writer_busy_precedes_binding_refusal() {
     isolated(
         "configured_bank_seal_writer_busy_precedes_binding_refusal",
@@ -9399,7 +9311,6 @@ fn configured_bank_seal_writer_busy_precedes_binding_refusal() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_metadata_refuses_without_attempt_or_new_base
 #[test]
-#[ignore = "recovery_frontier"]
 fn configured_bank_metadata_drift_refuses_before_attempt_publication() {
     isolated(
         "configured_bank_metadata_drift_refuses_before_attempt_publication",
@@ -9570,7 +9481,6 @@ fn activated_alias_retarget(root: &Path, action: &str, exclusive: bool, direct: 
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_never_acquires_foreign_exclusive_barrier
 #[test]
-#[ignore = "recovery_frontier"]
 fn retargeted_ingest_never_acquires_foreign_exclusive_barrier() {
     isolated(
         "retargeted_ingest_never_acquires_foreign_exclusive_barrier",
@@ -9579,7 +9489,6 @@ fn retargeted_ingest_never_acquires_foreign_exclusive_barrier() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_never_acquires_foreign_exclusive_barrier
 #[test]
-#[ignore = "recovery_frontier"]
 fn retargeted_seal_never_acquires_foreign_exclusive_barrier() {
     isolated(
         "retargeted_seal_never_acquires_foreign_exclusive_barrier",
@@ -9588,7 +9497,6 @@ fn retargeted_seal_never_acquires_foreign_exclusive_barrier() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_refuses_before_unreadable_native_binding
 #[test]
-#[ignore = "recovery_frontier"]
 fn retargeted_ingest_refuses_before_unreadable_foreign_binding() {
     isolated(
         "retargeted_ingest_refuses_before_unreadable_foreign_binding",
@@ -9597,7 +9505,6 @@ fn retargeted_ingest_refuses_before_unreadable_foreign_binding() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_refuses_before_unreadable_native_binding
 #[test]
-#[ignore = "recovery_frontier"]
 fn retargeted_seal_refuses_before_unreadable_foreign_binding() {
     isolated(
         "retargeted_seal_refuses_before_unreadable_foreign_binding",
@@ -9606,7 +9513,6 @@ fn retargeted_seal_refuses_before_unreadable_foreign_binding() {
 }
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checkout_retarget_after_view_validation_refuses_before_started_or_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn checkout_alias_retarget_after_validation_refuses_before_started_or_retirement() {
     isolated(
         "checkout_alias_retarget_after_validation_refuses_before_started_or_retirement",
@@ -9668,7 +9574,6 @@ fn carrier_uri(call: &mut Value, result: &mut Value, uri: Value) {
 
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_fresh_owned_guides_capture_exact_metadata_in_copy_and_link_modes
 #[test]
-#[ignore = "recovery_frontier"]
 fn fresh_owned_guides_retain_exact_closed_context_in_copy_and_link_modes() {
     scenarios(
         "fresh_owned_guides_retain_exact_closed_context_in_copy_and_link_modes",
@@ -9791,7 +9696,6 @@ fn fresh_owned_guides_retain_exact_closed_context_in_copy_and_link_modes() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_owned_guide_alias_partial_tamper_and_foreign_reads_keep_real_gaps
 #[test]
-#[ignore = "recovery_frontier"]
 fn owned_guide_alias_partial_tamper_and_foreign_carriers_keep_original_gaps() {
     isolated(
         "owned_guide_alias_partial_tamper_and_foreign_carriers_keep_original_gaps",
@@ -9928,7 +9832,6 @@ fn owned_guide_alias_partial_tamper_and_foreign_carriers_keep_original_gaps() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_noninstruction_artifact_read_retains_ordinary_body_not_owned_metadata
 #[test]
-#[ignore = "recovery_frontier"]
 fn noninstruction_packaged_artifact_retains_actual_ordinary_body_and_details() {
     isolated(
         "noninstruction_packaged_artifact_retains_actual_ordinary_body_and_details",
@@ -10116,7 +10019,6 @@ fn owned_manual_verification_rejects_real_binding_payload_and_policy_races() {
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_unrelated_ancestor_churn_preserves_witness_and_public_annotation
 #[test]
-#[ignore = "recovery_frontier"]
 fn unrelated_ancestor_churn_preserves_owned_witness_and_public_source_annotation() {
     scenarios(
         "unrelated_ancestor_churn_preserves_owned_witness_and_public_source_annotation",
@@ -10170,7 +10072,6 @@ fn unrelated_ancestor_churn_preserves_owned_witness_and_public_source_annotation
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_historical_owned_guide_never_authorizes_read_after_installation_changes
 #[test]
-#[ignore = "recovery_frontier"]
 fn historical_owned_guide_metadata_cannot_authorize_fresh_read_after_installation_change() {
     isolated(
         "historical_owned_guide_metadata_cannot_authorize_fresh_read_after_installation_change",
@@ -10263,7 +10164,6 @@ fn historical_owned_guide_metadata_cannot_authorize_fresh_read_after_installatio
 }
 // frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_owned_guide_rechecks_receipt_selection_and_nested_symlinks
 #[test]
-#[ignore = "recovery_frontier"]
 fn owned_guide_rechecks_selected_receipt_entry_nested_links_and_actual_rebind() {
     isolated(
         "owned_guide_rechecks_selected_receipt_entry_nested_links_and_actual_rebind",
@@ -10584,7 +10484,6 @@ fn run_wake_child(root: &Path, request: &Value, selector: Option<&str>, mode: &s
 }
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_cancel_before_reservation_refuses_and_after_start_preserves_result
 #[test]
-#[ignore = "recovery_frontier"]
 fn cancellation_before_reservation_refuses_but_after_reservation_keeps_one_root() {
     isolated(
         "cancellation_before_reservation_refuses_but_after_reservation_keeps_one_root",
@@ -10618,7 +10517,6 @@ fn cancellation_before_reservation_refuses_but_after_reservation_keeps_one_root(
 }
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_replacement_and_end_after_start_preserve_result
 #[test]
-#[ignore = "recovery_frontier"]
 fn replacing_clock_or_ending_after_reservation_preserves_exact_single_root() {
     scenarios(
         "replacing_clock_or_ending_after_reservation_preserves_exact_single_root",
@@ -10649,7 +10547,6 @@ fn replacing_clock_or_ending_after_reservation_preserves_exact_single_root() {
 }
 // frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_pre_reservation_wake_exception_does_not_unverify_committed_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn real_prereservation_fault_does_not_unverify_durable_direct_seal() {
     isolated(
         "real_prereservation_fault_does_not_unverify_durable_direct_seal",
@@ -10723,7 +10620,6 @@ fn cancelled_outcome_failure(root: &Path, io_failure: bool) {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_io_failure_never_verifies_partial_seal
 #[test]
-#[ignore = "recovery_frontier"]
 fn cancelled_uncommitted_outcome_real_io_failure_never_verifies_partial_seal() {
     isolated(
         "cancelled_uncommitted_outcome_real_io_failure_never_verifies_partial_seal",
@@ -10732,7 +10628,6 @@ fn cancelled_uncommitted_outcome_real_io_failure_never_verifies_partial_seal() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_refusal_never_verifies_partial_seal
 #[test]
-#[ignore = "recovery_frontier"]
 fn cancelled_uncommitted_outcome_typed_refusal_never_verifies_partial_seal() {
     isolated(
         "cancelled_uncommitted_outcome_typed_refusal_never_verifies_partial_seal",
@@ -10782,7 +10677,6 @@ fn controlled_reserved_root_exit(root: &Path, control: &str) {
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancel_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
-#[ignore = "recovery_frontier"]
 fn cancel_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
     isolated(
         "cancel_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root",
@@ -10792,7 +10686,6 @@ fn cancel_after_real_reservation_and_transport_exit_drift_retains_one_unknown_ro
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_replacement_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
-#[ignore = "recovery_frontier"]
 fn replacement_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
     isolated(
         "replacement_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root",
@@ -10802,7 +10695,6 @@ fn replacement_after_real_reservation_and_transport_exit_drift_retains_one_unkno
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_eof_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
-#[ignore = "recovery_frontier"]
 fn eof_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
     isolated(
         "eof_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root",
@@ -10812,7 +10704,6 @@ fn eof_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root(
 
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_output_loss_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
-#[ignore = "recovery_frontier"]
 fn output_loss_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
     isolated(
         "output_loss_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root",
@@ -10833,12 +10724,13 @@ fn fixture_without_native_activation(root: &Path) -> Fixture {
 fn public_observation_operation(root: &Path, f: &Fixture, operation: &str) {
     let result = if operation == "compatibility" {
         let target = decode(r#"{"private_state_capabilities":[]}"#);
+        let binary = agent_memory::installation::source_binary(get(&f.receipt, "source")).unwrap();
         agent_memory::private_state::required_private_state_capabilities(
             None,
             Some(&target),
             "install",
             &f.repo,
-            &f.runtime,
+            (&f.runtime, &binary),
         )
     } else {
         let barrier = turn_sources::source_barrier(&f.repo, true, false, None, &f.runtime).unwrap();
@@ -10868,7 +10760,6 @@ fn signaled_owned_child(root: &Path, child: OperationChild) {
 }
 // frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_race_remains_pending_for_normal_and_ordinary_failure
 #[test]
-#[ignore = "recovery_frontier"]
 fn public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_failure() {
     scenarios(
         "public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_failure",
@@ -10914,7 +10805,6 @@ fn public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_fai
 }
 // frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_preserves_interrupts_and_fatal_failures
 #[test]
-#[ignore = "recovery_frontier"]
 fn public_compatibility_preserves_real_sigint_and_exit_with_raced_evidence() {
     scenarios(
         "public_compatibility_preserves_real_sigint_and_exit_with_raced_evidence",
@@ -10957,7 +10847,6 @@ fn public_compatibility_preserves_real_sigint_and_exit_with_raced_evidence() {
 }
 // frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_source_inspection_preserves_interrupts_with_raced_completion_lock
 #[test]
-#[ignore = "recovery_frontier"]
 fn public_source_inspection_preserves_real_fatal_exits_and_refuses_raced_completion_lock() {
     scenarios(
         "public_source_inspection_preserves_real_fatal_exits_and_refuses_raced_completion_lock",
@@ -11031,7 +10920,6 @@ fn public_source_inspection_preserves_real_fatal_exits_and_refuses_raced_complet
 }
 // frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_unchanged_absence_allows_normal_exit_and_preserves_ordinary_error
 #[test]
-#[ignore = "recovery_frontier"]
 fn unchanged_private_absence_allows_success_and_preserves_original_ordinary_error() {
     scenarios(
         "unchanged_private_absence_allows_success_and_preserves_original_ordinary_error",
@@ -11347,7 +11235,6 @@ fn finite_writer_outcome(root: &Path, window: &str, failure: &str, transaction: 
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_at_outcome_unwinds_then_closes_without_replaying_source
 #[test]
-#[ignore = "recovery_frontier"]
 fn writer_at_outcome_unwinds_and_closes_without_replaying_source() {
     isolated(
         "writer_at_outcome_unwinds_and_closes_without_replaying_source",
@@ -11357,7 +11244,6 @@ fn writer_at_outcome_unwinds_and_closes_without_replaying_source() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_transaction_at_outcome_waits_without_adopting_its_marker
 #[test]
-#[ignore = "recovery_frontier"]
 fn transaction_at_outcome_waits_without_adopting_real_marker() {
     isolated(
         "transaction_at_outcome_waits_without_adopting_real_marker",
@@ -11367,7 +11253,6 @@ fn transaction_at_outcome_waits_without_adopting_real_marker() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_pre_ex_empty_publication_defers_without_stealing_its_lock
 #[test]
-#[ignore = "recovery_frontier"]
 fn pre_ex_empty_publication_defers_without_stealing_real_writer_slot() {
     isolated(
         "pre_ex_empty_publication_defers_without_stealing_real_writer_slot",
@@ -11377,7 +11262,6 @@ fn pre_ex_empty_publication_defers_without_stealing_real_writer_slot() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_full_owner_fsync_window_has_ex_ownership_before_probe
 #[test]
-#[ignore = "recovery_frontier"]
 fn full_owner_fsync_window_has_actual_ex_ownership_before_probe() {
     isolated(
         "full_owner_fsync_window_has_actual_ex_ownership_before_probe",
@@ -11387,7 +11271,6 @@ fn full_owner_fsync_window_has_actual_ex_ownership_before_probe() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_metadata_exhaustion_keeps_source_and_open_unknown
 #[test]
-#[ignore = "recovery_frontier"]
 fn actual_writer_metadata_exhaustion_preserves_source_and_open_unknown() {
     isolated(
         "actual_writer_metadata_exhaustion_preserves_source_and_open_unknown",
@@ -11397,7 +11280,6 @@ fn actual_writer_metadata_exhaustion_preserves_source_and_open_unknown() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_initializing_writer_exhaustion_cannot_verify_or_close
 #[test]
-#[ignore = "recovery_frontier"]
 fn initializing_writer_real_deadline_cannot_verify_or_close() {
     isolated(
         "initializing_writer_real_deadline_cannot_verify_or_close",
@@ -11407,7 +11289,6 @@ fn initializing_writer_real_deadline_cannot_verify_or_close() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_unheld_empty_publication_exhaustion_retains_source_without_outcome
 #[test]
-#[ignore = "recovery_frontier"]
 fn unheld_empty_publication_real_deadline_retains_source_without_outcome() {
     isolated(
         "unheld_empty_publication_real_deadline_retains_source_without_outcome",
@@ -11417,7 +11298,6 @@ fn unheld_empty_publication_real_deadline_retains_source_without_outcome() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_released_writer_with_unknown_transaction_is_hard_refusal_not_retry
 #[test]
-#[ignore = "recovery_frontier"]
 fn released_writer_unknown_transaction_is_not_retryable() {
     isolated(
         "released_writer_unknown_transaction_is_not_retryable",
@@ -11427,7 +11307,6 @@ fn released_writer_unknown_transaction_is_not_retryable() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_transaction_left_after_writer_release_remains_interruption
 #[test]
-#[ignore = "recovery_frontier"]
 fn released_transaction_retained_marker_remains_interruption() {
     isolated(
         "released_transaction_retained_marker_remains_interruption",
@@ -11437,7 +11316,6 @@ fn released_transaction_retained_marker_remains_interruption() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_release_rediscovers_identity_instead_of_reusing_frame_scope
 #[test]
-#[ignore = "recovery_frontier"]
 fn writer_release_freshly_rediscovers_changed_project_identity() {
     isolated(
         "writer_release_freshly_rediscovers_changed_project_identity",
@@ -11529,7 +11407,6 @@ fn busy_source_outcome(root: &Path, after_write: bool, exhausted: bool) {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_beforewrite_or_exit_retries_only_identical_source_after_unlock
 #[test]
-#[ignore = "recovery_frontier"]
 fn busy_source_outcome_retries_exact_immutable_source_after_transport_unlock() {
     scenarios(
         "busy_source_outcome_retries_exact_immutable_source_after_transport_unlock",
@@ -11539,7 +11416,6 @@ fn busy_source_outcome_retries_exact_immutable_source_after_transport_unlock() {
 }
 // frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_exit_exhaustion_keeps_retained_record_without_response_or_drain
 #[test]
-#[ignore = "recovery_frontier"]
 fn busy_source_outcome_exit_real_deadline_keeps_record_without_response_or_drain() {
     isolated(
         "busy_source_outcome_exit_real_deadline_keeps_record_without_response_or_drain",
@@ -11548,7 +11424,6 @@ fn busy_source_outcome_exit_real_deadline_keeps_record_without_response_or_drain
 }
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_real_io_failure_does_not_manufacture_invalid_request_refusal
 #[test]
-#[ignore = "recovery_frontier"]
 fn accepted_attempt_publication_failure_is_not_an_invalid_request_refusal() {
     isolated(
         "accepted_attempt_publication_failure_is_not_an_invalid_request_refusal",
@@ -11581,7 +11456,6 @@ fn accepted_attempt_publication_failure_is_not_an_invalid_request_refusal() {
 }
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_run_final_close_rejects_barrier_inode_replacement_after_metadata_write
 #[test]
-#[ignore = "recovery_frontier"]
 fn final_close_rejects_actual_source_barrier_swap_after_retaining_closed_record() {
     isolated(
         "final_close_rejects_actual_source_barrier_swap_after_retaining_closed_record",
@@ -11631,7 +11505,6 @@ fn signal_registry(root: &Path, signal: &str) {
 }
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_startup_typed_busy_retries_before_open_and_ready
 #[test]
-#[ignore = "recovery_frontier"]
 fn startup_retries_actual_canonical_busy_before_publishing_open_or_ready() {
     isolated(
         "startup_retries_actual_canonical_busy_before_publishing_open_or_ready",
@@ -11761,7 +11634,6 @@ fn invalid_attempt_busy_retry(root: &Path, kind: &str, corruption: &str) {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_request_durable_attempt_exit_busy_resumes_exactly_once
 #[test]
-#[ignore = "recovery_frontier"]
 fn invalid_request_busy_exit_resumes_exactly_once() {
     isolated("invalid_request_busy_exit_resumes_exactly_once", |root| {
         invalid_attempt_busy_retry(root, "REQUEST", "")
@@ -11770,7 +11642,6 @@ fn invalid_request_busy_exit_resumes_exactly_once() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_refused_frame_durable_attempt_exit_busy_counts_once
 #[test]
-#[ignore = "recovery_frontier"]
 fn invalid_refused_frame_busy_exit_counts_exactly_once() {
     isolated(
         "invalid_refused_frame_busy_exit_counts_exactly_once",
@@ -11780,7 +11651,6 @@ fn invalid_refused_frame_busy_exit_counts_exactly_once() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_partial_retry_record
 #[test]
-#[ignore = "recovery_frontier"]
 fn invalid_attempt_busy_exit_never_adopts_partial_record() {
     isolated(
         "invalid_attempt_busy_exit_never_adopts_partial_record",
@@ -11790,7 +11660,6 @@ fn invalid_attempt_busy_exit_never_adopts_partial_record() {
 
 // frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_different_retry_record
 #[test]
-#[ignore = "recovery_frontier"]
 fn invalid_attempt_busy_exit_never_adopts_different_record() {
     isolated(
         "invalid_attempt_busy_exit_never_adopts_different_record",

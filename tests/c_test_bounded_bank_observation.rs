@@ -5,7 +5,6 @@ use std::fs;
 use support::cutover::*;
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_changed_source_refused_at_recheck
 fn changed_canonical_source_refuses_at_observation_recheck() {
     let r = Recall::new();

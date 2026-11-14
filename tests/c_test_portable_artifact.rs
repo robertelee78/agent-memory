@@ -175,7 +175,6 @@ fn apply(world: &World, cli: &Path, group: &str, proposal: &Value, name: &str) -
 
 // obligation: tests/contracts/test_portable_artifact.py::PortableArtifactContract.test_copied_helpers_initialize_checkpoint_and_recall_while_preserving_unfinished_code
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn copied_native_runtime_initializes_checkpoints_recalls_and_preserves_unfinished_code() {
     let world = World::new().unwrap();
     let source = source(&world);

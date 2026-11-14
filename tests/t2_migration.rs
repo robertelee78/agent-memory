@@ -2,13 +2,12 @@
 //! test-only codecs in disposable Worlds.
 //!
 //! Test-only format codecs cannot be compiled into the production `am`, so
-//! every migration command runs in a child copy of this test binary
-//! (`migration_worker`) whose runtime is an isolated fixture runtime root
-//! (minimal portable pack + `bin/am`) and whose codecs are either the
-//! production `migration_codecs::Compiled` or the test-only fixture codecs
-//! below. Each child gets the World's environment, registers the production
-//! providers, and exits with the command's own exit code (86 for an injected
-//! `exit` fault).
+//! those migration commands run in a child copy of this test binary
+//! (`migration_worker`) with test-only codecs and a separate catalog-modified
+//! component package. Native commands execute a genuine installation's owned
+//! command and unaltered pack. Custom-codec workers bind their actual component
+//! pair explicitly, including retained packages; they do not prove native
+//! execution. Every child keeps its World's environment and command exit code.
 #[allow(unused_imports)]
 mod support;
 
@@ -26,14 +25,12 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
-use support::identity_fixtures::bind;
 use support::{RunOptions, World};
 
 const LEGACY: &str = "agent-memory/test-only-legacy";
 const MIDDLE: &str = "agent-memory/test-only-intermediate";
 const NATIVE: &str = "agent-memory/v1";
 const MARKER: &str = ".agent-memory-transaction.md";
-const STAND_IN: &[u8] = b"#!/bin/sh\nprintf 'stand-in am %s\\n' \"$*\"\n";
 const TIMEOUT: Duration = Duration::from_secs(120);
 
 // ----- test-only codecs (baseline tests/migration_fixtures.py CODE) -----
@@ -133,6 +130,16 @@ fn second(files: &Value) -> DomainResult<Value> {
 }
 
 // ----- child worker -----
+// Explicit component authority for test-only codecs, including their retained
+// package. This does not attest execution of the production binary.
+fn component_runtime() -> DomainResult<(PathBuf, PathBuf)> {
+    let path = |key| {
+        let value = std::env::var_os(key)
+            .ok_or_else(|| ContractError::new("Missing migration component runtime"))?;
+        agent_memory::fs::canonical_path(Path::new(&value), true)
+    };
+    Ok((path("AM_MIGRATION_PACK")?, path("AM_MIGRATION_BINARY")?))
+}
 
 #[test]
 fn migration_worker() {
@@ -149,9 +156,15 @@ fn migration_worker() {
     let root = PathBuf::from(std::env::var_os("AM_MIGRATION_RUNTIME").unwrap());
     let out = PathBuf::from(std::env::var_os("AM_MIGRATION_OUT").unwrap());
     agent_memory::cli::register_providers().unwrap();
-    // dev-tools: the runtime this child executes as is an explicit root, not
-    // the test binary.
+    // Explicit component locators do not attest the test binary as installed.
     agent_memory::migration::use_development_runtime(Some(root.clone()));
+    let (pack, binary) = component_runtime().unwrap();
+    agent_memory::cli::use_development_pack(Some(pack));
+    let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
+        component_runtime,
+    ));
+    agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
+    agent_memory::bank_contract::register_recovery_coverage(Some(frontier));
     let result = if args.first().map(String::as_str) == Some("transaction-recover") {
         let repo = PathBuf::from(&args[1]);
         let outcome = agent_memory::bank_transactions::recover(&repo, None, None);
@@ -170,7 +183,7 @@ fn migration_worker() {
             let surface = agent_memory::cli::surface::Declared::current()?;
             Ok(Runtime::new(
                 &root,
-                &root.join("bin/am"),
+                &binary,
                 codecs,
                 Some(Arc::new(surface)),
             ))
@@ -182,8 +195,9 @@ fn migration_worker() {
 
 struct Fixture {
     world: World,
-    /// The trusted fixture runtime root (`skills/agent-memory`, `bin/am`).
+    /// Migration package; test-only catalogs never become installed authority.
     source: PathBuf,
+    native: support::installed_runtime::NativeRuntime,
     codecs: &'static str,
     calls: usize,
 }
@@ -201,11 +215,29 @@ impl Fixture {
     /// the test-only chain, or the production catalog and compiled codecs.
     fn new(codecs: bool) -> Self {
         let world = World::new().unwrap();
-        let source = world.inside("trusted-fixture-source").unwrap();
-        runtime(&source, codecs);
+        let native = support::installed_runtime::install(&world.root, |argv| {
+            world
+                .run_with(
+                    argv,
+                    RunOptions {
+                        check: false,
+                        timeout: TIMEOUT,
+                        ..RunOptions::default()
+                    },
+                )
+                .unwrap()
+        });
+        let source = if codecs {
+            let source = world.inside("trusted-fixture-source").unwrap();
+            runtime(&source, &native);
+            source
+        } else {
+            native.source.clone()
+        };
         Self {
             world,
             source,
+            native,
             codecs: if codecs { "fixture" } else { "compiled" },
             calls: 0,
         }
@@ -214,6 +246,15 @@ impl Fixture {
     /// Point the next worker child at `args` and `runtime`; returns its argv.
     fn worker(&mut self, args: &[&str], runtime: Option<&Path>) -> Vec<OsString> {
         self.calls += 1;
+        if self.codecs == "compiled" && runtime.is_none() {
+            let mut argv = vec![
+                self.native.command.as_os_str().to_owned(),
+                "--json".into(),
+                "migrate".into(),
+            ];
+            argv.extend(args.iter().map(OsString::from));
+            return argv;
+        }
         let out = self.out();
         let encoded = text(&Value::Array(
             args.iter().map(|a| Value::String((*a).into())).collect(),
@@ -221,6 +262,14 @@ impl Fixture {
         let runtime = runtime.unwrap_or(&self.source).to_path_buf();
         for (key, value) in [
             ("AM_MIGRATION_ARGS", OsString::from(encoded)),
+            (
+                "AM_MIGRATION_PACK",
+                runtime.join("skills/agent-memory").into_os_string(),
+            ),
+            (
+                "AM_MIGRATION_BINARY",
+                runtime.join("bin/am").into_os_string(),
+            ),
             ("AM_MIGRATION_RUNTIME", runtime.into_os_string()),
             ("AM_MIGRATION_OUT", out.into_os_string()),
             ("AM_MIGRATION_CODECS", OsString::from(self.codecs)),
@@ -278,7 +327,11 @@ impl Fixture {
                 },
             )
             .unwrap();
-        let value = self.output();
+        let value = if self.codecs == "compiled" {
+            Some(decode(&output.stdout))
+        } else {
+            self.output()
+        };
         assert_eq!(
             output.status,
             Status::Code(expected),
@@ -354,8 +407,8 @@ impl Fixture {
     /// re-encoded in the test-only legacy format, with `projectbrief.md` 0640.
     fn memory(&self, legacy: bool) -> (PathBuf, PathBuf) {
         let repo = self.world.repository("repo", false).unwrap();
-        let bank = bank(&self.world, &repo);
-        bind(&self.world, &repo).unwrap();
+        let bank = bank(&self.world, &repo, &self.native.command);
+        bind(&self.world, &repo, &self.native.command);
         if legacy {
             let path = bank.join("MEMORY.md");
             let body = read_text(&path).replacen(NATIVE, LEGACY, 1);
@@ -442,8 +495,6 @@ fn snapshot(root: &Path) -> BTreeMap<String, String> {
     result
 }
 
-const COMPATIBILITY_HEAD: &str = r#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":"#;
-const COMPATIBILITY_TAIL: &str = r#","migration_catalog":"schemas/migrations.json","python_minimum":"3.11","installed_commands":["am","agent-memory"],"installation_receipt_schemas":["agent-memory/install-receipt-v1","agent-memory/install-receipt-v2","agent-memory/install-receipt-v3"],"git_required_for":["git-sharing"],"required_python_packages":[],"required_agent_clients":[],"optional_adapters":[]}"#;
 const PRODUCTION_CATALOG: &str = include_str!("../skills/agent-memory/schemas/migrations.json");
 
 /// The test-only two-step chain added to the production catalog
@@ -481,80 +532,39 @@ fn fixture_catalog() -> String {
     text(&value)
 }
 
-/// A minimal valid portable pack plus a stand-in `bin/am` under `root`.
-fn runtime(root: &Path, codecs: bool) {
+/// Test-only codecs need a distinct measured catalog. Its real binary and all
+/// other pack files come from the genuine runtime, which stays unaltered.
+fn runtime(root: &Path, native: &support::installed_runtime::NativeRuntime) {
     let pack = root.join("skills/agent-memory");
-    write(
-        &pack.join("SKILL.md"),
-        "---\nname: agent-memory\ndescription: Bounded portable contract fixture\nmetadata: {\"version\":\"0.0.15\"}\n---\n\n## Route\n| Inspect | [bank](bank/GUIDE.md) | [inspect](inspect/GUIDE.md) |\n",
-    );
-    write(
-        &pack.join("bank/GUIDE.md"),
-        "---\nkind: domain\n---\n\n[Inspect](../inspect/GUIDE.md).\n",
-    );
-    let mut operation =
-        String::from("---\nkind: operation\ndomain: bank\nfile-operations: [\"inspect\"]\n---\n\n");
-    for section in agent_memory::pack_validation::SECTIONS {
-        operation.push_str(&format!("## {section}\n\n"));
-        if section == "Required context" {
-            operation.push_str(
-                "A session MUST first load and follow the [bank domain](../bank/GUIDE.md).\n\n",
-            );
-        } else {
-            operation.push_str("Explicit operation context.\n\n");
-        }
+    for (relative, (bytes, permissions)) in
+        agent_memory::pack_validation::inventory(&native.pack).unwrap()
+    {
+        let path = pack.join(relative);
+        write(&path, bytes);
+        chmod(&path, permissions);
     }
-    write(&pack.join("inspect/GUIDE.md"), operation);
-    let sources = if codecs {
-        format!(r#"["{LEGACY}","{MIDDLE}"]"#)
-    } else {
-        "[]".to_owned()
-    };
-    write(
-        &pack.join("schemas/runtime-compatibility.json"),
-        format!("{COMPATIBILITY_HEAD}{sources}{COMPATIBILITY_TAIL}"),
-    );
-    let catalog = if codecs {
-        fixture_catalog()
-    } else {
-        PRODUCTION_CATALOG.to_owned()
-    };
-    write(&pack.join("schemas/migrations.json"), catalog);
-    write(
-        &pack.join("schemas/bank-router.json"),
-        r#"{"properties":{"schema":{"const":"agent-memory/v1"}}}"#,
-    );
-    write(
-        &pack.join("templates/activation-markdown.example.txt"),
-        agent_memory::installation::SHIM,
-    );
-    write(
-        &pack.join("templates/activation-omp-markdown.example.txt"),
-        include_str!("../skills/agent-memory/templates/activation-omp-markdown.example.txt"),
-    );
-    write(&pack.join("hooks/opencode.js"), "export default {}\n");
-    write(
-        &pack.join("hooks/omp.ts"),
-        "export default function () {}\n",
-    );
-    write(&root.join("bin/am"), STAND_IN);
-    for entry in walk(root) {
-        if entry.is_dir() {
-            chmod(&entry, 0o755);
-        } else {
-            chmod(&entry, 0o644);
-        }
-    }
+    let path = pack.join("schemas/runtime-compatibility.json");
+    let mut compatibility = decode(&std::fs::read(&path).unwrap());
+    *compatibility.get_mut("migrator_source_schemas").unwrap() = Value::Array(vec![
+        Value::String(LEGACY.into()),
+        Value::String(MIDDLE.into()),
+    ]);
+    write(&path, text(&compatibility));
+    write(&pack.join("schemas/migrations.json"), fixture_catalog());
+    std::fs::create_dir_all(root.join("bin")).unwrap();
+    std::fs::copy(&native.binary, root.join("bin/am")).unwrap();
     chmod(&root.join("bin/am"), 0o755);
 }
 
 /// Baseline `runtime_update_fixtures.bank(world, repo)`: render and validate
 /// the fixture bank through the public `am bank` commands.
-fn bank(world: &World, repo: &Path) -> PathBuf {
+fn bank(world: &World, repo: &Path, command: &Path) -> PathBuf {
     let proposal = r##"{"project-id":"8e0b66aa-2be5-4fa3-b47f-1245474aa7dd","router-updated":"2026-10-22T17:00:00Z","contexts":{"projectbrief.md":{"body":"# Project\n\nPreserve durable shared learning.\n","purpose":"Orient the agent","scope":"repository","lifecycle":"active","read-when":"When resuming work"}},"omitted":{"productContext.md":"No applicable evidence yet","activeContext.md":"No applicable evidence yet","systemPatterns.md":"No applicable evidence yet","techContext.md":"No applicable evidence yet","progress.md":"No applicable evidence yet"}}"##;
     let path = world.inside("bank-input.json").unwrap();
     std::fs::write(&path, proposal).unwrap();
-    let rendered = world.am(["bank", "render", "--input", s(&path)]).unwrap();
+    let rendered = world
+        .run([s(command), "--json", "bank", "render", "--input", s(&path)])
+        .unwrap();
     let rendered = decode(&rendered.stdout);
     let directory = repo.join("memory-bank");
     std::fs::create_dir(&directory).unwrap();
@@ -562,6 +572,49 @@ fn bank(world: &World, repo: &Path) -> PathBuf {
         std::fs::write(directory.join(name), body.as_str().unwrap()).unwrap();
     }
     directory
+}
+
+/// The identity fixture's public command sequence, through the owned command.
+fn bind(world: &World, repo: &Path, command: &Path) {
+    let call = |args: &[&str]| {
+        let argv: Vec<_> = [s(command), "--json"]
+            .into_iter()
+            .chain(args.iter().copied())
+            .collect();
+        decode(&world.run(argv).unwrap().stdout)
+    };
+    let apply = |route: &str, proposal: &Value| {
+        let path = world.inside("fixture-identity-proposal.json").unwrap();
+        std::fs::write(&path, text(proposal)).unwrap();
+        call(&[route, "apply", "--proposal", s(&path)])
+    };
+    let developer = call(&["developer", "status", "--repo", s(repo)]);
+    if truth(&developer, "setup_required") {
+        let proposal = call(&[
+            "developer",
+            "preview",
+            "--create",
+            "--label",
+            "Disposable test developer",
+        ]);
+        apply("developer", &proposal);
+    }
+    let current = call(&["identity", "status", "--repo", s(repo)]);
+    if !truth(&current, "resolved") {
+        let proposal = call(&[
+            "identity",
+            "preview",
+            "--repo",
+            s(repo),
+            "--action",
+            "bind",
+            "--reason",
+            "Explicit disposable fixture bank adoption",
+        ]);
+        let receipt = apply("identity", &proposal);
+        assert!(truth(&receipt, "verified"), "{receipt:?}");
+    }
+    call(&["identity", "status", "--repo", s(repo)]);
 }
 
 fn backups(root: &Path) -> Vec<PathBuf> {
@@ -579,7 +632,6 @@ fn operation(value: &Value) -> String {
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_production_native_noop_and_unsupported_refusal_do_not_create_backup_or_change_bank
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn production_native_noop_and_unsupported_refusal_do_not_create_backup_or_change_bank() {
     let mut f = Fixture::new(false);
     let (repo, bank) = f.memory(false);
@@ -615,7 +667,6 @@ fn production_native_noop_and_unsupported_refusal_do_not_create_backup_or_change
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_complete_multistep_conversion_has_private_complete_backup_and_historical_replay_preserves_new_edits
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn complete_multistep_conversion_has_private_complete_backup_and_historical_replay_preserves_new_edits()
  {
     let mut f = Fixture::new(true);
@@ -662,14 +713,11 @@ fn complete_multistep_conversion_has_private_complete_backup_and_historical_repl
     assert_eq!(std::fs::read(&receipt_path).unwrap(), original_receipt);
 }
 
-// The baseline runs the retained `scripts/migrate_bank.py` with the global
-// wrapper removed. Here the retained package is the complete runtime root
-// (`skills/agent-memory` + `bin/am`); the restoration runs as that retained
-// runtime after the original runtime's binary is removed. The fixture codecs
-// are test-only, so the retained stand-in binary itself is not executed.
+// The retained package contains the complete component runtime and real binary.
+// Fixture codecs still execute in the worker, not in the production executable;
+// ordinary provider authority remains the separate genuine installation.
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_completed_restore_is_new_transaction_and_retained_helper_works_without_global_install
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn completed_restore_is_new_transaction_and_retained_runtime_works_without_global_install() {
     let mut f = Fixture::new(true);
     let (repo, bank) = f.memory(true);
@@ -706,7 +754,6 @@ fn completed_restore_is_new_transaction_and_retained_runtime_works_without_globa
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_stale_proposal_mode_edit_and_new_learning_after_completion_refuse_without_overwrite
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn stale_proposal_mode_edit_and_new_learning_after_completion_refuse_without_overwrite() {
     let mut f = Fixture::new(true);
     let (repo, bank) = f.memory(true);
@@ -731,7 +778,6 @@ fn stale_proposal_mode_edit_and_new_learning_after_completion_refuse_without_ove
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_interrupted_conversion_recovers_finish_or_original_rollback_and_lost_response_is_safe
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn interrupted_conversion_recovers_finish_or_original_rollback_and_lost_response_is_safe() {
     let stages = [
         "migration-before-backup",
@@ -763,8 +809,15 @@ fn interrupted_conversion_recovers_finish_or_original_rollback_and_lost_response
             if bank.join(MARKER).exists() {
                 let normal = f
                     .world
-                    .am_with(
-                        ["--json", "bank", "validate", "--repo", s(&repo)],
+                    .run_with(
+                        [
+                            s(&f.native.command),
+                            "--json",
+                            "bank",
+                            "validate",
+                            "--repo",
+                            s(&repo),
+                        ],
                         RunOptions {
                             check: false,
                             ..RunOptions::default()
@@ -790,7 +843,6 @@ fn interrupted_conversion_recovers_finish_or_original_rollback_and_lost_response
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_receipt_backup_pin_corruption_refuses_historical_verification_and_completed_restore
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn receipt_backup_pin_corruption_refuses_historical_verification_and_completed_restore() {
     for bad in [
         "null",
@@ -825,7 +877,6 @@ fn receipt_backup_pin_corruption_refuses_historical_verification_and_completed_r
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_interrupted_unknown_new_edits_and_corrupt_backup_never_get_overwritten
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn interrupted_unknown_new_edits_and_corrupt_backup_never_get_overwritten() {
     for change in ["bytes", "mode", "extra", "backup"] {
         let mut f = Fixture::new(true);
@@ -895,7 +946,6 @@ fn interrupted_unknown_new_edits_and_corrupt_backup_never_get_overwritten() {
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_restoration_interruption_has_its_own_recovery_and_preserves_original_finished_receipt
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn restoration_interruption_has_its_own_recovery_and_preserves_original_finished_receipt() {
     for mode in ["finish", "rollback"] {
         let mut f = Fixture::new(true);
@@ -930,7 +980,6 @@ fn restoration_interruption_has_its_own_recovery_and_preserves_original_finished
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_changed_state_root_inside_runtime_refuses_before_any_runtime_or_bank_write
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_state_root_inside_runtime_refuses_before_any_runtime_or_bank_write() {
     for operation_name in ["preview", "apply", "historical", "recover"] {
         let mut f = Fixture::new(true);
@@ -979,7 +1028,6 @@ fn changed_state_root_inside_runtime_refuses_before_any_runtime_or_bank_write() 
 // in the worker child.
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_migration_preserves_uncommitted_feature_code_index_head_and_rejects_generic_recovery
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn migration_preserves_uncommitted_feature_code_index_head_and_rejects_generic_recovery() {
     let mut f = Fixture::new(true);
     let (repo, bank) = f.memory(true);
@@ -1028,7 +1076,6 @@ fn migration_preserves_uncommitted_feature_code_index_head_and_rejects_generic_r
 
 // obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_live_lock_and_immediate_pre_replace_mode_change_are_detected_without_overwrite
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn live_lock_and_immediate_pre_replace_mode_change_are_detected_without_overwrite() {
     let mut f = Fixture::new(true);
     let (repo, bank) = f.memory(true);
@@ -1278,7 +1325,6 @@ fn gaps_next_lifecycle_worker() {
     );
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_migration_runtime_rollback.py::MigrationRuntimeRollbackContract.test_partial_runtime_update_requires_explicit_retained_backup_restoration_before_rollback
 fn gaps_partial_runtime_update_requires_retained_backup_restoration_before_rollback() {
     let world = World::new().unwrap();
@@ -1287,8 +1333,16 @@ fn gaps_partial_runtime_update_requires_retained_backup_restoration_before_rollb
     let installed = channel.install(&world, "none", "copy");
     let receipt = field(&installed, "receipt").clone();
     let repo = world.repository("migration-consumer", false).unwrap();
-    let memory = bank(&world, &repo);
-    bind(&world, &repo).unwrap();
+    let source = field(&receipt, "source");
+    let command = agent_memory::installation::source_binary(source).unwrap();
+    let native = support::installed_runtime::NativeRuntime {
+        source: PathBuf::from(string(source, "path")),
+        pack: PathBuf::from(string(source, "pack")),
+        binary: command.clone(),
+        command: command.clone(),
+    };
+    let memory = bank(&world, &repo, &command);
+    bind(&world, &repo, &command);
     let before_bank = snapshot(&memory);
     let targets = field(&receipt, "targets")
         .as_array()
@@ -1338,6 +1392,7 @@ fn gaps_partial_runtime_update_requires_retained_backup_restoration_before_rollb
     let mut f = Fixture {
         world,
         source: runtime,
+        native,
         codecs: "next",
         calls: 0,
     };

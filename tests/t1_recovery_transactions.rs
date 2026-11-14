@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use support::{
-    installed_runtime::installed_runtime,
+    installed_runtime::install,
     record_fixtures,
     world::{RunOptions, World},
 };
@@ -229,6 +229,7 @@ struct Fixture {
     repo: PathBuf,
     bank: PathBuf,
     runtime: PathBuf,
+    binary: PathBuf,
     command: PathBuf,
     project: String,
     actor: String,
@@ -320,8 +321,26 @@ impl Fixture {
         review: impl FnOnce(&mut Value),
     ) -> Self {
         agent_memory::cli::register_providers().unwrap();
-        let world = World::new().unwrap();
-        let (runtime, command) = installed_runtime(&world);
+        let mut world = World::new().unwrap();
+        let installed = install(&world.root, |argv| {
+            world
+                .run_with(
+                    argv,
+                    RunOptions {
+                        check: false,
+                        timeout: std::time::Duration::from_secs(120),
+                        ..RunOptions::default()
+                    },
+                )
+                .unwrap()
+        });
+        world.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            installed.command.clone().into_os_string(),
+        );
+        let runtime = installed.pack;
+        let binary = installed.binary;
+        let command = installed.command;
         let repo = world.repository("repo", false).unwrap();
         fs::write(repo.join("synthetic-policy.md"), POLICY).unwrap();
         world.git(["add", "."]).unwrap();
@@ -363,7 +382,7 @@ impl Fixture {
             fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
         let native = g(&rendered, "files").clone();
-        let scope = support::identity_fixtures::bind(&world, &repo).unwrap();
+        let scope = support::identity_fixtures::bind_with_command(&world, &repo, &command).unwrap();
         let actor = t(&scope, "developer_id").to_owned();
         fs::write(bank.join("handoff-prompt.md"), body).unwrap();
         let mut f = Self {
@@ -371,6 +390,7 @@ impl Fixture {
             repo,
             bank,
             runtime,
+            binary,
             command,
             project,
             actor,
@@ -493,7 +513,9 @@ impl Fixture {
             ),
             ("directories", obj([])),
         ]);
-        let runtime = agent_memory::recovery_quiescence::measured_runtime(&self.runtime).unwrap();
+        // This explicitly measures the genuine fixture pair; native consumers
+        // still verify their own installed executable identity.
+        let runtime = agent_memory::artifact::inspect_runtime(&self.runtime, &self.binary).unwrap();
         let review_id = uuid();
         let attestation = obj([
             ("schema", s("agent-memory/layout-quiescence-attestation-v1")),
@@ -957,7 +979,6 @@ fn snapshot(root: &Path, canonical: bool) -> BTreeMap<String, Vec<u8>> {
 }
 // obligation: tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap() {
     for mode in ["error", "exit"] {
         let f = Fixture::new();
@@ -1158,7 +1179,6 @@ fn durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap() {
 }
 // obligation: tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_interrupted_pre_receipt_rollback_resumes_ordered_plan_not_forward_prefix
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn interrupted_pre_receipt_rollback_resumes_ordered_plan_not_forward_prefix() {
     for mode in ["error", "exit"] {
         let f = Fixture::new();
@@ -1254,7 +1274,6 @@ fn interrupted_pre_receipt_rollback_resumes_ordered_plan_not_forward_prefix() {
 }
 // obligation: tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_nested_retirement_resumes_active_binding_after_terminal_index
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn nested_retirement_resumes_active_binding_after_terminal_index() {
     for mode in ["error", "exit"] {
         let f = Fixture::new();
@@ -1406,19 +1425,16 @@ fn exact_retirement(stage: &str) {
 }
 // obligation: tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay() {
     exact_retirement("layout-recovery-sentinel-retirement");
 }
 // obligation: tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_exact_nested_finish_resumes_after_marker_removal_without_canonical_replay
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn exact_nested_finish_resumes_after_marker_removal_without_canonical_replay() {
     exact_retirement("layout-recovery-retirement-after-marker-removal");
 }
 // obligation: tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_exact_nested_finish_resumes_after_sentinel_removal_without_canonical_replay
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn exact_nested_finish_resumes_after_sentinel_removal_without_canonical_replay() {
     exact_retirement("layout-recovery-retirement-after-sentinel-removal");
 }
@@ -1598,25 +1614,21 @@ fn checkpoint_fault(after_receipt: bool, mode: &str) {
 }
 // obligation: tests/contracts/test_layout_checkpoint_faults.py::LayoutCheckpointFaults.test_before_receipt_error
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn checkpoint_before_receipt_error() {
     checkpoint_fault(false, "error");
 }
 // obligation: tests/contracts/test_layout_checkpoint_faults.py::LayoutCheckpointFaults.test_before_receipt_exit
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn checkpoint_before_receipt_exit() {
     checkpoint_fault(false, "exit");
 }
 // obligation: tests/contracts/test_layout_checkpoint_faults.py::LayoutCheckpointFaults.test_after_receipt_error
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn checkpoint_after_receipt_error() {
     checkpoint_fault(true, "error");
 }
 // obligation: tests/contracts/test_layout_checkpoint_faults.py::LayoutCheckpointFaults.test_after_receipt_exit
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn checkpoint_after_receipt_exit() {
     checkpoint_fault(true, "exit");
 }

@@ -454,7 +454,6 @@ fn prepared(world: &support::World, repo: &Path, request: &Value) -> Value {
 
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_unsafe_and_raw_conversation_capture_is_quarantined_without_content_copies
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn unsafe_and_raw_conversation_capture_is_quarantined_without_content_copies() {
     support::in_world(
         "unsafe_and_raw_conversation_capture_is_quarantined_without_content_copies",
@@ -485,7 +484,6 @@ fn unsafe_and_raw_conversation_capture_is_quarantined_without_content_copies() {
 }
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_transient_redundant_source_and_tracker_copies_are_discarded
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn transient_redundant_source_and_tracker_copies_are_discarded() {
     support::in_world(
         "transient_redundant_source_and_tracker_copies_are_discarded",
@@ -513,7 +511,6 @@ fn transient_redundant_source_and_tracker_copies_are_discarded() {
 }
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_user_correction_admits_small_record_and_history_automatically_without_git_changes
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn user_correction_admits_and_replays_without_git_changes() {
     support::in_world(
         "user_correction_admits_and_replays_without_git_changes",
@@ -598,7 +595,6 @@ fn draft_input(request: &Value) -> Value {
 
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_draft_fills_identity_without_deciding_or_writing
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn draft_fills_identity_without_deciding_or_writing() {
     support::in_world(
         "draft_fills_identity_without_deciding_or_writing",
@@ -644,7 +640,6 @@ fn draft_fills_identity_without_deciding_or_writing() {
 }
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_start_keeps_semantic_review_pending_and_never_writes_bank
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn start_keeps_semantic_review_pending_and_never_writes_bank() {
     support::in_world(
         "start_keeps_semantic_review_pending_and_never_writes_bank",
@@ -716,7 +711,6 @@ fn start_keeps_semantic_review_pending_and_never_writes_bank() {
 }
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_unconfirmed_proposals_and_weak_sources_never_become_confirmed_decisions
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn unconfirmed_and_weak_sources_never_become_confirmed_decisions() {
     support::in_world(
         "unconfirmed_and_weak_sources_never_become_confirmed_decisions",

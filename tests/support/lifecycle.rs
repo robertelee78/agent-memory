@@ -85,6 +85,15 @@ pub fn command(receipt: &Value) -> PathBuf {
     PathBuf::from(text(receipt, "bin_dir")).join("am")
 }
 
+/// Ordinary bank commands after a channel install run its receipt-owned command
+/// (ordinary `am` authority requires the installed executable).
+pub fn own_installed_command(world: &mut World, receipt: &Value) {
+    world.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        command(receipt).into_os_string(),
+    );
+}
+
 pub fn snapshot(root: &Path) -> BTreeMap<PathBuf, (u32, Vec<u8>)> {
     fn walk(root: &Path, path: &Path, result: &mut BTreeMap<PathBuf, (u32, Vec<u8>)>) {
         let metadata = std::fs::symlink_metadata(path).unwrap();

@@ -5,6 +5,7 @@ use agent_memory::recall_catalog as catalog;
 use agent_memory::{artifact, bank_contract, bank_transactions, host};
 use std::os::unix::fs::{DirBuilderExt, PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
+mod support;
 
 const ROOT: &str = "/repo";
 const BANK: &str = "/repo/memory-bank";
@@ -562,163 +563,184 @@ fn canonical_capacity_is_enforced_independently_of_optional_cache_metadata() {
 
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_warm_semantic_selection_matches_cold_sources_without_storing_learning_bodies
 #[test]
-#[ignore = "needs recovery_frontier, security, retrieval, discovery registered"]
 fn warm_catalog_preserves_canonical_body_without_storing_it() {
-    let world = World::new();
-    let runtime = world.runtime();
-    let mut observed = world.observed();
-    let engine = catalog::generation(&runtime).unwrap();
-    let environment = world.environment();
-    assert!(catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap());
-    let project = observed
-        .checked
-        .get("project_id")
-        .unwrap()
-        .as_str()
-        .unwrap();
-    let mut loaded = catalog::load_catalog_with_environment(
-        &observed.root,
-        project,
-        &runtime,
-        None,
-        &environment,
-    )
-    .unwrap();
-    assert_eq!(
-        loaded
-            .source("projectbrief.md", catalog::MAX_SOURCE)
-            .unwrap(),
-        observed.sources.get("projectbrief.md").unwrap().as_slice()
-    );
-    loaded.recheck(None).unwrap();
-    let (_, _, directory) =
-        catalog::locations_with_environment(&observed.root, &runtime.pack, &environment).unwrap();
-    let name = catalog::pointer(&directory)
-        .unwrap()
-        .0
-        .get("file")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_owned();
-    assert!(
-        !String::from_utf8_lossy(&std::fs::read(directory.join(name)).unwrap())
-            .contains("CANONICAL_BODY_NOT_IN_CATALOG")
+    support::with_frontier(
+        "warm_catalog_preserves_canonical_body_without_storing_it",
+        || {
+            let world = World::new();
+            let runtime = world.runtime();
+            let mut observed = world.observed();
+            let engine = catalog::generation(&runtime).unwrap();
+            let environment = world.environment();
+            assert!(
+                catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap()
+            );
+            let project = observed
+                .checked
+                .get("project_id")
+                .unwrap()
+                .as_str()
+                .unwrap();
+            let mut loaded = catalog::load_catalog_with_environment(
+                &observed.root,
+                project,
+                &runtime,
+                None,
+                &environment,
+            )
+            .unwrap();
+            assert_eq!(
+                loaded
+                    .source("projectbrief.md", catalog::MAX_SOURCE)
+                    .unwrap(),
+                observed.sources.get("projectbrief.md").unwrap().as_slice()
+            );
+            loaded.recheck(None).unwrap();
+            let (_, _, directory) =
+                catalog::locations_with_environment(&observed.root, &runtime.pack, &environment)
+                    .unwrap();
+            let name = catalog::pointer(&directory)
+                .unwrap()
+                .0
+                .get("file")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_owned();
+            assert!(
+                !String::from_utf8_lossy(&std::fs::read(directory.join(name)).unwrap())
+                    .contains("CANONICAL_BODY_NOT_IN_CATALOG")
+            );
+        },
     );
 }
 
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_missing_cache_automatically_rebuilds_and_returns_the_same_useful_memory
 #[test]
-#[ignore = "needs recovery_frontier, security, retrieval, discovery registered"]
 fn missing_cache_can_be_republished_from_unchanged_canonical_observation() {
-    let world = World::new();
-    let runtime = world.runtime();
-    let mut observed = world.observed();
-    let engine = catalog::generation(&runtime).unwrap();
-    let environment = world.environment();
-    let project = observed
-        .checked
-        .get("project_id")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_owned();
-    assert!(
-        catalog::load_catalog_with_environment(
-            &observed.root,
-            &project,
-            &runtime,
-            None,
-            &environment
-        )
-        .is_err()
+    support::with_frontier(
+        "missing_cache_can_be_republished_from_unchanged_canonical_observation",
+        || {
+            let world = World::new();
+            let runtime = world.runtime();
+            let mut observed = world.observed();
+            let engine = catalog::generation(&runtime).unwrap();
+            let environment = world.environment();
+            let project = observed
+                .checked
+                .get("project_id")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_owned();
+            assert!(
+                catalog::load_catalog_with_environment(
+                    &observed.root,
+                    &project,
+                    &runtime,
+                    None,
+                    &environment
+                )
+                .is_err()
+            );
+            catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
+            let loaded = catalog::load_catalog_with_environment(
+                &observed.root,
+                &project,
+                &runtime,
+                None,
+                &environment,
+            )
+            .unwrap();
+            assert_eq!(loaded.hashes, observed.hashes);
+            loaded.recheck(None).unwrap();
+        },
     );
-    catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
-    let loaded = catalog::load_catalog_with_environment(
-        &observed.root,
-        &project,
-        &runtime,
-        None,
-        &environment,
-    )
-    .unwrap();
-    assert_eq!(loaded.hashes, observed.hashes);
-    loaded.recheck(None).unwrap();
 }
 
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_late_mmap_change_with_restored_mtime_cannot_pass_the_final_whole_content_check
 #[test]
-#[ignore = "needs recovery_frontier, security registered"]
 fn final_recheck_hashes_actual_bytes_and_removes_stale_owned_pointer() {
-    let world = World::new();
-    let runtime = world.runtime();
-    let mut observed = world.observed();
-    let engine = catalog::generation(&runtime).unwrap();
-    let environment = world.environment();
-    catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
-    let project = observed
-        .checked
-        .get("project_id")
-        .unwrap()
-        .as_str()
-        .unwrap();
-    let loaded = catalog::load_catalog_with_environment(
-        &observed.root,
-        project,
-        &runtime,
-        None,
-        &environment,
-    )
-    .unwrap();
-    let target = observed.bank.join("projectbrief.md");
-    let original = std::fs::read(&target).unwrap();
-    let changed = String::from_utf8(original)
-        .unwrap()
-        .replacen("Project", "Changed", 1);
-    std::fs::write(&target, changed).unwrap();
-    assert!(loaded.recheck(None).is_err());
-    let (_, _, directory) =
-        catalog::locations_with_environment(&observed.root, &runtime.pack, &environment).unwrap();
-    assert!(!directory.join("current.json").exists());
+    support::with_frontier(
+        "final_recheck_hashes_actual_bytes_and_removes_stale_owned_pointer",
+        || {
+            let world = World::new();
+            let runtime = world.runtime();
+            let mut observed = world.observed();
+            let engine = catalog::generation(&runtime).unwrap();
+            let environment = world.environment();
+            catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
+            let project = observed
+                .checked
+                .get("project_id")
+                .unwrap()
+                .as_str()
+                .unwrap();
+            let loaded = catalog::load_catalog_with_environment(
+                &observed.root,
+                project,
+                &runtime,
+                None,
+                &environment,
+            )
+            .unwrap();
+            let target = observed.bank.join("projectbrief.md");
+            let original = std::fs::read(&target).unwrap();
+            let changed = String::from_utf8(original)
+                .unwrap()
+                .replacen("Project", "Changed", 1);
+            std::fs::write(&target, changed).unwrap();
+            assert!(loaded.recheck(None).is_err());
+            let (_, _, directory) =
+                catalog::locations_with_environment(&observed.root, &runtime.pack, &environment)
+                    .unwrap();
+            assert!(!directory.join("current.json").exists());
+        },
+    );
 }
 
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_loaded_immutable_reader_survives_concurrent_generation_replacement
 #[test]
-#[ignore = "needs recovery_frontier, security registered"]
 fn immutable_loaded_reader_survives_replacement_and_owned_generation_collection() {
-    let world = World::new();
-    let runtime = world.runtime();
-    let mut observed = world.observed();
-    let environment = world.environment();
-    let engine = catalog::generation(&runtime).unwrap();
-    catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
-    let project = observed
-        .checked
-        .get("project_id")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_owned();
-    let loaded = catalog::load_catalog_with_environment(
-        &observed.root,
-        &project,
-        &runtime,
-        None,
-        &environment,
-    )
-    .unwrap();
-    let (_, _, directory) =
-        catalog::locations_with_environment(&observed.root, &runtime.pack, &environment).unwrap();
-    let old = catalog::pointer(&directory)
-        .unwrap()
-        .0
-        .get("file")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_owned();
-    std::fs::remove_file(directory.join("current.json")).unwrap();
-    catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
-    assert!(!directory.join(old).exists());
-    loaded.recheck(None).unwrap();
+    support::with_frontier(
+        "immutable_loaded_reader_survives_replacement_and_owned_generation_collection",
+        || {
+            let world = World::new();
+            let runtime = world.runtime();
+            let mut observed = world.observed();
+            let environment = world.environment();
+            let engine = catalog::generation(&runtime).unwrap();
+            catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
+            let project = observed
+                .checked
+                .get("project_id")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_owned();
+            let loaded = catalog::load_catalog_with_environment(
+                &observed.root,
+                &project,
+                &runtime,
+                None,
+                &environment,
+            )
+            .unwrap();
+            let (_, _, directory) =
+                catalog::locations_with_environment(&observed.root, &runtime.pack, &environment)
+                    .unwrap();
+            let old = catalog::pointer(&directory)
+                .unwrap()
+                .0
+                .get("file")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_owned();
+            std::fs::remove_file(directory.join("current.json")).unwrap();
+            catalog::publish_with_environment(&mut observed, &engine, &environment).unwrap();
+            assert!(!directory.join(old).exists());
+            loaded.recheck(None).unwrap();
+        },
+    );
 }

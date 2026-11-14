@@ -5,7 +5,6 @@ use std::fs;
 use support::cutover::*;
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bounded_resume.py::BoundedResumeContract.test_router_then_exact_task_context_omits_unrelated_records_without_optional_stores
 fn exact_task_resume_omits_unrelated_records_without_optional_stores() {
     let r = Recall::new();
@@ -54,7 +53,6 @@ fn exact_task_resume_omits_unrelated_records_without_optional_stores() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bounded_resume.py::BoundedResumeContract.test_exact_resume_preserves_branch_unknown_validity_trust_and_kind_gates
 fn exact_resume_preserves_all_policy_gates() {
     let r = Recall::new();
@@ -100,7 +98,6 @@ fn exact_resume_preserves_all_policy_gates() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bounded_resume.py::BoundedResumeContract.test_ambiguous_task_keeps_only_router_and_prose_never_gains_typed_trust
 fn ambiguous_task_does_not_load_details_or_certify_prose_trust() {
     let r = Recall::new();

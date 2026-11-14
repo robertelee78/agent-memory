@@ -1,3 +1,5 @@
+mod support;
+
 use agent_memory::codec::json::{self, Value};
 use agent_memory::developer_identity::{self as developer, digest, encoded};
 fn string(value: impl Into<String>) -> Value {
@@ -14,10 +16,10 @@ fn get<'a>(value: &'a Value, key: &str) -> &'a Value {
     value.get(key).unwrap()
 }
 use agent_memory::{
-    bank_contract, bank_writes, cli, host, process, project_identity, scope_binding, security,
+    bank_contract, bank_writes, cli, process, project_identity, scope_binding, security,
 };
 use std::ffi::OsString;
-use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -61,36 +63,15 @@ fn reasons(value: &Value) -> Vec<&str> {
 }
 struct World {
     root: PathBuf,
-}
-impl Drop for World {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.root);
-    }
+    env: support::Environment,
+    runtime: Option<support::installed_runtime::NativeRuntime>,
 }
 impl World {
     fn env(&self) -> Vec<(OsString, OsString)> {
-        vec![
-            ("PATH".into(), "/usr/bin:/bin:/usr/local/bin".into()),
-            ("HOME".into(), self.root.join("home").into_os_string()),
-            (
-                "AGENT_MEMORY_CONFIG_HOME".into(),
-                self.root.join("config").into_os_string(),
-            ),
-            (
-                "AGENT_MEMORY_STATE_HOME".into(),
-                self.root.join("state/agent-memory").into_os_string(),
-            ),
-            (
-                "XDG_CONFIG_HOME".into(),
-                self.root.join("xdg-config").into_os_string(),
-            ),
-            (
-                "XDG_STATE_HOME".into(),
-                self.root.join("state").into_os_string(),
-            ),
-            ("GIT_CONFIG_NOSYSTEM".into(), "1".into()),
-            ("LC_ALL".into(), "C".into()),
-        ]
+        self.env
+            .iter()
+            .map(|(key, value)| (key.clone(), value.clone()))
+            .collect()
     }
     fn command(&self, argv: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
         let mut env = self.env();
@@ -139,7 +120,7 @@ impl World {
     }
     fn repo(&self) -> PathBuf {
         let repo = self.root.join("repo");
-        std::fs::create_dir(&repo).unwrap();
+        std::fs::create_dir_all(&repo).unwrap();
         self.git(&repo, &["init", "--initial-branch=main"]);
         self.git(&repo, &["config", "user.name", "Fixture"]);
         self.git(&repo, &["config", "user.email", "fixture@example.invalid"]);
@@ -206,7 +187,15 @@ impl World {
         path
     }
     fn native(&self, args: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
-        let mut argv = vec![OsString::from(env!("CARGO_BIN_EXE_am")), "--json".into()];
+        let mut argv = vec![
+            self.runtime
+                .as_ref()
+                .unwrap()
+                .command
+                .as_os_str()
+                .to_owned(),
+            "--json".into(),
+        ];
         argv.extend_from_slice(args);
         self.command(&argv, extra)
     }
@@ -291,19 +280,24 @@ fn checkpoint_input(world: &World, repo: &Path) -> Value {
 fn isolated(name: &str, body: impl FnOnce(&World)) {
     if std::env::var("AM_SECURITY_CASE").ok().as_deref() == Some(name) {
         cli::register_providers().unwrap();
-        body(&World {
-            root: PathBuf::from(std::env::var_os("AM_SECURITY_ROOT").unwrap()),
-        });
+        let mut world = World {
+            root: support::require_current_world().unwrap(),
+            env: std::env::vars_os().collect(),
+            runtime: None,
+        };
+        world.runtime = Some(support::installed_runtime::install(&world.root, |argv| {
+            world.command(argv, &[])
+        }));
+        support::installed_runtime::register_component_runtime();
+        body(&world);
         return;
     }
-    let path = std::env::temp_dir().join(format!("am-security-{}", host::uuid4().unwrap()));
-    std::fs::DirBuilder::new()
-        .mode(0o700)
-        .create(&path)
-        .unwrap();
-    let root = std::fs::canonicalize(path).unwrap();
-    std::fs::create_dir(root.join("home")).unwrap();
-    let world = World { root };
+    let isolated_world = support::World::new().unwrap();
+    let world = World {
+        root: isolated_world.root.clone(),
+        env: isolated_world.env.clone(),
+        runtime: None,
+    };
     let output = world.command(
         &[
             std::env::current_exe().unwrap().into_os_string(),
@@ -328,7 +322,6 @@ fn isolated(name: &str, body: impl FnOnce(&World)) {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_source_classes_remain_distinct_and_repository_bytes_are_actually_checked
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
 fn source_classes_and_real_repository_inventory() {
     isolated("source_classes_and_real_repository_inventory", |world| {
         let (repo, bank) = world.fixture();
@@ -392,7 +385,12 @@ fn source_classes_and_real_repository_inventory() {
             &string("eligible")
         );
         std::fs::write(repo.join("app.rs"), "const RETRIES: u8 = 4;\n").unwrap();
-        assert!(security::evaluate(&repo, &request, None, true).is_err());
+        assert_eq!(
+            security::evaluate(&repo, &request, None, true)
+                .unwrap_err()
+                .to_string(),
+            "Repository evidence changed or exceeds the bounded reader"
+        );
         assert_eq!(before, world.canonical(&bank));
         world.git(&repo, &["config", "core.excludesFile", "/dev/null"]);
         std::fs::write(repo.join(".gitignore"), "ignored.rs\n").unwrap();
@@ -465,7 +463,6 @@ fn source_classes_and_real_repository_inventory() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_secret_candidates_are_redacted_and_audit_never_copies_payload_or_secret_hashes
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
 fn secrets_redact_without_private_audit_payload() {
     isolated("secrets_redact_without_private_audit_payload", |world| {
         let (repo, bank) = world.fixture();
@@ -493,7 +490,6 @@ fn secrets_redact_without_private_audit_payload() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_hostile_authority_identity_and_conversation_text_quarantine_without_echo_or_execution
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
 fn hostile_sources_never_echo_or_execute() {
     isolated("hostile_sources_never_echo_or_execute", |world| {
         let (repo, _) = world.fixture();
@@ -532,22 +528,47 @@ fn hostile_sources_never_echo_or_execute() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_wrong_project_oversize_private_evidence_and_embedded_approval_claims_do_not_authorize
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
 fn wrong_project_private_evidence_and_claims_refuse() {
     isolated(
         "wrong_project_private_evidence_and_claims_refuse",
         |world| {
             let (repo, _) = world.fixture();
-            for (field, value) in [
-                ("project_id", string(DEAD)),
-                ("text", string("x".repeat(20000))),
-                ("category", string("promotion")),
-                ("approval", Value::Bool(true)),
+            assert_eq!(
+                get(
+                    &security::evaluate(&repo, &request(), None, false).unwrap(),
+                    "decision"
+                ),
+                &string("eligible")
+            );
+            for (field, value, error) in [
+                (
+                    "project_id",
+                    string(DEAD),
+                    "Operation project ID differs from the resolved repository",
+                ),
+                (
+                    "text",
+                    string("x".repeat(20000)),
+                    "Security content must be useful bounded UTF8 text without control separators",
+                ),
+                (
+                    "category",
+                    string("promotion"),
+                    "Procedure promotion requires an explicitly typed procedure request",
+                ),
+                (
+                    "approval",
+                    Value::Bool(true),
+                    "Security request needs explicit project, source class, operation and bounded content/record identities",
+                ),
             ] {
                 let mut request = request();
                 set(&mut request, field, value);
-                assert!(
-                    security::evaluate(&repo, &request, None, true).is_err(),
+                assert_eq!(
+                    security::evaluate(&repo, &request, None, true)
+                        .unwrap_err()
+                        .to_string(),
+                    error,
                     "{field}"
                 );
             }
@@ -561,7 +582,12 @@ fn wrong_project_private_evidence_and_claims_refuse() {
                     ("sha256", string("a".repeat(64))),
                 ]),
             );
-            assert!(security::evaluate(&repo, &request, None, true).is_err());
+            assert_eq!(
+                security::evaluate(&repo, &request, None, true)
+                    .unwrap_err()
+                    .to_string(),
+                "Repository evidence must be canonical local source, not memory or private metadata"
+            );
             let mut request = crate::request();
             set(&mut request, "content_kind", string("procedure"));
             set(
@@ -578,7 +604,6 @@ fn wrong_project_private_evidence_and_claims_refuse() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_procedure_eligibility_requires_separate_exact_project_content_version_approval
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
 fn procedure_approval_is_separate_exact_and_typed() {
     isolated("procedure_approval_is_separate_exact_and_typed", |world| {
         let (repo, _) = world.fixture();
@@ -617,11 +642,21 @@ fn procedure_approval_is_separate_exact_and_typed() {
         ] {
             let mut bad = approval.clone();
             set(&mut bad, field, value);
-            assert!(security::evaluate(&repo, &request, Some(&bad), true).is_err());
+            assert_eq!(
+                security::evaluate(&repo, &request, Some(&bad), true)
+                    .unwrap_err()
+                    .to_string(),
+                "Procedure eligibility requires separate explicit current-operator approval bound to exact content, source version and project"
+            );
         }
         set(&mut request, "category", string("admission"));
         set(&mut request, "content_kind", string("summary"));
-        assert!(security::evaluate(&repo, &request, Some(&approval), true).is_err());
+        assert_eq!(
+            security::evaluate(&repo, &request, Some(&approval), true)
+                .unwrap_err()
+                .to_string(),
+            "Approval is for a separate reviewed procedure promotion, never routine capture permission"
+        );
         assert_eq!(
             get(
                 &security::evaluate(&repo, &request, Some(&Value::Null), false).unwrap(),
@@ -634,7 +669,6 @@ fn procedure_approval_is_separate_exact_and_typed() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_deleted_record_id_suppresses_cached_text_before_audited_retrieval_output
 #[test]
-#[ignore = "needs recovery_frontier registered for canonical tombstone history"]
 fn terminal_deletion_suppresses_cached_text() {
     isolated("terminal_deletion_suppresses_cached_text", |world| {
         let (repo, bank) = world.fixture();
@@ -1164,7 +1198,6 @@ fn audit_rejects_invalid_metadata_before_io_and_migration_requires_real_locator(
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_governed_checkpoint_and_primitive_checkpoint_refuse_secrets_before_canonical_writes
 #[test]
-#[ignore = "needs checkpoint, recovery_frontier and turn_sources registered"]
 fn checkpoint_refuses_secrets_before_writes() {
     isolated("checkpoint_refuses_secrets_before_writes", |world| {
         let (repo, bank) = world.fixture();
@@ -1187,6 +1220,12 @@ fn checkpoint_refuses_secrets_before_writes() {
             &[],
         );
         assert_eq!(output.status, process::Status::Code(1));
+        assert!(
+            get(&developer::load(&output.stdout).unwrap(), "error")
+                .as_str()
+                .unwrap()
+                .contains("credential")
+        );
         assert!(!String::from_utf8_lossy(&output.stdout).contains("NEVER_PERSIST"));
         let content = "# Focus\n\npassword=NEVER_PERSIST_THIS_SECRET\n";
         let mut proposal =
@@ -1206,6 +1245,12 @@ fn checkpoint_refuses_secrets_before_writes() {
             &[],
         );
         assert_eq!(output.status, process::Status::Code(1));
+        assert!(
+            get(&developer::load(&output.stdout).unwrap(), "error")
+                .as_str()
+                .unwrap()
+                .contains("credential")
+        );
         assert!(!String::from_utf8_lossy(&output.stdout).contains("NEVER_PERSIST"));
         assert_eq!(world.canonical(&bank), before);
         let id = get(get(&proposal, "proposal"), "operation_id")
@@ -1234,7 +1279,6 @@ fn checkpoint_refuses_secrets_before_writes() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_initialization_rejects_secret_in_reviewed_summary_before_creating_bank
 #[test]
-
 fn initialization_refuses_secret_reviewed_summary() {
     isolated("initialization_refuses_secret_reviewed_summary", |world| {
         let repo = world.repo();
@@ -1299,6 +1343,12 @@ fn initialization_refuses_secret_reviewed_summary() {
             &[],
         );
         assert_eq!(output.status, process::Status::Code(1));
+        assert!(
+            get(&developer::load(&output.stdout).unwrap(), "error")
+                .as_str()
+                .unwrap()
+                .contains("token")
+        );
         assert!(!String::from_utf8_lossy(&output.stdout).contains("ghp_"));
         assert!(!repo.join("memory-bank").exists());
     });
@@ -1306,7 +1356,6 @@ fn initialization_refuses_secret_reviewed_summary() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_required_audit_failure_stops_write_and_same_operation_retries_after_repair
 #[test]
-#[ignore = "needs recovery_frontier and turn_sources registered"]
 fn audit_failure_stops_real_write_until_repair() {
     isolated("audit_failure_stops_real_write_until_repair", |world| {
         let (repo, bank) = world.fixture();
@@ -1344,7 +1393,6 @@ fn audit_failure_stops_real_write_until_repair() {
 
 // obligation: tests/contracts/test_security_policy.py::SecurityPolicyContract.test_interrupted_checkpoint_audit_and_write_replay_converge_without_payload_copies
 #[test]
-#[ignore = "needs checkpoint, recovery_frontier and turn_sources registered"]
 fn interrupted_checkpoint_replay_retains_metadata_only() {
     isolated(
         "interrupted_checkpoint_replay_retains_metadata_only",
@@ -1487,7 +1535,7 @@ fn authored_record(number: usize) -> String {
 
 // obligation: tests/contracts/test_large_refresh_security.py::LargeRefreshSecurityContract.test_complete_v2_delta_above_sixty_four_sources_imports_and_qualifies_peer_learning
 #[test]
-#[ignore = "needs semantic_sharing, memory_refresh, sharing_recovery, recovery_frontier and turn_sources registered"]
+#[ignore = "needs semantic_sharing semantic inspect/page/review-v2 and memory_refresh refresh prepare/apply-v2 command implementations"]
 fn complete_v2_refresh_preserves_feature_state_and_qualifies_last_source() {
     isolated(
         "complete_v2_refresh_preserves_feature_state_and_qualifies_last_source",
@@ -1658,7 +1706,7 @@ fn complete_v2_refresh_preserves_feature_state_and_qualifies_last_source() {
                 object([("left", pair.first().unwrap().clone()), ("right", pair.get(1).unwrap().clone()), ("classification", string("related")), ("reason", string("Independent authored partition observations and their navigation preserve distinct sources."))])
             }).collect())),
             ("dependencies", object([] as [(&str, Value); 0])), ("consolidations", Value::Array(vec![])),
-            ("rationale", string("Bounded mechanical complete-delta control, not semantic truth verification.")), ("recorded_at", string(host::utc_now_isoformat().unwrap())),
+            ("rationale", string("Bounded mechanical complete-delta control, not semantic truth verification.")), ("recorded_at", string(agent_memory::host::utc_now_isoformat().unwrap())),
         ]);
             let reviewed = world.root.join("reviewed.json");
             good(

@@ -418,6 +418,7 @@ pub fn canonical_writer_barrier(
         }
     }
 }
+
 fn operation<T>(repo: &Path, runtime_root: &Path, body: impl FnOnce() -> Result<T>) -> Result<T> {
     let barrier = source_barrier(repo, false, false, None, runtime_root)?;
     let result = body()?;
@@ -598,7 +599,24 @@ pub fn private_namespace(
     create: bool,
     runtime_root: &Path,
 ) -> Result<(Namespace, PrivateEnrollmentContext)> {
-    let context = scope::private_enrollment_context(repo, runtime_root)?;
+    private_namespace_with_authority(
+        repo,
+        harness,
+        session,
+        lifecycle,
+        create,
+        scope::RuntimeAuthority::Executing(runtime_root),
+    )
+}
+pub fn private_namespace_with_authority(
+    repo: &Path,
+    harness: &str,
+    session: &str,
+    lifecycle: &str,
+    create: bool,
+    authority: scope::RuntimeAuthority<'_>,
+) -> Result<(Namespace, PrivateEnrollmentContext)> {
+    let context = scope::private_enrollment_context_with_authority(repo, authority)?;
     let ns = namespace_at(
         context.root(),
         context.bank(),
@@ -1723,9 +1741,25 @@ pub fn inspect(
     lifecycle: &str,
     runtime_root: &Path,
 ) -> Result<Value> {
+    inspect_with_authority(
+        repo,
+        harness,
+        session,
+        lifecycle,
+        scope::RuntimeAuthority::Executing(runtime_root),
+    )
+}
+pub fn inspect_with_authority(
+    repo: &Path,
+    harness: &str,
+    session: &str,
+    lifecycle: &str,
+    authority: scope::RuntimeAuthority<'_>,
+) -> Result<Value> {
+    let runtime_root = authority.pack();
     operation(repo, runtime_root, || {
         let (ns, context) =
-            private_namespace(repo, harness, session, lifecycle, false, runtime_root)?;
+            private_namespace_with_authority(repo, harness, session, lifecycle, false, authority)?;
         if named(&ns.directory)?.is_none() {
             let value = private_inventory(&ns.directory, &ns.identity, &context)?;
             scope::recheck_private_enrollment(&context)?;

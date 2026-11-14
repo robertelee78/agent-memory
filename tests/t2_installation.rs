@@ -104,11 +104,18 @@ fn make_writable(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-// ----- seams: honest test implementers of unported callees -----
+// ----- component-test lifecycle seams -----
 
 struct FixtureUpdating;
 impl Updating for FixtureUpdating {
-    fn banks(&self, repositories: &[String], _: &Value, _: bool) -> install::Result<Value> {
+    fn banks(
+        &self,
+        repositories: &[String],
+        _: &Value,
+        _: bool,
+        _: (&Path, &Path),
+        _: Option<(&Path, &Path)>,
+    ) -> install::Result<Value> {
         Ok(Value::Object(vec![(
             "observed_repositories".into(),
             Value::Array(repositories.iter().cloned().map(Value::String).collect()),
@@ -139,16 +146,23 @@ impl PrivateState for FixturePrivateState {
         _: &Value,
         _: Option<&Value>,
         _: &str,
+        _: (&Path, &Path),
         transition: &mut dyn FnMut() -> install::Result<Option<Value>>,
         body: &mut dyn FnMut(&Value) -> install::Result<Value>,
     ) -> install::Result<Value> {
         transition()?;
         body(&Value::Object(vec![("fixture".into(), Value::Bool(true))]))
     }
-    fn prepare_lifecycle(&self, _: &Value, _: bool) -> install::Result<Value> {
+    fn prepare_lifecycle(&self, _: &Value, _: bool, _: (&Path, &Path)) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn require_compatible(&self, _: &Value, _: &Value, _: &str) -> install::Result<Value> {
+    fn require_compatible(
+        &self,
+        _: &Value,
+        _: &Value,
+        _: &str,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
     fn public_summary(&self, value: &Value) -> install::Result<Value> {
@@ -1286,6 +1300,54 @@ fn journal_codec_refuses_unknown_status_and_foreign_staging_paths() {
 // Checkpoint 2: fresh install, copy and link modes, journaled recovery
 // ======================================================================
 
+#[test]
+fn executing_runtime_selects_the_owned_development_receipt_without_writes() {
+    // The existing opaque executable fixture proves locator selection, not
+    // qualification of a native CLI or of the production installation guards.
+    let world = World::new();
+    let source = development_source(&world, "executing development source");
+    let binary = source.join("target/release/am");
+    let env = world.env();
+    let before = snapshot(&world.root);
+    let refusal = install::executing_runtime(&env, &binary).unwrap_err();
+    assert!(matches!(&refusal, install::Error::Contract(_)));
+    assert!(refusal.to_string().contains("trusted bootstrap installer"));
+    assert!(!refusal.to_string().contains("pass --pack"));
+    assert_eq!(snapshot(&world.root), before);
+
+    let installed = ok(&world, &request(&source));
+    let receipt = get(&installed, "receipt");
+    let expected = (
+        PathBuf::from(text(get(receipt, "source"), "pack")),
+        install::source_binary(get(receipt, "source")).unwrap(),
+    );
+    assert_eq!(expected.1, binary);
+    let before = snapshot(&world.root);
+    assert_eq!(
+        install::executing_runtime(&env, &world.bin().join("am")).unwrap(),
+        expected
+    );
+    assert_eq!(
+        install::pack_root(&env, &world.bin().join("agent-memory")).unwrap(),
+        expected.0
+    );
+    let locations = install::omp_locations(&env, &world.bin().join("am")).unwrap();
+    assert_eq!(locations.state, world.state());
+    assert_eq!(locations.pack, expected.0);
+    assert_eq!(locations.binary, expected.1);
+    assert_eq!(snapshot(&world.root), before);
+
+    let unrelated = world.path("unowned-am");
+    write(&unrelated, STAND_IN);
+    mode(&unrelated, 0o755);
+    let before = snapshot(&world.root);
+    let refusal = install::executing_runtime(&env, &unrelated).unwrap_err();
+    assert!(matches!(&refusal, install::Error::Contract(_)));
+    assert!(refusal.to_string().contains("trusted bootstrap installer"));
+    assert!(!refusal.to_string().contains("pass --pack"));
+    assert_eq!(snapshot(&world.root), before);
+}
+
 // obligation: tests/contracts/test_installer.py::InstallerContract.test_fresh_plan_link_install_repeat_and_installed_command_preserve_source_and_user_config
 #[test]
 fn fresh_plan_link_install_repeat_preserve_source_and_user_config() {
@@ -2037,6 +2099,241 @@ fn completed_recovery_checks_the_actual_receipt_and_owned_targets() {
         );
         assert_eq!(get(&value, "verified"), &Value::Bool(case == "healthy"));
         assert_eq!(without_lock(snapshot(&world.root)), before, "{case}");
+    }
+}
+
+/// Change only recovery evidence after a real source inspection, before the
+/// command can acquire the lifecycle lock. Runtime inspection remains genuine.
+struct JournalChangingArtifacts {
+    journal: PathBuf,
+    replacement: Vec<u8>,
+    changed: std::sync::atomic::AtomicBool,
+}
+impl ArtifactInspection for JournalChangingArtifacts {
+    fn inspect_runtime(&self, pack: &Path, binary: &Path) -> install::Result<Value> {
+        let observed = FixtureArtifacts.inspect_runtime(pack, binary)?;
+        if !self.changed.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            write(&self.journal, &self.replacement);
+        }
+        Ok(observed)
+    }
+    fn inspect(&self, pack: &Path) -> install::Result<Value> {
+        FixtureArtifacts.inspect(pack)
+    }
+}
+
+#[test]
+fn lifecycle_commands_refuse_a_journal_changed_between_runtime_selection_and_lock() {
+    for command in ["recover", "install"] {
+        let world = World::new();
+        let source = development_source(&world, "dev");
+        let stopped = child_install(
+            &world,
+            &source,
+            &[
+                ("AM_T2_PRESETS", "codex".into()),
+                (
+                    "AGENT_MEMORY_FAULT_STAGE",
+                    "install-after-activate-0".into(),
+                ),
+                ("AGENT_MEMORY_FAULT_MODE", "exit".into()),
+            ],
+        );
+        assert_eq!(stopped.code, Some(86), "{command}");
+        let journal = world.state().join("journal.json");
+        let mut replacement = decode(&journal);
+        set(
+            &mut replacement,
+            "status",
+            Value::String("rollback-conflict".into()),
+        );
+        let replacement = install::encoded(&replacement).unwrap();
+        let artifacts = Arc::new(JournalChangingArtifacts {
+            journal: journal.clone(),
+            replacement: replacement.clone(),
+            changed: std::sync::atomic::AtomicBool::new(false),
+        });
+        let mut services = services();
+        services.artifacts = artifacts.clone();
+        let journal_key = journal.strip_prefix(&world.root).unwrap().to_str().unwrap();
+        let mut before = without_lock(snapshot(&world.root));
+        before.remove(journal_key);
+        let result = if command == "recover" {
+            install::recover_command(&world.env(), &services)
+        } else {
+            install::install_command(
+                &world.env(),
+                &services,
+                &InstallRequest {
+                    presets: Some("codex".into()),
+                    ..request(&source)
+                },
+            )
+        };
+        assert_eq!(result.exit_code, 1, "{command}: {}", result.stdout);
+        assert_eq!(
+            error_text(result.value.as_ref().unwrap()),
+            "Lifecycle journal changed during runtime selection; retry",
+            "{command}",
+        );
+        assert!(artifacts.changed.load(std::sync::atomic::Ordering::SeqCst));
+        assert_eq!(std::fs::read(&journal).unwrap(), replacement, "{command}");
+        let mut after = without_lock(snapshot(&world.root));
+        after.remove(journal_key);
+        assert_eq!(
+            after, before,
+            "{command}: changed targets or recovery evidence"
+        );
+    }
+}
+
+#[test]
+fn completed_uninstall_recovery_needs_no_removed_runtime_or_backups() {
+    for (signed, native) in [(false, false), (true, false), (false, true)] {
+        let world = World::new();
+        let source = if signed {
+            signed_release(&world, "release", STAND_IN)
+        } else {
+            development_source(&world, "dev")
+        };
+        let mut services = if signed {
+            release_services(&source)
+        } else {
+            services()
+        };
+        let agent = world.path("omp agent");
+        if native {
+            std::fs::create_dir(&agent).unwrap();
+            services.omp_boundary = Some(Arc::new(FixtureOmp));
+        }
+        let installed = install::install_command(
+            &world.env(),
+            &services,
+            &InstallRequest {
+                mode: Some(Mode::Copy),
+                presets: Some(if native { "codex,omp" } else { "codex" }.into()),
+                omp_agent_dir: native.then(|| agent.to_str().unwrap().to_owned()),
+                omp_peers_upgraded: native,
+                ..if signed {
+                    release_request(&source)
+                } else {
+                    request(&source)
+                }
+            },
+        );
+        assert_eq!(installed.exit_code, 0, "{}", installed.stdout);
+        let removed = agent_memory::uninstallation::uninstall_command(
+            &world.env(),
+            &services,
+            &Default::default(),
+        );
+        assert_eq!(removed.exit_code, 0, "{}", removed.stdout);
+        let journal = decode(&world.state().join("journal.json"));
+        assert_eq!(text(&journal, "status"), "complete");
+        assert_eq!(
+            get(get(&journal, "receipt"), "uninstalled"),
+            &Value::Bool(true)
+        );
+        let transition_path = world.state().join("omp-transition.json");
+        if native {
+            // Capture the pending native-transition schema using the actual
+            // committed removal receipt and its retained owned extension bytes.
+            // No source identity, executable or receipt is fabricated.
+            let receipt = get(&journal, "receipt");
+            let extension = get(get(receipt, "omp_binding"), "extension_target");
+            let target = PathBuf::from(extension.as_str().unwrap());
+            let action = get(&journal, "actions")
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|action| get(action, "path") == extension)
+                .unwrap();
+            let disabled = target.parent().unwrap().join(format!(
+                ".agent-memory-disabled-{}-{}.ts.disabled",
+                text(receipt, "installation_id"),
+                agent_memory::host::uuid4().unwrap(),
+            ));
+            std::fs::rename(text(action, "stage"), &disabled).unwrap();
+            let transition = Value::Object(vec![
+                (
+                    "schema".into(),
+                    Value::String("agent-memory/omp-native-transition-v1".into()),
+                ),
+                (
+                    "installation_id".into(),
+                    get(receipt, "installation_id").clone(),
+                ),
+                ("source".into(), get(receipt, "source").clone()),
+                ("extension".into(), extension.clone()),
+                ("identity".into(), get(action, "before").clone()),
+                (
+                    "disabled_path".into(),
+                    Value::String(disabled.to_str().unwrap().into()),
+                ),
+                ("status".into(), Value::String("disabled".into())),
+            ]);
+            assert!(install::same(
+                &install::fingerprint(&disabled).unwrap(),
+                get(action, "before"),
+            ));
+            write(&transition_path, install::encoded(&transition).unwrap());
+            mode(&transition_path, 0o600);
+        }
+        // Remove the external development/acquisition source and both retained
+        // copies of every removed owned runtime, not merely its active path.
+        std::fs::remove_dir_all(&source).unwrap();
+        for action in get(&journal, "actions").as_array().unwrap() {
+            if text(action, "kind") == "source" {
+                for key in ["stage", "backup"] {
+                    if let Some(path) = get(action, key).as_str() {
+                        if Path::new(path).exists() {
+                            std::fs::remove_dir_all(path).unwrap();
+                        }
+                    }
+                }
+            }
+        }
+        assert!(!install::locations(&world.env()).unwrap().runtime.exists());
+        let mut before = without_lock(snapshot(&world.root));
+        let transition_key = transition_path
+            .strip_prefix(&world.root)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        before.remove(transition_key);
+        let recovered = install::recover_command(&world.env(), &services);
+        assert_eq!(recovered.exit_code, 0, "{}", recovered.stdout);
+        assert_eq!(
+            text(recovered.value.as_ref().unwrap(), "status"),
+            "complete"
+        );
+        assert_eq!(
+            get(recovered.value.as_ref().unwrap(), "verified"),
+            &Value::Bool(true)
+        );
+        if native {
+            assert_eq!(text(&decode(&transition_path), "status"), "completed");
+            let mut pending = decode(&transition_path);
+            set(&mut pending, "status", Value::String("disabled".into()));
+            write(&transition_path, install::encoded(&pending).unwrap());
+            let deferred =
+                install::recover(&world.env(), &services, &world.state(), true, true).unwrap();
+            assert_eq!(text(&deferred, "status"), "complete");
+            assert_eq!(text(&decode(&transition_path), "status"), "disabled");
+        }
+        for for_install in [false, true] {
+            let result =
+                install::recover(&world.env(), &services, &world.state(), for_install, true)
+                    .unwrap();
+            assert_eq!(text(&result, "status"), "complete");
+            assert_eq!(get(&result, "verified"), &Value::Bool(true));
+            if native && !for_install {
+                assert_eq!(text(&decode(&transition_path), "status"), "completed");
+            }
+        }
+        let mut after = without_lock(snapshot(&world.root));
+        after.remove(transition_key);
+        assert_eq!(after, before, "signed={signed}, native={native}");
     }
 }
 
@@ -3108,22 +3405,44 @@ impl install::OmpBoundary for FixtureOmp {
     fn capability(&self) -> &str {
         agent_memory::omp_installation::READER_CAPABILITY
     }
-    fn native_transition(&self, _: &mut Value, _: bool) -> install::Result<Value> {
+    fn native_transition(
+        &self,
+        _: &mut Value,
+        _: bool,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn native_activation(&self, _: &mut Value, _: bool) -> install::Result<Value> {
+    fn native_activation(
+        &self,
+        _: &mut Value,
+        _: bool,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn finish_native_transition(&self, _: &Value) -> install::Result<()> {
+    fn finish_native_transition(&self, _: &Value, _: (&Path, &Path)) -> install::Result<()> {
         Ok(())
     }
-    fn recover_native_binding(&self, _: &Path) -> install::Result<()> {
+    fn recover_native_binding(&self, _: &Path, _: (&Path, &Path)) -> install::Result<()> {
         Ok(())
     }
-    fn native_recovery_expected(&self, _: &Path, _: &str) -> install::Result<Option<Value>> {
+    fn recover_uninstalled_native(&self, state: &Path) -> install::Result<()> {
+        agent_memory::omp_boundary::recover_uninstalled_native(state)
+    }
+    fn native_recovery_expected(
+        &self,
+        _: &Path,
+        _: &str,
+        _: (&Path, &Path),
+    ) -> install::Result<Option<Value>> {
         Ok(None)
     }
-    fn complete_stored_source_activation(&self, _: &Path) -> install::Result<Value> {
+    fn complete_stored_source_activation(
+        &self,
+        _: &Path,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::String("verified".into()))
     }
 }
@@ -3378,9 +3697,51 @@ fn set(value: &mut Value, key: &str, replacement: Value) {
     }
 }
 
+/// Lifecycle-only captures intentionally omit portable pack bytes. Standalone
+/// recovery needs a real, independently inspected portable source, unlike an
+/// adoption with an explicit verified Rust candidate.
+fn readable_legacy_pack(world: &World) {
+    let template = development_source(world, "legacy reader fixture");
+    let template_pack = template.join(install::RELEASE_PACK);
+    let mut receipt = decode(&world.state().join("receipt.json"));
+    let source = receipt.get_mut("source").unwrap();
+    let root = PathBuf::from(text(source, "path"));
+    let pack = PathBuf::from(text(source, "pack"));
+    for path in walk(&template_pack) {
+        let target = pack.join(path.strip_prefix(&template_pack).unwrap());
+        if path.is_dir() {
+            std::fs::create_dir_all(&target).unwrap();
+        } else {
+            write(&target, std::fs::read(&path).unwrap());
+            mode(&target, 0o644);
+        }
+    }
+    let skill = pack.join("SKILL.md");
+    write(
+        &skill,
+        std::fs::read_to_string(&skill)
+            .unwrap()
+            .replace("0.0.15", "0.0.14"),
+    );
+    let package = FixtureArtifacts.inspect(&pack).unwrap();
+    for key in ["version", "artifact_digest", "compatibility"] {
+        set(source, key, get(&package, key).clone());
+    }
+    let Value::Array(targets) = receipt.get_mut("targets").unwrap() else {
+        panic!("captured targets")
+    };
+    for target in targets {
+        if text(target, "path") == root.to_str().unwrap() {
+            set(target, "identity", install::fingerprint(&root).unwrap());
+        }
+    }
+    store_receipt(world, &receipt);
+}
+
 /// A captured Python journal shape with several activated node kinds, not just
 /// an activation-file step. The prior receipt remains byte-for-byte committed.
 fn in_flight_nodes(world: &World, kinds: &[&str]) -> Vec<(PathBuf, Value)> {
+    readable_legacy_pack(world);
     let receipt = decode(&world.state().join("receipt.json"));
     let transaction = "0123456789abcdef0123456789abcdef";
     let mut actions = Vec::new();
@@ -3456,8 +3817,8 @@ fn in_flight_nodes(world: &World, kinds: &[&str]) -> Vec<(PathBuf, Value)> {
 fn in_flight_python_journal_restores_source_copy_wrapper_and_activation_before_adoption() {
     let world = World::new();
     materialize(&world, "all-copy");
-    let receipt = std::fs::read(world.state().join("receipt.json")).unwrap();
     let originals = in_flight_nodes(&world, &["source", "copy", "wrapper", "activation"]);
+    let receipt = std::fs::read(world.state().join("receipt.json")).unwrap();
     let (code, result) = recover(&world);
     assert_eq!(code, 0, "{result:?}");
     assert_eq!(text(&result, "status"), "rolled-back");
@@ -3487,13 +3848,15 @@ impl Updating for RecheckingUpdating {
         repositories: &[String],
         compatibility: &Value,
         readable: bool,
+        runtime: (&Path, &Path),
+        held_runtime: Option<(&Path, &Path)>,
     ) -> install::Result<Value> {
         if readable && self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst) == 1 {
             return Err(
                 agent_memory::error::ContractError::new("Concurrent bank migration").into(),
             );
         }
-        FixtureUpdating.banks(repositories, compatibility, readable)
+        FixtureUpdating.banks(repositories, compatibility, readable, runtime, held_runtime)
     }
     fn qualified_current(
         &self,
@@ -3668,7 +4031,7 @@ fn python_development_artifact_readback_refuses_a_drifted_link_pack() {
         assert!(
             error
                 .to_string()
-                .contains("Client-visible artifact readback failed"),
+                .contains("Legacy portable pack differs from its recorded identity"),
             "{error}"
         );
         assert_eq!(snapshot(&world.root), before);

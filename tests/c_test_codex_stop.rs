@@ -31,29 +31,69 @@ fn prompt(w: &World, event: &Value, body: &str) {
     put(&mut event, "prompt", text(body));
     hook(w, "codex-prompt", &event);
 }
-fn pending(w: &World, repo: &std::path::Path) -> Value {
-    let (code, stdout, stderr) = dispatch(
-        w,
-        &[
-            "--json".into(),
-            "codex-boundary".into(),
-            "--repo".into(),
-            repo.as_os_str().to_owned(),
-            "--list-pending".into(),
-        ],
-        None,
+/// Child of the installed World: baseline `core.inspect(repo, 'codex', s, t)`
+/// under the World environment with the installed pack.
+#[test]
+fn turn_inspect_worker() {
+    let Some(request) = std::env::var_os("AGENT_MEMORY_FAULT_CODEX_TURN_INSPECT") else {
+        return;
+    };
+    agent_memory::cli::register_providers().unwrap();
+    support::installed_runtime::register_component_runtime();
+    let request = json::decode_bytes(&fs::read(request).unwrap(), Default::default()).unwrap();
+    let value = agent_memory::turn_sources::inspect(
+        std::path::Path::new(string(&request, "repo")),
+        "codex",
+        string(&request, "session"),
+        string(&request, "turn"),
+        std::path::Path::new(string(&request, "pack")),
+    )
+    .unwrap();
+    println!(
+        "CODEX-TURN-INSPECT:{}",
+        json::encode(&value, json::DEFAULT).unwrap()
     );
-    assert_eq!(code, 0, "{stdout}\n{stderr}");
-    json::decode(&stdout, Default::default()).unwrap()
+}
+fn inspect(w: &World, repo: &std::path::Path, session: &str, turn: &str) -> Value {
+    let request = object([
+        ("repo", text(repo.to_str().unwrap())),
+        ("session", text(session)),
+        ("turn", text(turn)),
+        ("pack", text(installed_pair(w).0.to_str().unwrap())),
+    ]);
+    let path = save(w, &request, "codex-turn-inspect.json");
+    let env = [(
+        OsString::from("AGENT_MEMORY_FAULT_CODEX_TURN_INSPECT"),
+        path.into_os_string(),
+    )];
+    let output = w
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                "turn_inspect_worker".into(),
+                "--nocapture".into(),
+            ],
+            support::RunOptions {
+                env: &env,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let row = stdout
+        .lines()
+        .find_map(|line| line.strip_prefix("CODEX-TURN-INSPECT:"))
+        .unwrap_or_else(|| panic!("{stdout}"));
+    json::decode(row, Default::default()).unwrap()
 }
 fn complete(w: &World, repo: &std::path::Path, session: &str, turn: &str) {
-    let value = pending(w, repo);
+    let value = inspect(w, repo, session, turn);
     let source = get(&value, "pending")
         .as_array()
         .unwrap()
-        .iter()
-        .find(|row| get(row, "session").as_str() == Some(session))
-        .unwrap();
+        .first()
+        .unwrap_or_else(|| panic!("no pending source for {session}: {value:?}"));
     let id = string(source, "observation_id");
     let request = object([
         ("session", text(session)),
@@ -92,7 +132,12 @@ fn complete(w: &World, repo: &std::path::Path, session: &str, turn: &str) {
 #[test]
 // obligation: tests/contracts/test_codex_stop.py::CodexStopContract.test_nonrepository_uninitialized_and_missing_source
 fn nonrepository_uninitialized_and_missing_source_are_quiet() {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.as_os_str().to_owned(),
+    );
     let repo = w.repository("repo", false).unwrap();
     let outside = w.inside("outside").unwrap();
     fs::create_dir(&outside).unwrap();
@@ -111,7 +156,6 @@ fn nonrepository_uninitialized_and_missing_source_are_quiet() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_codex_stop.py::CodexStopContract.test_proactive_complete_nullable_final_late_steering_and_durable_wake_cap
 fn proactive_completion_nullable_final_late_steering_and_durable_wake_cap() {
     let r = Recall::new();
@@ -134,9 +178,9 @@ fn proactive_completion_nullable_final_late_steering_and_durable_wake_cap() {
             .is_none()
     );
     prompt(&r.world, &event, string(&first, "reason"));
-    let state = pending(&r.world, &r.repo);
+    let state = inspect(&r.world, &r.repo, session, turn);
     assert!(
-        get(&state, "pending")
+        get(&state, "sources")
             .as_array()
             .unwrap()
             .iter()
@@ -155,7 +199,6 @@ fn proactive_completion_nullable_final_late_steering_and_durable_wake_cap() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_codex_stop.py::CodexStopContract.test_quiet_completion_surfaces_earlier_pending_once
 fn quiet_completion_surfaces_earlier_pending_only_once() {
     let r = Recall::new();

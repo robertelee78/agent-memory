@@ -74,7 +74,6 @@ fn absent(world: &World) {
 
 // obligation: tests/contracts/test_offline_skill.py::OfflineSkillContract.test_offline_manual_checkpoint_and_fresh_file_resume_preserve_project_and_unrelated_work
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn manual_checkpoint_and_fresh_clone_resume_need_no_generated_state() {
     let world = World::new().unwrap();
     let (repo, memory, project) = initialize(&world);
@@ -178,7 +177,6 @@ fn manual_checkpoint_and_fresh_clone_resume_need_no_generated_state() {
 
 // obligation: tests/contracts/test_offline_skill.py::OfflineSkillContract.test_generated_state_absence_never_bypasses_busy_or_interrupted_bank
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn absent_generated_state_never_bypasses_busy_or_interrupted_bank() {
     let world = World::new().unwrap();
     let (repo, memory, _) = initialize(&world);

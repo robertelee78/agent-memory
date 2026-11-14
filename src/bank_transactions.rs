@@ -1315,7 +1315,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
             "hold_sha256",
         ) != &Value::Null
     {
-        return crate::recovery_transactions::apply_transaction(p, &crate::cli::runtime_root()?);
+        return crate::recovery_transactions::apply_transaction(p, &crate::cli::pack_root()?);
     }
     if operation == "bind" {
         return Err(err(

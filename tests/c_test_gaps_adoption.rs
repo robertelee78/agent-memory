@@ -78,6 +78,9 @@ fn native(w: &World, args: &[&str]) -> Value {
 fn adoption(scenario: &str, alias: bool, collaborative: bool) {
     let mut w = World::new().unwrap();
     let old = captured(&w, scenario);
+    // Adoption keeps every captured owned target (baseline
+    // `installation.py:838-839` refuses to strand any of them).
+    let presets = text(&old, "presets").to_owned();
     let old_source = PathBuf::from(text(get(&old, "source"), "path"));
     let retained = snapshot(&old_source);
     let history = fs::read(state(&w).join("journal.json")).unwrap();
@@ -87,10 +90,6 @@ fn adoption(scenario: &str, alias: bool, collaborative: bool) {
         symlink(&w.paths["state"], &alias).unwrap();
         w.env
             .insert("XDG_STATE_HOME".into(), alias.clone().into_os_string());
-        w.env.insert(
-            "AGENT_MEMORY_STATE_HOME".into(),
-            alias.join("agent-memory").into_os_string(),
-        );
     }
     let output = if collaborative {
         let env = w
@@ -105,7 +104,7 @@ fn adoption(scenario: &str, alias: bool, collaborative: bool) {
             "--development-source".into(),
             source.clone().into_os_string(),
             "--presets".into(),
-            "none".into(),
+            presets.as_str().into(),
         ];
         let output = agent_memory::process::run(&agent_memory::process::Spec {
             argv: &args,
@@ -133,7 +132,7 @@ fn adoption(scenario: &str, alias: bool, collaborative: bool) {
         );
         agent_memory::codec::json::decode_bytes(&output.stdout, Default::default()).unwrap()
     } else {
-        install(&w, &source, &["--presets", "none"])
+        install(&w, &source, &["--presets", &presets])
     };
     assert_eq!(get(&output, "verified"), &Value::Bool(true));
     let receipt = get(&output, "receipt");
@@ -166,7 +165,7 @@ fn adoption(scenario: &str, alias: bool, collaborative: bool) {
     }
     let stable = fs::read(state(&w).join("receipt.json")).unwrap();
     assert_eq!(
-        get(&install(&w, &source, &["--presets", "none"]), "changed"),
+        get(&install(&w, &source, &["--presets", &presets]), "changed"),
         &Value::Bool(false)
     );
     assert_eq!(fs::read(state(&w).join("receipt.json")).unwrap(), stable);
@@ -174,42 +173,181 @@ fn adoption(scenario: &str, alias: bool, collaborative: bool) {
     assert_eq!(get(&removed, "verified"), &Value::Bool(true));
     assert!(!binary.exists());
     assert!(!binary.parent().unwrap().join("agent-memory").exists());
-    assert_eq!(snapshot(&old_source), retained);
+    assert!(
+        !old_source.exists(),
+        "explicit uninstall removes owned legacy source"
+    );
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_installer.py::MacOSCommandContract.test_actual_shipped_old_updater_then_install_migrates_without_stranding_ownership
 fn captured_old_install_migrates_without_stranding_ownership() {
     adoption("all-copy", false, false);
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_installer.py::MacOSCommandContract.test_shipped_uninstaller_can_remove_new_wrappers_with_aliased_xdg_and_target_paths
 fn captured_ownership_removes_native_commands_under_aliased_xdg() {
     adoption("all-link", true, false);
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_actual_released_v002_updater_accepts_changed_runtime_under_umask002
 fn captured_legacy_ownership_adopts_under_umask002() {
     adoption("all-copy", false, true);
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_public_cli.py::PublicCLIContract.test_actual_legacy_wrapper_gains_flags_and_human_output_without_wrapper_replacement
 fn captured_legacy_commands_gain_native_flags_with_explicit_wrapper_cutover() {
     adoption("all-link", false, false);
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_trusted_source_helper_updates_when_the_installed_command_does_not_yet_dispatch_update
 fn trusted_native_binary_adopts_without_executing_legacy_dispatch() {
     adoption("claude-opencode-copy", false, false);
 }
 
+fn interrupt_captured_activation(w: &World, old: &Value) -> (PathBuf, Vec<u8>) {
+    let target = get(old, "targets")
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|target| text(target, "kind") == "activation")
+        .unwrap();
+    let path = PathBuf::from(text(target, "path"));
+    let mut journal = read(&state(w).join("journal.json"));
+    let transaction = text(&journal, "transaction");
+    let stage = path
+        .parent()
+        .unwrap()
+        .join(format!(".agent-memory-{transaction}-0"));
+    fs::rename(&path, &stage).unwrap();
+    let original = fs::read(&stage).unwrap();
+    let mut interrupted = original.clone();
+    interrupted.extend_from_slice(b"\nInterrupted Python update.\n");
+    fs::write(&path, interrupted).unwrap();
+    mode(&path, 0o644);
+    let action = support::cutover::object([
+        ("path", Value::String(path.to_str().unwrap().into())),
+        ("kind", Value::String("activation".into())),
+        ("stage", Value::String(stage.to_str().unwrap().into())),
+        ("backup", Value::Null),
+        ("before", get(target, "identity").clone()),
+        ("after", installation::fingerprint(&path).unwrap()),
+    ]);
+    put(&mut journal, "status", Value::String("activating".into()));
+    put(&mut journal, "receipt_identity", Value::Null);
+    put(&mut journal, "created_directories", Value::Array(vec![]));
+    put(&mut journal, "actions", Value::Array(vec![action]));
+    put(&mut journal, "activated", Value::Int(1.into()));
+    fs::write(
+        state(w).join("journal.json"),
+        installation::encoded(&journal).unwrap(),
+    )
+    .unwrap();
+    (path, original)
+}
+
 #[test]
-#[ignore = "needs recovery_frontier registered"]
+// obligation: Python-era adoption design, in-flight journal v1 recorded-step rollback.
+fn captured_python_journal_rolls_back_under_verified_install_candidate() {
+    let w = World::new().unwrap();
+    let old = captured(&w, "all-copy");
+    let old_source = PathBuf::from(text(get(&old, "source"), "path"));
+    let retained = snapshot(&old_source);
+    let (path, _) = interrupt_captured_activation(&w, &old);
+    let source = source(&w);
+    let adopted = install(&w, &source, &["--presets", "all"]);
+    assert_eq!(get(&adopted, "verified"), &Value::Bool(true));
+    assert!(
+        !fs::read_to_string(path)
+            .unwrap()
+            .contains("Interrupted Python update.")
+    );
+    assert_eq!(snapshot(&old_source), retained);
+    assert!(fs::read_dir(state(&w)).unwrap().any(|entry| {
+        let entry = entry.unwrap();
+        entry.file_name().to_string_lossy().starts_with("journal-")
+            && text(&read(&entry.path()), "status") == "rolled-back"
+    }));
+}
+
+#[test]
+// obligation: Python-era adoption design, standalone journal recovery verifies the retained reader.
+fn standalone_python_recovery_reads_a_verified_pack_and_refuses_drift() {
+    let w = World::new().unwrap();
+    let mut old = captured(&w, "all-copy");
+    let root = PathBuf::from(text(get(&old, "source"), "path"));
+    let pack = PathBuf::from(text(get(&old, "source"), "pack"));
+    // Lifecycle-only captures omit the legacy pack. Supply a real portable
+    // inventory with the captured compatibility, without any Python bytes.
+    let reader = source(&w);
+    copy_tree(&reader.join(installation::RELEASE_PACK), &pack);
+    let skill = pack.join("SKILL.md");
+    fs::write(
+        &skill,
+        fs::read_to_string(&skill)
+            .unwrap()
+            .replacen(env!("CARGO_PKG_VERSION"), "0.0.14", 1),
+    )
+    .unwrap();
+    fs::write(
+        pack.join("schemas/runtime-compatibility.json"),
+        installation::encoded(get(get(&old, "source"), "compatibility")).unwrap(),
+    )
+    .unwrap();
+    let package = native(
+        &w,
+        &["artifact", "inspect", "--pack", pack.to_str().unwrap()],
+    );
+    assert_eq!(text(&package, "version"), "0.0.14");
+    put(
+        old.get_mut("source").unwrap(),
+        "artifact_digest",
+        get(&package, "artifact_digest").clone(),
+    );
+    let Value::Array(targets) = old.get_mut("targets").unwrap() else {
+        panic!("captured targets")
+    };
+    for target in targets {
+        if text(target, "path") == root.to_str().unwrap() {
+            put(
+                target,
+                "identity",
+                installation::fingerprint(&root).unwrap(),
+            );
+        }
+    }
+    let receipt_path = state(&w).join("receipt.json");
+    fs::write(&receipt_path, installation::encoded(&old).unwrap()).unwrap();
+    let mut journal = read(&state(&w).join("journal.json"));
+    put(&mut journal, "receipt", old.clone());
+    put(
+        &mut journal,
+        "receipt_identity",
+        installation::fingerprint(&receipt_path).unwrap(),
+    );
+    fs::write(
+        state(&w).join("journal.json"),
+        installation::encoded(&journal).unwrap(),
+    )
+    .unwrap();
+    let retained = snapshot(&root);
+    let (path, original) = interrupt_captured_activation(&w, &old);
+    let recovered = native(&w, &["recover"]);
+    assert_eq!(text(&recovered, "status"), "rolled-back");
+    assert_eq!(fs::read(path).unwrap(), original);
+    assert_eq!(snapshot(&root), retained);
+    fs::write(
+        pack.join("templates/foreign.txt"),
+        "Unowned changed reader.\n",
+    )
+    .unwrap();
+    let drifted = snapshot(&root);
+    let refused = run(&w, &["recover"], 1);
+    assert_eq!(get(&refused, "verified"), &Value::Bool(false));
+    assert_eq!(snapshot(&root), drifted);
+}
+
+#[test]
 // tests/contracts/test_installer.py::MacOSCommandContract.test_current_and_shipped_recovery_read_each_others_wrapper_journals
 fn captured_and_native_journals_recover_at_the_receipt_boundary() {
     for committed in [false, true] {
@@ -229,7 +367,7 @@ fn captured_and_native_journals_recover_at_the_receipt_boundary() {
                 "--development-source",
                 source.to_str().unwrap(),
                 "--presets",
-                "none",
+                "all",
             ],
             stage,
             "exit",
@@ -254,12 +392,26 @@ fn captured_and_native_journals_recover_at_the_receipt_boundary() {
 
 fn signed_adoption(deleted_worktree: bool, collaborative: bool) {
     let mut w = World::new().unwrap();
+    // The consumer is registered through a genuinely installed native command,
+    // whose ownership is then removed by the real uninstaller before the
+    // captured v0.0.14 installation state is laid down.
+    let runtime = support::installed_runtime::install(&w.root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.clone().into_os_string(),
+    );
+    let repo = w.repository("registered-consumer", false).unwrap();
+    let bank = bank(&w, &repo);
+    support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
+    assert_eq!(
+        get(&native(&w, &["uninstall"]), "verified"),
+        &Value::Bool(true)
+    );
+    w.env
+        .remove(std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"));
     let old = captured(&w, "all-copy");
     let source = PathBuf::from(text(get(&old, "source"), "path"));
     let old_source = snapshot(&source);
-    let repo = w.repository("registered-consumer", false).unwrap();
-    let bank = bank(&w, &repo);
-    support::identity_fixtures::bind(&w, &repo).unwrap();
     w.git_with(
         ["add", "."],
         RunOptions {
@@ -299,7 +451,7 @@ fn signed_adoption(deleted_worktree: bool, collaborative: bool) {
     let adopted = channel.run_with_umask(
         &w,
         "install",
-        &["none", "copy"],
+        &["all", "copy"],
         0,
         if collaborative { "002" } else { "022" },
     );
@@ -314,17 +466,15 @@ fn signed_adoption(deleted_worktree: bool, collaborative: bool) {
     assert_eq!(snapshot(&bank), before_bank);
     // No source execution or interpreter is part of same-version signed adoption.
     w.env.insert("PATH".into(), "/usr/bin:/bin".into());
-    let version = native(&w, &["version"]);
-    assert_ne!(get(&version, "verified"), &Value::Bool(false));
+    let version = channel.run(&w, "diagnostic", &["version"], 0);
+    assert_eq!(get(&version, "ok"), &Value::Bool(true));
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_actual_v002_index_refresh_and_deleted_worktree_upgrade_through_signed_one_liner
 fn captured_old_source_and_deleted_worktree_adopt_to_signed_release() {
     signed_adoption(true, false);
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_actual_v002_process_then_same_version_signed_adoption_under_022_and_002
 fn captured_legacy_source_adopts_signed_release_with_collaborative_modes() {
     signed_adoption(false, false);
@@ -332,13 +482,66 @@ fn captured_legacy_source_adopts_signed_release_with_collaborative_modes() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_released_v014_sources_preview_then_upgrade_without_inventing_native_authority
 fn captured_pending_sources_preview_and_adopt_without_inventing_native_authority() {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    // The captured fixture deliberately contains lifecycle records only
+    // (derive.sh:9-19), not the pending source directory. Produce its unchanged
+    // turn-source-v2 format through a real installed Codex prompt hook first.
+    let runtime = support::installed_runtime::install(&w.root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.clone().into_os_string(),
+    );
+    let repo = w.repository("pending-consumer", false).unwrap();
+    let memory = bank(&w, &repo);
+    support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
+    let event = support::cutover::object([
+        ("hook_event_name", Value::String("UserPromptSubmit".into())),
+        (
+            "session_id",
+            Value::String(agent_memory::host::uuid4().unwrap()),
+        ),
+        (
+            "turn_id",
+            Value::String(agent_memory::host::uuid4().unwrap()),
+        ),
+        ("cwd", Value::String(repo.to_str().unwrap().into())),
+        (
+            "prompt",
+            Value::String("Public synthetic pre-barrier source.".into()),
+        ),
+    ]);
+    let event = support::cutover::save(&w, &event, "pending-source-event.json");
+    let hook = w
+        .run([
+            std::ffi::OsStr::new("/bin/sh"),
+            std::ffi::OsStr::new("-c"),
+            std::ffi::OsStr::new("exec \"$1\" hook codex-prompt < \"$2\""),
+            std::ffi::OsStr::new("pending-source"),
+            runtime.command.as_os_str(),
+            event.as_os_str(),
+        ])
+        .unwrap();
+    let hook = agent_memory::codec::json::decode_bytes(&hook.stdout, Default::default()).unwrap();
+    assert!(hook.get("hookSpecificOutput").is_some(), "{hook:?}");
+    native(&w, &["uninstall"]);
+    w.env
+        .remove(std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"));
+    let writes = w.paths["state"].join("agent-memory/writes");
+    let sources = fs::read_dir(&writes)
+        .unwrap()
+        .map(|entry| entry.unwrap().path().join("turn-sources-v2"))
+        .find(|path| path.is_dir())
+        .unwrap();
+    let barrier = sources.parent().unwrap().join("source-barrier.lock");
+    // The released hook predates this coordinator. Its source records remain
+    // valid without a barrier; adoption may establish one, not rewrite sources.
+    fs::remove_file(&barrier).unwrap();
     captured(&w, "codex-copy-pending-source");
     let source = source(&w);
-    let before = snapshot(&w.paths["state"].join("agent-memory/writes"));
+    let before = snapshot(&sources);
+    let before_bank = snapshot(&memory);
     let all_before = snapshot(&w.root);
     let checked = native(
         &w,
@@ -355,10 +558,9 @@ fn captured_pending_sources_preview_and_adopt_without_inventing_native_authority
     assert_eq!(snapshot(&w.root), all_before);
     let adopted = install(&w, &source, &["--presets", "codex"]);
     assert_eq!(get(&adopted, "verified"), &Value::Bool(true));
-    assert_eq!(
-        snapshot(&w.paths["state"].join("agent-memory/writes")),
-        before
-    );
+    assert_eq!(snapshot(&sources), before);
+    assert_eq!(snapshot(&memory), before_bank);
+    assert!(barrier.is_file());
     let state = support::cutover::physical(&w.paths["state"]);
     assert!(
         !state
@@ -370,14 +572,11 @@ fn captured_pending_sources_preview_and_adopt_without_inventing_native_authority
         get(&native(&w, &["recover"]), "verified"),
         &Value::Bool(true)
     );
-    assert_eq!(
-        snapshot(&w.paths["state"].join("agent-memory/writes")),
-        before
-    );
+    assert_eq!(snapshot(&sources), before);
+    assert_eq!(snapshot(&memory), before_bank);
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_managed_source_ownership.py::ManagedSourceOwnershipContract.test_doctor_uses_the_same_legacy_ownership_check
 fn doctor_checks_captured_ownership_and_preserves_foreign_source() {
     let w = World::new().unwrap();
@@ -396,8 +595,14 @@ fn doctor_checks_captured_ownership_and_preserves_foreign_source() {
     fs::remove_file(source.join("kept-note")).unwrap();
     let before = snapshot(&source);
     let native_source = support::lifecycle::source(&w);
-    let installed = install(&w, &native_source, &["--presets", "none"]);
+    let installed = install(&w, &native_source, &["--presets", "all"]);
     assert_eq!(get(&installed, "verified"), &Value::Bool(true));
     assert_eq!(snapshot(&source), before);
-    assert_eq!(get(&native(&w, &["doctor"]), "ok"), &Value::Bool(true));
+    let command = command(get(&installed, "receipt"));
+    let observed = w
+        .run([command.as_os_str(), "--json".as_ref(), "doctor".as_ref()])
+        .unwrap();
+    let observed =
+        agent_memory::codec::json::decode_bytes(&observed.stdout, Default::default()).unwrap();
+    assert_eq!(get(&observed, "ok"), &Value::Bool(true), "{observed:?}");
 }

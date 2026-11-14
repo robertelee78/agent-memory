@@ -79,20 +79,39 @@ fn fixture(w: &World, tracked: bool, complete: bool) -> (PathBuf, PathBuf) {
     }
     (repo, bank)
 }
+/// Baseline `command`: the inspection runs from the World root, so a renamed
+/// default repository directory is never the child's working directory.
 fn inspect(w: &World, repo: &std::path::Path) -> Value {
-    good(
-        w,
+    let args = support::world::helper_arguments(
         "bank_state.py",
-        &[
-            "inspect".into(),
+        [
+            OsString::from("inspect"),
             "--repo".into(),
             repo.as_os_str().to_owned(),
         ],
     )
+    .unwrap();
+    let output = w
+        .am_with(
+            std::iter::once(OsString::from("--json")).chain(args),
+            RunOptions {
+                cwd: Some(&w.root),
+                check: false,
+                ..RunOptions::default()
+            },
+        )
+        .unwrap();
+    let value = agent_memory::codec::json::decode_bytes(&output.stdout, Default::default())
+        .unwrap_or_else(|error| panic!("{error}: {output:?}"));
+    assert_eq!(
+        output.status,
+        agent_memory::process::Status::Code(0),
+        "{value:?}"
+    );
+    value
 }
 
 #[test]
-#[ignore = "needs am inspect route and recovery_frontier registered"]
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_minimal_untracked_bank_survives_poisoned_then_removed_application_state
 fn untracked_bank_survives_poisoned_then_removed_application_state() {
     let w = World::new().unwrap();
@@ -138,7 +157,6 @@ fn untracked_bank_survives_poisoned_then_removed_application_state() {
 }
 
 #[test]
-#[ignore = "needs am inspect route and recovery_frontier registered"]
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_all_six_tracked_contexts_retain_git_evidence_without_claiming_uncommitted_bytes_are_shared
 fn all_contexts_retain_git_evidence_without_claiming_uncommitted_bytes_shared() {
     let w = World::new().unwrap();
@@ -236,7 +254,6 @@ fn all_contexts_retain_git_evidence_without_claiming_uncommitted_bytes_shared() 
 }
 
 #[test]
-#[ignore = "needs am inspect route and recovery_frontier registered"]
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_git_root_spelling_preserves_trailing_spaces
 fn git_root_spelling_preserves_trailing_spaces() {
     let w = World::new().unwrap();
@@ -254,7 +271,6 @@ fn git_root_spelling_preserves_trailing_spaces() {
 }
 
 #[test]
-#[ignore = "needs am inspect route and recovery_frontier registered"]
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_busy_or_interrupted_bank_is_not_repaired_by_state_loss
 fn busy_or_interrupted_bank_is_not_repaired_by_state_loss() {
     let w = World::new().unwrap();
@@ -281,7 +297,6 @@ fn busy_or_interrupted_bank_is_not_repaired_by_state_loss() {
 }
 
 #[test]
-#[ignore = "needs am inspect route and recovery_frontier registered"]
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_git_inspection_ignores_ambient_repo_redirection_and_does_not_execute_fsmonitor_or_write_trace
 fn git_inspection_ignores_ambient_redirection_fsmonitor_and_trace() {
     let mut w = World::new().unwrap();

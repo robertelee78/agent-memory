@@ -1192,7 +1192,7 @@ pub fn validate_transaction(p: &Value, owner: Option<&[u8]>) -> Result<()> {
         owner,
         None,
     )?;
-    layout_resolution::claims_for(p, owner, None, &crate::cli::runtime_root()?)?;
+    layout_resolution::claims_for(p, owner, None, &crate::cli::pack_root()?)?;
     Ok(())
 }
 pub fn check_sources(p: &Value, owner: Option<&[u8]>, marker: Option<&[u8]>) -> Result<()> {

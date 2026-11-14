@@ -10,6 +10,14 @@ fn setup(world: &World) -> Channel {
     channel.install(world, "codex", "copy");
     channel
 }
+/// Ordinary bank commands after the install run the receipt-owned command.
+fn owned(world: &mut World) {
+    let command = command(&read(&state(world).join("receipt.json")));
+    world.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        command.into_os_string(),
+    );
+}
 fn doctor(world: &World, repo: &std::path::Path) -> Value {
     let output = world
         .am_with(
@@ -31,10 +39,10 @@ fn doctor(world: &World, repo: &std::path::Path) -> Value {
 
 // obligation: tests/contracts/test_doctor_fix.py::DoctorFixContract.test_interrupted_bank_is_reported_and_preserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn interrupted_bank_is_reported_and_preserved() {
-    let world = World::new().unwrap();
+    let mut world = World::new().unwrap();
     let channel = setup(&world);
+    owned(&mut world);
     let repo = world.repository("consumer", false).unwrap();
     let memory = bank(&world, &repo);
     std::fs::write(
@@ -57,10 +65,10 @@ fn interrupted_bank_is_reported_and_preserved() {
 
 // obligation: tests/contracts/test_doctor_fix.py::DoctorFixContract.test_unsafe_bank_markers_are_preserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn linked_and_oversized_markers_are_never_repaired() {
-    let world = World::new().unwrap();
+    let mut world = World::new().unwrap();
     setup(&world);
+    owned(&mut world);
     let repo = world.repository("consumer", false).unwrap();
     let memory = bank(&world, &repo);
     let marker = memory.join(".agent-memory-transaction.md");
@@ -172,10 +180,10 @@ fn render(world: &World, repo: &std::path::Path, contexts: &[(&str, &str)], time
 
 // obligation: tests/contracts/test_doctor_fix.py::DoctorFixContract.test_receipted_bank_transaction_cleanup
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn doctor_cleans_only_receipted_completed_bank_transaction() {
-    let world = World::new().unwrap();
+    let mut world = World::new().unwrap();
     setup(&world);
+    owned(&mut world);
     let repo = world.repository("transaction consumer", false).unwrap();
     let before = render(
         &world,
@@ -212,7 +220,8 @@ fn doctor_cleans_only_receipted_completed_bank_transaction() {
     for (name, body) in before.as_object().unwrap() {
         std::fs::write(memory.join(name), body.as_str().unwrap()).unwrap();
     }
-    support::identity_fixtures::bind(&world, &repo).unwrap();
+    let receipt = read(&state(&world).join("receipt.json"));
+    support::identity_fixtures::bind_with_command(&world, &repo, &command(&receipt)).unwrap();
     let input = world.root.join("files.json");
     save(&input, &after);
     let proposal = run(

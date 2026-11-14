@@ -5,12 +5,20 @@ use agent_memory::process::Status;
 use std::collections::BTreeSet;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
+/// Baseline `PurgeWriteCases.fixture` adds a hard-linked alias and generated
+/// cache; `PurgeUnlockCases.fixture` (`lifecycle_unlock_fixtures.py:11-16`)
+/// is the plain rendered bank.
 fn fixture(world: &World) -> (PathBuf, Value, Vec<String>) {
+    fixture_with(world, true)
+}
+fn fixture_with(world: &World, write_extras: bool) -> (PathBuf, Value, Vec<String>) {
     let memory = bank(world, &world.paths["repo"]);
-    std::fs::hard_link(memory.join("projectbrief.md"), memory.join("alias.md")).unwrap();
-    let generated = memory.join(".agent-memory-cache");
-    std::fs::create_dir(&generated).unwrap();
-    std::fs::write(generated.join("references.json"), b"{\"derived\":true}\n").unwrap();
+    if write_extras {
+        std::fs::hard_link(memory.join("projectbrief.md"), memory.join("alias.md")).unwrap();
+        let generated = memory.join(".agent-memory-cache");
+        std::fs::create_dir(&generated).unwrap();
+        std::fs::write(generated.join("references.json"), b"{\"derived\":true}\n").unwrap();
+    }
     let preview = get(
         &run(
             world,
@@ -80,7 +88,9 @@ fn rows(trace: &Path) -> Vec<Value> {
         .collect()
 }
 pub fn replay(phase: &str) {
-    let world = World::new().unwrap();
+    // Purge acts with the already-read verified installation receipt (owner
+    // lifecycle-authority decision), so each replay World has a real install.
+    let world = super::cutover::installed_world();
     let (memory, _, args) = fixture(&world);
     let trace = world.root.join("clean-trace.jsonl");
     let clean = invoke(&world, &args, 0, &trace, None).unwrap();
@@ -105,7 +115,7 @@ pub fn replay(phase: &str) {
     assert!(!selected.is_empty());
     let mut executed = Vec::new();
     for event in selected {
-        let world = World::new().unwrap();
+        let world = super::cutover::installed_world();
         let (memory, preview, args) = fixture(&world);
         let retained = [
             world.paths["repo"].join(".git"),
@@ -116,7 +126,11 @@ pub fn replay(phase: &str) {
         ]
         .into_iter()
         .map(|path| {
-            let before = snapshot(&path);
+            // Baseline `snapshot` is `None` for an absent path (the World's
+            // plain `repo` directory has no `.git`).
+            let before = std::fs::symlink_metadata(&path)
+                .is_ok()
+                .then(|| snapshot(&path));
             (path, before)
         })
         .collect::<Vec<_>>();
@@ -127,7 +141,9 @@ pub fn replay(phase: &str) {
         let completed = run(&world, &refs, 0);
         assert_eq!(get(&completed, "verified"), &Value::Bool(true));
         let receipt = get(&completed, "receipt");
-        assert_eq!(get(receipt, "preview"), &preview);
+        // Baseline compares decoded dicts; key order is not content.
+        let sorted = |value: &Value| json::encode(value, json::SORTED_ASCII).unwrap();
+        assert_eq!(sorted(get(receipt, "preview")), sorted(&preview));
         assert_eq!(
             get(receipt, "status"),
             get(get(&clean, "receipt"), "status")
@@ -144,7 +160,10 @@ pub fn replay(phase: &str) {
         );
         assert_eq!(get(&run(&world, &refs, 0), "changed"), &Value::Bool(false));
         for (path, before) in retained {
-            assert_eq!(snapshot(&path), before);
+            let after = std::fs::symlink_metadata(&path)
+                .is_ok()
+                .then(|| snapshot(&path));
+            assert_eq!(after, before);
         }
         executed.push(text(event, "point").to_owned());
     }
@@ -159,8 +178,8 @@ fn rows_from(path: &Path) -> Vec<Value> {
     rows(path)
 }
 pub fn unlock(phase: &str) {
-    let world = World::new().unwrap();
-    let (memory, preview, mut args) = fixture(&world);
+    let world = super::cutover::installed_world();
+    let (memory, preview, mut args) = fixture_with(&world, false);
     let invalid = "0".repeat(64);
     assert_ne!(text(&preview, "confirmation"), invalid);
     *args.last_mut().unwrap() = invalid;
@@ -175,8 +194,8 @@ pub fn unlock(phase: &str) {
         .collect::<Vec<_>>();
     assert_eq!(events.len(), 1);
     for event in events {
-        let world = World::new().unwrap();
-        let (memory, _, mut args) = fixture(&world);
+        let world = super::cutover::installed_world();
+        let (memory, _, mut args) = fixture_with(&world, false);
         *args.last_mut().unwrap() = "0".repeat(64);
         let before = snapshot(&memory);
         let trace = world.root.join("actual.jsonl");

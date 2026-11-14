@@ -1,15 +1,21 @@
 //! Real private filesystem/process fixture shared by admission and refresh contracts.
-use agent_memory::{clock::Deadline, codec::json::Value, developer_identity, host, process};
+use agent_memory::{clock::Deadline, codec::json::Value, developer_identity, process};
 use std::ffi::OsString;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+
+#[path = "mod.rs"]
+mod runtime_support;
 
 pub struct World {
     pub root: PathBuf,
 }
 impl World {
     fn env(&self) -> Vec<(OsString, OsString)> {
+        if runtime_support::require_current_world().ok().as_ref() == Some(&self.root) {
+            return std::env::vars_os().collect();
+        }
         [
             ("PATH", OsString::from("/usr/bin:/bin:/usr/local/bin")),
             ("HOME", self.root.join("home").into_os_string()),
@@ -136,39 +142,71 @@ impl World {
     }
 }
 pub fn in_world(name: &str, body: impl FnOnce(&World)) {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+
+    const COMPLETED: &str = "admission-consumer-completed";
     if std::env::var("AM_ADMISSION_CASE").ok().as_deref() == Some(name) {
-        agent_memory::cli::register_providers().unwrap();
-        body(&World {
-            root: PathBuf::from(std::env::var_os("AM_ADMISSION_ROOT").unwrap()),
+        let root = runtime_support::require_current_world().unwrap();
+        assert_eq!(
+            std::env::var_os("AM_ADMISSION_ROOT").unwrap(),
+            root.as_os_str()
+        );
+        let world = World { root };
+        let runtime = runtime_support::installed_runtime::install(&world.root, |argv| {
+            world.command(argv, &[])
         });
+        agent_memory::cli::register_providers().unwrap();
+        runtime_support::installed_runtime::register_component_runtime();
+        body(&world);
+        let token = std::env::var("AGENT_MEMORY_TEST_TOKEN").unwrap();
+        let mut completed = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(world.root.join(COMPLETED))
+            .unwrap();
+        completed
+            .write_all(format!("{name}\n{token}\n").as_bytes())
+            .unwrap();
+        completed.sync_all().unwrap();
+        std::fs::File::open(&world.root)
+            .unwrap()
+            .sync_all()
+            .unwrap();
+        drop(runtime);
         return;
     }
-    let root = agent_memory::fs::canonical_path(&std::env::temp_dir(), true)
-        .unwrap()
-        .join(format!("am-admission-journey-{}", host::uuid4().unwrap()));
-    std::fs::create_dir(&root).unwrap();
-    std::fs::set_permissions(&root, std::fs::Permissions::from_mode(0o700)).unwrap();
-    std::fs::create_dir(root.join("home")).unwrap();
-    let world = World { root };
-    let output = world.command(
-        &[
-            std::env::current_exe().unwrap().into_os_string(),
-            "--exact".into(),
-            name.into(),
-            "--include-ignored".into(),
-            "--nocapture".into(),
-        ],
-        &[
-            ("AM_ADMISSION_CASE", name.into()),
-            ("AM_ADMISSION_ROOT", world.root.as_os_str().to_owned()),
-        ],
+    let mut world = runtime_support::World::new().unwrap();
+    std::fs::remove_dir(world.root.join("repo")).unwrap();
+    world.env.insert(
+        "AGENT_MEMORY_CONFIG_HOME".into(),
+        world.root.join("config").into_os_string(),
     );
-    std::fs::remove_dir_all(&world.root).unwrap();
+    world.env.insert("AM_ADMISSION_CASE".into(), name.into());
+    world.env.insert(
+        "AM_ADMISSION_ROOT".into(),
+        world.root.as_os_str().to_owned(),
+    );
+    let expected = format!("{name}\n{}\n", world.token);
+    world
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                name.into(),
+                "--include-ignored".into(),
+                "--nocapture".into(),
+            ],
+            runtime_support::RunOptions {
+                cwd: Some(&world.root),
+                timeout: Duration::from_secs(120),
+                ..Default::default()
+            },
+        )
+        .unwrap();
     assert_eq!(
-        output.status,
-        process::Status::Code(0),
-        "{}\n{}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
+        std::fs::read(world.root.join(COMPLETED)).unwrap(),
+        expected.as_bytes()
     );
 }

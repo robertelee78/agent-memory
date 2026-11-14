@@ -287,10 +287,13 @@ impl Sources for crate::recall_catalog::Catalog {
         self.parsed(path, text)
     }
 }
+/// The executing pack and binary measured for the catalog generation. The
+/// binary is the resolved executable (an installed `am` is invoked through its
+/// owned command link), as `installation::executing_runtime` compares it.
 pub(crate) fn catalog_runtime() -> Result<crate::recall_catalog::Runtime> {
     Ok(crate::recall_catalog::Runtime {
         pack: crate::cli::pack_root()?,
-        binary: crate::host::current_executable()?,
+        binary: crate::fs::canonical_path(&crate::host::current_executable()?, true)?,
     })
 }
 #[allow(clippy::too_many_arguments)]

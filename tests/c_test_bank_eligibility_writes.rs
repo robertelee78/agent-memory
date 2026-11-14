@@ -58,7 +58,6 @@ fn large() -> Bank {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_render_and_single_preview_reject_complete_utf8_source
 fn render_and_single_preview_reject_complete_utf8_source() {
     let b = Bank::new();
@@ -111,7 +110,6 @@ fn render_and_single_preview_reject_complete_utf8_source() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_single_apply_revalidates_a_schema_valid_changed_request
 fn single_apply_revalidates_a_schema_valid_changed_request() {
     let b = Bank::new();
@@ -147,7 +145,6 @@ fn single_apply_revalidates_a_schema_valid_changed_request() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_multifile_preview_and_apply_reject_complete_oversized_map
 fn multifile_preview_and_apply_reject_complete_oversized_map() {
     let b = Bank::new();
@@ -178,7 +175,6 @@ fn multifile_preview_and_apply_reject_complete_oversized_map() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_multifile_capacity_includes_record_metadata
 fn multifile_capacity_includes_record_metadata() {
     let b = Bank::new();
@@ -250,7 +246,6 @@ fn aggregate_replacement_counts_only_the_complete_result() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_transaction_preflight_refuses_symlink_inside_runtime_directory
 fn transaction_preflight_refuses_symlink_inside_runtime_directory() {
     let b = Bank::new();
@@ -276,7 +271,6 @@ fn transaction_preflight_refuses_symlink_inside_runtime_directory() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_transaction_preflight_refuses_incomplete_inventory_and_failed_target_stat
 fn preflight_refuses_inaccessible_inventory_and_unclassifiable_target() {
     let b = Bank::new();
@@ -307,7 +301,6 @@ fn preflight_refuses_inaccessible_inventory_and_unclassifiable_target() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_large_inventory_ordinary_apply_and_retry
 fn large_inventory_ordinary_apply_and_exact_retry() {
     let b = large();
@@ -331,7 +324,6 @@ fn large_inventory_ordinary_apply_and_exact_retry() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_large_inventory_transaction_and_exact_retry
 fn large_inventory_transaction_finish_and_exact_retry() {
     let b = large();
@@ -356,7 +348,6 @@ fn large_inventory_transaction_finish_and_exact_retry() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_large_marker_rollback_and_unknown_marker_refusal
 fn large_marker_rollback_and_unknown_marker_refusal() {
     let b = large();
@@ -405,41 +396,103 @@ fn large_marker_rollback_and_unknown_marker_refusal() {
     assert_eq!(physical(&b.repo), saved);
 }
 
+/// Child of an installed World: baseline `recovery_frontier.observe(repo,
+/// transaction=witness)` under the World environment, with the installed pack.
 #[test]
-#[ignore = "needs recovery_frontier registered"]
-// obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_large_owned_marker_keeps_frontier_but_unknown_or_changed_bytes_refuse
-fn large_owned_marker_keeps_frontier_but_changed_witness_refuses() {
-    let b = large();
-    // The same canonical frontier is captured by the actual scope context; no
-    // substitute RecoveryFrontier provider is registered by this fixture.
-    let before = good(
-        &b.world,
-        "scope_binding.py",
-        &[
-            "status".into(),
-            "--repo".into(),
-            b.repo.as_os_str().to_owned(),
-        ],
+fn frontier_observe_worker() {
+    let Some(request) = std::env::var_os("AGENT_MEMORY_FAULT_ELIGIBILITY_OBSERVE") else {
+        return;
+    };
+    agent_memory::cli::register_providers().unwrap();
+    support::installed_runtime::register_component_runtime();
+    let request =
+        agent_memory::codec::json::decode_bytes(&fs::read(request).unwrap(), Default::default())
+            .unwrap();
+    let witness = match get(&request, "witness") {
+        Value::Null => None,
+        path => Some(fs::read(path.as_str().unwrap()).unwrap()),
+    };
+    let repo = std::path::Path::new(string(&request, "repo"));
+    let pack = std::path::Path::new(string(&request, "pack"));
+    let result = agent_memory::recovery_frontier::observe(repo, None, witness.as_deref(), pack);
+    let row = match result {
+        Ok(value) => object([("ok", Value::Bool(true)), ("value", value)]),
+        Err(error) => object([
+            ("ok", Value::Bool(false)),
+            ("error", text(error.to_string())),
+        ]),
+    };
+    println!(
+        "FRONTIER-OBSERVE:{}",
+        agent_memory::codec::json::encode(&row, agent_memory::codec::json::DEFAULT).unwrap()
     );
-    b.crash(&b.prepared, "transaction-after-marker");
-    b.unlock();
-    let marker = fs::read(b.bank.join(MARKER)).unwrap();
-    agent_memory::bank_observation::markers(&b.bank, None, Some(&marker)).unwrap();
-    for witness in [None, Some(&marker[..marker.len() - 1])] {
-        assert!(agent_memory::bank_observation::markers(&b.bank, None, witness).is_err());
-    }
-    let mut changed = marker.clone();
-    *changed.last_mut().unwrap() = b' ';
-    assert!(agent_memory::bank_observation::markers(&b.bank, None, Some(&changed)).is_err());
-    let sentinel = b.bank.join(".agent-memory-recovery.md");
-    fs::write(&sentinel, &marker).unwrap();
-    assert!(agent_memory::bank_observation::markers(&b.bank, None, Some(&marker)).is_err());
-    fs::remove_file(sentinel).unwrap();
-    assert!(yes(&before, "resolved"));
+}
+fn frontier_observe(b: &Bank, witness: Option<&[u8]>) -> Value {
+    let witness = witness.map(|bytes| {
+        let path = b.world.inside("frontier-witness").unwrap();
+        fs::write(&path, bytes).unwrap();
+        text(path.to_str().unwrap())
+    });
+    let request = object([
+        ("repo", text(b.repo.to_str().unwrap())),
+        ("pack", text(installed_pair(&b.world).0.to_str().unwrap())),
+        ("witness", witness.unwrap_or(Value::Null)),
+    ]);
+    let path = save(&b.world, &request, "frontier-observe.json");
+    let env = [(
+        std::ffi::OsString::from("AGENT_MEMORY_FAULT_ELIGIBILITY_OBSERVE"),
+        path.into_os_string(),
+    )];
+    let output = b
+        .world
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                "frontier_observe_worker".into(),
+                "--nocapture".into(),
+            ],
+            support::RunOptions {
+                env: &env,
+                check: false,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(output.status, Status::Code(0), "{output:?}");
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let row = stdout
+        .lines()
+        .find_map(|line| line.strip_prefix("FRONTIER-OBSERVE:"))
+        .unwrap_or_else(|| panic!("{stdout}"));
+    agent_memory::codec::json::decode(row, Default::default()).unwrap()
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_large_owned_marker_keeps_frontier_but_unknown_or_changed_bytes_refuse
+fn large_owned_marker_keeps_frontier_but_changed_witness_refuses() {
+    let b = large();
+    let before_frontier = frontier_observe(&b, None);
+    assert!(yes(&before_frontier, "ok"), "{before_frontier:?}");
+    b.crash(&b.prepared, "transaction-after-marker");
+    b.unlock();
+    let marker = fs::read(b.bank.join(MARKER)).unwrap();
+    let before = physical(&b.repo);
+    let owned = frontier_observe(&b, Some(&marker));
+    assert_eq!(owned, before_frontier);
+    let mut changed = marker[..marker.len() - 1].to_vec();
+    changed.push(b' ');
+    for witness in [None, Some(&marker[..marker.len() - 1]), Some(&changed[..])] {
+        assert!(!yes(&frontier_observe(&b, witness), "ok"));
+    }
+    let sentinel = b.bank.join(".agent-memory-recovery.md");
+    fs::write(&sentinel, &marker).unwrap();
+    assert!(!yes(&frontier_observe(&b, Some(&marker)), "ok"));
+    fs::remove_file(sentinel).unwrap();
+    assert_eq!(physical(&b.repo), before);
+}
+
+#[test]
 // obligation: tests/contracts/test_bank_eligibility_writes.py::BankEligibilityWritesContract.test_unknown_marker_is_refused_without_opening_its_body
 fn unknown_fifo_marker_is_refused_without_opening_its_body() {
     let b = Bank::new();

@@ -162,6 +162,11 @@ impl Action {
 }
 
 impl Plan {
+    /// Actual verified bytes, not the future active paths in `source`.
+    pub fn runtime(&self) -> (&Path, &Path) {
+        (&self.pack_source, &self.binary_source)
+    }
+
     /// The plan as the dictionary the baseline passed to its lazy callees.
     pub fn value(&self) -> Result<Value> {
         let mut fields = vec![

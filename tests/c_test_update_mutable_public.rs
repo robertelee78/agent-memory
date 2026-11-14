@@ -8,6 +8,7 @@ fn exercise(kind: &str) {
     let channel = Channel::new(&world);
     channel.publish(env!("CARGO_PKG_VERSION"), &"a".repeat(40));
     let installed = channel.install(&world, "codex", "copy");
+    own_installed_command(&mut world, get(&installed, "receipt"));
     let repo = world.repository("mutable repository", false).unwrap();
     let memory = bank(&world, &repo);
     let git = |world: &World, args: &[&str]| {
@@ -215,37 +216,31 @@ fn exercise(kind: &str) {
 
 // obligation: tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_changed_head_is_reobserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_head_is_reobserved() {
     exercise("head");
 }
 // obligation: tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_changed_index_is_reobserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_index_is_reobserved() {
     exercise("index");
 }
 // obligation: tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_changed_local_config_is_reobserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_local_configuration_is_reobserved() {
     exercise("config");
 }
 // obligation: tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_changed_bank_is_reobserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_bank_is_reobserved() {
     exercise("bank");
 }
 // obligation: tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_new_idle_lock_is_reobserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn new_idle_lock_is_reobserved() {
     exercise("lock");
 }
 // obligation: tests/contracts/test_update_mutable_public.py::MutableUpdateCompatibility.test_transient_lock_cleared_before_recheck_succeeds
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn transient_lock_cleared_before_recheck_succeeds() {
     exercise("transient");
 }

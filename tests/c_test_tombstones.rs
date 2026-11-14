@@ -94,7 +94,6 @@ fn filter(
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_tombstones.py::TombstonesContract.test_delete_rebuild_and_repeat_cannot_resurrect_id_under_changed_conditions
 fn repeated_rebuild_cannot_resurrect_terminal_id_under_changed_conditions() {
     let (w, repo, bank, path, mut stale) = fixture();
@@ -142,7 +141,6 @@ fn repeated_rebuild_cannot_resurrect_terminal_id_under_changed_conditions() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_tombstones.py::TombstonesContract.test_unknown_ids_wrong_project_invalid_history_and_interrupted_bank_stop_rebuild
 fn wrong_project_unknown_ids_invalid_history_and_interruption_stop_rebuild() {
     let (w, repo, bank, path, stale) = fixture();
@@ -192,7 +190,6 @@ fn wrong_project_unknown_ids_invalid_history_and_interruption_stop_rebuild() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_tombstones.py::TombstonesContract.test_copied_portable_guard_uses_the_same_canonical_project_history
 fn portable_binary_uses_the_same_canonical_tombstone_history() {
     let (w, repo, _, _, stale) = fixture();
@@ -218,7 +215,6 @@ fn portable_binary_uses_the_same_canonical_tombstone_history() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_tombstones.py::TombstonesContract.test_history_namespace_route_state_and_record_identity_must_match_before_rebuild
 fn history_namespace_route_state_and_identity_must_match() {
     let (w, repo, bank, path, stale) = fixture();

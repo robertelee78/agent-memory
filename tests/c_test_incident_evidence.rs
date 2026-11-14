@@ -11,6 +11,8 @@ fn call(world: &World, args: &[&str], expected: i32) -> Value {
             std::iter::once(env!("CARGO_BIN_EXE_am-dev")).chain(args.iter().copied()),
             RunOptions {
                 check: false,
+                // Baseline `run_incident.py` call bound (test_incident_evidence.py:123).
+                timeout: std::time::Duration::from_secs(180),
                 ..Default::default()
             },
         )
@@ -324,7 +326,6 @@ fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
 
 // obligation: tests/contracts/test_incident_evidence.py::IncidentEvidenceContract.test_actual_incident_runner_exercises_both_user_visible_public_regressions
 #[test]
-#[ignore = "needs recovery_frontier registered and the retained incident native tests enabled"]
 fn native_incident_runner_executes_both_retained_public_regressions() {
     let world = World::new().unwrap();
     let catalog = support::lifecycle::read(

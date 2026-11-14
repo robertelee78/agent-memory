@@ -13,6 +13,7 @@ mod lock;
 mod plan;
 mod providers;
 mod records;
+mod runtime;
 pub(crate) mod seams;
 mod transaction;
 
@@ -28,13 +29,14 @@ pub use plan::{
     source_info, stage_release,
 };
 pub use providers::{
-    InstallationActivation, OmpHarness, installation_inventory, omp_activation_template,
-    omp_locations, omp_verify_targets, pack_root,
+    InstallationActivation, OmpHarness, executing_runtime, installation_inventory,
+    omp_activation_template, omp_locations, omp_verify_targets, pack_root,
 };
 pub(crate) use providers::{
     installed_receipt, into_contract, managed_source_info, runtime_pack_root,
 };
 pub use records::{encoded, load, read_journal, read_receipt, receipt_is_rust_era};
+pub use runtime::{LifecycleRuntime, recovery_runtime, verified_receipt_runtime};
 pub use seams::{
     ArtifactInspection, OmpBoundary, PrivateState, RegisteredArtifacts, ReleaseAccess, Services,
     Updating, register_omp_boundary, register_private_state, register_updating,

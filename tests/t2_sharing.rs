@@ -760,7 +760,22 @@ struct SharingFixture {
 impl SharingFixture {
     fn new() -> Self {
         registered();
-        let w = World::new().unwrap();
+        let mut w = World::new().unwrap();
+        let runtime = support::installed_runtime::install(&w.root, |argv| {
+            w.run_with(
+                argv,
+                RunOptions {
+                    check: false,
+                    timeout: std::time::Duration::from_secs(120),
+                    ..Default::default()
+                },
+            )
+            .unwrap()
+        });
+        w.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            runtime.command.clone().into_os_string(),
+        );
         let repo = w.repository("repo", false).unwrap();
         let remote = w.repository("remote.git", true).unwrap();
         git(
@@ -779,7 +794,7 @@ impl SharingFixture {
             std::fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
         std::fs::write(repo.join("code.rs"), "const VALUE: u8 = 1;\n").unwrap();
-        support::identity_fixtures::bind(&w, &repo).unwrap();
+        support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
         std::fs::write(
             bank.join("activeContext.md"),
             "# Current focus\n\nIndependent local orientation.\n",
@@ -806,54 +821,31 @@ impl SharingFixture {
         path
     }
     fn call(&self, operation: &str, extra: &[OsString]) -> (i32, Value) {
-        let args = vec![
-            OsString::from("semantic"),
+        let args = [
+            self.w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+            "--json".into(),
+            "semantic".into(),
             operation.into(),
             "--repo".into(),
             self.repo.as_os_str().to_owned(),
         ]
         .into_iter()
-        .chain(extra.iter().cloned())
-        .map(|arg| s(arg.into_string().unwrap()))
-        .collect();
-        let result = self.w.inside("child-result.json").unwrap();
-        let environment = [
-            (
-                OsString::from("AM_SHARING_CHILD"),
-                OsString::from(json::encode(&Value::Array(args), json::DEFAULT).unwrap()),
-            ),
-            (
-                OsString::from("AM_SHARING_RESULT"),
-                result.as_os_str().to_owned(),
-            ),
-        ];
-        let executable = std::env::current_exe().unwrap();
-        self.w
+        .chain(extra.iter().cloned());
+        let output = self
+            .w
             .run_with(
-                [
-                    executable.as_os_str(),
-                    std::ffi::OsStr::new("--exact"),
-                    std::ffi::OsStr::new("child_entry"),
-                    std::ffi::OsStr::new("--nocapture"),
-                ],
+                args,
                 RunOptions {
-                    env: &environment,
+                    check: false,
                     ..Default::default()
                 },
             )
             .unwrap();
-        let result = json::decode_bytes(
-            &std::fs::read(result).unwrap(),
-            json::DecodePolicy::default(),
-        )
-        .unwrap();
-        let code = g(&result, "exit_code")
-            .as_int()
-            .unwrap()
-            .to_string()
-            .parse()
-            .unwrap();
-        (code, g(&result, "value").clone())
+        let agent_memory::process::Status::Code(code) = output.status else {
+            panic!("native semantic command terminated: {:?}", output.status);
+        };
+        let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+        (code, value)
     }
     fn good(&self, operation: &str, extra: &[OsString]) -> Value {
         let (code, value) = self.call(operation, extra);
@@ -959,7 +951,6 @@ impl SharingFixture {
 }
 // obligation: tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_textually_clean_cross_file_yellow_blue_conflict_shows_both_origins_and_keeps_independent_work
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn test_textually_clean_cross_file_yellow_blue_conflict_shows_both_origins_and_keeps_independent_work()
  {
     let f = SharingFixture::new();
@@ -1031,7 +1022,6 @@ fn test_textually_clean_cross_file_yellow_blue_conflict_shows_both_origins_and_k
 }
 // obligation: tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_only_explicit_dependent_updates_pause_with_conflict
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn test_only_explicit_dependent_updates_pause_with_conflict() {
     let f = SharingFixture::new();
     let (_, left) = f.add(&f.bank, "wall", "# Wall\n\nPaint yellow.\n");
@@ -1097,7 +1087,6 @@ fn test_only_explicit_dependent_updates_pause_with_conflict() {
 }
 // obligation: tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_differently_worded_duplicate_combines_stable_identity_all_evidence_and_origins
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn test_differently_worded_duplicate_combines_stable_identity_all_evidence_and_origins() {
     let f = SharingFixture::new();
     let (first, left) = f.add(
@@ -1173,7 +1162,6 @@ fn test_differently_worded_duplicate_combines_stable_identity_all_evidence_and_o
 }
 // obligation: tests/contracts/test_checked_page_export.py::CheckedPageExportContract.test_empty_inspection_has_only_a_complete_marker
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn test_empty_inspection_has_only_a_complete_marker() {
     let f = SharingFixture::new();
     let before = f.state();
@@ -1201,7 +1189,6 @@ fn test_empty_inspection_has_only_a_complete_marker() {
 }
 // obligation: tests/contracts/test_checked_page_export.py::CheckedPageExportContract.test_bundle_matches_manifest_and_independent_public_pages
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn test_bundle_matches_manifest_and_independent_public_pages() {
     use std::os::unix::fs::PermissionsExt;
     let f = SharingFixture::new();
@@ -1306,34 +1293,6 @@ fn test_collisions_and_unsafe_paths_refuse_without_clobbering() {
     }
     assert_eq!(std::fs::read(existing).unwrap(), b"keep");
     assert_eq!(std::fs::read_dir(occupied).unwrap().count(), 0);
-}
-
-#[test]
-fn child_entry() {
-    let Ok(arguments) = std::env::var("AM_SHARING_CHILD") else {
-        return;
-    };
-    support::world::require_current_world().unwrap();
-    registered();
-    let arguments = json::decode(&arguments, json::DecodePolicy::default())
-        .unwrap()
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|arg| arg.as_str().unwrap().to_owned())
-        .collect::<Vec<_>>();
-    let result = agent_memory::cli::dispatch(&arguments, "am").result;
-    let value = o([
-        ("exit_code", Value::Int(result.exit_code.into())),
-        (
-            "value",
-            result
-                .value
-                .unwrap_or_else(|| panic!("No command JSON: {}", result.stderr)),
-        ),
-    ]);
-    let output = std::env::var_os("AM_SHARING_RESULT").unwrap();
-    std::fs::write(output, json::encode(&value, json::DEFAULT).unwrap()).unwrap();
 }
 
 // obligation: tests/contracts/test_selector_local_reuse.py::SelectorLocalReuseContract.test_uncached_and_bounded_reuse_preserve_framed_matches_and_edges
@@ -1560,7 +1519,6 @@ fn test_disputed_invalidation_caption_keeps_erasure_and_revocation_guards() {
 }
 // obligation: tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_hidden_other_kind_superseder_still_prevents_duplicate_reactivation
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn test_hidden_other_kind_superseder_still_prevents_duplicate_reactivation() {
     let f = SharingFixture::new();
     let (first, left) = f.add(
@@ -1643,7 +1601,6 @@ fn test_hidden_other_kind_superseder_still_prevents_duplicate_reactivation() {
 }
 // obligation: tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_explicit_clarifying_decision_corrects_then_consolidates_with_both_origins_and_history
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn test_explicit_clarifying_decision_corrects_then_consolidates_with_both_origins_and_history() {
     let f = SharingFixture::new();
     let (old, left) = f.add(

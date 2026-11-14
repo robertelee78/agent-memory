@@ -40,9 +40,10 @@ fn human_recovery_after_partial_activation_and_no_pending_transaction() {
 
 // obligation: tests/contracts/test_public_cli.py::PublicCLIContract.test_human_bootstrap_preview_repeat_update_and_uninstall_journey_under_temp_alias
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn human_signed_lifecycle_journey_under_native_temp_alias() {
-    let mut world = World::new().unwrap();
+    let world = World::new().unwrap();
+    #[cfg(target_os = "macos")]
+    let mut world = world;
     #[cfg(target_os = "macos")]
     {
         let tmp = world.paths["tmp"]
@@ -90,10 +91,10 @@ fn human_signed_lifecycle_journey_under_native_temp_alias() {
     let bank = world.paths["repo"].join("memory-bank");
     std::fs::create_dir(&bank).unwrap();
     std::fs::write(bank.join("keep.md"), b"Keep memory.\n").unwrap();
-    let preview = world
-        .run([cli.to_str().unwrap(), "uninstall", "--check"])
-        .unwrap();
-    assert!(String::from_utf8_lossy(&preview.stdout).contains("Uninstall preview"));
+    // The release binary trusts only production signing roots; the public API
+    // receives this disposable channel's real roots and the console renders it.
+    let preview = channel.run(&world, "uninstall", &["--check"], 0);
+    assert!(rendered(&preview, "uninstall").contains("Uninstall preview"));
     assert!(cli.exists());
     let removed = channel.run(&world, "uninstall", &[], 0);
     let text = rendered(&removed, "uninstall");

@@ -9,7 +9,22 @@ use support::cutover::*;
 use support::{RunOptions, World};
 
 fn fixture() -> (World, PathBuf, PathBuf) {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| {
+        w.run_with(
+            argv,
+            RunOptions {
+                check: false,
+                timeout: Duration::from_secs(120),
+                ..RunOptions::default()
+            },
+        )
+        .unwrap()
+    });
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.clone().into_os_string(),
+    );
     let repo = w.repository("repo", false).unwrap();
     let bank = repo.join("memory-bank");
     fs::create_dir(&bank).unwrap();
@@ -29,7 +44,7 @@ fn fixture() -> (World, PathBuf, PathBuf) {
             "2026-10-22T18:00:00Z",
         ),
     );
-    support::identity_fixtures::bind(&w, &repo).unwrap();
+    support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
     fs::write(repo.join("code.rs"), "const VALUE: u32 = 1;\n").unwrap();
     w.git_with(
         ["add", "."],
@@ -137,7 +152,7 @@ fn pause(w: &World, p: &Value, stage: &str, name: &str) -> (support::Child, Path
     let child = w
         .spawn_with(
             [
-                OsString::from(env!("CARGO_BIN_EXE_am")),
+                w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
                 "--json".into(),
                 "writes".into(),
                 "apply".into(),
@@ -173,7 +188,6 @@ fn collect(child: &support::Child, code: i32) -> Value {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_concurrent_bank_writers.py::ConcurrentBankWriters.test_four_contenders_refuse_live_owner_and_stale_retries_then_preserve_every_rebased_fact
 fn four_real_contenders_refuse_owner_and_stale_retries_preserving_all_rebased_facts() {
     let (w, repo, bank) = fixture();
@@ -203,7 +217,7 @@ fn four_real_contenders_refuse_owner_and_stale_retries_preserving_all_rebased_fa
         let cmd = w
             .command(
                 [
-                    OsString::from(env!("CARGO_BIN_EXE_am")),
+                    w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
                     "--json".into(),
                     "writes".into(),
                     "apply".into(),
@@ -302,7 +316,6 @@ fn atomic_observer_worker() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_concurrent_bank_writers.py::ConcurrentBankWriters.test_concurrent_observer_sees_complete_old_or_new_bytes_through_atomic_replacement
 fn real_concurrent_observer_sees_only_complete_old_or_new_bytes() {
     let (w, repo, bank) = fixture();
@@ -356,7 +369,6 @@ fn real_concurrent_observer_sees_only_complete_old_or_new_bytes() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_concurrent_bank_writers.py::ConcurrentBankWriters.test_actual_external_editor_invalidates_the_observed_target_without_losing_its_edit
 fn real_external_editor_invalidates_target_without_losing_its_edit() {
     let (w, repo, bank) = fixture();
@@ -392,7 +404,6 @@ fn real_external_editor_invalidates_target_without_losing_its_edit() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier and am transaction route registered"]
 // obligation: tests/contracts/test_concurrent_bank_writers.py::ConcurrentBankWriters.test_killed_transaction_owner_cannot_be_stolen_and_public_recovery_preserves_the_complete_bank
 fn killed_transaction_owner_cannot_be_stolen_and_explicit_recovery_preserves_bank() {
     let b = Bank::new();
@@ -444,7 +455,6 @@ fn killed_transaction_owner_cannot_be_stolen_and_explicit_recovery_preserves_ban
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_concurrent_bank_writers.py::ConcurrentBankWriters.test_distinct_worktrees_hold_independent_locks_and_sharing_manifests_contain_only_canonical_paths
 fn distinct_worktrees_hold_independent_locks_and_share_only_canonical_paths() {
     let (w, repo, bank) = fixture();

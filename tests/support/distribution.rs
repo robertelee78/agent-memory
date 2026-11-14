@@ -340,8 +340,13 @@ fn driver_entry() {
         services.artifacts.clone(),
         services.release.clone(),
     )));
-    if matches!(operation, "doctor" | "diagnostic") {
-        services.executable = Some(install::locations(&env).unwrap().runtime_binary());
+    if matches!(operation, "doctor" | "diagnostic" | "purge-check") {
+        let receipt = install::read_receipt(&env, &install::locations(&env).unwrap().state)
+            .unwrap()
+            .unwrap();
+        let source = get(&receipt, "source");
+        services.executable = Some(install::source_binary(source).unwrap());
+        super::installed_runtime::register_component_runtime();
     }
     if operation == "inventory" {
         let compatibility =
@@ -353,7 +358,11 @@ fn driver_entry() {
             .collect::<Vec<_>>();
         let outcome = agent_memory::updating::banks(
             &env,
-            &channel.root.join("pack"),
+            (
+                &channel.root.join("pack"),
+                Path::new(env!("CARGO_BIN_EXE_am")),
+            ),
+            None,
             &repositories,
             &compatibility,
             true,
@@ -475,9 +484,24 @@ fn driver_entry() {
                 fix: false,
             },
         ),
-        "uninstall" => {
-            agent_memory::uninstallation::uninstall_command(&env, &services, &Default::default())
-        }
+        "purge-check" => agent_memory::purging::purge_command(
+            &env,
+            &services,
+            &agent_memory::purging::PurgeRequest {
+                repo: PathBuf::from(args[1].as_str().unwrap()),
+                path: PathBuf::from(args[2].as_str().unwrap()),
+                check: true,
+                confirm: None,
+            },
+        ),
+        "uninstall" => agent_memory::uninstallation::uninstall_command(
+            &env,
+            &services,
+            &agent_memory::uninstallation::UninstallRequest {
+                check: args.iter().any(|arg| arg.as_str() == Some("--check")),
+                ..Default::default()
+            },
+        ),
         _ => panic!("unknown lifecycle operation"),
     };
     let value = json::decode(&result.stdout, Default::default()).unwrap();

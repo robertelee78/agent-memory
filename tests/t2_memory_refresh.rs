@@ -68,18 +68,20 @@ fn git(w: &World, repo: &Path, args: &[&str]) -> TestResult<String> {
     Ok(String::from_utf8(output.stdout)?)
 }
 fn install_runtime(world: &mut World) {
-    let (runtime, command) = support::installed_runtime::installed_runtime(world);
-    world
-        .env
-        .insert("AM_REFRESH_TEST_RUNTIME".into(), runtime.into_os_string());
-    world
-        .env
-        .insert("AM_REFRESH_TEST_COMMAND".into(), command.into_os_string());
+    let runtime = support::installed_runtime::install(&world.root, |argv| world.run(argv).unwrap());
+    world.env.insert(
+        "AM_REFRESH_TEST_RUNTIME".into(),
+        runtime.pack.into_os_string(),
+    );
+    world.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.into_os_string(),
+    );
 }
 fn runtime_command(world: &World) -> &OsStr {
     world
         .env
-        .get(OsStr::new("AM_REFRESH_TEST_COMMAND"))
+        .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
         .map(OsString::as_os_str)
         .unwrap_or(OsStr::new(env!("CARGO_BIN_EXE_am")))
 }
@@ -603,7 +605,15 @@ impl Fixture {
             fs::write(bank_path.join(path), text(body))?;
         }
         fs::write(repo.join("code.rs"), b"const VALUE: u32 = 1;\n")?;
-        support::identity_fixtures::bind(&w, &repo)?;
+        support::identity_fixtures::bind_with_command(
+            &w,
+            &repo,
+            Path::new(
+                w.env
+                    .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+                    .unwrap(),
+            ),
+        )?;
         git(&w, &repo, &["add", "."])?;
         git(&w, &repo, &["commit", "-m", "Fixture canonical memory"])?;
         git(&w, &repo, &["push", "origin", "HEAD:main"])?;
@@ -861,7 +871,6 @@ impl Fixture {
 
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_second_clone_import_is_recalled_with_conditions_without_code_index_or_local_learning_loss
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn second_clone_import_preserves_feature_state_and_recalls_conditions() -> TestResult {
     let f = Fixture::new()?;
     fs::write(
@@ -938,7 +947,6 @@ fn second_clone_import_preserves_feature_state_and_recalls_conditions() -> TestR
 }
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_equal_bank_and_orphan_journal
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn current_equal_bank_and_orphan_journal() -> TestResult {
     let f = Fixture::new()?;
     let before = state(&f.world, &f.repo)?;
@@ -967,7 +975,6 @@ fn current_equal_bank_and_orphan_journal() -> TestResult {
 }
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_preserves_private_and_read_only_bank_permissions
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn current_preserves_private_and_read_only_bank_permissions() -> TestResult {
     let f = Fixture::new()?;
     let before = state(&f.world, &f.repo)?;
@@ -993,7 +1000,6 @@ fn current_preserves_private_and_read_only_bank_permissions() -> TestResult {
 }
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_rejects_executable_and_world_writable_bank_files
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn current_rejects_executable_and_world_writable_bank_files() -> TestResult {
     for bits in [0o755, 0o666] {
         let f = Fixture::new()?;
@@ -1014,7 +1020,6 @@ fn current_rejects_executable_and_world_writable_bank_files() -> TestResult {
 }
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_untracked_canonical_memory_explains_full_review_without_writes
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn current_untracked_canonical_memory_explains_full_review_without_writes() -> TestResult {
     let f = Fixture::new()?;
     f.add(
@@ -1040,7 +1045,6 @@ fn current_untracked_canonical_memory_explains_full_review_without_writes() -> T
 }
 // obligation: tests/contracts/test_refresh_pending.py::RefreshPendingContract.test_late_local_edit_and_same_commit_branch_change_refuse_the_original_proposal
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn late_local_edit_and_same_commit_branch_change_refuse_original_proposal() -> TestResult {
     let f = Fixture::new()?;
     f.imported(
@@ -1071,7 +1075,6 @@ fn late_local_edit_and_same_commit_branch_change_refuse_original_proposal() -> T
 }
 // obligation: tests/contracts/test_refresh_pending.py::RefreshPendingContract.test_new_authority_and_offline_observation_require_fresh_review_before_import
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn new_authority_and_offline_observation_require_fresh_review_before_import() -> TestResult {
     let f = Fixture::new()?;
     let (_, first) = f.imported("first", "# First\n\nInitial shared evidence.\n")?;
@@ -1100,7 +1103,6 @@ fn new_authority_and_offline_observation_require_fresh_review_before_import() ->
 }
 // obligation: tests/contracts/test_refresh_pending.py::RefreshPendingContract.test_changed_candidate_or_foreign_recall_project_cannot_bypass_exact_source_review
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_candidate_or_foreign_recall_project_cannot_bypass_source_review() -> TestResult {
     let f = Fixture::new()?;
     let (_, path) = f.imported("incoming", "# Incoming\n\nPreserve this actual evidence.\n")?;
@@ -1163,7 +1165,6 @@ fn changed_candidate_or_foreign_recall_project_cannot_bypass_source_review() -> 
 }
 // obligation: tests/contracts/test_refresh_v2.py::RefreshVersionTwoContract.test_explicit_v2_inspection_uses_changed_learning_frontier_and_retains_the_actual_base
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn explicit_v2_inspection_preserves_actual_base_and_feature_state() -> TestResult {
     let f = Fixture::new()?;
     let before = state(&f.world, &f.repo)?;
@@ -1277,19 +1278,16 @@ fn cursor_checkout_change(switch_branch: bool) -> TestResult {
 }
 // obligation: tests/contracts/test_refresh_cursor.py::RefreshCursorContract.test_stashed_import_and_same_head_branch_switch_reimports_the_shared_lesson
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn stashed_import_and_same_head_branch_switch_reimports_shared_lesson() -> TestResult {
     cursor_checkout_change(true)
 }
 // obligation: tests/contracts/test_refresh_cursor.py::RefreshCursorContract.test_stashed_import_and_new_revision_on_same_branch_reimports_the_shared_lesson
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn stashed_import_and_new_revision_reimports_shared_lesson() -> TestResult {
     cursor_checkout_change(false)
 }
 // obligation: tests/contracts/test_refresh_receipt_snapshot.py::ReceiptSnapshotCurrent.test_import_then_current_then_full_noop_then_current_preserves_feature_state
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn import_then_current_and_full_noop_preserve_feature_state() -> TestResult {
     let f = Fixture::new()?;
     fs::write(
@@ -1323,7 +1321,6 @@ fn import_then_current_and_full_noop_preserve_feature_state() -> TestResult {
 }
 // obligation: tests/contracts/test_refresh_conflicts.py::RefreshConflictsContract.test_conflict_and_real_dependency_are_preserved_but_not_returned_as_current_guidance
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn conflict_and_real_dependency_preserved_but_never_current_guidance() -> TestResult {
     let f = Fixture::new()?;
     let (_, local) = f.add(
@@ -1368,7 +1365,6 @@ fn conflict_and_real_dependency_preserved_but_never_current_guidance() -> TestRe
 }
 // obligation: tests/contracts/test_refresh_conflicts.py::RefreshConflictsContract.test_held_claims_do_not_consume_a_small_budget_and_starve_an_independent_import
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn held_claims_do_not_starve_independent_import() -> TestResult {
     let f = Fixture::new()?;
     let (_, local) = f.add(
@@ -1425,7 +1421,6 @@ fn held_claims_do_not_starve_independent_import() -> TestResult {
 
 // obligation: tests/contracts/test_refresh_invalidation.py::RefreshInvalidationContract.test_imported_unknown_or_other_branch_conditions_stay_out_of_current_recall
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn imported_unknown_and_other_branch_conditions_stay_out_of_current_recall() -> TestResult {
     let f = Fixture::new()?;
     let (unknown, one) = f.add(
@@ -1459,7 +1454,6 @@ fn imported_unknown_and_other_branch_conditions_stay_out_of_current_recall() -> 
 }
 // obligation: tests/contracts/test_refresh_invalidation.py::RefreshInvalidationContract.test_landed_tombstone_removes_a_locally_edited_old_record_without_staging_or_resurrection
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn landed_tombstone_defeats_locally_edited_guidance_without_staging() -> TestResult {
     let f = Fixture::new()?;
     let (record, path) = f.imported(
@@ -1538,7 +1532,6 @@ fn landed_tombstone_defeats_locally_edited_guidance_without_staging() -> TestRes
 }
 // obligation: tests/contracts/test_refresh_integration.py::RefreshIntegrationContract.test_linked_worktree_import_does_not_touch_sibling_bank_index_or_feature_heads
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn linked_worktree_import_preserves_original_and_sibling_feature_state() -> TestResult {
     let mut f = Fixture::new()?;
     let sibling = f.world.inside("other session worktree")?;
@@ -1563,7 +1556,16 @@ fn linked_worktree_import_preserves_original_and_sibling_feature_state() -> Test
         sibling.join("memory-bank/activeContext.md"),
         "# Current focus\n\nIndependent unpublished sibling learning.\n",
     )?;
-    support::identity_fixtures::bind(&f.world, &sibling)?;
+    support::identity_fixtures::bind_with_command(
+        &f.world,
+        &sibling,
+        Path::new(
+            f.world
+                .env
+                .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+                .unwrap(),
+        ),
+    )?;
     let (_, path) = f.imported(
         "landed",
         "# Landed\n\nA shared observation for separate sessions.\n",
@@ -1585,7 +1587,6 @@ fn linked_worktree_import_preserves_original_and_sibling_feature_state() -> Test
 }
 // obligation: tests/contracts/test_refresh_integration.py::RefreshIntegrationContract.test_cursor_loss_recovers_from_git_and_later_normal_code_merge_does_not_duplicate_memory
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn cursor_loss_recovers_from_git_without_duplicate_memory_after_normal_merge() -> TestResult {
     let f = Fixture::new()?;
     fs::write(
@@ -1751,7 +1752,6 @@ fn recover(f: &Fixture, mode: &str) -> TestResult<Value> {
 }
 // obligation: tests/contracts/test_refresh_recovery.py::RefreshRecoveryContract.test_lost_completed_response_recovers_without_duplicates_and_remains_honest_while_offline
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn lost_completed_response_recovers_honestly_even_while_offline() -> TestResult {
     let f = Fixture::new()?;
     let (_, path) = f.imported(
@@ -1800,7 +1800,6 @@ fn lost_completed_response_recovers_honestly_even_while_offline() -> TestResult 
 }
 // obligation: tests/contracts/test_refresh_recovery.py::RefreshRecoveryContract.test_unfinished_source_bound_import_requires_rollback_then_fresh_review_not_old_finish
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn unfinished_import_requires_rollback_and_fresh_review_not_old_finish() -> TestResult {
     let f = Fixture::new()?;
     let (_, path) = f.imported(
@@ -1875,7 +1874,6 @@ fn current_final_recheck_api_worker() -> TestResult {
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_refuses_local_and_authority_changes_at_final_recheck
 // obligation: tests/contracts/test_refresh_path_policy.py::RefreshPathPolicyIntegration.test_final_source_mutation_has_specific_api_and_cli_diagnostic
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn current_final_recheck_refuses_local_authority_index_and_mode_races() -> TestResult {
     for (scenario, api) in [
         ("local", false),
@@ -1975,7 +1973,6 @@ fn current_final_recheck_refuses_local_authority_index_and_mode_races() -> TestR
 }
 // obligation: tests/contracts/test_refresh_path_policy.py::RefreshPathPolicyIntegration.test_unprotected_state_failure_remains_specific_without_changing_work
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn unprotected_state_failure_keeps_specific_refresh_and_doctor_diagnostics() -> TestResult {
     let f = Fixture::new()?;
     let state_root = PathBuf::from(
@@ -2018,7 +2015,6 @@ fn unprotected_state_failure_keeps_specific_refresh_and_doctor_diagnostics() -> 
 }
 // obligation: tests/contracts/test_refresh_path_policy.py::RefreshPathPolicyIntegration.test_actual_protected_775_chain_current_and_doctor_preserve_feature_work
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn protected_775_chain_current_and_doctor_preserve_feature_work() -> TestResult {
     let f = Fixture::new()?;
     let state_root = PathBuf::from(
@@ -2216,7 +2212,6 @@ fn public_sharing_commands_reject_unsafe_outputs_before_work() -> TestResult {
 }
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_succeeds_with_group_writable_umask_for_new_runtime_state
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn current_succeeds_with_group_writable_umask_for_new_state() -> TestResult {
     let f = Fixture::new()?;
     let before = state(&f.world, &f.repo)?;
@@ -2257,7 +2252,6 @@ fn current_succeeds_with_group_writable_umask_for_new_state() -> TestResult {
 }
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_cursor_advances_memory_without_feature_ancestry_and_old_retry_cannot_reverse_newer_import
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn cursor_advances_without_feature_ancestry_and_old_retry_cannot_reverse_import() -> TestResult {
     let f = Fixture::new()?;
     let (_, path) = f.imported(
@@ -2298,7 +2292,6 @@ fn cursor_advances_without_feature_ancestry_and_old_retry_cannot_reverse_import(
 }
 // obligation: tests/contracts/test_refresh_receipt_snapshot.py::ReceiptSnapshotCurrent.test_imported_remote_deletion_is_part_of_complete_snapshot
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn imported_remote_deletion_is_part_of_complete_snapshot() -> TestResult {
     let f = Fixture::new()?;
     let (_, path) = f.imported(
@@ -2342,7 +2335,6 @@ fn imported_remote_deletion_is_part_of_complete_snapshot() -> TestResult {
 }
 // obligation: tests/contracts/test_refresh_receipt_snapshot.py::ReceiptSnapshotCurrent.test_local_mutations_staged_memory_and_new_authority_remain_review_required
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn local_mutations_staged_memory_and_new_authority_remain_review_required() -> TestResult {
     let f = Fixture::new()?;
     let (_, path) = f.imported(
@@ -2425,7 +2417,6 @@ fn local_mutations_staged_memory_and_new_authority_remain_review_required() -> T
 }
 // obligation: tests/contracts/test_refresh_receipt_snapshot.py::ReceiptSnapshotCurrent.test_cursor_receipt_and_branch_pins_cannot_be_mixed_or_missing
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn cursor_receipt_and_branch_pins_cannot_be_mixed_or_missing() -> TestResult {
     let f = Fixture::new()?;
     f.imported(
@@ -2506,7 +2497,6 @@ fn cursor_receipt_and_branch_pins_cannot_be_mixed_or_missing() -> TestResult {
 }
 // obligation: tests/contracts/test_refresh_v2.py::RefreshVersionTwoContract.test_legacy_semantic_inspect_and_check_keep_their_required_input_contract
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn legacy_semantic_inspect_and_check_keep_required_input_contract() -> TestResult {
     let f = Fixture::new()?;
     let view = good(
@@ -2545,7 +2535,6 @@ fn legacy_semantic_inspect_and_check_keep_required_input_contract() -> TestResul
 
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_current_refuses_unchanged_hidden_record_and_corrupt_hold_anchor
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn current_refuses_unchanged_hidden_record_and_corrupt_hold_anchor() -> TestResult {
     for scenario in ["hidden", "hold-anchor"] {
         let mut f = Fixture::new()?;
@@ -2578,7 +2567,16 @@ fn current_refuses_unchanged_hidden_record_and_corrupt_hold_anchor() -> TestResu
                     "origin/main",
                 ],
             )?;
-            support::identity_fixtures::bind(&f.world, &sibling)?;
+            support::identity_fixtures::bind_with_command(
+                &f.world,
+                &sibling,
+                Path::new(
+                    f.world
+                        .env
+                        .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+                        .unwrap(),
+                ),
+            )?;
             f.repo = sibling;
         } else {
             let path = f
@@ -2621,7 +2619,6 @@ fn find_named(root: &Path, name: &str) -> TestResult<PathBuf> {
 }
 // obligation: tests/contracts/test_memory_refresh.py::MemoryRefreshContract.test_primed_unchanged_refresh_uses_catalog_and_matches_canonical_recall
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn primed_unchanged_refresh_uses_catalog_and_matches_canonical_recall() -> TestResult {
     let mut selections = Vec::new();
     for disabled in [false, true] {
@@ -2936,7 +2933,6 @@ fn v2_prepared(f: &Fixture, recall: Value) -> TestResult<(PathBuf, Value)> {
 }
 // obligation: tests/contracts/test_large_refresh_security.py::LargeRefreshSecurityContract.test_complete_v2_delta_above_sixty_four_sources_imports_and_qualifies_peer_learning
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn complete_v2_delta_above_sixty_four_sources_is_scanned_imported_and_recalled() -> TestResult {
     let f = Fixture::new()?;
     let shared = f.peer.join("memory-bank");

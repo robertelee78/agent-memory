@@ -73,12 +73,13 @@ fn failure(reason: &str, repair: &str) -> String {
 
 /// Run the real `am` binary with `env`, `cwd` and bounded `stdin`.
 fn run_am(
+    command: &Path,
     env: &[(OsString, OsString)],
     cwd: &Path,
     args: &[&str],
     stdin: &[u8],
 ) -> (i32, String, String) {
-    let argv: Vec<OsString> = std::iter::once(OsString::from(env!("CARGO_BIN_EXE_am")))
+    let argv: Vec<OsString> = std::iter::once(command.as_os_str().to_owned())
         .chain(args.iter().map(OsString::from))
         .collect();
     let spec = process::Spec {
@@ -153,7 +154,13 @@ impl Sandbox {
         self.root.join("repo").to_str().unwrap().to_owned()
     }
     fn am(&self, args: &[&str], stdin: &[u8]) -> (i32, String, String) {
-        run_am(&self.env, &self.root, args, stdin)
+        run_am(
+            Path::new(env!("CARGO_BIN_EXE_am")),
+            &self.env,
+            &self.root,
+            args,
+            stdin,
+        )
     }
 }
 impl Drop for Sandbox {
@@ -166,7 +173,13 @@ impl Drop for Sandbox {
 /// the private world environment.
 fn world_am(world: &admission::World, args: &[&str], stdin: &[u8]) -> (i32, String, String) {
     let env: Vec<(OsString, OsString)> = std::env::vars_os().collect();
-    run_am(&env, &world.root, args, stdin)
+    run_am(
+        &world.root.join("home/.local/bin/am"),
+        &env,
+        &world.root,
+        args,
+        stdin,
+    )
 }
 
 /// The legacy boundary directory `<state>/writes/<bank>/<name>` of `repo`,
@@ -535,7 +548,6 @@ fn codex_completion_requires_an_object_before_scope() {
 
 // obligation: tests/contracts/test_claude_boundary.py::ClaudeBoundaryContract.test_bound_source_and_duplicate_are_fail_closed
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn bound_source_and_duplicate_are_fail_closed() {
     admission::in_world("bound_source_and_duplicate_are_fail_closed", |world| {
         let (repo, bank, _) = world.fixture();
@@ -620,7 +632,6 @@ fn text<'a>(value: &'a Value, key: &str) -> &'a str {
 
 // obligation: tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_legacy_unicode_done_is_bounded_and_corruption_is_not_quiet
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn legacy_unicode_done_is_bounded_and_corruption_is_not_quiet() {
     admission::in_world(
         "legacy_unicode_done_is_bounded_and_corruption_is_not_quiet",
@@ -660,7 +671,6 @@ fn legacy_unicode_done_is_bounded_and_corruption_is_not_quiet() {
 
 // obligation: tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_interrupted_old_unicode_completion_retries_without_rewriting_evidence
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn interrupted_old_unicode_completion_retries_without_rewriting_evidence() {
     admission::in_world(
         "interrupted_old_unicode_completion_retries_without_rewriting_evidence",
@@ -704,7 +714,6 @@ fn interrupted_old_unicode_completion_retries_without_rewriting_evidence() {
 
 // obligation: tests/contracts/test_codex_stop.py::CodexStopContract.test_legacy_completion_remains_quiet_without_rewriting_source
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn legacy_codex_completion_is_exact_and_listed_until_acknowledged() {
     admission::in_world(
         "legacy_codex_completion_is_exact_and_listed_until_acknowledged",
@@ -723,8 +732,8 @@ fn legacy_codex_completion_is_exact_and_listed_until_acknowledged() {
             ]);
             let path = directory.join(format!("{}.pending", key(&session, &turn)));
             write_private(&path, encode(&pending).as_bytes());
-            let runtime = Path::new(env!("CARGO_MANIFEST_DIR"));
-            let listed = codex_boundary::legacy_list_pending(&repo, runtime).unwrap();
+            let runtime = agent_memory::cli::pack_root().unwrap();
+            let listed = codex_boundary::legacy_list_pending(&repo, &runtime).unwrap();
             assert_eq!(
                 get(&listed, "pending"),
                 &Value::Array(vec![pending.clone()])
@@ -771,7 +780,7 @@ fn legacy_codex_completion_is_exact_and_listed_until_acknowledged() {
                 text(&record, "schema"),
                 "agent-memory/codex-boundary-completed-v1"
             );
-            let listed = codex_boundary::legacy_list_pending(&repo, runtime).unwrap();
+            let listed = codex_boundary::legacy_list_pending(&repo, &runtime).unwrap();
             assert_eq!(get(&listed, "pending"), &Value::Array(vec![]));
             let (code, stdout, stderr) = world_am(world, &args, b"");
             assert_eq!(code, 0, "{stdout}{stderr}");
@@ -785,13 +794,12 @@ fn legacy_codex_completion_is_exact_and_listed_until_acknowledged() {
 
 // obligation: tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_interrupted_prompt_is_discoverable_and_stdin_cannot_claim_publication
 #[test]
-#[ignore = "needs security, recovery_frontier, installation and their real dependency providers registered"]
 fn interrupted_prompt_is_discoverable_and_stdin_cannot_claim_publication() {
     admission::in_world(
         "interrupted_prompt_is_discoverable_and_stdin_cannot_claim_publication",
         |world| {
             let (repo, _, _) = world.fixture();
-            let runtime = Path::new(env!("CARGO_MANIFEST_DIR"));
+            let runtime = agent_memory::cli::pack_root().unwrap();
             let (session, prompt) = (uuid(), uuid());
             // The observation claude_prompt.py registers before any transcript exists.
             turn_sources::register(
@@ -803,11 +811,11 @@ fn interrupted_prompt_is_discoverable_and_stdin_cannot_claim_publication() {
                 Some(&prompt),
                 None,
                 None,
-                runtime,
+                &runtime,
             )
             .unwrap();
-            let later =
-                agent_memory::claude_turns::pending(&repo, None, None, (0, 0, 0), runtime).unwrap();
+            let later = agent_memory::claude_turns::pending(&repo, None, None, (0, 0, 0), &runtime)
+                .unwrap();
             assert!(
                 get(&later, "turns")
                     .as_array()

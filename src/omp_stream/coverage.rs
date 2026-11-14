@@ -12,6 +12,7 @@ use crate::error::{ContractError, Result};
 use crate::fs::{self, PrivateLock};
 use crate::lifecycle::get;
 use crate::omp_installation::{self, HeldSource, ObserverBinding};
+use crate::scope_binding::RuntimeAuthority;
 use crate::turn_sources::{self, SourceBarrier};
 use std::any::Any;
 use std::cell::{Cell, RefCell};
@@ -54,7 +55,7 @@ pub trait StreamAuthority: Send + Sync {
     fn transport(&self) -> Result<Arc<dyn OmpTransport>>;
 }
 
-/// Seam to `omp_transport` (not yet ported): the native observer, the
+/// Seam to `omp_transport`: the native observer, the
 /// post-response source drain, and the fresh verified native disposition set.
 pub trait OmpTransport: Send + Sync {
     fn observe(
@@ -118,7 +119,11 @@ impl StreamAuthority for Installed {
         repo: &Path,
         body: &mut dyn FnMut() -> Result<Value>,
     ) -> Result<Value> {
-        crate::private_state::observation_barrier(repo, &self.runtime_root, |_| body())
+        crate::private_state::observation_barrier(
+            repo,
+            RuntimeAuthority::Executing(&self.runtime_root),
+            |_| body(),
+        )
     }
     fn attest(&self, binding: &Value, receipt: Option<&Value>) -> Result<FrameProof> {
         let receipt = receipt_required(receipt)?;

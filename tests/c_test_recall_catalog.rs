@@ -41,7 +41,12 @@ fn ready() -> (Recall, String, Value, PathBuf) {
     assert_eq!(output.status, Status::Code(0));
     assert_eq!(get(&first, "results").as_array().unwrap().len(), 1);
     assert!(!yes(&first, "optional_indexes_used"));
-    assert!(yes(get(&first, "metrics"), "catalog_updated"));
+    assert!(
+        yes(get(&first, "metrics"), "catalog_updated"),
+        "{:?} {}",
+        get(&first, "metrics"),
+        String::from_utf8_lossy(&output.stderr)
+    );
     let state = r.world.paths["state"].clone();
     let pointer = physical(&state)
         .keys()
@@ -52,7 +57,6 @@ fn ready() -> (Recall, String, Value, PathBuf) {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_ordinary_recall_preserves_optional_navigation_catalog_without_republishing_it
 fn ordinary_recall_preserves_navigation_catalog_without_republication() {
     let (r, path, mut request, pointer) = ready();
@@ -94,30 +98,34 @@ fn ordinary_recall_preserves_navigation_catalog_without_republication() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_common_installed_cli_reuses_the_same_validated_catalog
 fn common_cli_reuses_the_same_validated_catalog() {
     let (r, path, request, _) = ready();
     let before = physical(&r.bank);
     let code = r.code();
-    // The dispatch worker uses the source checkout's pack as the installed
-    // runtime pack, without fabricating an installation ownership receipt.
+    // Baseline: the common installed CLI reuses the catalog that the same
+    // installed runtime published (its generation is that runtime's digest).
     for _ in 0..2 {
         let input = save(&r.world, &request, "catalog-request.json");
-        let (exit, stdout, stderr) = dispatch(
-            &r.world,
-            &[
-                "--json".into(),
-                "search".into(),
-                "--repo".into(),
-                r.repo.as_os_str().to_owned(),
-                "--request".into(),
-                input.into_os_string(),
-            ],
-            None,
-        );
-        assert_eq!(exit, 0, "{stdout}\n{stderr}");
-        let result = json::decode(&stdout, Default::default()).unwrap();
+        let output = r
+            .world
+            .am_with(
+                [
+                    std::ffi::OsString::from("--json"),
+                    "search".into(),
+                    "--repo".into(),
+                    r.repo.as_os_str().to_owned(),
+                    "--request".into(),
+                    input.into_os_string(),
+                ],
+                support::RunOptions {
+                    check: false,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert_eq!(output.status, Status::Code(0), "{output:?}");
+        let result = json::decode_bytes(&output.stdout, Default::default()).unwrap();
         assert!(yes(&result, "optional_indexes_used"));
         assert_eq!(
             string(&get(&result, "results").as_array().unwrap()[0], "path"),
@@ -129,7 +137,6 @@ fn common_cli_reuses_the_same_validated_catalog() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_recall_catalog.py::RecallCatalogContract.test_warm_policy_matches_full_reader_for_hidden_unsafe_and_conditional_corrections
 fn warm_catalog_policy_matches_full_reader_for_all_replacement_gates() {
     for (name, updates, old_remains) in [

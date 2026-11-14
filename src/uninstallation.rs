@@ -350,7 +350,12 @@ fn source_kind(target: &Value) -> bool {
 }
 
 /// Baseline `prepare`: plan removal of every unchanged owned target.
-pub fn prepare(env: &Environment, old: &Value, locations: &Locations) -> Result<Plan> {
+pub fn prepare(
+    env: &Environment,
+    old: &Value,
+    locations: &Locations,
+    runtime: (&Path, &Path),
+) -> Result<Plan> {
     let mut planner = Planner {
         env,
         old,
@@ -371,8 +376,6 @@ pub fn prepare(env: &Environment, old: &Value, locations: &Locations) -> Result<
         }
     }
     let source = get(old, "source").clone();
-    let pack = path_of(&source, "pack");
-    let binary = install::source_binary(&source).unwrap_or_else(|_| pack.clone());
     let strings = |key: &str| -> Vec<String> {
         get(old, key)
             .as_array()
@@ -399,8 +402,8 @@ pub fn prepare(env: &Environment, old: &Value, locations: &Locations) -> Result<
         omp_layout_quiescence: Vec::new(),
         layout_quiescence: Vec::new(),
         old: Some(old.clone()),
-        pack_source: pack,
-        binary_source: binary,
+        pack_source: runtime.0.to_path_buf(),
+        binary_source: runtime.1.to_path_buf(),
         cache_recovery: None,
         rollback_repositories: Vec::new(),
         private_state_evidence: None,
@@ -542,7 +545,17 @@ fn work(
         ]));
     };
     require(!install::python_era_kind(&current), ADOPTION_GUIDANCE)?;
-    let mut plan = prepare(env, &current, locations)?;
+    let source = text(get(&current, "source"), "path")
+        .ok_or_else(|| contract("Removal source path is missing"))?;
+    let runtime = if install::fingerprint(Path::new(source))? == Value::Null {
+        // The baseline trusted outside helper can remove stale ownership when
+        // the old runtime is absent. Select it before verification, never as a
+        // fallback for a present but damaged or untrusted installed runtime.
+        install::LifecycleRuntime::executing(services)?
+    } else {
+        install::verified_receipt_runtime(env, services, &current)?
+    };
+    let mut plan = prepare(env, &current, locations, runtime.pair())?;
     let selected = match &request.preserve_capable_runtime {
         Some(selection) => Some(preserved_reader(env, services, selection, &plan)?),
         None => None,
@@ -557,10 +570,10 @@ fn work(
     if omp_transition && request.check && !native_preflight {
         services
             .omp_boundary()?
-            .native_transition(&mut plan_value, true)?;
+            .native_transition(&mut plan_value, true, runtime.pair())?;
     }
     let private = services.private_state()?;
-    let target = private.prepare_lifecycle(&plan_value, true)?;
+    let target = private.prepare_lifecycle(&plan_value, true, runtime.pair())?;
     if omp_transition && (native_preflight || !request.check) {
         // Only the real transition can disable the owned route and prove a
         // drain. Never project that future state into a public preview.
@@ -573,7 +586,7 @@ fn work(
             Some(&target).filter(|target| **target != Value::Null),
             "uninstall",
             &cwd,
-            &locations.runtime_pack(),
+            runtime.pair(),
         )?;
         let missing_native = get(&proof, "missing_capabilities")
             .as_array()
@@ -588,7 +601,7 @@ fn work(
             "Private-state runtime compatibility is pending; preserve the capable active runtime and evidence",
         )?;
     } else {
-        private.require_compatible(&current, &target, "uninstall")?;
+        private.require_compatible(&current, &target, "uninstall", runtime.pair())?;
     }
     let fields = plan
         .uninstall

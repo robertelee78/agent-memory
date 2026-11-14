@@ -58,8 +58,9 @@ fn set(value: &mut Value, key: &str, replacement: Value) {
     *field = replacement;
 }
 fn run(w: &World, args: &[&str]) -> Output {
-    w.am_with(
-        args,
+    w.run_with(
+        std::iter::once(support::cutover::executable(w).into_os_string())
+            .chain(args.iter().map(|arg| OsString::from(*arg))),
         RunOptions {
             check: false,
             ..Default::default()
@@ -501,7 +502,6 @@ fn inspect_preserves_typed_refusal_bytes() {
 
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_minimal_untracked_bank_survives_poisoned_then_removed_application_state
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn inspect_ignores_poisoned_then_removed_application_state() {
     let w = World::new().unwrap();
     let (repo, bank) = fixture(&w, false, false);
@@ -563,7 +563,6 @@ fn inspect_ignores_poisoned_then_removed_application_state() {
 
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_all_six_tracked_contexts_retain_git_evidence_without_claiming_uncommitted_bytes_are_shared
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn inspect_retains_git_evidence_without_claiming_current_bytes_are_shared() {
     let w = World::new().unwrap();
     let (repo, bank) = fixture(&w, true, true);
@@ -635,7 +634,6 @@ fn inspect_retains_git_evidence_without_claiming_current_bytes_are_shared() {
 
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_missing_git_still_reads_the_copied_portable_markdown_bank
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn inspect_without_git_keeps_markdown_authoritative() {
     let mut w = World::new().unwrap();
     let (repo, _) = fixture(&w, false, false);
@@ -657,7 +655,6 @@ fn inspect_without_git_keeps_markdown_authoritative() {
 
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_git_root_spelling_preserves_trailing_spaces
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn inspect_preserves_git_root_trailing_spaces() {
     let w = World::new().unwrap();
     let (repo, _) = fixture(&w, true, false);
@@ -673,7 +670,6 @@ fn inspect_preserves_git_root_trailing_spaces() {
 
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_busy_or_interrupted_bank_is_not_repaired_by_state_loss
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn inspect_preserves_busy_or_interrupted_bank_after_state_loss() {
     let w = World::new().unwrap();
     let (repo, bank) = fixture(&w, false, false);
@@ -692,7 +688,6 @@ fn inspect_preserves_busy_or_interrupted_bank_after_state_loss() {
 
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_git_inspection_ignores_ambient_repo_redirection_and_does_not_execute_fsmonitor_or_write_trace
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn inspect_suppresses_ambient_git_redirection_and_fsmonitor_trace_writes() {
     let mut w = World::new().unwrap();
     let (repo, _) = fixture(&w, true, false);
@@ -725,11 +720,25 @@ fn inspect_suppresses_ambient_git_redirection_and_fsmonitor_trace_writes() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier and comparison_view registered"]
 fn inspect_path_is_explicit_historical_orientation_and_refuses_unknown_contexts() {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| {
+        w.run_with(
+            argv,
+            RunOptions {
+                check: false,
+                timeout: std::time::Duration::from_secs(120),
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    });
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.clone().into_os_string(),
+    );
     let (repo, bank) = fixture(&w, false, true);
-    support::identity_fixtures::bind(&w, &repo).unwrap();
+    support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
     let before = snapshot(&bank);
     let value = receipt(
         run(
@@ -990,7 +999,6 @@ fn tombstones_parser_help_argument_errors_and_input_refusals() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn tombstones_filter_suppresses_deleted_content_and_refuses_duplicate_ids() {
     let w = World::new().unwrap();
     let (repo, bank) = fixture(&w, false, false);

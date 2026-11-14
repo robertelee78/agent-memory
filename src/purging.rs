@@ -103,6 +103,7 @@ struct Selection {
     repo: PathBuf,
     bank: PathBuf,
     locations: install::Locations,
+    runtime: install::LifecycleRuntime,
 }
 
 /// Baseline `selection`.
@@ -135,10 +136,15 @@ fn selection(env: &Environment, services: &Services, request: &PurgeRequest) -> 
         &locations,
         old.as_ref(),
     )?;
+    let receipt = old.as_ref().ok_or_else(|| {
+        contract("Purge requires an active independently verified installation receipt")
+    })?;
+    let runtime = install::verified_receipt_runtime(env, services, receipt)?;
     Ok(Selection {
         repo,
         bank,
         locations,
+        runtime,
     })
 }
 
@@ -278,12 +284,25 @@ fn count(entries: &[(String, Value)], select: impl Fn(&str, &Value) -> bool) -> 
 }
 
 /// Baseline `preview`: the exact confirmable inventory of the bank.
-fn preview(selection: &Selection, owner: Option<&[u8]>) -> Result<Value> {
+fn preview(selection: &Selection, owner: Option<&[u8]>, runtime: (&Path, &Path)) -> Result<Value> {
     let repo = &selection.repo;
     let bank = &selection.bank;
-    let token =
-        crate::bank_writes::recovery_frontier_provider()?.observe_owned(repo, owner, None)?;
-    let indexed = crate::layout_recovery_state::index(repo, &selection.locations.runtime_pack())?;
+    let frontier = crate::bank_writes::recovery_frontier_provider()?;
+    let runtime_root = runtime.0;
+    let (observed_repo, observed_bank, _, _) =
+        crate::layout_recovery_state::paths(repo, None, runtime_root)?;
+    require(
+        observed_repo == *repo && observed_bank == *bank,
+        "Memory Bank location changed after purge selection",
+    )?;
+    let token = frontier.observe_bank(repo, bank, owner, None, true, runtime_root)?;
+    let (current_repo, current_bank, _, _) =
+        crate::layout_recovery_state::paths(repo, None, runtime_root)?;
+    require(
+        current_repo == observed_repo && current_bank == observed_bank,
+        "Recovery bank location changed during observation",
+    )?;
+    let indexed = crate::layout_recovery_state::index(repo, runtime_root)?;
     let active = get(&indexed, "operations")
         .as_object()
         .unwrap_or(&[])
@@ -978,7 +997,10 @@ pub fn run(env: &Environment, services: &Services, request: &PurgeRequest) -> Re
             ("verified", Value::Bool(false)),
             ("check_complete", Value::Bool(true)),
             ("writes_performed", Value::Bool(false)),
-            ("preview", preview(&selection, None)?),
+            (
+                "preview",
+                preview(&selection, None, selection.runtime.pair())?,
+            ),
             (
                 "retained",
                 object([
@@ -1016,7 +1038,7 @@ pub fn run(env: &Environment, services: &Services, request: &PurgeRequest) -> Re
             let mut barrier = crate::turn_sources::canonical_writer_barrier(
                 &selection.repo,
                 None,
-                &crate::cli::pack_root()?,
+                selection.runtime.pair().0,
             )?;
             let result = bank_lock(&selection.bank, None, |owner| {
                 detach(record, &record_path, &records, &selection, &confirm, owner)
@@ -1041,7 +1063,7 @@ fn detach(
     let bank = &selection.bank;
     let state = &selection.locations.state;
     crate::bank_writes::fault("purge-bank-lock-ready")?;
-    let selected = preview(selection, Some(owner))?;
+    let selected = preview(selection, Some(owner), selection.runtime.pair())?;
     require(
         text(&selected, "confirmation") == Some(confirm),
         "Purge preview is stale; inspect a fresh exact preview",

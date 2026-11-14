@@ -1719,7 +1719,7 @@ fn sweep_result(
             .map(|id| Ok(text(id)?.to_owned()))
             .collect::<Result<_>>()?;
         let references_value = Value::Array(references.clone());
-        let authority = Installed::new(site.runtime_root);
+        let authority = Installed::new(site.authority.pack());
         scope_binding::fresh_enrollment_locations(|| {
             omp_stream::resolve_recovery(
                 &authority,

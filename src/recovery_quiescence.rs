@@ -2,14 +2,14 @@
 use crate::codec::json::Value;
 use crate::error::{ContractError, Result};
 use crate::layout_resolution::{
-    err, field, frontier, has_keys, locked, read_optional, read_value, safe_text, same, set, sha,
-    text, uuid,
+    err, field, frontier, has_keys, read_optional, read_value, safe_text, same, set, sha, text,
+    uuid,
 };
 use crate::lifecycle::{get, object, string};
 use crate::scope_binding::{self, RequireOptions};
 use crate::{
-    artifact, bank_observation, bank_writes as writes, host, installation,
-    layout_recovery_state as state, lifecycle, sharing_limits,
+    artifact, bank_observation, bank_writes as writes, host, layout_recovery_state as state,
+    lifecycle, sharing_limits,
 };
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -53,17 +53,14 @@ const REVIEW_FIELDS: &[&str] = &[
 const MAX_DECLARED: usize = 1024;
 const MAX_DECLARED_ITEM_BYTES: usize = 4096;
 
-/// The executing runtime binary inside an explicit runtime root.
-pub fn runtime_binary(runtime_root: &Path) -> PathBuf {
-    runtime_root.join(installation::RELEASE_BINARY)
+/// The strict executing runtime binary matching the supplied pack root.
+pub fn runtime_binary(runtime_root: &Path) -> Result<PathBuf> {
+    Ok(frontier()?.runtime_pair(runtime_root)?.1)
 }
-/// Baseline `artifact.inspect(artifact.PACK)`: the executing runtime measured
-/// from its explicit root (pack plus `bin/am`), never from ambient state.
+/// Measure the strict executing runtime pair matching the supplied pack root.
 pub fn measured_runtime(runtime_root: &Path) -> Result<Value> {
-    Ok(artifact::inspect_runtime(
-        &runtime_root.join(installation::RELEASE_PACK),
-        &runtime_binary(runtime_root),
-    )?)
+    let (pack, binary) = frontier()?.runtime_pair(runtime_root)?;
+    Ok(artifact::inspect_runtime(&pack, &binary)?)
 }
 /// `'layout-frontier-v1' in runtime['compatibility'].get('private_state_capabilities', [])`.
 pub fn frontier_capable(runtime: &Value) -> bool {
@@ -210,8 +207,9 @@ pub fn validate(
     required_routes: &[String],
     publish: bool,
     owner: Option<&[u8]>,
-    runtime_root: &Path,
+    runtime: (&Path, &Path),
 ) -> Result<Value> {
+    let runtime_root = runtime.0;
     let (root, bank, _, _) = state::paths(repo, None, runtime_root)?;
     if !has_keys(value, &["attestation", "review"])
         || get(value, "attestation").as_object().is_none()
@@ -236,13 +234,13 @@ pub fn validate(
     let frontier = frontier()?;
     let (directory, _, current) = frontier.ledger(&root, operation_id, row, &bank, runtime_root)?;
     let (manifest, proposal) = frontier.evidence(&directory, &current, row, runtime_root)?;
-    let mut runtime = measured_runtime(runtime_root)?;
+    let mut target_runtime = artifact::inspect_runtime(runtime.0, runtime.1)?;
     set(
-        &mut runtime,
+        &mut target_runtime,
         "artifact_digest",
         runtime_digest.map_or(Value::Null, string),
     );
-    attestation_value(attestation, &manifest, &runtime)?;
+    attestation_value(attestation, &manifest, &target_runtime)?;
     let declared: BTreeSet<&str> = get(attestation, "declared_invocation_routes")
         .as_array()
         .unwrap_or_default()
@@ -282,8 +280,7 @@ pub fn validate(
     safe_text(get(review, "rationale"), 4096)?;
     safe_text(get(review, "reviewer_harness"), 256)?;
     safe_text(get(review, "reviewer_session"), 256)?;
-    // Bank location is fresh at entry and frontier.check below freshly resolves
-    // it again. Do not carry this read-only path observation across publication.
+    // Pin the actual bank and metadata token, then recheck both before publication.
     let live = frontier.observe_bank(&root, &bank, owner, None, true, runtime_root)?;
     let marker = frontier.marker_bytes(&bank, crate::bank_transactions::MARKER, None)?;
     let marker_value = match &marker {
@@ -311,7 +308,7 @@ pub fn validate(
             migration_reader: None,
         },
     )?;
-    let executing = measured_runtime(runtime_root)?;
+    let executing = artifact::inspect_runtime(runtime.0, runtime.1)?;
     let executing_digest = text(&executing, "artifact_digest")?;
     if selected_at(&directory, &proposal, executing_digest)?.is_none()
         && Some(executing_digest) != runtime_digest
@@ -320,21 +317,44 @@ pub fn validate(
             "The executing verifier is neither the reviewed existing runtime nor the reviewed replacement",
         ));
     }
-    frontier.check(&live, &root, owner, None)?;
+    let (current_root, current_bank, _, _) = state::paths(&root, None, runtime_root)?;
+    if current_root != root || current_bank != bank {
+        return Err(err("Recovery bank location changed during observation"));
+    }
+    let current = frontier.observe_bank(&root, &bank, owner, None, true, runtime_root)?;
+    let (after_root, after_bank, _, _) = state::paths(&root, None, runtime_root)?;
+    if after_root != root || after_bank != bank {
+        return Err(err("Recovery bank location changed during observation"));
+    }
+    if crate::developer_identity::encoded(&current)? != crate::developer_identity::encoded(&live)? {
+        return Err(err(
+            "Private recovery frontier changed; reread every pending source before proceeding",
+        ));
+    }
     if publish {
         if owner.is_none() {
             let id = host::uuid4()?;
-            return locked(&root, &bank, &id, |owned| {
-                validate(
-                    &root,
-                    value,
-                    runtime_digest,
-                    required_routes,
-                    true,
-                    Some(owned),
-                    runtime_root,
-                )
-            });
+            let mut barrier =
+                crate::turn_sources::canonical_writer_barrier(&root, None, runtime.0)?;
+            let outcome = crate::local_registry::exclusive(
+                &bank.join(".agent-memory.lock"),
+                &id,
+                "bank-recover",
+                host::Sources::default(),
+                |owned| {
+                    validate(
+                        &root,
+                        value,
+                        runtime_digest,
+                        required_routes,
+                        true,
+                        Some(owned),
+                        runtime,
+                    )
+                },
+            )?;
+            barrier.finish()?;
+            return Ok(outcome);
         }
         state::write_once(
             &directory
@@ -367,7 +387,7 @@ pub fn validate(
             }
             set(&mut heads, key, next_head);
             state::replace(&heads_path, &heads, old.as_deref())?;
-            frontier.invalidate(&root)?;
+            crate::recovery_frontier::invalidate(&root, runtime.0)?;
         }
     }
     Ok(object([
@@ -404,7 +424,7 @@ impl crate::private_state::RecoveryQuiescence for RecoveryQuiescence {
         required_routes: &[String],
         publish: bool,
         owner: Option<&[u8]>,
-        runtime_root: &Path,
+        runtime: (&Path, &Path),
     ) -> Result<Value> {
         validate(
             repo,
@@ -413,7 +433,7 @@ impl crate::private_state::RecoveryQuiescence for RecoveryQuiescence {
             required_routes,
             publish,
             owner,
-            runtime_root,
+            runtime,
         )
     }
 }

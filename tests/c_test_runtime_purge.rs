@@ -58,10 +58,9 @@ fn touch_metadata(path: &Path) {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_changed_content_and_recreated_identical_bank_require_new_confirmation
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn content_change_or_recreated_bank_requires_fresh_confirmation() {
     for change in ["content", "new-inode"] {
-        let world = World::new().unwrap();
+        let world = support::cutover::installed_world();
         let memory = bank(&world, &world.paths["repo"]);
         let token = token(&world, &memory);
         if change == "content" {
@@ -82,9 +81,8 @@ fn content_change_or_recreated_bank_requires_fresh_confirmation() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_same_inode_and_content_after_file_metadata_change_requires_fresh_consent
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn file_metadata_change_requires_fresh_consent() {
-    let world = World::new().unwrap();
+    let world = support::cutover::installed_world();
     let memory = bank(&world, &world.paths["repo"]);
     let path = memory.join("projectbrief.md");
     let bytes = std::fs::read(&path).unwrap();
@@ -111,10 +109,9 @@ fn file_metadata_change_requires_fresh_consent() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_ordinary_hardlink_aliases_finish_and_recover_the_unlink_bookkeeping_gap
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn hardlink_aliases_finish_and_recover_the_unlink_gap() {
     for point in [None, Some("purge-after-alias-unlink")] {
-        let world = World::new().unwrap();
+        let world = support::cutover::installed_world();
         let memory = bank(&world, &world.paths["repo"]);
         std::fs::hard_link(memory.join("projectbrief.md"), memory.join("alias.md")).unwrap();
         let token = token(&world, &memory);
@@ -141,9 +138,8 @@ fn hardlink_aliases_finish_and_recover_the_unlink_gap() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_metadata_changed_after_alias_unlink_gap_is_not_adopted_as_self_mutation
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_metadata_after_alias_unlink_is_not_adopted() {
-    let world = World::new().unwrap();
+    let world = support::cutover::installed_world();
     let memory = bank(&world, &world.paths["repo"]);
     std::fs::hard_link(memory.join("projectbrief.md"), memory.join("alias.md")).unwrap();
     let token = token(&world, &memory);
@@ -163,9 +159,8 @@ fn changed_metadata_after_alias_unlink_is_not_adopted() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_retry_preserves_a_recreated_canonical_bank_and_purges_only_the_confirmed_quarantine
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn retry_preserves_recreated_canonical_bank() {
-    let world = World::new().unwrap();
+    let world = support::cutover::installed_world();
     let memory = bank(&world, &world.paths["repo"]);
     let token = token(&world, &memory);
     interrupt(&world, &memory, &token, "purge-after-detach");
@@ -184,9 +179,8 @@ fn retry_preserves_recreated_canonical_bank() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_unapproved_quarantine_data_is_preserved_on_retry
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn unapproved_quarantine_additions_are_preserved() {
-    let world = World::new().unwrap();
+    let world = support::cutover::installed_world();
     let memory = bank(&world, &world.paths["repo"]);
     let token = token(&world, &memory);
     interrupt(&world, &memory, &token, "purge-after-detach");
@@ -209,9 +203,8 @@ fn unapproved_quarantine_additions_are_preserved() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_foreign_bank_lock_record_is_preserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn foreign_bank_lock_is_preserved() {
-    let world = World::new().unwrap();
+    let world = support::cutover::installed_world();
     let memory = bank(&world, &world.paths["repo"]);
     let token = token(&world, &memory);
     std::fs::write(
@@ -226,9 +219,8 @@ fn foreign_bank_lock_is_preserved() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_pending_memory_transaction_marker_is_preserved
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn pending_bank_transaction_is_preserved() {
-    let world = World::new().unwrap();
+    let world = support::cutover::installed_world();
     let memory = bank(&world, &world.paths["repo"]);
     std::fs::write(
         memory.join(".agent-memory-transaction.md"),
@@ -242,9 +234,8 @@ fn pending_bank_transaction_is_preserved() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_live_bank_writer_blocks_purge_until_the_process_releases_its_lock
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn live_writer_blocks_purge_until_flock_is_released() {
-    let world = World::new().unwrap();
+    let world = support::cutover::installed_world();
     let memory = bank(&world, &world.paths["repo"]);
     let token = token(&world, &memory);
     let lock = memory.join(".agent-memory.lock");

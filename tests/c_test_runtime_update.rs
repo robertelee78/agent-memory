@@ -49,16 +49,21 @@ fn changed_owned_copy_retains_payload_and_receipt_backups() {
 
 // obligation: tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_discovered_and_explicit_banks_remain_unchanged_and_unsupported_schema_refuses
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn discovered_and_explicit_banks_are_preserved_and_unknown_schema_refuses() {
     for registered in [false, true] {
-        let world = World::new().unwrap();
+        let mut world = World::new().unwrap();
         let channel = channel(&world);
         let installed = channel.install(&world, "codex", "copy");
+        own_installed_command(&mut world, get(&installed, "receipt"));
         let repo = world.repository("another project", false).unwrap();
         let memory = bank(&world, &repo);
         if registered {
-            support::identity_fixtures::bind(&world, &repo).unwrap();
+            let command = agent_memory::installation::source_binary(get(
+                get(&installed, "receipt"),
+                "source",
+            ))
+            .unwrap();
+            support::identity_fixtures::bind_with_command(&world, &repo, &command).unwrap();
         }
         channel.publish(NEXT, &"b".repeat(40));
         let argument = format!("repo={}", repo.display());

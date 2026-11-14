@@ -1,10 +1,12 @@
 //! Source-preserving layout recovery and exact-file retention contracts.
-//! Full public journeys stay ignored until the real recovery_frontier provider
-//! exists; the value, byte-boundary and exact private-file contracts run now.
+//! Public component journeys use real direct APIs and genuine installed runtime
+//! authority, including publication-dependent retention and historical retry.
 // Shared process fixture also serves admission tests with extra entry points.
 #[allow(dead_code)]
 #[path = "support/admission.rs"]
 mod admission_world;
+#[allow(unused_imports)]
+mod support;
 use admission_world::World;
 use agent_memory::codec::json::Value;
 use agent_memory::developer_identity::encoded;
@@ -411,12 +413,17 @@ fn isolated(name: &str, body: impl FnOnce(&World)) {
     isolated_variant(name, "", body);
 }
 fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+
+    const COMPLETED: &str = "layout-consumer-completed";
     if std::env::var("AM_LAYOUT_CASE").ok().as_deref() == Some(name) {
         if std::env::var("AM_LAYOUT_VARIANT").unwrap_or_default() != variant {
             return;
         }
         agent_memory::cli::register_providers().unwrap();
         if let Ok(operation) = std::env::var("AM_LAYOUT_ACTION") {
+            support::installed_runtime::register_component_runtime();
             let path = |key| std::env::var_os(key).map(PathBuf::from);
             let repo = path("AM_LAYOUT_REPO").unwrap();
             let runtime = path("AM_LAYOUT_RUNTIME").unwrap();
@@ -446,34 +453,65 @@ fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
             eprint!("{}", result.stderr);
             std::process::exit(result.exit_code);
         }
-        body(&World {
-            root: PathBuf::from(std::env::var_os("AM_LAYOUT_ROOT").unwrap()),
-        });
+        let root = support::require_current_world().unwrap();
+        assert_eq!(
+            std::env::var_os("AM_LAYOUT_ROOT").unwrap(),
+            root.as_os_str()
+        );
+        let world = World { root };
+        body(&world);
+        let token = std::env::var("AGENT_MEMORY_TEST_TOKEN").unwrap();
+        let mut completed = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(world.root.join(COMPLETED))
+            .unwrap();
+        completed
+            .write_all(format!("{name}\n{variant}\n{token}\n").as_bytes())
+            .unwrap();
+        completed.sync_all().unwrap();
+        fs::File::open(&world.root).unwrap().sync_all().unwrap();
         return;
     }
-    let root = Root::new();
-    fs::create_dir(root.join("home")).unwrap();
-    private(
-        &root.join(".test-world.json"),
-        b"{\"token\":\"layout-contract\"}",
+    let mut guard = support::World::new().unwrap();
+    let installed = support::installed_runtime::install(&guard.root, |argv| {
+        guard
+            .run_with(
+                argv,
+                support::RunOptions {
+                    check: false,
+                    timeout: std::time::Duration::from_secs(120),
+                    ..support::RunOptions::default()
+                },
+            )
+            .unwrap()
+    });
+    guard.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        installed.command.into_os_string(),
     );
-    let world = World {
-        root: root.0.clone(),
-    };
-    let output = world.command(
-        &[
-            std::env::current_exe().unwrap().into_os_string(),
-            "--exact".into(),
-            name.into(),
-            "--include-ignored".into(),
-            "--nocapture".into(),
-        ],
-        &[
-            ("AM_LAYOUT_CASE", name.into()),
-            ("AM_LAYOUT_ROOT", root.0.as_os_str().to_owned()),
-            ("AM_LAYOUT_VARIANT", variant.into()),
-        ],
-    );
+    guard.env.insert("AM_LAYOUT_CASE".into(), name.into());
+    guard
+        .env
+        .insert("AM_LAYOUT_ROOT".into(), guard.root.as_os_str().to_owned());
+    guard.env.insert("AM_LAYOUT_VARIANT".into(), variant.into());
+    let output = guard
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                name.into(),
+                "--include-ignored".into(),
+                "--nocapture".into(),
+            ],
+            support::RunOptions {
+                check: false,
+                timeout: std::time::Duration::from_secs(120),
+                ..support::RunOptions::default()
+            },
+        )
+        .unwrap();
     assert_eq!(
         output.status,
         agent_memory::process::Status::Code(0),
@@ -481,23 +519,17 @@ fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
-}
-fn copy_tree(source: &Path, target: &Path) {
-    fs::create_dir_all(target).unwrap();
-    for entry in fs::read_dir(source).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_dir() {
-            copy_tree(&path, &target.join(entry.file_name()));
-        } else if path.is_file() {
-            fs::copy(path, target.join(entry.file_name())).unwrap();
-        }
-    }
+    let expected = format!("{name}\n{variant}\n{}\n", guard.token);
+    assert_eq!(
+        fs::read(guard.root.join(COMPLETED)).unwrap(),
+        expected.as_bytes()
+    );
 }
 struct Fixture {
     repo: PathBuf,
     bank: PathBuf,
     runtime: PathBuf,
+    command: PathBuf,
     native: Value,
     originals: BTreeMap<String, Vec<u8>>,
     dev: String,
@@ -531,6 +563,13 @@ fn snapshot(root: &Path) -> BTreeMap<String, Vec<u8>> {
     rows
 }
 fn fixture(w: &World, pending: bool) -> Fixture {
+    let command = PathBuf::from(std::env::var_os("AGENT_MEMORY_TEST_OWNED_COMMAND").unwrap());
+    let (runtime, _) = agent_memory::installation::executing_runtime(
+        &agent_memory::installation::Environment::process(),
+        &command,
+    )
+    .unwrap();
+    support::installed_runtime::register_component_runtime();
     let (repo, bank, dev) = w.fixture();
     let sentence = "Under the synthetic review condition, preserve existing guidance and check the original source before acting.\n";
     let concise = format!("# Active context\n\n{sentence}");
@@ -631,17 +670,11 @@ fn fixture(w: &World, pending: bool) -> Fixture {
         fs::write(bank.join("handoff-prompt.md"), body).unwrap();
     }
     let originals = snapshot(&bank);
-    let runtime = w.root.join("runtime");
-    copy_tree(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-        &runtime.join("skills/agent-memory"),
-    );
-    fs::create_dir_all(runtime.join("bin")).unwrap();
-    fs::copy(env!("CARGO_BIN_EXE_am"), runtime.join("bin/am")).unwrap();
     Fixture {
         repo,
         bank,
         runtime,
+        command,
         native,
         originals,
         dev,
@@ -828,7 +861,7 @@ fn request(f: &Fixture, observed: &Value) -> Value {
             ("declared_principals", Value::Array(vec![s(&f.dev)])),
             (
                 "declared_invocation_routes",
-                Value::Array(vec![s(f.runtime.join("bin/am").to_str().unwrap())]),
+                Value::Array(vec![s(f.command.to_str().unwrap())]),
             ),
             ("stopped_sessions", Value::Array(vec![])),
             (
@@ -911,7 +944,6 @@ fn prepared(f: &Fixture) -> (Value, Value) {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index() {
     isolated(
         "all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index",
@@ -970,7 +1002,6 @@ fn all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index() {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_exact_retry_is_historical_and_never_overwrites_later_context
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn exact_retry_is_historical_and_never_overwrites_later_context() {
     isolated(
         "exact_retry_is_historical_and_never_overwrites_later_context",
@@ -1008,7 +1039,6 @@ fn exact_retry_is_historical_and_never_overwrites_later_context() {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_prepare_requires_full_coverage_independent_review_real_identity_and_safe_output
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn prepare_requires_full_coverage_independent_review_real_identity_and_safe_output() {
     isolated(
         "prepare_requires_full_coverage_independent_review_real_identity_and_safe_output",
@@ -1094,7 +1124,6 @@ fn prepare_requires_full_coverage_independent_review_real_identity_and_safe_outp
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement() {
     isolated(
         "changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement",
@@ -1141,7 +1170,6 @@ fn changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_completed_restore_has_distinct_child_and_keeps_parent_historical_receipt
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn completed_restore_has_distinct_child_and_keeps_parent_historical_receipt() {
     isolated(
         "completed_restore_has_distinct_child_and_keeps_parent_historical_receipt",
@@ -1170,7 +1198,6 @@ fn completed_restore_has_distinct_child_and_keeps_parent_historical_receipt() {
 }
 // obligation: tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_pending_units_cannot_be_deleted_by_retention
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn public_pending_units_cannot_be_deleted_by_retention() {
     isolated("public_pending_units_cannot_be_deleted_by_retention", |w| {
         let f = fixture(w, true);
@@ -1212,8 +1239,6 @@ fn fault_action(
                 .join(format!("fault-{}.json", uuid()))
                 .into_os_string(),
         ),
-        ("AGENT_MEMORY_TEST_ROOT", w.root.as_os_str().to_owned()),
-        ("AGENT_MEMORY_TEST_TOKEN", "layout-contract".into()),
         ("AGENT_MEMORY_FAULT_STAGE", stage.into()),
     ];
     if let Some(proposal) = proposal {
@@ -1236,7 +1261,6 @@ fn fault_action(
 
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_initial_quiescence_requires_exact_independent_review
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn initial_quiescence_requires_exact_independent_review() {
     isolated(
         "initial_quiescence_requires_exact_independent_review",
@@ -1284,7 +1308,6 @@ fn initial_quiescence_requires_exact_independent_review() {
 
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it() {
     isolated(
         "partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it",
@@ -1359,7 +1382,6 @@ fn recover_fault(w: &World, pending: bool, stage: &str, mode: &str) {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_first_replacement_before_progress_supports_known_finish_and_rollback
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn first_replacement_before_progress_supports_known_finish_and_rollback() {
     for mode in ["finish", "rollback"] {
         isolated_variant(
@@ -1378,7 +1400,6 @@ fn first_replacement_before_progress_supports_known_finish_and_rollback() {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_known_finish_and_rollback_follow_exact_journal_boundaries
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn known_finish_and_rollback_follow_exact_journal_boundaries() {
     for mode in ["finish", "rollback"] {
         for stage in [
@@ -1402,7 +1423,6 @@ fn known_finish_and_rollback_follow_exact_journal_boundaries() {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original() {
     isolated(
         "reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original",
@@ -1444,7 +1464,6 @@ fn reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original()
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_prepare_refuses_demoting_canonical_context_or_typed_prior_guidance
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn prepare_refuses_demoting_canonical_context_or_typed_prior_guidance() {
     isolated(
         "prepare_refuses_demoting_canonical_context_or_typed_prior_guidance",
@@ -1563,7 +1582,6 @@ fn cleanup_review(f: &Fixture, id: &str, author: &Value) -> Value {
 }
 // obligation: tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_terminal_cleanup_crash_resume_and_real_historical_retry
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn public_terminal_cleanup_crash_resume_and_real_historical_retry() {
     isolated(
         "public_terminal_cleanup_crash_resume_and_real_historical_retry",
@@ -1602,7 +1620,6 @@ fn public_terminal_cleanup_crash_resume_and_real_historical_retry() {
 }
 // obligation: tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger() {
     isolated(
         "public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger",
@@ -1744,7 +1761,6 @@ fn journal_accepts_only_an_attainable_ordered_action_prefix() {
 
 // obligation: tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_purge_and_age_cannot_retire_pending_hold
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn public_purge_and_age_cannot_retire_pending_hold() {
     isolated("public_purge_and_age_cannot_retire_pending_hold", |w| {
         let f = fixture(w, true);
@@ -1797,6 +1813,337 @@ fn public_purge_and_age_cannot_retire_pending_hold() {
             g(&applied, "pending_unit_ids")
         );
     });
+}
+
+#[test]
+fn native_candidate_reinstall_renews_real_pending_hold_without_check_writes() {
+    isolated(
+        "native_candidate_reinstall_renews_real_pending_hold_without_check_writes",
+        |w| {
+            let f = fixture(w, true);
+            let environment = agent_memory::installation::Environment::process();
+            let (current_pack, current_binary) =
+                agent_memory::installation::executing_runtime(&environment, &f.command).unwrap();
+            assert_eq!(current_pack, f.runtime);
+            let current_runtime =
+                agent_memory::artifact::inspect_runtime(&current_pack, &current_binary).unwrap();
+            let receipt_path = PathBuf::from(std::env::var_os("AGENT_MEMORY_STATE_HOME").unwrap())
+                .join("install/receipt.json");
+            let receipt_bytes = fs::read(&receipt_path).unwrap();
+            let receipt = agent_memory::developer_identity::load(&receipt_bytes).unwrap();
+            assert_eq!(
+                agent_memory::installation::source_binary(g(&receipt, "source")).unwrap(),
+                current_binary
+            );
+            let mut routes = std::collections::BTreeSet::from([
+                f.command.to_str().unwrap().to_owned(),
+                current_binary.to_str().unwrap().to_owned(),
+            ]);
+            for target in g(&receipt, "targets").as_array().unwrap() {
+                routes.insert(t(target, "path").to_owned());
+            }
+            fs::write(f.repo.join("feature.txt"), "Staged lifecycle fixture\n").unwrap();
+            w.git(&f.repo, &["add", "feature.txt"]);
+            fs::write(f.repo.join("feature.txt"), "Unstaged lifecycle fixture\n").unwrap();
+            let observed = r::inspect(&f.repo, None, &f.runtime).unwrap();
+            let mut layout_request = request(&f, &observed);
+            set(
+                layout_request.get_mut("quiescence_attestation").unwrap(),
+                "declared_invocation_routes",
+                Value::Array(routes.iter().map(s).collect()),
+            );
+            let attestation_pin = sha(g(&layout_request, "quiescence_attestation"));
+            set(
+                layout_request.get_mut("review").unwrap(),
+                "quiescence_attestation_sha256",
+                s(attestation_pin),
+            );
+            let operation_id = t(&observed, "operation_id");
+            let proposal = r::prepare(&f.repo, operation_id, &layout_request, &f.runtime).unwrap();
+            let applied = r::apply(&f.repo, &proposal, &f.runtime).unwrap();
+            assert_eq!(
+                g(&applied, "semantic_recovery_complete"),
+                &Value::Bool(false)
+            );
+            assert!(
+                !g(&applied, "pending_unit_ids")
+                    .as_array()
+                    .unwrap()
+                    .is_empty()
+            );
+            let verified_hold = agent_memory::recovery_frontier::verified_hold(
+                &f.repo,
+                None,
+                None,
+                &current_pack,
+                &current_binary,
+            )
+            .unwrap()
+            .expect("Pending layout apply must establish an independently verified hold");
+            let hold = verified_hold.marker();
+            assert_eq!(fs::read(f.bank.join(r::MARKER)).unwrap().as_slice(), hold);
+            let marker = agent_memory::developer_identity::load(hold).unwrap();
+            assert_eq!(g(&marker, "schema"), &s(agent_memory::bank_writes::HOLD));
+            assert_eq!(g(&marker, "operation_id"), &s(operation_id));
+            let operation = r::operation(&f.repo, operation_id, &f.runtime).unwrap();
+            let originals = snapshot(&operation.directory.join("originals"));
+            assert!(!originals.is_empty());
+            for source in g(&operation.manifest, "sources").as_array().unwrap() {
+                assert_eq!(
+                    fs::read(operation.directory.join(t(source, "blob"))).unwrap(),
+                    f.originals[t(source, "path")]
+                );
+            }
+
+            // Stage source assets only: no second installer or receipt is used
+            // to make the unpublished candidate appear currently installed.
+            let candidate_source = w.root.join("candidate-source");
+            let candidate_pack = candidate_source.join("skills/agent-memory");
+            for (relative, (bytes, mode)) in
+                agent_memory::pack_validation::inventory(&current_pack).unwrap()
+            {
+                let path = candidate_pack.join(relative);
+                fs::create_dir_all(path.parent().unwrap()).unwrap();
+                fs::write(&path, bytes).unwrap();
+                fs::set_permissions(&path, fs::Permissions::from_mode(mode)).unwrap();
+            }
+            let candidate_binary = candidate_source.join("target/release/am");
+            fs::create_dir_all(candidate_binary.parent().unwrap()).unwrap();
+            fs::copy(env!("CARGO_BIN_EXE_am"), &candidate_binary).unwrap();
+            fs::set_permissions(&candidate_binary, fs::Permissions::from_mode(0o755)).unwrap();
+            assert_ne!(candidate_binary, current_binary);
+            let guide = candidate_pack.join("offline/GUIDE.md");
+            let before_guide = fs::read_to_string(&guide).unwrap();
+            let paragraph = "The bank domain owns current Markdown semantics, cache loss and interruption rules. This fallback MUST remain distinct from governed CLI admission, audit, observed-write and publication guarantees.";
+            assert_eq!(before_guide.matches(paragraph).count(), 1);
+            fs::write(
+                &guide,
+                before_guide.replacen(
+                    paragraph,
+                    &format!("{paragraph} Ordinary file inspection retains the original evidence."),
+                    1,
+                ),
+            )
+            .unwrap();
+            let candidate_runtime =
+                agent_memory::artifact::inspect_runtime(&candidate_pack, &candidate_binary)
+                    .unwrap();
+            assert_eq!(g(&candidate_runtime, "valid"), &Value::Bool(true));
+            assert_ne!(
+                g(&candidate_runtime, "artifact_digest"),
+                g(&current_runtime, "artifact_digest")
+            );
+            assert_eq!(
+                g(&candidate_runtime, "compatibility"),
+                g(&current_runtime, "compatibility")
+            );
+            let current_files = g(&current_runtime, "files");
+            let candidate_files = g(&candidate_runtime, "files");
+            assert_eq!(
+                current_files.as_object().unwrap().len(),
+                candidate_files.as_object().unwrap().len()
+            );
+            for (path, original) in current_files.as_object().unwrap() {
+                if path == "offline/GUIDE.md" {
+                    assert_ne!(candidate_files.get(path).unwrap(), original);
+                } else {
+                    assert_eq!(candidate_files.get(path).unwrap(), original, "{path}");
+                }
+            }
+
+            // Source preservation review is not runtime authority. The new
+            // measured pair gets its own exact attestation and independent
+            // lifecycle review, bound to the real active operation.
+            let mut attestation = g(&layout_request, "quiescence_attestation").clone();
+            set(&mut attestation, "attestation_id", s(uuid()));
+            set(&mut attestation, "review_id", s(uuid()));
+            set(
+                &mut attestation,
+                "runtime_artifact_digest",
+                g(&candidate_runtime, "artifact_digest").clone(),
+            );
+            routes.insert(candidate_binary.to_str().unwrap().to_owned());
+            set(
+                &mut attestation,
+                "declared_invocation_routes",
+                Value::Array(routes.iter().map(s).collect()),
+            );
+            let reviewer = g(g(&layout_request, "review"), "reviewer");
+            let renewal = obj([
+                (
+                    "review",
+                    obj([
+                        ("schema", s("agent-memory/layout-quiescence-review-v1")),
+                        ("review_id", g(&attestation, "review_id").clone()),
+                        ("operation_id", s(operation_id)),
+                        ("attestation_sha256", s(sha(&attestation))),
+                        ("reviewer_developer_id", g(reviewer, "developer_id").clone()),
+                        ("reviewer_harness", g(reviewer, "harness").clone()),
+                        (
+                            "reviewer_session",
+                            s(format!("candidate-renewal-{}", uuid())),
+                        ),
+                        ("review_time", g(&attestation, "issued_at").clone()),
+                        ("decision", s("approve")),
+                        (
+                            "rationale",
+                            s(
+                                "Independent review of the measured candidate, exact held bank, retained sources and complete invocation routes.",
+                            ),
+                        ),
+                    ]),
+                ),
+                ("attestation", attestation),
+            ]);
+            let renewal_path = w.save(&renewal, "candidate-quiescence.json");
+            let mut altered = renewal.clone();
+            set(
+                altered.get_mut("review").unwrap(),
+                "attestation_sha256",
+                s("0".repeat(64)),
+            );
+            let altered_path = w.save(&altered, "altered-candidate-quiescence.json");
+            let bank_and_git = || {
+                (
+                    snapshot(&f.bank),
+                    fs::read(f.bank.join(r::MARKER)).unwrap(),
+                    fs::read(f.bank.join(r::SENTINEL)).unwrap(),
+                    fs::read(f.repo.join(".git/index")).unwrap(),
+                    w.git(&f.repo, &["rev-parse", "HEAD"]),
+                    w.git(&f.repo, &["symbolic-ref", "HEAD"]),
+                    fs::read(f.repo.join("feature.txt")).unwrap(),
+                )
+            };
+            let unchanged_bank_and_git = bank_and_git();
+            let private_before_checks = snapshot(&operation.directory);
+            let install = |review: &Path, check: bool| {
+                let mut argv = vec![
+                    candidate_binary.as_os_str().to_owned(),
+                    "--json".into(),
+                    "install".into(),
+                    "--development-source".into(),
+                    candidate_source.as_os_str().to_owned(),
+                    "--mode".into(),
+                    "link".into(),
+                    "--presets".into(),
+                    "none".into(),
+                    "--no-guidance".into(),
+                    "--bin-dir".into(),
+                    f.command.parent().unwrap().as_os_str().to_owned(),
+                    "--layout-quiescence".into(),
+                    review.as_os_str().to_owned(),
+                ];
+                if check {
+                    argv.push("--check".into());
+                }
+                w.command(&argv, &[])
+            };
+            let checked = install(&renewal_path, true);
+            assert_eq!(
+                checked.status,
+                agent_memory::process::Status::Code(0),
+                "{checked:?}"
+            );
+            let checked = agent_memory::developer_identity::load(&checked.stdout).unwrap();
+            assert_eq!(g(&checked, "schema"), &s("agent-memory/install-plan-v1"));
+            assert_eq!(
+                g(&checked, "installation_writes_performed"),
+                &Value::Bool(false)
+            );
+            assert_eq!(
+                g(g(&checked, "source"), "artifact_digest"),
+                g(&candidate_runtime, "artifact_digest")
+            );
+            assert!(
+                g(
+                    g(&checked, "private_compatibility"),
+                    "required_capabilities"
+                )
+                .as_array()
+                .unwrap()
+                .contains(&s("layout-frontier-v1"))
+            );
+            assert_eq!(bank_and_git(), unchanged_bank_and_git);
+            assert_eq!(fs::read(&receipt_path).unwrap(), receipt_bytes);
+            assert_eq!(snapshot(&operation.directory), private_before_checks);
+            let refused = install(&altered_path, true);
+            assert_eq!(
+                refused.status,
+                agent_memory::process::Status::Code(1),
+                "{refused:?}"
+            );
+            assert!(
+                String::from_utf8_lossy(&refused.stdout).contains(
+                    "Quiescence renewal needs retained independent review of the exact complete declaration"
+                ),
+                "{refused:?}"
+            );
+            assert_eq!(bank_and_git(), unchanged_bank_and_git);
+            assert_eq!(fs::read(&receipt_path).unwrap(), receipt_bytes);
+            assert_eq!(snapshot(&operation.directory), private_before_checks);
+
+            let installed = install(&renewal_path, false);
+            assert_eq!(
+                installed.status,
+                agent_memory::process::Status::Code(0),
+                "{installed:?}"
+            );
+            let installed = agent_memory::developer_identity::load(&installed.stdout).unwrap();
+            assert_eq!(g(&installed, "verified"), &Value::Bool(true));
+            assert_eq!(fs::canonicalize(&f.command).unwrap(), candidate_binary);
+            let (installed_pack, installed_binary) =
+                agent_memory::installation::executing_runtime(&environment, &f.command).unwrap();
+            assert_eq!(installed_pack, candidate_pack);
+            assert_eq!(installed_binary, candidate_binary);
+            let installed_hold = agent_memory::recovery_frontier::verified_hold(
+                &f.repo,
+                None,
+                None,
+                &installed_pack,
+                &installed_binary,
+            )
+            .unwrap()
+            .expect("The newly installed runtime must independently verify the same pending hold");
+            assert_eq!(installed_hold.marker(), hold);
+            assert_ne!(fs::read(&receipt_path).unwrap(), receipt_bytes);
+            let status = w.command(
+                &[
+                    f.command.as_os_str().to_owned(),
+                    "--json".into(),
+                    "bank".into(),
+                    "recover-layout".into(),
+                    "status".into(),
+                    "--repo".into(),
+                    f.repo.as_os_str().to_owned(),
+                    "--operation".into(),
+                    operation_id.into(),
+                ],
+                &[],
+            );
+            assert_eq!(
+                status.status,
+                agent_memory::process::Status::Code(0),
+                "{status:?}"
+            );
+            let status = agent_memory::developer_identity::load(&status.stdout).unwrap();
+            assert_eq!(
+                g(&status, "semantic_recovery_complete"),
+                &Value::Bool(false)
+            );
+            assert_eq!(
+                g(&status, "pending_unit_ids"),
+                g(&applied, "pending_unit_ids")
+            );
+            assert_eq!(bank_and_git(), unchanged_bank_and_git);
+            assert_eq!(snapshot(&operation.directory.join("originals")), originals);
+            for source in g(&operation.manifest, "sources").as_array().unwrap() {
+                assert_eq!(
+                    fs::read(operation.directory.join(t(source, "blob"))).unwrap(),
+                    f.originals[t(source, "path")]
+                );
+            }
+        },
+    );
 }
 
 #[test]

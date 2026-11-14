@@ -352,7 +352,7 @@ pub fn preview(repo: &Path, operation_id: &str, runtime_root: &Path) -> Result<V
             &root,
             &child,
             runtime_root,
-            &recovery_quiescence::runtime_binary(runtime_root),
+            &recovery_quiescence::runtime_binary(runtime_root)?,
             raw::ObserveOptions {
                 owner,
                 transaction: existing_marker.as_deref(),

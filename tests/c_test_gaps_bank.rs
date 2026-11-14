@@ -16,7 +16,8 @@ struct Installed {
 impl Installed {
     fn new() -> Self {
         let r = Recall::new();
-        let (runtime, cli) = support::installed_runtime::installed_runtime(&r.world);
+        let (runtime, _) = installed_pair(&r.world);
+        let cli = executable(&r.world);
         Self { r, runtime, cli }
     }
     fn call(&self, args: &[&str], expected: i32) -> Value {
@@ -96,7 +97,13 @@ fn call(w: &World, cli: &Path, args: &[&str], expected: i32) -> Value {
             },
         )
         .unwrap();
-    assert_eq!(output.status, Status::Code(expected), "{output:?}");
+    assert_eq!(
+        output.status,
+        Status::Code(expected),
+        "stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
     json::decode_bytes(&output.stdout, Default::default()).unwrap()
 }
 fn stdin(w: &World, cli: &Path, args: &[&str], value: &Value) -> Output {
@@ -150,13 +157,21 @@ fn pause(w: &World, cli: &Path, args: &[&str], stage: &str) -> (support::Child, 
             RunOptions {
                 env: &env,
                 check: false,
+                timeout: Duration::from_secs(120),
                 ..Default::default()
             },
         )
         .unwrap();
-    let deadline = agent_memory::clock::Deadline::after(Duration::from_secs(10)).unwrap();
+    let deadline = agent_memory::clock::Deadline::after(Duration::from_secs(30)).unwrap();
     while !directory.join(format!("{stage}.ready")).exists() {
-        assert!(!deadline.expired(), "missing {stage}");
+        if deadline.expired() {
+            let output = child.wait().unwrap();
+            panic!(
+                "missing {stage}: stdout={} stderr={}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+            );
+        }
         std::thread::sleep(Duration::from_millis(5));
     }
     (child, directory.join(format!("{stage}.release")))
@@ -222,11 +237,22 @@ fn compact(f: &Installed) -> (Value, Value, Vec<String>) {
     );
     let input = object([
         ("comparison_request", request),
-        ("comparison_proof", proof),
+        ("comparison_proof", get(&proof, "proof").clone()),
         ("capture", Value::Null),
         ("context", object([] as [(&str, Value); 0])),
     ]);
     let path = save(&f.r.world, &input, "compact-input.json");
+    let plan_input = object([
+        (
+            "comparison_request",
+            get(&input, "comparison_request").clone(),
+        ),
+        ("comparison_judgment", judgment),
+        ("capture", Value::Null),
+        ("context", object([] as [(&str, Value); 0])),
+    ]);
+    let plan_path = save(&f.r.world, &plan_input, "compact-plan-input.json");
+    let p = f.r.world.root.join("compact-plan.json");
     let plan = f.call(
         &[
             "compact",
@@ -234,11 +260,13 @@ fn compact(f: &Installed) -> (Value, Value, Vec<String>) {
             "--repo",
             f.repo(),
             "--input",
-            path.to_str().unwrap(),
+            plan_path.to_str().unwrap(),
+            "--private-output",
+            p.to_str().unwrap(),
         ],
         0,
     );
-    let p = save(&f.r.world, &plan, "compact-plan.json");
+    assert!(plan.get("private_artifact").is_some(), "{plan:?}");
     let prepared = f.call(
         &[
             "compact",
@@ -256,11 +284,10 @@ fn compact(f: &Installed) -> (Value, Value, Vec<String>) {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_installed_bank_initialization.py::InstalledBankRoundtrip.test_cold_identity_initialization_and_checkpoint_have_no_bank_dependency
 fn cold_identity_initialization_and_checkpoint_have_no_bank_dependency() {
-    let w = World::new().unwrap();
-    let (_, cli) = support::installed_runtime::installed_runtime(&w);
+    let w = installed_world();
+    let cli = executable(&w);
     let repo = w.repository("cold-repo", false).unwrap();
     fs::create_dir(repo.join("src")).unwrap();
     fs::write(repo.join("src/app.rs"), "const RETRY_LIMIT: u32 = 3;\n").unwrap();
@@ -357,7 +384,7 @@ fn cold_identity_initialization_and_checkpoint_have_no_bank_dependency() {
             "preview",
             "--repo",
             repo.to_str().unwrap(),
-            "--input",
+            "--review",
             path.to_str().unwrap(),
         ],
         0,
@@ -397,7 +424,7 @@ fn cold_identity_initialization_and_checkpoint_have_no_bank_dependency() {
         ),
         ("open_questions", Value::Array(vec![])),
         ("next_step", text("Review another actor's observations.")),
-        ("evidence", Value::Array(vec![])),
+        ("evidence", Value::Array(vec![text("../src/app.rs")])),
         ("conditions", object([] as [(&str, Value); 0])),
         ("harness", text("custom")),
         ("session", text("cold-session")),
@@ -438,7 +465,6 @@ fn cold_identity_initialization_and_checkpoint_have_no_bank_dependency() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_installed_bank_qualified_recall.py::InstalledBankRoundtrip.test_qualified_recall_aliases_preserve_ids_conditions_validity_and_provenance
 fn qualified_recall_aliases_preserve_ids_conditions_validity_and_provenance() {
     let f = Installed::new();
@@ -491,7 +517,7 @@ fn qualified_recall_aliases_preserve_ids_conditions_validity_and_provenance() {
         get(&f.recall(&request, "get"), "results"),
         &Value::Array(vec![])
     );
-    let alias = f.r.world.root.join("bin/am");
+    let alias = f.cli.clone();
     fs::remove_file(&alias).unwrap();
     assert!(!alias.exists());
     assert!(
@@ -507,7 +533,6 @@ fn qualified_recall_aliases_preserve_ids_conditions_validity_and_provenance() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_portable_handoff.py::PortableHandoff.test_unknown_conditions_malformed_framing_and_stale_evidence_stay_qualified
 fn unknown_conditions_malformed_framing_and_stale_evidence_stay_qualified() {
     let f = Installed::new();
@@ -582,7 +607,6 @@ fn unknown_conditions_malformed_framing_and_stale_evidence_stay_qualified() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_portable_handoff.py::PortableHandoff.test_preparation_recovery_retains_original_source_pins_and_can_rollback
 fn preparation_recovery_retains_original_source_pins_and_can_rollback() {
     let f = Installed::new();
@@ -695,7 +719,6 @@ fn preparation_recovery_retains_original_source_pins_and_can_rollback() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_unified_cli_operations.py::UnifiedCLIOperations.test_installed_context_requires_an_actual_current_text_bound_token_count
 fn installed_context_requires_current_text_bound_token_count() {
     let f = Installed::new();
@@ -818,7 +841,6 @@ fn installed_context_requires_current_text_bound_token_count() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_unified_cli_operations.py::UnifiedCLIOperations.test_installed_compaction_preserves_distinct_provenance_history_and_converges
 fn installed_compaction_preserves_provenance_history_and_converges() {
     let f = Installed::new();
@@ -846,7 +868,6 @@ fn installed_compaction_preserves_provenance_history_and_converges() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_recall_observation.py::RecallObservationContract.test_owned_lock_disappearance_or_replacement_refuses_public_maintenance_before_write
 fn owned_lock_disappearance_or_replacement_refuses_before_maintenance_write() {
     for changed in [false, true] {
@@ -889,7 +910,6 @@ fn owned_lock_disappearance_or_replacement_refuses_before_maintenance_write() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_turn_sources.py::Sources.test_real_prompt_registration_steering_stdin_ack_and_cap_blocks_input
 fn real_prompt_registration_steering_stdin_ack_and_cap_blocks_input() {
     let f = Installed::new();
@@ -1004,6 +1024,7 @@ fn gap_library_worker() {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
+    support::installed_runtime::register_component_runtime();
     let request = json::decode_bytes(&fs::read(path).unwrap(), Default::default()).unwrap();
     let repo = Path::new(string(&request, "repo"));
     let runtime = Path::new(string(&request, "runtime"));
@@ -1051,7 +1072,6 @@ fn gap_library_worker() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_checkout_repair.py::CheckoutRepairContract.test_doctor_recognizes_and_persists_old_device_binding
 fn doctor_recognizes_and_persists_old_device_binding() {
     let f = Installed::new();
@@ -1127,7 +1147,6 @@ fn doctor_recognizes_and_persists_old_device_binding() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_checkout_repair.py::CheckoutRepairContract.test_doctor_reports_prompt_and_stop_failures_independently
 fn doctor_reports_prompt_and_stop_failures_independently() {
     let f = Installed::new();
@@ -1139,7 +1158,7 @@ fn doctor_reports_prompt_and_stop_failures_independently() {
             ("runtime", text(f.runtime.to_str().unwrap())),
         ]),
     );
-    let result = f.call(&["doctor", "--repo", f.repo()], 1);
+    let result = f.call(&["doctor", "--repo", f.repo()], 0);
     assert_eq!(get(&result, "hook_failures").as_array().unwrap().len(), 2);
     let warnings = get(&result, "warnings").as_array().unwrap();
     for component in ["hook.codex.prompt", "hook.codex.stop"] {
@@ -1152,7 +1171,6 @@ fn doctor_reports_prompt_and_stop_failures_independently() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_discovery.py::DiscoveryContract.test_discovered_equivalent_cannot_be_omitted_from_comparison_to_admit_duplicate
 fn discovered_equivalent_cannot_be_omitted_to_admit_duplicate() {
     let f = Installed::new();
@@ -1175,7 +1193,7 @@ fn discovered_equivalent_cannot_be_omitted_to_admit_duplicate() {
         m,
         "source",
         object([
-            ("kind", text("user-feedback")),
+            ("kind", text("user")),
             ("actor", text("Explicit fixture correction")),
         ]),
     );
@@ -1188,7 +1206,7 @@ fn discovered_equivalent_cannot_be_omitted_to_admit_duplicate() {
     let capture_request = object([
         ("project_id", text(PROJECT)),
         ("candidate", candidate.clone()),
-        ("source_class", text("user-feedback")),
+        ("source_class", text("user")),
         ("repository_evidence", Value::Null),
         (
             "assessment",

@@ -53,7 +53,6 @@ fn finish_refused(child: support::Child, release: std::path::PathBuf) {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_recall_observation.py::RecallObservationContract.test_omitted_context_occupied_by_directory_or_fifo_is_not_absence
 fn omitted_context_directory_or_fifo_is_not_absence() {
     for directory in [true, false] {
@@ -80,7 +79,6 @@ fn omitted_context_directory_or_fifo_is_not_absence() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_recall_observation.py::RecallObservationContract.test_changed_source_after_read_or_at_final_recheck_is_unavailable
 fn changed_source_after_read_or_final_recheck_is_unavailable() {
     for stage in ["recall-after-source-read", "recall-final-source-recheck"] {
@@ -106,7 +104,6 @@ fn changed_source_after_read_or_final_recheck_is_unavailable() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_recall_observation.py::RecallObservationContract.test_fifo_marker_arriving_at_final_recheck_refuses_without_blocking_or_removal
 fn fifo_marker_arriving_at_final_recheck_is_preserved_without_blocking() {
     for name in [".agent-memory.lock", MARKER] {

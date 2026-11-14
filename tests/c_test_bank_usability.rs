@@ -127,7 +127,6 @@ fn bounded(path: impl AsRef<std::path::Path>, limit: usize) -> String {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_usability.py::BankUsabilityContract.test_fresh_clone_resumes_from_bounded_current_markdown_without_any_generated_state
 fn fresh_clone_resumes_from_bounded_canonical_markdown_without_state() {
     let w = World::new().unwrap();
@@ -212,7 +211,6 @@ fn fresh_clone_resumes_from_bounded_canonical_markdown_without_state() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_usability.py::BankUsabilityContract.test_deleting_generated_state_does_not_make_an_interrupted_bank_usable_or_repair_it
 fn state_loss_never_repairs_or_hides_an_interrupted_bank() {
     let w = World::new().unwrap();

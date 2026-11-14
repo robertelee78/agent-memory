@@ -113,6 +113,44 @@ pub fn read_journal(env: &Environment, state: &Path) -> Result<Option<Value>> {
             && transaction.is_some(),
         "Unsupported lifecycle journal",
     )?;
+    // New journals retain source observations, never executable authority.
+    // Old journals remain readable; recovery refuses if their exact bytes
+    // cannot be independently established from existing receipt/action evidence.
+    for key in ["previous_source", "runtime_source"] {
+        if let Some(source) = journal.get(key).filter(|source| **source != Value::Null) {
+            require(
+                source.as_object().is_some()
+                    && text(source, "kind").is_some()
+                    && is_absolute_canonical(env, get(source, "path"))
+                    && is_absolute_canonical(env, get(source, "pack")),
+                "Malformed lifecycle journal source observation; preserve recovery evidence",
+            )?;
+            if key == "runtime_source" {
+                let candidate = get(get(&journal, "receipt"), "source");
+                require(
+                    source.as_object().is_some_and(|fields| {
+                        fields.iter().all(|(name, value)| {
+                            matches!(name.as_str(), "path" | "pack")
+                                || super::same(value, get(candidate, name))
+                        }) || text(&journal, "operation") == Some("uninstall")
+                    }),
+                    "Journal acquisition source differs from its candidate identity",
+                )?;
+            } else {
+                for (field, recorded) in [
+                    ("compatibility", "previous_compatibility"),
+                    ("artifact_digest", "previous_artifact_digest"),
+                ] {
+                    if let Some(value) = journal.get(recorded) {
+                        require(
+                            super::same(get(source, field), value),
+                            "Journal prior source differs from rollback identity",
+                        )?;
+                    }
+                }
+            }
+        }
+    }
     let transaction = transaction.unwrap_or_default();
     for (index, action) in get(&journal, "actions")
         .as_array()

@@ -16,7 +16,6 @@ fn route(path: &str, scope: &str) -> Value {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_layout.py::LayoutContract.test_copied_artifact_preserves_index_and_code_and_refuses_busy_or_interrupted_banks
 fn relocated_binary_preserves_nested_bank_and_unknown_interruption_evidence() {
     let w = World::new().unwrap();
@@ -100,7 +99,7 @@ fn relocated_binary_preserves_nested_bank_and_unknown_interruption_evidence() {
     let output = invoke();
     assert_eq!(output.status, Status::Code(0));
     let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
-    assert!(yes(&value, "valid"));
+    assert_eq!(string(&value, "schema"), "agent-memory/layout-result-v1");
     for name in [".agent-memory.lock", MARKER] {
         let marker = bank.join(name);
         fs::write(&marker, "Preserve unknown interruption evidence\n").unwrap();

@@ -805,7 +805,7 @@ fn review_required_current() -> Result<Value> {
     )
 }
 pub fn current(repo: &Path) -> Result<Value> {
-    current_with_runtime(repo, &crate::cli::runtime_root()?)
+    current_with_runtime(repo, &crate::cli::pack_root()?)
 }
 
 /// Observe current memory against the explicitly located installed runtime.

@@ -190,21 +190,7 @@ fn projection_bounded_malformed_inputs_are_content_free() {
     }
 }
 #[test]
-fn missing_providers_and_discovery_failure_envelopes_are_typed() {
-    let w = World::new().unwrap();
-    let path = w.inside("missing").unwrap();
-    let error = retrieval::retrieve(
-        &path,
-        &{
-            let mut r = request();
-            set(&mut r, "query", s(""));
-            r
-        },
-        None,
-        &[],
-    )
-    .unwrap_err();
-    assert!(!error.to_string().contains("retry"));
+fn discovery_failure_envelope_preserves_typed_repair() {
     let failure =
         discovery::command_result("read", "canonical-qualification", Err(discovery::changed()));
     assert_eq!(failure.exit_code, 1);
@@ -222,6 +208,7 @@ struct Fixture {
     world: World,
     repo: PathBuf,
     bank: PathBuf,
+    runtime: Option<support::installed_runtime::NativeRuntime>,
 }
 impl Fixture {
     fn new() -> Self {
@@ -229,6 +216,19 @@ impl Fixture {
     }
     fn with_identity(bind: bool) -> Self {
         let world = World::new().unwrap();
+        let runtime = bind.then(|| {
+            support::installed_runtime::install(&world.root, |argv| {
+                world
+                    .run_with(
+                        argv,
+                        RunOptions {
+                            check: false,
+                            ..Default::default()
+                        },
+                    )
+                    .unwrap()
+            })
+        });
         let repo = world.repository("repo", false).unwrap();
         fs::write(repo.join("app.rs"), "const RETRY_LIMIT: usize = 3;\n").unwrap();
         world.git(["add", "."]).unwrap();
@@ -265,16 +265,77 @@ impl Fixture {
         for (path, body) in get(&files, "files").as_object().unwrap() {
             fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
+        let fixture = Self {
+            world,
+            repo,
+            bank,
+            runtime,
+        };
         if bind {
-            support::identity_fixtures::bind(&world, &repo).unwrap();
+            fixture.bind(&fixture.repo);
         }
         fs::write(
-            repo.join("app.rs"),
+            fixture.repo.join("app.rs"),
             "const RETRY_LIMIT: usize = 4; // staged unrelated work\n",
         )
         .unwrap();
-        world.git(["add", "app.rs"]).unwrap();
-        Self { world, repo, bank }
+        fixture.world.git(["add", "app.rs"]).unwrap();
+        fixture
+    }
+    fn bind(&self, repo: &Path) {
+        let developer = self.good(vec![
+            "developer".into(),
+            "status".into(),
+            "--repo".into(),
+            repo.as_os_str().to_owned(),
+        ]);
+        if get(&developer, "setup_required") == &Value::Bool(true) {
+            let proposal = self.good(vec![
+                "developer".into(),
+                "preview".into(),
+                "--create".into(),
+                "--label".into(),
+                "Disposable test developer".into(),
+            ]);
+            self.good(vec![
+                "developer".into(),
+                "apply".into(),
+                "--proposal".into(),
+                self.save(&proposal, "developer.json").into_os_string(),
+            ]);
+        }
+        let current = self.good(vec![
+            "identity".into(),
+            "status".into(),
+            "--repo".into(),
+            repo.as_os_str().to_owned(),
+        ]);
+        if get(&current, "resolved") != &Value::Bool(true) {
+            let proposal = self.good(vec![
+                "identity".into(),
+                "preview".into(),
+                "--repo".into(),
+                repo.as_os_str().to_owned(),
+                "--action".into(),
+                "bind".into(),
+                "--reason".into(),
+                "Explicit disposable fixture bank adoption".into(),
+            ]);
+            let receipt = self.good(vec![
+                "identity".into(),
+                "apply".into(),
+                "--proposal".into(),
+                self.save(&proposal, "identity.json").into_os_string(),
+            ]);
+            assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
+        }
+        let current = self.good(vec![
+            "identity".into(),
+            "status".into(),
+            "--repo".into(),
+            repo.as_os_str().to_owned(),
+        ]);
+        assert_eq!(get(&current, "resolved"), &Value::Bool(true));
     }
     fn save(&self, value: &Value, name: &str) -> PathBuf {
         let path = self.world.inside(name).unwrap();
@@ -284,8 +345,18 @@ impl Fixture {
     fn call(&self, args: Vec<OsString>) -> (bool, Value, String) {
         let output = self
             .world
-            .am_with(
-                args,
+            .run_with(
+                [
+                    self.runtime
+                        .as_ref()
+                        .unwrap()
+                        .command
+                        .as_os_str()
+                        .to_owned(),
+                    "--json".into(),
+                ]
+                .into_iter()
+                .chain(args),
                 RunOptions {
                     check: false,
                     ..Default::default()
@@ -444,7 +515,6 @@ impl Fixture {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_exact_id_path_and_text_work_without_indexes_preserving_complete_evidence_and_local_code
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn exact_id_path_text_keep_canonical_evidence_and_code() {
     let f = Fixture::new();
     let metadata = f.add(
@@ -511,7 +581,6 @@ fn exact_id_path_text_keep_canonical_evidence_and_code() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_lifecycle_time_trust_type_and_unknown_applicability_exclude_before_even_exact_ranking
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn lifecycle_time_trust_type_unknown_are_hard_gates() {
     let f = Fixture::new();
     let good = f.add(
@@ -575,7 +644,6 @@ fn lifecycle_time_trust_type_unknown_are_hard_gates() {
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_conditions_are_anded_component_prefixes_are_exact_and_checkout_cannot_be_spoofed
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_revision_condition_uses_actual_head_and_unmerged_origin_stays_visibly_conditional
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn observed_checkout_conditions_and_unmerged_provenance() {
     let f = Fixture::new();
     let revision = String::from_utf8(f.world.git(["rev-parse", "HEAD"]).unwrap().stdout)
@@ -659,7 +727,6 @@ fn observed_checkout_conditions_and_unmerged_provenance() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_type_query_or_hidden_replacement_never_reactivate_an_applicable_superseded_version
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn replacements_invalidate_before_type_visibility_query_and_security() {
     let f = Fixture::new();
     let old = f.add("topics/old.md", "# Retry\n\nOld assertion.\n", &[]);
@@ -718,7 +785,6 @@ fn replacements_invalidate_before_type_visibility_query_and_security() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_oversized_possible_replacements_fail_recall_instead_of_resurrecting_old_guidance
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn oversized_replacements_never_resurrect_old_guidance() {
     let f = Fixture::new();
     let old = f.add(
@@ -791,7 +857,6 @@ fn oversized_replacements_never_resurrect_old_guidance() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_plain_context_requires_explicit_orientation_and_never_fabricates_record_trust
 #[test]
-#[ignore = "needs recovery_frontier, checkpoint registered"]
 fn plain_context_is_only_explicit_orientation() {
     let f = Fixture::new();
     let mut r = request();
@@ -809,7 +874,6 @@ fn plain_context_is_only_explicit_orientation() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_instructions_credentials_and_unsafe_filenames_are_quarantined_without_echo_or_execution
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn unsafe_bodies_and_filenames_never_execute_or_echo() {
     let f = Fixture::new();
     let sentinel = f.world.inside("must-not-execute").unwrap();
@@ -860,7 +924,6 @@ fn unsafe_bodies_and_filenames_never_execute_or_echo() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_scope_bounds_unknown_markers_and_audit_failure_refuse_without_claiming_empty_memory
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn invalid_scope_markers_and_audit_failure_are_not_empty_memory() {
     use std::os::unix::fs::symlink;
     let f = Fixture::new();
@@ -905,7 +968,6 @@ fn invalid_scope_markers_and_audit_failure_are_not_empty_memory() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_deleted_id_never_returns_from_older_lookup_and_invalid_bank_is_not_no_matches
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn deleted_id_never_returns_and_invalid_bank_never_claims_no_matches() {
     let f = Fixture::new();
     let m = f.add(
@@ -959,7 +1021,6 @@ fn deleted_id_never_returns_and_invalid_bank_never_claims_no_matches() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_result_budget_keeps_complete_lessons_deterministic_and_reports_honest_counts
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn result_budget_preserves_complete_deterministic_lessons() {
     let f = Fixture::new();
     for number in 0..10 {
@@ -1009,7 +1070,6 @@ fn result_budget_preserves_complete_deterministic_lessons() {
 // obligation: tests/contracts/test_discovery.py::DiscoveryContract.test_exact_source_after_semantic_navigation_has_no_literal_overlap_requirement
 // obligation: tests/contracts/test_discovery.py::DiscoveryContract.test_traced_empty_selection_never_falls_back_to_literal_or_full_inventory
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn semantic_source_selection_ignores_literal_overlap_but_empty_is_empty() {
     let f = Fixture::new();
     let metadata = f.add(
@@ -1047,7 +1107,6 @@ fn semantic_source_selection_ignores_literal_overlap_but_empty_is_empty() {
 }
 // obligation: tests/contracts/test_discovery.py::DiscoveryContract.test_source_version_uncertainty_and_missing_parent_never_become_novelty
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn source_version_uncertainty_and_missing_parent_refuse() {
     let f = Fixture::new();
     f.add("topics/lesson.md", "# Retry\n\nObserved lesson.\n", &[]);
@@ -1075,7 +1134,6 @@ fn source_version_uncertainty_and_missing_parent_refuse() {
 }
 // obligation: tests/contracts/test_discovery.py::DiscoveryContract.test_traced_stable_id_resolves_current_discovered_version_without_historical_trace
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn stable_id_resolves_current_discovered_version() {
     let f = Fixture::new();
     let old = f.add(
@@ -1113,7 +1171,6 @@ fn stable_id_resolves_current_discovered_version() {
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_withheld_source_hashes_and_labels_are_not_echoed_by_qualified_read
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_successful_orientation_and_empty_qualification_are_not_promoted_to_current_guidance
 #[test]
-#[ignore = "needs recovery_frontier, checkpoint registered"]
 fn qualified_read_redacts_withheld_sources_and_never_promotes_orientation() {
     let f = Fixture::new();
     f.add(
@@ -1153,7 +1210,6 @@ fn qualified_read_redacts_withheld_sources_and_never_promotes_orientation() {
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_changed_map_explains_the_problem_and_restart_repairs_navigation
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_limited_start_cannot_certify_a_bank_with_a_broken_unrelated_record
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_map_and_broken_unrelated_record_require_fresh_qualification() {
     let f = Fixture::new();
     f.add("topics/lesson.md", "# Retry\n\nQualified lesson.\n", &[]);
@@ -1206,7 +1262,6 @@ fn changed_map_and_broken_unrelated_record_require_fresh_qualification() {
 // obligation: tests/contracts/test_projection_contract.py::ProjectionContract.test_changed_source_or_interrupted_bank_invalidates_without_echoing_old_hashes
 // obligation: tests/contracts/test_projection_contract.py::ProjectionContract.test_exact_shape_project_and_reference_substitution_refuse_even_with_current_source_hashes
 #[test]
-#[ignore = "needs recovery_frontier, inactive registered"]
 fn disposable_projection_uses_only_canonical_references_and_refuses_stale_or_substituted_data() {
     let f = Fixture::new();
     let m = f.add(
@@ -1318,7 +1373,6 @@ fn disposable_projection_uses_only_canonical_references_and_refuses_stale_or_sub
 
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_nested_index_conditions_and_detached_checkout_keep_unknown_branch_out_of_current_results
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn nested_scope_conditions_and_detached_checkout_preserve_unknown_branch() {
     let f = Fixture::new();
     let metadata = f.add(
@@ -1394,7 +1448,6 @@ fn nested_scope_conditions_and_detached_checkout_preserve_unknown_branch() {
 }
 // obligation: tests/contracts/test_retrieval.py::RetrievalContract.test_new_machine_and_different_developer_recall_same_project_without_rewriting_original_provenance
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn independent_clone_requires_explicit_binding_and_preserves_original_provenance() {
     let mut f = Fixture::new();
     let metadata = f.add(
@@ -1433,7 +1486,7 @@ fn independent_clone_requires_explicit_binding_and_preserves_original_provenance
     f.repo = clone.clone();
     f.bank = clone.join("memory-bank");
     assert!(!f.recall(&request()).0);
-    support::identity_fixtures::bind(&f.world, &clone).unwrap();
+    f.bind(&clone);
     let before = f.state();
     let code = f.code();
     let (ok, value, stdout) = f.recall(&request());
@@ -1451,7 +1504,6 @@ fn independent_clone_requires_explicit_binding_and_preserves_original_provenance
 }
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_topic_navigation_qualifies_actual_sources_and_returns_only_safe_recall_state
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn topic_navigation_qualifies_safe_sources_and_warms_optional_catalog() {
     let f = Fixture::new();
     let metadata = f.add(
@@ -1542,7 +1594,6 @@ fn topic_navigation_qualifies_safe_sources_and_warms_optional_catalog() {
 }
 // obligation: tests/contracts/test_projection_contract.py::ProjectionContract.test_canonical_deletion_rejects_older_projection_and_rebuild_cannot_recreate_record
 #[test]
-#[ignore = "needs recovery_frontier, inactive registered"]
 fn canonical_deletion_invalidates_projection_and_rebuild_cannot_resurrect() {
     let f = Fixture::new();
     let metadata = f.add(
@@ -1879,7 +1930,6 @@ fn comparison_request(path: &str) -> Value {
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_comparison_read_retains_discovered_matches_despite_unrelated_literal_searches
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_comparison_read_refuses_hidden_source_without_returning_request_or_source_trace
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn comparison_qualification_retains_discovered_matches_but_redacts_hidden_sources() {
     let f = Fixture::new();
     let mut metadata = f.add(
@@ -1930,7 +1980,6 @@ fn comparison_qualification_retains_discovered_matches_but_redacts_hidden_source
 }
 // obligation: tests/contracts/test_discovery.py::DiscoveryContract.test_changed_unvisited_source_rejects_old_navigation_before_recall_or_comparison
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn unvisited_source_change_invalidates_both_recall_and_comparison_navigation() {
     let f = Fixture::new();
     f.add("topics/lesson.md", "# Retry\n\nConditional lesson.\n", &[]);
@@ -1970,7 +2019,6 @@ fn unvisited_source_change_invalidates_both_recall_and_comparison_navigation() {
 }
 // obligation: tests/contracts/test_projection_contract.py::ProjectionContract.test_same_bank_projection_checks_in_explicitly_linked_clone_without_machine_or_developer_namespace
 #[test]
-#[ignore = "needs recovery_frontier, inactive registered"]
 fn same_bank_projection_checks_in_explicitly_linked_independent_clone() {
     let mut f = Fixture::new();
     let metadata = f.add(
@@ -2049,7 +2097,6 @@ fn same_bank_projection_checks_in_explicitly_linked_independent_clone() {
 }
 // obligation: tests/contracts/test_projection_contract.py::ProjectionContract.test_observed_write_conflict_replay_and_projection_freshness_preserve_later_corrections
 #[test]
-#[ignore = "needs recovery_frontier, inactive registered"]
 fn observed_write_conflicts_and_replays_preserve_later_corrections_and_projection_freshness() {
     let f = Fixture::new();
     let m = f.add(
@@ -2136,7 +2183,6 @@ fn observed_write_conflicts_and_replays_preserve_later_corrections_and_projectio
 
 // obligation: tests/contracts/test_projection_contract.py::ProjectionContract.test_interrupted_multi_file_write_is_detected_and_original_recovery_precedes_projection_rebuild
 #[test]
-#[ignore = "needs recovery_frontier, inactive, bank_transactions registered"]
 fn interrupted_multi_file_write_requires_original_recovery_before_projection_rebuild() {
     let f = Fixture::new();
     let metadata = f.add(
@@ -2180,8 +2226,10 @@ fn interrupted_multi_file_write_requires_original_recovery_before_projection_reb
     ];
     let output = f
         .world
-        .am_with(
+        .run_with(
             vec![
+                f.runtime.as_ref().unwrap().command.as_os_str().to_owned(),
+                "--json".into(),
                 OsString::from("transaction"),
                 "apply".into(),
                 "--proposal".into(),

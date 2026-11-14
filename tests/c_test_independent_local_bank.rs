@@ -87,7 +87,12 @@ fn claim(fact: &str, value: i64, reference: &str, context: &str) -> Value {
     ])
 }
 fn initialized() -> (World, PathBuf, PathBuf, String) {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.as_os_str().to_owned(),
+    );
     let repo = w.repository("repo", false).unwrap();
     fs::create_dir_all(repo.join("docs/adr")).unwrap();
     fs::create_dir(repo.join("src")).unwrap();
@@ -272,7 +277,6 @@ fn checkpoint(w: &World, repo: &Path) -> Value {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_independent_local_bank.py::IndependentLocalBankContract.test_initialize_checkpoint_resume_and_search_without_any_global_service
 fn initialize_checkpoint_resume_and_search_without_global_services() {
     let (w, repo, bank, project) = initialized();
@@ -368,7 +372,6 @@ fn initialize_checkpoint_resume_and_search_without_global_services() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_independent_local_bank.py::IndependentLocalBankContract.test_version_export_and_plain_file_repair_after_disposable_state_loss
 fn version_export_and_plain_file_repair_after_state_loss() {
     let (w, repo, bank, project) = initialized();
@@ -457,7 +460,6 @@ fn version_export_and_plain_file_repair_after_state_loss() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_independent_local_bank.py::IndependentLocalBankContract.test_local_interrupted_checkpoint_recovers_with_retained_private_receipt_evidence
 fn interrupted_local_checkpoint_recovers_from_retained_receipt_evidence() {
     let (w, repo, bank, project) = initialized();

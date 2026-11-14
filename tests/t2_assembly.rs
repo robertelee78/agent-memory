@@ -74,6 +74,7 @@ fn request() -> Value {
 }
 struct Fixture {
     world: World,
+    command: PathBuf,
     repo: PathBuf,
     bank: PathBuf,
     actor: String,
@@ -82,6 +83,18 @@ impl Fixture {
     fn new() -> Self {
         agent_memory::cli::register_providers().unwrap();
         let world = World::new().unwrap();
+        let runtime = support::installed_runtime::install(&world.root, |argv| {
+            world
+                .run_with(
+                    argv,
+                    support::RunOptions {
+                        check: false,
+                        timeout: std::time::Duration::from_secs(120),
+                        ..Default::default()
+                    },
+                )
+                .unwrap()
+        });
         let repo = world.repository("repo", false).unwrap();
         fs::write(repo.join("app.rs"), "const VALUE: u8 = 1;\n").unwrap();
         world.git(["add", "."]).unwrap();
@@ -113,10 +126,12 @@ impl Fixture {
         for (path, body) in get(&rendered, "files").as_object().unwrap() {
             fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
-        let inspected = support::identity_fixtures::bind(&world, &repo).unwrap();
+        let inspected =
+            support::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
         let actor = get(&inspected, "developer_id").as_str().unwrap().to_owned();
         Self {
             world,
+            command: runtime.command,
             repo,
             bank,
             actor,
@@ -184,8 +199,10 @@ impl Fixture {
         }
         let result = self
             .world
-            .am_with(
-                args,
+            .run_with(
+                std::iter::once(self.command.clone().into_os_string())
+                    .chain(std::iter::once(OsString::from("--json")))
+                    .chain(args),
                 RunOptions {
                     check: false,
                     ..Default::default()
@@ -320,7 +337,6 @@ fn context_serialization_matches_baseline_sorted_utf8_indent_and_newline() {
 }
 // obligation: tests/contracts/test_assembly.py::AssemblyContract.test_diverse_whole_units_and_exact_duplicates_preserve_every_source_origin_and_condition
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn diverse_whole_units_and_exact_duplicates_preserve_every_source_origin_and_condition() {
     let f = Fixture::new();
     for n in 0..5 {
@@ -416,7 +432,6 @@ fn diverse_whole_units_and_exact_duplicates_preserve_every_source_origin_and_con
 }
 // obligation: tests/contracts/test_assembly.py::AssemblyContract.test_harness_counter_is_bound_to_exact_current_text_and_token_cap
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn harness_counter_is_bound_to_exact_current_text_and_token_cap() {
     let f = Fixture::new();
     f.add(
@@ -467,7 +482,6 @@ fn harness_counter_is_bound_to_exact_current_text_and_token_cap() {
 }
 // obligation: tests/contracts/test_assembly.py::AssemblyContract.test_disputed_evidence_outside_query_stays_together_and_routes_to_detecting_developer
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn disputed_evidence_outside_query_stays_together_and_routes_to_detecting_developer() {
     let f = Fixture::new();
     let a = f.add(
@@ -508,7 +522,6 @@ fn disputed_evidence_outside_query_stays_together_and_routes_to_detecting_develo
 }
 // obligation: tests/contracts/test_assembly.py::AssemblyContract.test_conflict_reference_cannot_bypass_scope_visibility_lifecycle_or_source_hash
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn conflict_reference_cannot_bypass_scope_visibility_lifecycle_or_source_hash() {
     for change in ["other-branch", "hidden", "revoked", "stale-hash", "unsafe"] {
         let f = Fixture::new();
@@ -553,7 +566,6 @@ fn conflict_reference_cannot_bypass_scope_visibility_lifecycle_or_source_hash() 
 }
 // obligation: tests/contracts/test_assembly.py::AssemblyContract.test_overlapping_conflicts_form_one_indivisible_group
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn overlapping_conflicts_form_one_indivisible_group() {
     let f = Fixture::new();
     for name in ["yellow", "blue", "green"] {
@@ -584,7 +596,6 @@ fn overlapping_conflicts_form_one_indivisible_group() {
 }
 // obligation: tests/contracts/test_assembly.py::AssemblyContract.test_same_body_with_different_conditions_stays_distinct_and_orientation_is_not_admitted
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn same_body_with_different_conditions_stays_distinct_and_orientation_is_not_admitted() {
     let f = Fixture::new();
     let body = "# Same wording\n\nRetain each original applicability.\n";
@@ -615,7 +626,6 @@ fn same_body_with_different_conditions_stays_distinct_and_orientation_is_not_adm
 }
 // obligation: tests/contracts/test_assembly.py::AssemblyContract.test_small_budget_reports_omission_and_unknown_runtime_markers_never_produce_context
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn small_budget_reports_omission_and_unknown_runtime_markers_never_produce_context() {
     let f = Fixture::new();
     f.add(

@@ -90,7 +90,12 @@ fn native(world: &World, channel: &Channel, cli: &Path, args: &[&str]) -> Value 
         );
         // The public API receives this disposable channel's real signing roots;
         // the release binary correctly trusts only production roots.
-        channel.run(world, "diagnostic", args, 0)
+        // The driver takes `operation [repo]` positionally.
+        let mut options = vec![args[0]];
+        if let Some(index) = args.iter().position(|arg| *arg == "--repo") {
+            options.extend(args.get(index + 1).copied());
+        }
+        channel.run(world, "diagnostic", &options, 0)
     } else {
         let output = world
             .run(
@@ -219,13 +224,13 @@ fn custom_only_targets_never_create_default_client_links_or_guidance() {
 
 // obligation: tests/contracts/test_installed_layout.py::InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn all_clients_share_one_artifact_and_lifecycle_preserves_distinct_data() {
     for mode in ["link", "copy"] {
         let world = World::new().unwrap();
-        let channel = Channel::new(&world);
-        channel.publish(env!("CARGO_PKG_VERSION"), &"a".repeat(40));
+        // The canary fixture owns the World's single signed channel.
         let fixture = support::canaries::Canary::new(&world);
+        let channel = &fixture.channel;
+        channel.publish(env!("CARGO_PKG_VERSION"), &"a".repeat(40));
         let cache = world.paths["cache"].join("agent-memory/cache");
         std::fs::create_dir_all(&cache).unwrap();
         std::fs::write(
@@ -310,7 +315,16 @@ fn all_clients_share_one_artifact_and_lifecycle_preserves_distinct_data() {
             vec!["status", "--repo", fixture.repo.to_str().unwrap()],
         ] {
             let before = snapshot(&world.root);
-            native(&world, &channel, &cli, &args);
+            if args[0] == "install" {
+                // The release binary trusts only production signing roots; the
+                // public API receives this disposable channel's real roots.
+                let target = format!("target={}", custom.display());
+                channel.run(&world, "install", &["all", mode, &target, "--check"], 0);
+            } else if args[0] == "uninstall" {
+                channel.run(&world, "uninstall", &["--check"], 0);
+            } else {
+                native(&world, &channel, &cli, &args);
+            }
             assert_eq!(snapshot(&world.root), before);
         }
         channel.publish("0.0.16", &"b".repeat(40));
@@ -360,6 +374,9 @@ fn all_clients_share_one_artifact_and_lifecycle_preserves_distinct_data() {
             ),
             fixture.project
         );
+        // A fresh install bootstraps from this build, which must match the
+        // channel's latest signed release (the update above published 0.0.16).
+        channel.publish(env!("CARGO_PKG_VERSION"), &"c".repeat(40));
         let restored = channel.run(
             &world,
             "install",

@@ -102,7 +102,6 @@ fn current_selection_excludes_inactive_states_and_each_unsafe_axis() {
 
 // obligation: tests/contracts/test_release_canaries.py::ReleaseCanaries.test_copied_pack_checks_routes_and_preserves_unknown_busy_or_interrupted_state
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn copied_runtime_preserves_unknown_busy_and_interrupted_bank_state() {
     let world = World::new().unwrap();
     let fixture = Canary::new(&world);
@@ -173,7 +172,6 @@ fn copied_runtime_preserves_unknown_busy_and_interrupted_bank_state() {
 
 // obligation: tests/contracts/test_release_canaries.py::ReleaseCanaries.test_poisoned_imports_and_claimed_approval_do_not_execute_export_or_promote
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn poisoned_inputs_and_claimed_approval_never_execute_export_or_promote() {
     let world = World::new().unwrap();
     let fixture = Canary::new(&world);
@@ -211,7 +209,6 @@ fn poisoned_inputs_and_claimed_approval_never_execute_export_or_promote() {
 
 // obligation: tests/contracts/test_release_canaries.py::ReleaseCanaries.test_source_review_scope_and_byte_freshness_precede_any_admission_claim
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn source_review_scope_and_actual_bytes_precede_admission_claims() {
     let world = World::new().unwrap();
     let fixture = Canary::new(&world);
@@ -261,7 +258,6 @@ fn source_review_scope_and_actual_bytes_precede_admission_claims() {
 
 // obligation: tests/contracts/test_release_canaries.py::ReleaseCanaries.test_secret_redaction_and_oversize_refusal_keep_bank_and_content_free_audit_safe
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn secret_redaction_and_oversize_refusal_keep_content_free_audit_safe() {
     let world = World::new().unwrap();
     let fixture = Canary::new(&world);
@@ -296,7 +292,6 @@ fn secret_redaction_and_oversize_refusal_keep_content_free_audit_safe() {
 
 // obligation: tests/contracts/test_release_canaries.py::ReleaseCanaries.test_terminal_tombstone_survives_clone_and_suppresses_cached_body_without_sensitive_hash
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn terminal_tombstone_survives_clone_and_suppresses_cached_body_without_hash() {
     let world = World::new().unwrap();
     let mut fixture = Canary::new(&world);

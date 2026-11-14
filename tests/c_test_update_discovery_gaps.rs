@@ -12,14 +12,19 @@ fn setup(world: &World, mode: &str) -> (Channel, Value) {
 
 // obligation: tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_deleted_registered_worktree_does_not_block_update_repeat_or_recovery
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn deleted_registered_worktree_is_a_gap_not_a_fabricated_explicit_root() {
     for mode in ["link", "copy"] {
-        let world = World::new().unwrap();
-        let (channel, _) = setup(&world, mode);
+        let mut world = World::new().unwrap();
+        let (channel, installed) = setup(&world, mode);
+        own_installed_command(&mut world, get(&installed, "receipt"));
         let repo = world.repository("registered project", false).unwrap();
         let memory = bank(&world, &repo);
-        support::identity_fixtures::bind(&world, &repo).unwrap();
+        support::identity_fixtures::bind_with_command(
+            &world,
+            &repo,
+            &command(get(&installed, "receipt")),
+        )
+        .unwrap();
         let git = |args: &[&str]| {
             world
                 .git_with(

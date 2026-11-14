@@ -1,21 +1,19 @@
 mod support;
 use agent_memory::codec::json::Value;
-use support::World;
 use support::lifecycle::*;
 
 // obligation: tests/contracts/test_purge_unlock_before.py::PurgeUnlockBeforeContract.test_before_refused_purge_unlock
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn interruption_before_refused_purge_unlock_releases_only_proved_ownership() {
     support::purge_replay::unlock("before");
 }
 
 // obligation: tests/contracts/test_purge_unlock_before.py::PurgeUnlockBeforeContract.test_live_foreign_or_malformed_lock_is_not_released
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn live_foreign_or_malformed_lock_is_never_released() {
     for case in ["live", "foreign-host", "malformed-owner"] {
-        let world = World::new().unwrap();
+        // Purge acts with the already-read verified installation receipt.
+        let world = support::cutover::installed_world();
         let memory = bank(&world, &world.paths["repo"]);
         let preview = run(
             &world,

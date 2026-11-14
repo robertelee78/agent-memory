@@ -24,7 +24,13 @@ fn invoke(w: &World, binary: &Path, args: &[&str], expected: i32) -> Value {
             },
         )
         .unwrap();
-    assert_eq!(output.status, Status::Code(expected), "{output:?}");
+    assert_eq!(
+        output.status,
+        Status::Code(expected),
+        "stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
     if output.stdout.is_empty() {
         Value::Null
     } else {
@@ -34,7 +40,22 @@ fn invoke(w: &World, binary: &Path, args: &[&str], expected: i32) -> Value {
 fn copy_exact(from: &Path, to: &Path) {
     let metadata = fs::symlink_metadata(from).unwrap();
     if metadata.is_symlink() {
-        symlink(fs::read_link(from).unwrap(), to).unwrap();
+        // Baseline shutil.copytree(..., symlinks=True) also copies link
+        // metadata. Recreating under our umask loses Darwin's link mode.
+        let output = agent_memory::release_distribution::run_command(
+            &[
+                OsString::from("/bin/cp"),
+                "-Pp".into(),
+                from.as_os_str().to_owned(),
+                to.as_os_str().to_owned(),
+            ],
+            b"",
+            4096,
+            None,
+            Duration::from_secs(10),
+        )
+        .unwrap();
+        assert_eq!(output.status, Status::Code(0), "{output:?}");
     } else if metadata.is_dir() {
         fs::create_dir_all(to).unwrap();
         for entry in fs::read_dir(from).unwrap() {
@@ -225,25 +246,21 @@ fn recover_replay(committed: bool, phase: &str) {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_recover_commit_write_copy_after.py::LifecycleWriteContract.test_after_every_recover_commit_copy_write
 fn after_every_recover_commit_copy_write() {
     recover_replay(true, "after");
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_recover_commit_write_copy_before.py::LifecycleWriteContract.test_before_every_recover_commit_copy_write
 fn before_every_recover_commit_copy_write() {
     recover_replay(true, "before");
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_recover_rollback_write_copy_after.py::LifecycleWriteContract.test_after_every_recover_rollback_copy_write
 fn after_every_recover_rollback_copy_write() {
     recover_replay(false, "after");
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_recover_rollback_write_copy_before.py::LifecycleWriteContract.test_before_every_recover_rollback_copy_write
 fn before_every_recover_rollback_copy_write() {
     recover_replay(false, "before");
@@ -262,7 +279,15 @@ fn retired_channel(symlinked: bool) {
     )
     .unwrap();
     w.git_with(
-        ["commit", "-m", "Inert managed history"],
+        [
+            "-c",
+            "maintenance.auto=false",
+            "-c",
+            "gc.auto=0",
+            "commit",
+            "-m",
+            "Inert managed history",
+        ],
         RunOptions {
             cwd: Some(&repo),
             ..Default::default()
@@ -458,15 +483,18 @@ fn private_temp_barrier_native_alias_and_group_write_payloads_work() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_fresh_and_existing_install_check_and_apply_refuse_unsupported_bank_without_activation
 fn unsupported_bank_refuses_fresh_and_existing_install_without_activation() {
     for existing in [false, true] {
         for check in [false, true] {
-            let w = World::new().unwrap();
+            let mut w = World::new().unwrap();
             let source = source(&w);
             if existing {
-                install(&w, &source, &["--presets", "none"]);
+                let installed = install(&w, &source, &["--presets", "none"]);
+                w.env.insert(
+                    "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+                    command(get(&installed, "receipt")).into_os_string(),
+                );
             }
             let repo = w.repository("consumer", false).unwrap();
             let memory = bank(&w, &repo);
@@ -490,13 +518,22 @@ fn unsupported_bank_refuses_fresh_and_existing_install_without_activation() {
                 source.to_str().unwrap(),
                 "--presets",
                 "none",
-                "--repo",
-                repo.to_str().unwrap(),
             ];
             if check {
                 args.push("--check");
             }
-            let denied = run(&w, &args, 1);
+            let output = w
+                .am_with(
+                    std::iter::once("--json").chain(args.iter().copied()),
+                    RunOptions {
+                        cwd: Some(&repo),
+                        check: false,
+                        ..Default::default()
+                    },
+                )
+                .unwrap();
+            assert_eq!(output.status, Status::Code(1), "{output:?}");
+            let denied = json::decode_bytes(&output.stdout, Default::default()).unwrap();
             assert_eq!(get(&denied, "verified"), &Value::Bool(false));
             assert_eq!(snapshot(&memory), before_bank);
             assert_eq!(snapshot(&source), before_source);
@@ -541,7 +578,6 @@ fn missing_signature_verifier_refuses_before_lifecycle_state_is_created() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_one_line_install_update_failures_recovery_and_preservation
 fn signed_install_update_failures_recovery_and_preservation() {
     let mut w = World::new().unwrap();
@@ -687,7 +723,6 @@ fn piped_install(w: &World, channel: &Channel, source: &Path, check: bool) -> St
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_installer.py::OneLineBootstrapContract.test_pipe_preview_repeat_update_and_uninstall_preserve_memory_and_user_instructions
 fn pipe_preview_repeat_update_and_uninstall_preserve_memory_and_instructions() {
     let w = World::new().unwrap();
@@ -725,7 +760,6 @@ fn pipe_preview_repeat_update_and_uninstall_preserve_memory_and_instructions() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_portable_lifecycle.py::PortableLifecycleContract.test_link_custom_only_updates_without_optional_clients_identity_or_a_bank
 fn link_custom_only_preserves_neighbors_without_identity_or_a_bank() {
     let w = World::new().unwrap();
@@ -752,7 +786,6 @@ fn link_custom_only_preserves_neighbors_without_identity_or_a_bank() {
         0,
     );
     let receipt = get(&installed, "receipt");
-    let cli = command(receipt);
     assert!(
         !get(receipt, "targets")
             .as_array()
@@ -761,7 +794,10 @@ fn link_custom_only_preserves_neighbors_without_identity_or_a_bank() {
             .any(|t| text(t, "kind") == "activation")
     );
     assert_eq!(
-        text(get(&invoke(&w, &cli, &["status"], 0), "bank"), "state"),
+        text(
+            get(&channel.run(&w, "diagnostic", &["status"], 0), "bank"),
+            "state",
+        ),
         "not_located"
     );
     channel.publish("99.0.0", &"2".repeat(40));
@@ -795,7 +831,6 @@ fn link_custom_only_preserves_neighbors_without_identity_or_a_bank() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_portable_lifecycle.py::PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall
 fn copy_all_clients_keep_qualified_memory_through_full_lifecycle() {
     let r = support::cutover::Recall::new();
@@ -824,6 +859,9 @@ fn copy_all_clients_keep_qualified_memory_through_full_lifecycle() {
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(path, "Retain original matrix user instructions.\n").unwrap();
     }
+    // Recall's harness already installed a development runtime. Its explicit
+    // source is intentionally sticky; remove it before testing signed install.
+    invoke(w, &support::cutover::executable(w), &["uninstall"], 0);
     let channel = Channel::new(w);
     channel.publish(env!("CARGO_PKG_VERSION"), &"1".repeat(40));
     let custom = w.root.join("portable custom skills");
@@ -846,7 +884,7 @@ fn copy_all_clients_keep_qualified_memory_through_full_lifecycle() {
     assert_eq!(get(&recalled, "results").as_array().unwrap().len(), 1);
     assert_eq!(
         get(
-            &channel.run(w, "doctor", &[r.repo.to_str().unwrap()], 0),
+            &channel.run(w, "diagnostic", &["doctor", r.repo.to_str().unwrap()], 0),
             "ok"
         ),
         &Value::Bool(true)
@@ -918,17 +956,10 @@ fn copy_all_clients_keep_qualified_memory_through_full_lifecycle() {
         get(&recalled, "results")
     );
     let before = snapshot(&w.root);
-    let preview = invoke(
+    let preview = channel.run(
         w,
-        &cli,
-        &[
-            "purge-data",
-            "--repo",
-            r.repo.to_str().unwrap(),
-            "--path",
-            r.bank.to_str().unwrap(),
-            "--check",
-        ],
+        "purge-check",
+        &[r.repo.to_str().unwrap(), r.bank.to_str().unwrap()],
         0,
     );
     assert!(
@@ -940,4 +971,31 @@ fn copy_all_clients_keep_qualified_memory_through_full_lifecycle() {
     channel.run(w, "uninstall", &[], 0);
     assert_eq!(snapshot(&r.bank), bank_before);
     assert_eq!(r.code(), git_before);
+}
+
+#[test]
+// obligation: tests/contracts/test_runtime_uninstall.py::RuntimeUninstallContract.test_missing_managed_source_is_removed_from_ownership_using_trusted_helper
+fn trusted_native_helper_removes_missing_runtime_ownership() {
+    let w = World::new().unwrap();
+    let source = source(&w);
+    let instructions = w.paths["codex"].join("AGENTS.md");
+    fs::write(&instructions, "Keep original instructions.\n").unwrap();
+    let installed = install(&w, &source, &["--mode", "copy", "--presets", "codex"]);
+    let owned_command = command(get(&installed, "receipt"));
+    let helper = w.root.join("trusted outside helper");
+    copy_tree(&source, &helper);
+    fs::remove_dir_all(&source).unwrap();
+    let removed = invoke(
+        &w,
+        &helper.join(agent_memory::installation::DEVELOPMENT_BINARY),
+        &["uninstall"],
+        0,
+    );
+    assert_eq!(get(&removed, "verified"), &Value::Bool(true));
+    assert!(fs::symlink_metadata(owned_command).is_err());
+    assert!(!w.paths["codex"].join("skills/agent-memory").exists());
+    assert_eq!(
+        fs::read_to_string(instructions).unwrap(),
+        "Keep original instructions.\n"
+    );
 }

@@ -43,7 +43,6 @@ fn developer(w: &World, label: &str) -> String {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_authority_boundary.py::AuthorityBoundaryContract.test_raw_read_and_edit_need_no_identity_and_create_no_cli_audit
 fn raw_read_and_edit_need_no_identity_or_cli_audit() {
     let w = World::new().unwrap();
@@ -161,7 +160,6 @@ fn developer_attribution_does_not_change_bank_permissions_or_visibility() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_authority_boundary.py::AuthorityBoundaryContract.test_hostile_memory_cannot_execute_shell_or_replace_identity_and_approval
 fn hostile_memory_never_executes_or_replaces_explicit_identity() {
     let w = World::new().unwrap();

@@ -7,7 +7,6 @@ use support::RunOptions;
 use support::cutover::*;
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_preview_readonly_and_verified_write_router_last_preserves_code_index_and_external_state_boundary
 fn preview_readonly_and_verified_write_preserves_external_state() {
     let b = Bank::new();
@@ -35,10 +34,12 @@ fn preview_readonly_and_verified_write_preserves_external_state() {
             .unwrap()
             .contains("OLD_CONTENT_CANARY")
     );
+    // Baseline: no `journal.json` remains in the state home. The World's own
+    // installer lifecycle journal (`install/journal.json`) is not bank state.
     assert!(
-        !physical(&b.world.paths["state"])
+        !physical(&b.world.paths["state"].join("agent-memory"))
             .keys()
-            .any(|p| p.ends_with("journal.json"))
+            .any(|p| p.ends_with("journal.json") && p != "install/journal.json")
     );
     good(
         &b.world,
@@ -48,7 +49,6 @@ fn preview_readonly_and_verified_write_preserves_external_state() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_recovery_preview_is_observed_and_a_subsequent_even_owned_version_change_refuses
 fn recovery_preview_refuses_a_subsequent_owned_version_change() {
     let b = Bank::new();
@@ -68,7 +68,6 @@ fn recovery_preview_refuses_a_subsequent_owned_version_change() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_lost_response_after_receipt_finishes_cleanup_without_replacing_and_cannot_switch_to_rollback
 fn lost_response_finishes_cleanup_without_replacing_or_switching_outcome() {
     let b = Bank::new();
@@ -123,7 +122,6 @@ fn lost_response_finishes_cleanup_without_replacing_or_switching_outcome() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_recovery_itself_can_be_interrupted_and_resumed
 fn recovery_itself_can_be_interrupted_and_resumed() {
     for mode in ["finish", "rollback"] {
@@ -159,7 +157,6 @@ fn recovery_itself_can_be_interrupted_and_resumed() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_stale_proposals_unknown_markers_invalid_projection_and_symlinks_preserve_originals
 fn stale_unknown_invalid_and_symlinked_proposals_preserve_originals() {
     let b = Bank::new();
@@ -208,7 +205,6 @@ fn stale_unknown_invalid_and_symlinked_proposals_preserve_originals() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_raw_crlf_router_rejected_before_preview_or_journal_even_if_changed_after_preview
 fn raw_crlf_router_refuses_before_preview_or_journal() {
     for timing in ["before-preview", "after-preview"] {
@@ -251,7 +247,6 @@ fn raw_crlf_router_refuses_before_preview_or_journal() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_external_omitted_context_directory_before_receipt_cannot_be_reported_as_a_usable_bank
 fn omitted_context_directory_before_receipt_cannot_be_reported_usable() {
     let b = Bank::new();
@@ -273,7 +268,6 @@ fn omitted_context_directory_before_receipt_cannot_be_reported_usable() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_alias_arriving_after_preview_is_not_inventoried_as_an_owned_target
 fn late_alias_is_not_an_owned_target() {
     let b = Bank::new();
@@ -296,7 +290,6 @@ fn late_alias_is_not_an_owned_target() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_alias_arriving_after_recovery_preview_cannot_be_overwritten_in_either_direction
 fn late_recovery_alias_is_preserved_in_both_directions() {
     for mode in ["finish", "rollback"] {
@@ -323,7 +316,6 @@ fn late_recovery_alias_is_preserved_in_both_directions() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_single_file_reader_and_writer_share_exact_component_spelling_validation
 fn single_reader_and_writer_share_component_spelling_validation() {
     let b = Bank::new();
@@ -365,7 +357,6 @@ fn single_reader_and_writer_share_component_spelling_validation() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_bank_root_spelling_alias_refuses_before_lock_and_unique_unicode_target_still_works
 fn bank_root_alias_refuses_and_unique_unicode_target_works() {
     let b = Bank::new();
@@ -399,14 +390,59 @@ fn bank_root_alias_refuses_and_unique_unicode_target_works() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_portable_copy_uses_same_protocol_and_memory_body_remains_unexecuted_data
 fn relocated_binary_uses_same_protocol_and_never_executes_memory() {
     let b = Bank::new();
+    // Baseline copies the pack to a path with spaces and runs it there. The
+    // native copy (shipped pack plus binary) replaces the World's installation
+    // through the real uninstaller and installer, then runs as the owner.
     let directory = b.world.inside("portable copy with spaces").unwrap();
-    fs::create_dir(&directory).unwrap();
+    let source = directory.join("source");
+    let shipped = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
+    for (relative, (bytes, permissions)) in
+        agent_memory::pack_validation::inventory(&shipped).unwrap()
+    {
+        let path = source.join("skills/agent-memory").join(relative);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(&path, bytes).unwrap();
+        support::lifecycle::mode(&path, permissions);
+    }
+    let built = source.join("target/release/am");
+    fs::create_dir_all(built.parent().unwrap()).unwrap();
+    fs::copy(env!("CARGO_BIN_EXE_am"), &built).unwrap();
+    support::lifecycle::mode(&built, 0o755);
+    let removed = b
+        .world
+        .run([
+            executable(&b.world).into_os_string(),
+            "--json".into(),
+            "uninstall".into(),
+        ])
+        .unwrap();
+    let removed =
+        agent_memory::codec::json::decode_bytes(&removed.stdout, Default::default()).unwrap();
+    assert!(yes(&removed, "verified"), "{removed:?}");
+    let installed = b
+        .world
+        .run([
+            built.into_os_string(),
+            "--json".into(),
+            "install".into(),
+            "--development-source".into(),
+            source.into_os_string(),
+            "--mode".into(),
+            "copy".into(),
+            "--presets".into(),
+            "none".into(),
+            "--no-guidance".into(),
+            "--bin-dir".into(),
+            directory.clone().into_os_string(),
+        ])
+        .unwrap();
+    let installed =
+        agent_memory::codec::json::decode_bytes(&installed.stdout, Default::default()).unwrap();
+    assert!(yes(&installed, "verified"), "{installed:?}");
     let binary = directory.join("am");
-    fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
     let sentinel = b.world.inside("must-not-execute").unwrap();
     let mut p = b.prepared.clone();
     let files = p.get_mut("proposal").unwrap().get_mut("files").unwrap();

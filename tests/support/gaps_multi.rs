@@ -463,7 +463,6 @@ fn apply_refresh(w: &World, p: &Value) -> TestResult<Value> {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_multi_machine_compatible.py::MultiMachineCompatible.test_two_developers_three_clones_and_a_worktree_reconcile_without_importing_feature_code
 fn compatible_three_clones_and_linked_worktree() -> TestResult {
     let mut w = World::new()?;
@@ -611,7 +610,6 @@ fn compatible_three_clones_and_linked_worktree() -> TestResult {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_multi_machine_conflicts.py::MultiMachineConflicts.test_detecting_developer_sees_both_origins_without_pausing_independent_memory_or_code
 fn detecting_developer_retains_both_origins_and_independent_work() -> TestResult {
     let mut w = World::new()?;
@@ -851,7 +849,7 @@ fn indexed(w: &World, repo: &Path, claims: &[String]) -> TestResult<(PathBuf, Va
     ]);
     Ok((path, view, decision))
 }
-fn indexed_fixture(w: &World) -> TestResult<(PathBuf, PathBuf, PathBuf, Vec<String>)> {
+fn indexed_fixture(w: &mut World) -> TestResult<(PathBuf, PathBuf, PathBuf, Vec<String>)> {
     let (repo, bank, peer, _) = fixture(w)?;
     let dev = field(
         &good(
@@ -916,11 +914,10 @@ fn indexed_review(
     Ok((output, value))
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_indexed_review_requires_every_pair_and_preserves_conflict
 fn indexed_review_requires_every_pair_and_preserves_conflict() -> TestResult {
-    let w = World::new()?;
-    let (repo, _, _, claims) = indexed_fixture(&w)?;
+    let mut w = World::new()?;
+    let (repo, _, _, claims) = indexed_fixture(&mut w)?;
     let (path, view, decisions) = indexed(&w, &repo, &claims)?;
     for page in rows(&view, "pages") {
         let exposed = good(
@@ -967,12 +964,11 @@ fn indexed_review_requires_every_pair_and_preserves_conflict() -> TestResult {
     Ok(())
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_indexed_review_refuses_changed_source_or_authority
 fn indexed_review_refuses_changed_source_or_authority() -> TestResult {
     for authority in [false, true] {
-        let w = World::new()?;
-        let (repo, bank, peer, claims) = indexed_fixture(&w)?;
+        let mut w = World::new()?;
+        let (repo, bank, peer, claims) = indexed_fixture(&mut w)?;
         let (path, _, decisions) = indexed(&w, &repo, &claims)?;
         let target = if authority {
             peer.join("memory-bank").join(&claims[1])
@@ -1018,11 +1014,10 @@ fn stale_hold_worker() {
     panic!("stale-lock worker returned");
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_wrong_project_recovery_preserves_private_state_and_stale_bank_marker
 fn wrong_project_recovery_preserves_private_state_and_stale_marker() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, _, _) = fixture(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, _, _) = fixture(&mut w)?;
     let project =
         support::record_fixtures::project_id(&fs::read_to_string(bank.join("MEMORY.md"))?)?;
     let env = [(
@@ -1075,7 +1070,6 @@ fn wrong_project_recovery_preserves_private_state_and_stale_marker() -> TestResu
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_multi_machine_race.py::MultiMachineRace.test_simultaneous_public_publishers_consolidate_duplicate_learning_before_retry_lands
 fn simultaneous_public_publishers_consolidate_before_retry_lands() -> TestResult {
     let mut w = World::new()?;
@@ -1261,11 +1255,10 @@ fn simultaneous_public_publishers_consolidate_before_retry_lands() -> TestResult
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_multi_machine_merge_replay.py::MultiMachineMergeReplay.test_erasure_survives_an_ordinary_code_merge_and_pre_erasure_proposal_replay
 fn erasure_survives_ordinary_code_merge_and_old_refresh_replay() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     fs::write(
         repo.join("unrelated.txt"),
         "Keep independent session note.\n",
@@ -1474,7 +1467,6 @@ fn erasure_survives_ordinary_code_merge_and_old_refresh_replay() -> TestResult {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_shared_learning_loop.py::SharedLearningLoopContract.test_automatic_durable_capture_lands_and_another_actor_recalls_it_without_feature_code
 fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> TestResult {
     let mut w = World::new()?;

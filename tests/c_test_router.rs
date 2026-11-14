@@ -35,7 +35,6 @@ fn validate(w: &World) -> Value {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_router.py::RouterContract.test_minimal_bank_resumes_from_only_canonical_files
 fn minimal_bank_resumes_from_canonical_files_only() {
     let w = World::new().unwrap();
@@ -73,7 +72,6 @@ fn minimal_bank_resumes_from_canonical_files_only() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_router.py::RouterContract.test_paths_cannot_route_runtime_state_outside_bank_or_personal_overlays
 fn router_never_routes_runtime_outside_or_personal_paths() {
     let w = World::new().unwrap();
@@ -126,7 +124,6 @@ fn router_never_routes_runtime_outside_or_personal_paths() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_router.py::RouterContract.test_optional_topic_is_readable_and_runtime_state_is_not_routed
 fn optional_topic_is_readable_but_runtime_is_not_routed() {
     let w = World::new().unwrap();
@@ -188,7 +185,6 @@ fn optional_topic_is_readable_but_runtime_is_not_routed() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_router.py::RouterContract.test_portable_helper_works_after_copy_outside_checkout
 fn relocated_native_binary_reads_the_same_router() {
     let w = World::new().unwrap();

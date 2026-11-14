@@ -42,6 +42,8 @@ pub const MAX_FAULT_WORLD_BYTES: usize = 1024 * 1024;
 pub const FAULT_PAUSE_SECONDS: f64 = 10.0;
 
 pub trait RecoveryFrontier: Send + Sync {
+    /// Resolve the strict executing runtime pair matching the supplied pack root.
+    fn runtime_pair(&self, runtime_root: &Path) -> Result<(PathBuf, PathBuf)>;
     fn capture_scope(&self, repo: &Path) -> Result<Value>;
     fn observe(&self, repo: &Path) -> Result<Value>;
     /// Baseline recovery_frontier.observe(repo, owner, transaction).
@@ -101,13 +103,13 @@ pub trait RecoveryFrontier: Send + Sync {
         runtime_artifact_digest: Option<&str>,
         required_routes: &[String],
         publish: bool,
-        runtime_root: &Path,
+        runtime: (&Path, &Path),
     ) -> Result<Value>;
     fn verified_hold_for_runtime(
         &self,
         repo: &Path,
         owner: Option<&[u8]>,
-        runtime_root: &Path,
+        runtime: (&Path, &Path),
     ) -> Result<Vec<u8>>;
     /// Full verified hold observation at an independently located bank.
     fn verified_enrollment_hold_at_bank(
@@ -115,6 +117,13 @@ pub trait RecoveryFrontier: Send + Sync {
         root: &Path,
         bank: &Path,
         runtime_root: &Path,
+    ) -> Result<Option<crate::scope_binding::VerifiedEnrollmentHold>>;
+    /// Lifecycle verification uses only the independently verified exact pair.
+    fn verified_enrollment_hold_for_runtime_at_bank(
+        &self,
+        root: &Path,
+        bank: &Path,
+        runtime: (&Path, &Path),
     ) -> Result<Option<crate::scope_binding::VerifiedEnrollmentHold>>;
     /// Observe the private frontier, including removed holds and its private index.
     fn observe_enrollment_bank(
@@ -736,10 +745,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         .ok_or_else(|| err("Recovery frontier lacks hold coverage"))?
         != &Value::Null
     {
-        return crate::recovery_transactions::apply_checkpoint(
-            proposal,
-            &crate::cli::runtime_root()?,
-        );
+        return crate::recovery_transactions::apply_checkpoint(proposal, &crate::cli::pack_root()?);
     }
     if get(proposal, "scope_context") == &Value::Null {
         return Err(err(

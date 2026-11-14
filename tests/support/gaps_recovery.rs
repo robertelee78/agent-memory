@@ -10,7 +10,8 @@ fn values(v: &Value, key: &str) -> Vec<Value> {
 fn library(f: &Fixture, action: &str, stage: Option<&str>) -> (support::Child, PathBuf) {
     let request = obj([
         ("repo", s(f.repo.to_str().unwrap())),
-        ("runtime", s(f.runtime.to_str().unwrap())),
+        ("pack", s(f.runtime.to_str().unwrap())),
+        ("binary", s(f.binary.to_str().unwrap())),
         ("action", s(action)),
     ]);
     let path = f.save(&request);
@@ -72,12 +73,16 @@ fn library_worker() {
     agent_memory::cli::register_providers().unwrap();
     let request = json::decode_bytes(&fs::read(path).unwrap(), Default::default()).unwrap();
     let repo = Path::new(t(&request, "repo"));
-    let runtime = Path::new(t(&request, "runtime"));
+    let runtime = (
+        Path::new(t(&request, "pack")),
+        Path::new(t(&request, "binary")),
+    );
     let result: agent_memory::error::Result<Value> = match t(&request, "action") {
         "held-settings" => (|| {
             let settings = agent_memory::repository_config::settings(repo)?;
             let recovery = agent_memory::repository_config::recovery_settings(repo)?;
-            let context = agent_memory::scope_binding::private_enrollment_context(repo, runtime)?;
+            let context =
+                agent_memory::scope_binding::private_enrollment_context_for_runtime(repo, runtime)?;
             assert!(context.held());
             assert_eq!(context.root(), repo);
             assert_eq!(settings.bank_root, recovery.bank_root);
@@ -87,7 +92,7 @@ fn library_worker() {
             ]))
         })(),
         "private" => (|| {
-            let target = agent_memory::recovery_quiescence::measured_runtime(runtime)?;
+            let target = agent_memory::artifact::inspect_runtime(runtime.0, runtime.1)?;
             let installation = obj([(
                 "observed_repositories",
                 Value::Array(vec![s(repo.to_str().unwrap())]),
@@ -113,7 +118,6 @@ fn library_worker() {
     );
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_real_verified_hold_remains_readonly_through_grouped_settings_and_enrollment
 fn real_verified_hold_remains_readonly_through_grouped_settings_and_enrollment() {
     let f = Fixture::new();
@@ -142,7 +146,6 @@ fn real_verified_hold_remains_readonly_through_grouped_settings_and_enrollment()
     }
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_private_lifecycle_observation_refuses_config_bank_hold_and_attestation_races
 fn private_lifecycle_observation_refuses_config_bank_hold_and_attestation_races() {
     for kind in ["config", "bank", "hold", "attestation"] {
@@ -234,12 +237,8 @@ fn signed_hold() -> (Fixture, Channel) {
             channel.publish(env!("CARGO_PKG_VERSION"), &"1".repeat(40));
             let installed = channel.install(&f.world, "none", "copy");
             let receipt = g(&installed, "receipt");
-            f.runtime = PathBuf::from(t(g(receipt, "source"), "pack"))
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .to_path_buf();
+            f.runtime = PathBuf::from(t(g(receipt, "source"), "pack"));
+            f.binary = agent_memory::installation::source_binary(g(receipt, "source")).unwrap();
             f.command = Path::new(t(receipt, "bin_dir")).join("am");
             *save_routes.borrow_mut() = values(receipt, "targets")
                 .iter()
@@ -308,7 +307,6 @@ fn renewal(f: &Fixture, digest: &str) -> PathBuf {
     PathBuf::from(f.save(&envelope))
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_layout_recovery_runtime_rollback.py::HeldRuntimeRollbackContract.test_interrupted_capable_update_rolls_back_exact_runtime_and_keeps_hold
 fn interrupted_capable_update_rolls_back_exact_runtime_and_keeps_hold() {
     let (f, channel) = signed_hold();
@@ -632,7 +630,13 @@ fn mixed(completed: bool) -> Fixture {
             let installed = f.good(vec![
                 "install".into(),
                 "--development-source".into(),
-                f.runtime.as_os_str().to_owned(),
+                f.runtime
+                    .parent()
+                    .unwrap()
+                    .parent()
+                    .unwrap()
+                    .as_os_str()
+                    .to_owned(),
                 "--presets".into(),
                 "omp".into(),
                 "--omp-agent-dir".into(),
@@ -640,12 +644,8 @@ fn mixed(completed: bool) -> Fixture {
                 "--omp-peers-upgraded".into(),
             ]);
             let receipt = g(&installed, "receipt");
-            f.runtime = PathBuf::from(t(g(receipt, "source"), "pack"))
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .to_path_buf();
+            f.runtime = PathBuf::from(t(g(receipt, "source"), "pack"));
+            f.binary = agent_memory::installation::source_binary(g(receipt, "source")).unwrap();
             f.command = Path::new(t(receipt, "bin_dir")).join("am");
             *saved.borrow_mut() = values(receipt, "targets")
                 .iter()
@@ -678,7 +678,6 @@ fn mixed(completed: bool) -> Fixture {
     )
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_omp_first_mixed_pending_rejects_actual_published_old_managed_candidate
 fn omp_first_mixed_pending_rejects_retired_managed_candidate() {
     let f = mixed(false);
@@ -722,7 +721,6 @@ fn omp_first_mixed_pending_rejects_retired_managed_candidate() {
     assert_eq!(pending(&f), pending_before);
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_completed_omp_drains_before_layout_then_old_reader_after_both
 fn completed_omp_drains_only_after_independent_layout_hold_retires() {
     let f = mixed(true);

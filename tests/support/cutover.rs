@@ -42,6 +42,42 @@ pub fn save(w: &World, value: &Value, name: &str) -> PathBuf {
     fs::write(&path, json::encode(value, json::DEFAULT).unwrap()).unwrap();
     path
 }
+/// Install real receipt-owned bytes before selecting native consumer dispatch.
+pub fn install_runtime(w: &mut World, root: &Path) {
+    let runtime = super::installed_runtime::install(root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.into_os_string(),
+    );
+}
+pub fn installed_world() -> World {
+    let mut world = World::new().unwrap();
+    let root = world.root.clone();
+    install_runtime(&mut world, &root);
+    world
+}
+/// The `(pack, binary)` pair recorded by the World's installed v3 receipt,
+/// for direct-domain consumers that take an explicit runtime.
+pub fn installed_pair(w: &World) -> (PathBuf, PathBuf) {
+    let receipt = json::decode_bytes(
+        &fs::read(w.root.join("state/agent-memory/install/receipt.json")).unwrap(),
+        Default::default(),
+    )
+    .unwrap();
+    let source = get(&receipt, "source");
+    (
+        PathBuf::from(string(source, "pack")),
+        agent_memory::installation::source_binary(source).unwrap(),
+    )
+}
+/// Uninstalled fixtures deliberately retain the unowned parser/refusal route.
+/// Once installed, a missing or invalid owned command is never substituted.
+pub fn executable(w: &World) -> PathBuf {
+    w.env
+        .get(std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_am")))
+}
 pub fn command(w: &World, helper: &str, args: &[OsString]) -> (Output, Value) {
     command_fault(w, helper, args, &[])
 }
@@ -52,9 +88,11 @@ pub fn command_fault(
     env: &[(OsString, OsString)],
 ) -> (Output, Value) {
     let translated = super::world::helper_arguments(helper, args).unwrap();
-    let argv = std::iter::once(OsString::from("--json")).chain(translated);
+    let argv = [executable(w).into_os_string(), "--json".into()]
+        .into_iter()
+        .chain(translated);
     let output = w
-        .am_with(
+        .run_with(
             argv,
             RunOptions {
                 check: false,
@@ -214,7 +252,7 @@ pub struct Bank {
 }
 impl Bank {
     pub fn new() -> Self {
-        let world = World::new().unwrap();
+        let world = installed_world();
         let repo = world.repository("repo", false).unwrap();
         let bank = repo.join("memory-bank");
         fs::create_dir(&bank).unwrap();
@@ -244,7 +282,7 @@ impl Bank {
             "2026-10-22T19:00:00Z",
         );
         write_files(&bank, &before);
-        super::identity_fixtures::bind(&world, &repo).unwrap();
+        super::identity_fixtures::bind_with_command(&world, &repo, &executable(&world)).unwrap();
         let mut value = Self {
             world,
             repo,
@@ -363,7 +401,7 @@ impl Bank {
             .world
             .spawn_with(
                 [
-                    OsString::from(env!("CARGO_BIN_EXE_am")),
+                    executable(&self.world).into_os_string(),
                     "--json".into(),
                     "transaction".into(),
                     "apply".into(),
@@ -405,11 +443,21 @@ impl Bank {
             fs::read(self.repo.join(".git/HEAD")).unwrap(),
         )
     }
+    /// Baseline `assert_no_transaction_state`: only bank transaction journals
+    /// (`transactions/*/journal.json`) and write receipts (`operations/*.json`)
+    /// count; lifecycle installer history is not bank transaction state.
     pub fn assert_no_transaction_state(&self) {
         let state = self.world.paths["state"].join("agent-memory");
         for path in physical(&state).keys() {
+            let parts: Vec<&str> = path.split('/').collect();
+            let journal = parts.len() >= 3
+                && parts[parts.len() - 1] == "journal.json"
+                && parts[parts.len() - 3] == "transactions";
+            let receipt = parts.len() >= 2
+                && parts[parts.len() - 2] == "operations"
+                && parts[parts.len() - 1].ends_with(".json");
             assert!(
-                !path.ends_with("journal.json") && !path.contains("/operations/"),
+                !journal && !receipt,
                 "unexpected transaction evidence: {path}"
             );
         }
@@ -434,7 +482,7 @@ pub struct Recall {
 }
 impl Recall {
     pub fn new() -> Self {
-        let world = World::new().unwrap();
+        let world = installed_world();
         let repo = world.repository("repo", false).unwrap();
         fs::write(repo.join("app.rs"), "const RETRY_LIMIT: u32 = 3;\n").unwrap();
         fs::write(
@@ -478,7 +526,7 @@ impl Recall {
                 "2026-10-22T17:00:00Z",
             ),
         );
-        super::identity_fixtures::bind(&world, &repo).unwrap();
+        super::identity_fixtures::bind_with_command(&world, &repo, &executable(&world)).unwrap();
         fs::write(
             repo.join("app.rs"),
             "const RETRY_LIMIT: u32 = 4; // staged unrelated work\n",
@@ -600,7 +648,7 @@ impl Recall {
             .world
             .spawn_with(
                 [
-                    OsString::from(env!("CARGO_BIN_EXE_am")),
+                    executable(&self.world).into_os_string(),
                     "--json".into(),
                     "search".into(),
                     "--repo".into(),
@@ -624,16 +672,14 @@ impl Recall {
     }
 }
 
-/// Re-executed `am` library dispatch with the source checkout's pack.
+/// Re-executed component dispatch against the genuinely installed fixture pack.
 /// Tests using this helper define `cutover_dispatch_worker` and delegate to it.
 pub fn dispatch_worker() {
     let Some(input) = std::env::var_os("AGENT_MEMORY_FAULT_DISPATCH_INPUT") else {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
-    agent_memory::cli::use_development_pack(Some(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-    ));
+    super::installed_runtime::register_component_runtime();
     let request = json::decode_bytes(&fs::read(input).unwrap(), Default::default()).unwrap();
     let args: Vec<_> = get(&request, "args")
         .as_array()

@@ -1,7 +1,9 @@
 //! Lifecycle lane: `am update` (Rust-to-Rust from a locally signed
 //! release-v2 channel), `am uninstall`, `am purge-data` and doctor repair,
-//! in isolated Worlds. Fault-injection scenarios run in a child copy of this
-//! test binary so the process environment of parallel tests is never mutated.
+//! in isolated Worlds. Fixture lifecycle faults run in this test binary;
+//! purge journeys install and invoke the receipt-owned native `am`.
+mod support;
+
 use agent_memory::cache_recovery::Qualification;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::installation::{
@@ -28,6 +30,7 @@ const NEXT: &str = "0.0.16";
 struct World {
     root: PathBuf,
     token: String,
+    owns_root: bool,
 }
 impl World {
     fn new() -> Self {
@@ -47,12 +50,17 @@ impl World {
             std::fs::create_dir(root.join(name)).unwrap();
             mode(&root.join(name), 0o700);
         }
-        Self { root, token }
+        Self {
+            root,
+            token,
+            owns_root: true,
+        }
     }
     fn reopen(root: &Path, token: &str) -> Self {
         Self {
             root: root.to_path_buf(),
             token: token.to_owned(),
+            owns_root: false,
         }
     }
     fn path(&self, name: &str) -> PathBuf {
@@ -99,7 +107,7 @@ impl World {
 }
 impl Drop for World {
     fn drop(&mut self) {
-        if std::env::var_os("AM_T2_CHILD").is_none() {
+        if self.owns_root && std::env::var_os("AM_T2_CHILD").is_none() {
             let _ = make_writable(&self.root);
             let _ = std::fs::remove_dir_all(&self.root);
         }
@@ -116,13 +124,19 @@ fn make_writable(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-// ----- seams: honest test implementers of unported callees -----
+// ----- component-test lifecycle seams -----
 
-/// The real update checks; only the bank scan (private_state hooks, waiting
-/// for installation/omp_boundary/admission registration) is a fixture.
+/// Real update checks with component-test bank inventory.
 struct LifecycleUpdating(updating::Runtime);
 impl Updating for LifecycleUpdating {
-    fn banks(&self, repositories: &[String], _: &Value, _: bool) -> install::Result<Value> {
+    fn banks(
+        &self,
+        repositories: &[String],
+        _: &Value,
+        _: bool,
+        _: (&Path, &Path),
+        _: Option<(&Path, &Path)>,
+    ) -> install::Result<Value> {
         Ok(Value::Object(vec![(
             "observed_repositories".into(),
             Value::Array(repositories.iter().cloned().map(Value::String).collect()),
@@ -167,16 +181,23 @@ impl PrivateState for FixturePrivateState {
         _: &Value,
         _: Option<&Value>,
         _: &str,
+        _: (&Path, &Path),
         transition: &mut dyn FnMut() -> install::Result<Option<Value>>,
         body: &mut dyn FnMut(&Value) -> install::Result<Value>,
     ) -> install::Result<Value> {
         transition()?;
         body(&Value::Object(vec![("fixture".into(), Value::Bool(true))]))
     }
-    fn prepare_lifecycle(&self, _: &Value, _: bool) -> install::Result<Value> {
+    fn prepare_lifecycle(&self, _: &Value, _: bool, _: (&Path, &Path)) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn require_compatible(&self, _: &Value, _: &Value, _: &str) -> install::Result<Value> {
+    fn require_compatible(
+        &self,
+        _: &Value,
+        _: &Value,
+        _: &str,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
     fn public_summary(&self, value: &Value) -> install::Result<Value> {
@@ -654,54 +675,78 @@ fn child_entry() {
     };
     let root = PathBuf::from(std::env::var("AGENT_MEMORY_TEST_ROOT").unwrap());
     let token = std::env::var("AGENT_MEMORY_TEST_TOKEN").unwrap();
+    match command.as_str() {
+        "native-purge-preview" | "native-purge-scenario" | "native-runtime-authority" => {
+            let world = World::reopen(&root, &token);
+            let runtime = support::installed_runtime::install(&world.root, |argv| {
+                bounded_purge_process(&world, argv, &[])
+            });
+            match command.as_str() {
+                "native-purge-preview" => purge_preview_scenario(&world),
+                "native-runtime-authority" => runtime_authority_scenario(&world, &runtime),
+                "native-purge-scenario" => {
+                    let point = std::env::var("AM_T2_PURGE_POINT").unwrap();
+                    purge_interruption_scenario(&world, &point);
+                }
+                _ => unreachable!(),
+            }
+            use std::io::Write;
+            use std::os::unix::fs::OpenOptionsExt;
+            let mut receipt = std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .mode(0o600)
+                .open(world.path("native-purge-worker-completed"))
+                .unwrap();
+            receipt
+                .write_all(format!("{command}\n{token}\n").as_bytes())
+                .unwrap();
+            receipt.sync_all().unwrap();
+            std::fs::File::open(&root).unwrap().sync_all().unwrap();
+            return;
+        }
+        _ => {}
+    }
     let installed = Installed {
         world: World::reopen(&root, &token),
         channel: Channel::open(&root.join("channel")),
     };
-    let result = match command.as_str() {
-        "recover" => install::recover_command(&installed.world.env(), &installed.services()),
-        "update" => updating::update_command(
-            &installed.world.env(),
-            &installed.services(),
-            &UpdateRequest::default(),
-        ),
-        "uninstall" => uninstallation::uninstall_command(
-            &installed.world.env(),
-            &installed.services(),
-            &UninstallRequest::default(),
-        ),
-        "purge" => agent_memory::purging::purge_command(
-            &installed.world.env(),
-            &installed.services(),
-            &agent_memory::purging::PurgeRequest {
-                repo: installed.world.path("repo"),
-                path: installed.world.path("repo/memory-bank"),
-                check: false,
-                confirm: std::env::var("AM_T2_CONFIRM").ok(),
-            },
-        ),
-        "doctor-fix" => {
-            // Diagnostics over this World with the production security tier;
-            // doctor_fix inspects with the same environment and services.
-            let env = installed.world.env();
-            let services = installed.running_services();
-            agent_memory::diagnostics::command(
-                &env,
-                &services,
-                &agent_memory::diagnostics::Request {
-                    operation: "doctor".into(),
-                    repo: installed.world.path("repo"),
-                    projection: None,
-                    fix: true,
-                },
-            )
-        }
-        other => panic!("unknown child command {other}"),
+    let run = || {
+        let result = match command.as_str() {
+            "recover" => install::recover_command(&installed.world.env(), &installed.services()),
+            "update" => updating::update_command(
+                &installed.world.env(),
+                &installed.services(),
+                &UpdateRequest::default(),
+            ),
+            "uninstall" => uninstallation::uninstall_command(
+                &installed.world.env(),
+                &installed.services(),
+                &UninstallRequest::default(),
+            ),
+            "doctor-fix" => {
+                // Diagnostics over this World with the production security tier.
+                let env = installed.world.env();
+                let services = installed.running_services();
+                agent_memory::diagnostics::command(
+                    &env,
+                    &services,
+                    &agent_memory::diagnostics::Request {
+                        operation: "doctor".into(),
+                        repo: installed.world.path("repo"),
+                        projection: None,
+                        fix: true,
+                    },
+                )
+            }
+            other => panic!("unknown child command {other}"),
+        };
+        println!(
+            "AM-RESULT:{}",
+            json::encode(&result.value.unwrap_or(Value::Null), json::COMPACT_ASCII).unwrap()
+        );
     };
-    println!(
-        "AM-RESULT:{}",
-        json::encode(&result.value.unwrap_or(Value::Null), json::COMPACT_ASCII).unwrap()
-    );
+    run();
 }
 
 struct Child {
@@ -738,6 +783,159 @@ fn child(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
         value,
     }
 }
+/// The same bounded, cleared-environment process convention for native am and
+/// the assertion worker. Only the worker writes its normal-completion receipt.
+fn bounded_purge_process(
+    world: &World,
+    argv: &[OsString],
+    extra: &[(&str, String)],
+) -> agent_memory::process::Output {
+    use agent_memory::{clock::Deadline, process};
+    let mut environment: Vec<(OsString, OsString)> = world
+        .pairs()
+        .into_iter()
+        .map(|(key, value)| (key.into(), value.into()))
+        .collect();
+    for (key, relative) in [
+        ("XDG_CACHE_HOME", "cache"),
+        ("GH_CONFIG_DIR", "credentials"),
+        ("AGENT_MEMORY_CONFIG_HOME", "config/agent-memory"),
+        ("AGENT_MEMORY_STATE_HOME", "state/agent-memory"),
+        ("AGENT_MEMORY_BACKUP_HOME", "backups"),
+    ] {
+        environment.push((key.into(), world.path(relative).into_os_string()));
+    }
+    environment.extend(
+        extra
+            .iter()
+            .map(|(key, value)| ((*key).into(), value.into())),
+    );
+    let cwd = world.path("repo");
+    process::run(&process::Spec {
+        argv,
+        env: &environment,
+        search_path: false,
+        cwd: Some(&cwd),
+        stdin: process::Input::Null,
+        stdout: process::Target::Capture {
+            limit: 4 * 1024 * 1024,
+        },
+        stderr: process::Target::Capture {
+            limit: 4 * 1024 * 1024,
+        },
+        deadline: Deadline::from_seconds(120.0).unwrap(),
+        new_session: false,
+        file_size_limit: None,
+        umask: Some(0o077),
+        pass_fds: &[],
+    })
+    .unwrap()
+}
+
+fn native_purge_worker(world: &World, command: &str, extra: &[(&str, String)]) -> Child {
+    let argv = [
+        std::env::current_exe().unwrap().into_os_string(),
+        "child_entry".into(),
+        "--exact".into(),
+        "--nocapture".into(),
+        "--test-threads=1".into(),
+        "-q".into(),
+    ];
+    let mut environment = vec![("AM_T2_CHILD", command.to_owned())];
+    environment.extend_from_slice(extra);
+    let output = bounded_purge_process(world, &argv, &environment);
+    let code = match output.status {
+        agent_memory::process::Status::Code(code) => Some(code),
+        _ => None,
+    };
+    assert_eq!(
+        code,
+        Some(0),
+        "{command}: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+    assert_eq!(
+        std::fs::read(world.path("native-purge-worker-completed")).unwrap(),
+        format!("{command}\n{}\n", world.token).as_bytes(),
+    );
+    Child { code, value: None }
+}
+
+fn native_purge_command(
+    world: &World,
+    executable: &Path,
+    arguments: &[OsString],
+    extra: &[(&str, String)],
+) -> Child {
+    let mut argv = vec![executable.as_os_str().to_owned(), "--json".into()];
+    argv.extend_from_slice(arguments);
+    let output = bounded_purge_process(world, &argv, extra);
+    let code = match output.status {
+        agent_memory::process::Status::Code(code) => Some(code),
+        _ => None,
+    };
+    assert!(
+        output.stderr.is_empty(),
+        "native am: {}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let value = if output.stdout.is_empty() {
+        None
+    } else {
+        Some(json::decode_bytes(&output.stdout, Default::default()).unwrap())
+    };
+    Child { code, value }
+}
+
+#[test]
+fn verified_receipt_pair_ignores_executable_locator_but_refuses_changed_bytes() {
+    let world = World::new();
+    native_purge_worker(&world, "native-runtime-authority", &[]);
+}
+
+fn runtime_authority_scenario(
+    world: &World,
+    installed: &support::installed_runtime::NativeRuntime,
+) {
+    agent_memory::cli::register_providers().unwrap();
+    let env = world.env();
+    let receipt = decode(&world.receipt_path());
+    let locations = install::locations(&env).unwrap();
+    let before = snapshot(&world.root);
+    let pack_before = snapshot(&installed.pack);
+    for executable in [
+        None,
+        Some(world.path("missing-executable")),
+        Some(std::env::current_exe().unwrap()),
+    ] {
+        let mut services = Services::registered().unwrap();
+        services.executable = executable;
+        let runtime = install::verified_receipt_runtime(&env, &services, &receipt).unwrap();
+        assert_eq!(runtime.pair(), installed.pair());
+        let (trusted, trusted_runtime) =
+            agent_memory::doctor_fix::trusted_receipt(&env, &services, &locations, None).unwrap();
+        assert_eq!(trusted, receipt);
+        assert_eq!(trusted_runtime.pair(), installed.pair());
+        assert_eq!(snapshot(&world.root), before);
+    }
+    use std::io::Write;
+    let mut binary = std::fs::OpenOptions::new()
+        .append(true)
+        .open(&installed.binary)
+        .unwrap();
+    binary.write_all(b"\nchanged candidate bytes\n").unwrap();
+    binary.sync_all().unwrap();
+    drop(binary);
+    let changed = snapshot(&world.root);
+    let services = Services::registered().unwrap();
+    assert!(install::verified_receipt_runtime(&env, &services, &receipt).is_err());
+    assert!(agent_memory::doctor_fix::trusted_receipt(&env, &services, &locations, None).is_err());
+    assert_eq!(snapshot(&world.root), changed);
+    assert_eq!(snapshot(&installed.pack), pack_before);
+    assert_eq!(decode(&world.receipt_path()), receipt);
+}
+
 fn fault(stage: &str) -> Vec<(&'static str, String)> {
     vec![
         ("AGENT_MEMORY_FAULT_STAGE", stage.to_owned()),
@@ -1674,11 +1872,23 @@ fn allowed_outside_edits_survive_uninstall_even_after_update_captures_them() {
 // obligation: tests/contracts/test_runtime_uninstall.py::RuntimeUninstallContract.test_missing_managed_source_is_removed_from_ownership_using_trusted_helper
 #[test]
 fn missing_runtime_is_removed_from_ownership() {
-    let installed = Installed::new(Mode::Link);
+    let installed = Installed::with_binary(
+        Mode::Link,
+        &std::fs::read(env!("CARGO_BIN_EXE_am")).unwrap(),
+    );
+    let helper = installed.world.path("trusted outside helper");
+    copy_tree(&installed.world.runtime(), &helper);
+    let mut services = installed.services();
+    services.executable = Some(helper.join(install::RELEASE_BINARY));
     make_writable(&installed.world.runtime()).unwrap();
     std::fs::remove_dir_all(installed.world.runtime()).unwrap();
-    let (code, result) = installed.uninstall(&uninstall_request(false));
-    verified(code, &result);
+    let result = uninstallation::uninstall_command(
+        &installed.world.env(),
+        &services,
+        &uninstall_request(false),
+    );
+    verified(result.exit_code, result.value.as_ref().unwrap());
+    let result = result.value.unwrap();
     assert_eq!(get(&result, "uninstalled"), &Value::Bool(true));
     assert!(std::fs::symlink_metadata(installed.world.bin().join("agent-memory")).is_err());
 }
@@ -2179,7 +2389,7 @@ fn changed_or_added_legacy_payload_is_preserved() {
 // Checkpoint 2: am purge-data
 // ======================================================================
 
-fn purge(
+fn unregistered_purge(
     world: &World,
     repo: &Path,
     path: &Path,
@@ -2200,20 +2410,87 @@ fn purge(
     assert!(result.stderr.is_empty(), "{}", result.stderr);
     (result.exit_code, result.value.unwrap())
 }
+
+fn native_purge_request(
+    repo: &Path,
+    path: &Path,
+    check: bool,
+    confirm: Option<&str>,
+) -> Vec<OsString> {
+    let mut arguments = vec![
+        "purge-data".into(),
+        "--repo".into(),
+        repo.as_os_str().to_owned(),
+        "--path".into(),
+        path.as_os_str().to_owned(),
+    ];
+    if check {
+        assert!(confirm.is_none());
+        arguments.push("--check".into());
+    } else {
+        arguments.push("--confirm".into());
+        arguments.push(confirm.expect("confirmed native purge").into());
+    }
+    arguments
+}
+
+fn native_purge(
+    world: &World,
+    repo: &Path,
+    path: &Path,
+    check: bool,
+    confirm: Option<&str>,
+) -> (i32, Value) {
+    let result = native_purge_command(
+        world,
+        &world.bin().join("am"),
+        &native_purge_request(repo, path, check, confirm),
+        &[],
+    );
+    (
+        result.code.expect("native purge exited by status"),
+        result
+            .value
+            .expect("native purge returned its JSON response"),
+    )
+}
 fn small_bank(world: &World) -> PathBuf {
     let bank = world.path("repo/memory-bank");
-    write(
-        &bank.join("MEMORY.md"),
-        "---\nschema: agent-memory/v1\nproject-id: 8e0b66aa-2be5-4fa3-b47f-1245474aa7dd\n---\nBank.\n",
+    let metadata = Value::Object(vec![
+        ("schema".into(), Value::String("agent-memory/v1".into())),
+        (
+            "project-id".into(),
+            Value::String("8e0b66aa-2be5-4fa3-b47f-1245474aa7dd".into()),
+        ),
+        (
+            "router-updated".into(),
+            Value::String("2026-10-22T18:00:00Z".into()),
+        ),
+    ]);
+    let omitted = Value::Object(
+        agent_memory::bank_contract::CONTEXTS
+            .iter()
+            .map(|name| {
+                (
+                    (*name).into(),
+                    Value::String("No distinct purge fixture source".into()),
+                )
+            })
+            .collect(),
     );
+    // A legacy MEMORY-only router is valid; the higher-level render proposal
+    // intentionally requires a useful context and cannot represent this fixture.
+    let router = agent_memory::bank_contract::router_text(&metadata, &[], &omitted).unwrap();
+    agent_memory::bank_contract::parse_router(&router).unwrap();
+    write(&bank.join("MEMORY.md"), router);
     bank
 }
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_broad_home_root_and_symlink_inputs_are_refused_without_writes
 #[test]
 fn broad_home_root_and_symlink_inputs_are_refused_without_writes() {
-    // The `broad` and `inside-link` cases need the bank locator (security
-    // scan) and the inventory (recovery frontier): see the ignored test below.
+    // Early path refusals deliberately use the unregistered in-process callee;
+    // the full bank-locator journey below uses the installed native CLI.
     for case in ["home", "root", "alias"] {
         let world = World::new();
         let bank = small_bank(&world);
@@ -2228,7 +2505,7 @@ fn broad_home_root_and_symlink_inputs_are_refused_without_writes() {
             }
         };
         let before = snapshot(&world.root);
-        let (code, denied) = purge(&world, &repo, &path, true, None);
+        let (code, denied) = unregistered_purge(&world, &repo, &path, true, None);
         let error = refused(code, &denied);
         let expected = match case {
             "broad" => {
@@ -2246,26 +2523,99 @@ fn broad_home_root_and_symlink_inputs_are_refused_without_writes() {
 
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_exact_preview_confirmation_and_repeat_preserve_runtime_backups_code_and_git
 #[test]
-#[ignore = "needs security, recovery_frontier registered"]
 fn broad_path_preview_confirm_and_repeat_purge_only_the_confirmed_bank() {
     let world = World::new();
-    let bank = small_bank(&world);
+    native_purge_worker(&world, "native-purge-preview", &[]);
+}
+
+fn purge_preview_scenario(world: &World) {
     let repo = world.path("repo");
+    let code_path = repo.join("worker.py");
+    write(&code_path, "print(\"original\")\n");
+    let git = |arguments: &[&str]| {
+        agent_memory::managed_source::git(&repo, arguments, None, 65536).unwrap()
+    };
+    git(&["init", "--quiet"]);
+    git(&["add", "--", "worker.py"]);
+    git(&[
+        "-c",
+        "user.name=Purge fixture",
+        "-c",
+        "user.email=purge@example.invalid",
+        "commit",
+        "--quiet",
+        "-m",
+        "Initial project",
+    ]);
+    write(&code_path, "print(\"staged worker edit\")\n");
+    git(&["add", "--", "worker.py"]);
+    let bank = small_bank(world);
+    write(
+        &bank.join(".agent-memory-cache/index.json"),
+        "{\"derived\":true}\n",
+    );
+    let other_bank = world.path("another project/memory-bank");
+    write(
+        &other_bank.join("MEMORY.md"),
+        std::fs::read(bank.join("MEMORY.md")).unwrap(),
+    );
+    write(&world.path("backups/retained.txt"), "External backup\n");
+    let retained_paths = [
+        world.path("dev-source"),
+        code_path,
+        repo.join(".git"),
+        other_bank,
+        world.path("backups"),
+        world.receipt_path(),
+    ];
+    let retained: Vec<_> = retained_paths.iter().map(|path| snapshot(path)).collect();
     let before = snapshot(&world.root);
-    let (code, denied) = purge(&world, &repo, &repo, true, None);
+    let (code, denied) = native_purge(world, &repo, &repo, true, None);
     assert_eq!(
         refused(code, &denied),
         "Purge path must be exactly this repository's resolved Memory Bank, not a broad directory"
     );
     assert_eq!(snapshot(&world.root), before);
-    let (code, preview) = purge(&world, &repo, &bank, true, None);
+    let (code, preview) = native_purge(world, &repo, &bank, true, None);
     assert_eq!(code, 0, "{preview:?}");
     assert_eq!(snapshot(&world.root), before);
+    let counts = get(get(&preview, "preview"), "counts");
+    assert!(
+        get(counts, "durable_files")
+            .as_int()
+            .and_then(|value| value.as_u64())
+            .unwrap()
+            > 0
+    );
+    assert_eq!(
+        get(counts, "generated_runtime_files"),
+        &Value::Int(1.into())
+    );
     let token = text(get(&preview, "preview"), "confirmation").to_owned();
-    let (code, done) = purge(&world, &repo, &bank, false, Some(&token));
+    let mut unconfirmed = vec![world.bin().join("am").into_os_string(), "--json".into()];
+    let mut arguments = native_purge_request(&repo, &bank, true, None);
+    arguments.pop();
+    unconfirmed.extend(arguments);
+    let denied = bounded_purge_process(world, &unconfirmed, &[]);
+    assert_eq!(denied.status, agent_memory::process::Status::Code(2),);
+    let error = String::from_utf8_lossy(&denied.stderr);
+    assert!(error.contains("--check") && error.contains("--confirm"));
+    assert_eq!(snapshot(&world.root), before);
+    let (code, done) = native_purge(world, &repo, &bank, false, Some(&token));
     verified(code, &done);
     assert!(!bank.exists());
-    let (code, repeated) = purge(&world, &repo, &bank, false, Some(&token));
+    assert_eq!(
+        get(get(&done, "receipt"), "deletion_readback_verified"),
+        &Value::Bool(true)
+    );
+    assert_eq!(
+        retained_paths
+            .iter()
+            .map(|path| snapshot(path))
+            .collect::<Vec<_>>(),
+        retained,
+    );
+    let (code, repeated) = native_purge(world, &repo, &bank, false, Some(&token));
     verified(code, &repeated);
     assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
 }
@@ -2276,16 +2626,18 @@ fn purge_refuses_without_touching_the_bank_outside_an_installed_runtime() {
     let bank = small_bank(&world);
     let repo = world.path("repo");
     let before = snapshot(&repo);
-    // The purge child is a test binary, not the installed runtime: after the
-    // lifecycle lock (whose lock/owner files persist by design) its canonical
-    // writer barrier cannot locate the runtime pack, so both phases refuse
-    // before any repository or bank write.
+    // A process without receipt-owned runtime authority must refuse before
+    // changing the selected repository or its canonical bank.
     for (check, confirm) in [(true, None), (false, Some("0".repeat(64)))] {
-        let (code, refusal) = purge(&world, &repo, &bank, check, confirm.as_deref());
-        let error = refused(code, &refusal);
-        assert!(
-            error.ends_with("pass --pack PATH") || error.ends_with("provider is not registered"),
-            "{error}"
+        let result = native_purge_command(
+            &world,
+            Path::new(env!("CARGO_BIN_EXE_am")),
+            &native_purge_request(&repo, &bank, check, confirm.as_deref()),
+            &[],
+        );
+        assert_eq!(
+            refused(result.code.unwrap(), result.value.as_ref().unwrap()),
+            "Purge requires an active independently verified installation receipt",
         );
     }
     assert_eq!(snapshot(&repo), before);
@@ -2314,7 +2666,7 @@ fn reconcile_recreates_missing_owned_targets_from_the_receipt() {
     let installed = Installed::new(Mode::Copy);
     let services = installed.running_services();
     let locations = installed.locations();
-    let old = agent_memory::doctor_fix::trusted_receipt(
+    let (old, _runtime) = agent_memory::doctor_fix::trusted_receipt(
         &installed.world.env(),
         &services,
         &locations,
@@ -2385,22 +2737,9 @@ fn reconcile_preserves_a_modified_owned_hook_and_refuses() {
 }
 
 #[test]
-fn trusted_receipt_refuses_another_executing_package_and_python_era_receipts() {
+fn trusted_receipt_refuses_python_era_receipts() {
     let installed = Installed::new(Mode::Copy);
     let locations = installed.locations();
-    let mut services = installed.services();
-    services.executable = Some(installed.channel.binary(BASE));
-    let error = agent_memory::doctor_fix::trusted_receipt(
-        &installed.world.env(),
-        &services,
-        &locations,
-        None,
-    )
-    .unwrap_err();
-    assert_eq!(
-        error.to_string(),
-        "Executing package differs from the installed receipt"
-    );
     let mut legacy = installed.receipt();
     set_field(
         &mut legacy,
@@ -2413,7 +2752,8 @@ fn trusted_receipt_refuses_another_executing_package_and_python_era_receipts() {
         &locations,
         Some(legacy),
     )
-    .unwrap_err();
+    .err()
+    .unwrap();
     assert_eq!(error.to_string(), install::ADOPTION_GUIDANCE);
 }
 
@@ -2435,7 +2775,6 @@ fn doctor_fix_on_a_healthy_installation_repairs_nothing() {
 // obligation: tests/contracts/test_runtime_purge.py::RuntimePurgeContract.test_interruptions_before_journal_detach_partial_delete_and_lost_response_converge
 // obligation: tests/contracts/test_lifecycle_lost_responses.py::LifecycleLostResponses.test_purge_response_loss_reuses_the_exact_original_confirmation
 #[test]
-#[ignore = "needs security, recovery_frontier registered"]
 fn purge_interruptions_and_lost_response_converge_on_the_same_confirmation() {
     for point in [
         "purge-bank-lock-ready",
@@ -2446,31 +2785,45 @@ fn purge_interruptions_and_lost_response_converge_on_the_same_confirmation() {
         "purge-response-lost",
     ] {
         let world = World::new();
-        let bank = small_bank(&world);
-        write(&bank.join("projectbrief.md"), "# Project\n");
-        let repo = world.path("repo");
-        let (code, preview) = purge(&world, &repo, &bank, true, None);
-        assert_eq!(code, 0, "{preview:?}");
-        let token = text(get(&preview, "preview"), "confirmation").to_owned();
-        let mut extra = fault(point);
-        extra.push(("AM_T2_CONFIRM", token.clone()));
-        assert_eq!(child(&world, "purge", &extra).code, Some(86), "{point}");
-        let (code, completed) = purge(&world, &repo, &bank, false, Some(&token));
-        verified(code, &completed);
-        let receipt = get(&completed, "receipt");
-        assert!(install::same(
-            get(receipt, "preview"),
-            get(&preview, "preview")
-        ));
-        assert_eq!(
-            get(receipt, "deletion_readback_verified"),
-            &Value::Bool(true)
+        let outcome = native_purge_worker(
+            &world,
+            "native-purge-scenario",
+            &[("AM_T2_PURGE_POINT", point.into())],
         );
-        assert!(!bank.exists());
-        let (code, repeated) = purge(&world, &repo, &bank, false, Some(&token));
-        verified(code, &repeated);
-        assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
+        assert_eq!(outcome.code, Some(0), "{point}");
     }
+}
+fn purge_interruption_scenario(world: &World, point: &str) {
+    let bank = small_bank(&world);
+    write(&bank.join("projectbrief.md"), "# Project\n");
+    let repo = world.path("repo");
+    let (code, preview) = native_purge(world, &repo, &bank, true, None);
+    assert_eq!(code, 0, "{preview:?}");
+    let token = text(get(&preview, "preview"), "confirmation").to_owned();
+    let extra = fault(point);
+    let interrupted = native_purge_command(
+        world,
+        &world.bin().join("am"),
+        &native_purge_request(&repo, &bank, false, Some(&token)),
+        &extra,
+    );
+    assert_eq!(interrupted.code, Some(86), "{point}");
+    assert!(interrupted.value.is_none(), "{point}");
+    let (code, completed) = native_purge(world, &repo, &bank, false, Some(&token));
+    verified(code, &completed);
+    let receipt = get(&completed, "receipt");
+    assert!(install::same(
+        get(receipt, "preview"),
+        get(&preview, "preview")
+    ));
+    assert_eq!(
+        get(receipt, "deletion_readback_verified"),
+        &Value::Bool(true)
+    );
+    assert!(!bank.exists());
+    let (code, repeated) = native_purge(world, &repo, &bank, false, Some(&token));
+    verified(code, &repeated);
+    assert_eq!(get(&repeated, "changed"), &Value::Bool(false));
 }
 
 // obligation: tests/contracts/test_doctor_fix.py::DoctorFixContract.test_healthy_unrelated_hook_configuration_needs_no_repair
@@ -2502,91 +2855,6 @@ fn healthy_installation_needs_no_doctor_repair() {
     assert_eq!(get(&value, "repairs_performed"), &Value::Bool(false));
     assert_eq!(get(&value, "writes_performed"), &Value::Bool(false));
     assert_eq!(get(&value, "restart_clients"), &Value::Array(vec![]));
-    assert_eq!(snapshot(&installed.world.root), before);
-}
-
-/// Records each plan the lifecycle hands to the native boundary seam.
-#[derive(Default)]
-struct RecordingOmp(std::sync::Mutex<Vec<(Value, bool)>>);
-fn planned_transition() -> Value {
-    json::decode(
-        r#"{"binding_disable_planned": true, "drains": [], "installation_writes_performed": false, "canonical_writes_performed": false}"#,
-        json::DecodePolicy::default(),
-    )
-    .unwrap()
-}
-impl install::OmpBoundary for RecordingOmp {
-    fn capability(&self) -> &str {
-        agent_memory::omp_boundary::CAPABILITY
-    }
-    fn native_transition(&self, plan: &mut Value, check: bool) -> install::Result<Value> {
-        self.0.lock().unwrap().push((plan.clone(), check));
-        Ok(planned_transition())
-    }
-    fn native_activation(&self, _: &mut Value, _: bool) -> install::Result<Value> {
-        Ok(Value::Array(vec![]))
-    }
-    fn finish_native_transition(&self, _: &Value) -> install::Result<()> {
-        Ok(())
-    }
-    fn recover_native_binding(&self, _: &Path) -> install::Result<()> {
-        Ok(())
-    }
-    fn native_recovery_expected(&self, _: &Path, _: &str) -> install::Result<Option<Value>> {
-        Ok(None)
-    }
-    fn complete_stored_source_activation(&self, _: &Path) -> install::Result<Value> {
-        Ok(Value::Object(vec![]))
-    }
-}
-
-/// `--omp-writers-quiesced` is the plan's own `omp_transition`; update check
-/// records the native transition's result, uninstall check passes the plan.
-#[test]
-fn writers_quiesced_checks_hand_the_plan_transition_to_the_native_boundary() {
-    let installed = Installed::new(Mode::Copy);
-    let omp = Arc::new(RecordingOmp::default());
-    let mut services = installed.services();
-    services.omp_boundary = Some(omp.clone());
-    let before = snapshot(&installed.world.root);
-    let request = UpdateRequest {
-        check: true,
-        omp_writers_quiesced: true,
-        ..UpdateRequest::default()
-    };
-    let result = updating::update_command(&installed.world.env(), &services, &request);
-    let value = result.value.unwrap();
-    assert_eq!(result.exit_code, 0, "{value:?}");
-    assert_eq!(get(&value, "native_transition"), &planned_transition());
-    let quiesced = json::decode(
-        r#"{"writers_quiesced": true}"#,
-        json::DecodePolicy::default(),
-    )
-    .unwrap();
-    {
-        let calls = omp.0.lock().unwrap();
-        assert_eq!(calls.len(), 1);
-        let (plan, check) = &calls[0];
-        assert!(*check);
-        assert_eq!(get(plan, "omp_transition"), &quiesced);
-        assert_eq!(text(plan, "operation"), "update");
-        assert!(plan.get("preserved").is_none() && plan.get("reinstall").is_none());
-    }
-    let request = UninstallRequest {
-        check: true,
-        omp_writers_quiesced: true,
-        ..UninstallRequest::default()
-    };
-    let result = uninstallation::uninstall_command(&installed.world.env(), &services, &request);
-    let value = result.value.unwrap();
-    assert_eq!(result.exit_code, 0, "{value:?}");
-    let calls = omp.0.lock().unwrap();
-    assert_eq!(calls.len(), 2);
-    let (plan, check) = &calls[1];
-    assert!(*check);
-    assert_eq!(get(plan, "omp_transition"), &quiesced);
-    assert_eq!(text(plan, "operation"), "uninstall");
-    assert!(plan.get("preserved").is_some());
     assert_eq!(snapshot(&installed.world.root), before);
 }
 

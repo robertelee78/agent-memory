@@ -56,6 +56,15 @@ fn text(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap()
 }
 
+/// Actual component paths for metadata-only lifecycle tests. These tests do
+/// not claim an installed binding or exercise a held-runtime proof.
+fn lifecycle_runtime() -> (PathBuf, PathBuf) {
+    (
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+        std::env::current_exe().unwrap(),
+    )
+}
+
 struct Root(PathBuf);
 impl Root {
     fn new() -> Self {
@@ -651,9 +660,11 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
     isolated(
         "native_recovery_validates_its_journal_and_completes_a_committed_uninstall",
         |root| {
+            let (pack, binary) = lifecycle_runtime();
+            let runtime = (pack.as_path(), binary.as_path());
             let state = state_directory(root);
             let journal = state.join("omp-transition.json");
-            boundary::recover_native_binding(&state).unwrap();
+            boundary::recover_native_binding(&state, runtime).unwrap();
             assert!(!journal.exists());
             assert_eq!(
                 boundary::native_recovery_expected(&state, "/any/extension.ts").unwrap(),
@@ -664,7 +675,7 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
                 b"{\"schema\": \"agent-memory/omp-native-transition-v1\", \"status\": \"disabled\"}",
             );
             install_refusal(
-                boundary::recover_native_binding(&state),
+                boundary::recover_native_binding(&state, runtime),
                 "Unverifiable native lifecycle recovery journal",
             );
             let agent = root.join("agent");
@@ -688,14 +699,14 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
                 transition_journal(source, &target, &identity, &backup, "completed").as_bytes(),
             );
             let completed = text(&journal);
-            boundary::recover_native_binding(&state).unwrap();
+            boundary::recover_native_binding(&state, runtime).unwrap();
             assert_eq!(text(&journal), completed);
             write(
                 &journal,
                 transition_journal(source, &target, &identity, &backup, "disabled").as_bytes(),
             );
             // No committed receipt at all: never guess the executable.
-            assert!(boundary::recover_native_binding(&state).is_err());
+            assert!(boundary::recover_native_binding(&state, runtime).is_err());
             let receipt = format!(
                 "{{\"schema\": \"agent-memory/install-receipt-v3\", \"installation_id\": \"{ID}\", \"verified\": true, \"uninstalled\": true, \"source\": {source}, \"targets\": [], \"omp_binding\": {}}}",
                 json::encode(&binding, json::DEFAULT).unwrap()
@@ -703,11 +714,11 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
             write(&state.join("receipt.json"), receipt.as_bytes());
             write(&target, b"foreign\n");
             install_refusal(
-                boundary::recover_native_binding(&state),
+                boundary::recover_native_binding(&state, runtime),
                 "Committed native uninstall differs from its retained disabled executable",
             );
             std::fs::remove_file(&target).unwrap();
-            boundary::recover_native_binding(&state).unwrap();
+            boundary::recover_native_binding(&state, runtime).unwrap();
             let recovered = installation::load(&journal).unwrap();
             assert_eq!(
                 recovered.get("status"),
@@ -729,10 +740,90 @@ fn native_recovery_validates_its_journal_and_completes_a_committed_uninstall() {
                 transition_journal(source, &target, &identity, &backup, "disabled").as_bytes(),
             );
             install_refusal(
-                boundary::recover_native_binding(&state),
+                boundary::recover_native_binding(&state, runtime),
                 "Native uninstall recovery has no exact committed receipt",
             );
         },
+    );
+}
+
+#[test]
+fn uninstalled_native_recovery_finishes_without_runtime_bytes_and_refuses_current_ownership() {
+    let world = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&world.root, |argv| {
+        world
+            .run_with(
+                argv,
+                RunOptions {
+                    cwd: Some(&world.root),
+                    check: false,
+                    timeout: Duration::from_secs(120),
+                    ..RunOptions::default()
+                },
+            )
+            .unwrap()
+    });
+    let state = world.root.join("state/agent-memory/install");
+    let receipt_path = state.join("receipt.json");
+    let installed = installation::load(&receipt_path).unwrap();
+    let receipt_identity = installation::fingerprint(&receipt_path).unwrap();
+    install_refusal(
+        boundary::recover_uninstalled_native(&state),
+        "Native uninstall recovery requires absent current ownership",
+    );
+    assert_eq!(
+        installation::fingerprint(&receipt_path).unwrap(),
+        receipt_identity
+    );
+
+    let agent = world.root.join("native-agent");
+    mkdir(&agent.join("extensions"));
+    let binding = omp_installation::binding(
+        agent.to_str().unwrap(),
+        false,
+        omp_installation::READER_CAPABILITY,
+    )
+    .unwrap();
+    let target = agent.join("extensions/agent-memory.ts");
+    let installation_id = installed.get("installation_id").unwrap().as_str().unwrap();
+    let backup = agent.join(format!(
+        "extensions/.agent-memory-disabled-{installation_id}-{}.ts.disabled",
+        host::uuid4().unwrap()
+    ));
+    write(&backup, b"export default function () {}\n");
+    let identity = installation::fingerprint(&backup).unwrap();
+    let source = json::encode(installed.get("source").unwrap(), json::DEFAULT).unwrap();
+    let historical = format!(
+        "{{\"schema\":\"agent-memory/install-receipt-v3\",\"installation_id\":\"{installation_id}\",\"verified\":true,\"uninstalled\":true,\"source\":{source},\"targets\":[],\"omp_binding\":{}}}",
+        json::encode(&binding, json::DEFAULT).unwrap(),
+    );
+    write(&receipt_path, historical.as_bytes());
+    let journal_path = state.join("omp-transition.json");
+    let journal = format!(
+        "{{\"schema\":\"agent-memory/omp-native-transition-v1\",\"installation_id\":\"{installation_id}\",\"source\":{source},\"extension\":\"{}\",\"identity\":{},\"disabled_path\":\"{}\",\"status\":\"disabled\"}}",
+        target.display(),
+        json::encode(&identity, json::DEFAULT).unwrap(),
+        backup.display(),
+    );
+    write(&journal_path, journal.as_bytes());
+    std::fs::remove_dir_all(&runtime.source).unwrap();
+    assert!(!runtime.pack.exists());
+    assert!(!runtime.binary.exists());
+
+    boundary::recover_uninstalled_native(&state).unwrap();
+    let completed = installation::load(&journal_path).unwrap();
+    assert_eq!(
+        completed.get("status").and_then(Value::as_str),
+        Some("completed"),
+    );
+    assert!(!target.exists());
+    assert_eq!(installation::fingerprint(&backup).unwrap(), identity);
+    assert_eq!(text(&receipt_path), historical);
+    let completed_identity = installation::fingerprint(&journal_path).unwrap();
+    boundary::recover_uninstalled_native(&state).unwrap();
+    assert_eq!(
+        installation::fingerprint(&journal_path).unwrap(),
+        completed_identity,
     );
 }
 
@@ -743,7 +834,8 @@ fn native_transition_disables_only_the_owned_extension_and_rewrites_the_plan() {
     isolated(
         "native_transition_disables_only_the_owned_extension_and_rewrites_the_plan",
         |root| {
-            let runtime = root.join("runtime");
+            let (pack, binary) = lifecycle_runtime();
+            let runtime = (pack.as_path(), binary.as_path());
             let state = state_directory(root);
             let agent = root.join("agent");
             mkdir(&agent.join("extensions"));
@@ -777,7 +869,7 @@ fn native_transition_disables_only_the_owned_extension_and_rewrites_the_plan() {
                 skill.display()
             );
             let mut plan = decode(&plan_text(&actions));
-            let planned = boundary::native_transition(&mut plan, true, &runtime).unwrap();
+            let planned = boundary::native_transition(&mut plan, true, runtime).unwrap();
             assert_eq!(
                 planned,
                 decode(
@@ -786,7 +878,7 @@ fn native_transition_disables_only_the_owned_extension_and_rewrites_the_plan() {
             );
             assert_eq!(plan, decode(&plan_text(&actions)));
             assert!(!state.join("omp-transition.json").exists());
-            let result = boundary::native_transition(&mut plan, false, &runtime).unwrap();
+            let result = boundary::native_transition(&mut plan, false, runtime).unwrap();
             assert_eq!(
                 result,
                 decode(
@@ -835,7 +927,7 @@ fn native_transition_disables_only_the_owned_extension_and_rewrites_the_plan() {
                 target.display()
             );
             let mut retry = decode(&plan_text(&removed));
-            boundary::native_transition(&mut retry, false, &runtime).unwrap();
+            boundary::native_transition(&mut retry, false, runtime).unwrap();
             assert_eq!(retry.get("actions").unwrap(), &decode("[]"));
             assert_eq!(
                 retry.get("omp_disabled_backup"),
@@ -852,7 +944,7 @@ fn native_transition_disables_only_the_owned_extension_and_rewrites_the_plan() {
             write(&target, b"modified\n");
             let mut modified = decode(&plan_text(&actions));
             install_refusal(
-                boundary::native_transition(&mut modified, false, &runtime),
+                boundary::native_transition(&mut modified, false, runtime),
                 "Native binding is modified/unowned; preserve it and refuse compatibility drain",
             );
             assert_eq!(text(&target), "modified\n");
@@ -863,37 +955,38 @@ fn native_transition_disables_only_the_owned_extension_and_rewrites_the_plan() {
 #[test]
 fn native_lifecycle_entry_refusals_and_absent_work() {
     isolated("native_lifecycle_entry_refusals_and_absent_work", |root| {
-        let runtime = root.join("runtime");
+        let (pack, binary) = lifecycle_runtime();
+        let runtime = (pack.as_path(), binary.as_path());
         let state = state_directory(root);
         let mut plan = decode("{}");
         install_refusal(
-            boundary::native_transition(&mut plan, false, &runtime),
+            boundary::native_transition(&mut plan, false, runtime),
             "Native deactivation requires saved ownership and explicit writer quiescence",
         );
         let mut plan = decode(
             "{\"old\": {\"installation_id\": \"x\"}, \"omp_transition\": {\"writers_quiesced\": false}}",
         );
         install_refusal(
-            boundary::native_transition(&mut plan, true, &runtime),
+            boundary::native_transition(&mut plan, true, runtime),
             "Native deactivation requires saved ownership and explicit writer quiescence",
         );
         let mut plan = decode("{\"omp_binding\": null}");
         assert_eq!(
-            boundary::native_activation(&mut plan, true, &runtime).unwrap(),
+            boundary::native_activation(&mut plan, true, runtime).unwrap(),
             Value::Array(vec![])
         );
         let mut plan = decode(
             "{\"omp_binding\": {\"peer_reader_capability\": \"omp-harness-v1\"}, \"old\": null}",
         );
         refusal(
-            boundary::native_activation(&mut plan, true, &runtime),
+            boundary::native_activation(&mut plan, true, runtime),
             "New native activation requires the stored-source reader capability",
         );
         let mut plan = decode(
             "{\"omp_binding\": {\"peer_reader_capability\": \"omp-stored-source-v2\"}, \"old\": {\"omp_binding\": {\"peer_reader_capability\": \"omp-harness-v1\"}}, \"omp_peers_upgraded\": false}",
         );
         refusal(
-            boundary::native_activation(&mut plan, true, &runtime),
+            boundary::native_activation(&mut plan, true, runtime),
             "Native source activation requires renewed --omp-peers-upgraded",
         );
         let mut plan = decode(
@@ -901,16 +994,16 @@ fn native_lifecycle_entry_refusals_and_absent_work() {
         );
         let before = plan.clone();
         assert_eq!(
-            boundary::native_activation(&mut plan, true, &runtime).unwrap(),
+            boundary::native_activation(&mut plan, true, runtime).unwrap(),
             Value::Array(vec![])
         );
         assert_eq!(plan, before);
         assert_eq!(
-            boundary::complete_stored_source_activation(&state).unwrap(),
+            boundary::complete_stored_source_activation(&state, runtime).unwrap(),
             decode("{\"status\": \"not-required\", \"verified\": true}")
         );
         refusal(
-            boundary::drain_source_capabilities(Path::new("."), false, true, &runtime),
+            boundary::drain_source_capabilities(Path::new("."), false, true, runtime.0),
             "Source drain requires disabled bindings and writer quiescence",
         );
     });

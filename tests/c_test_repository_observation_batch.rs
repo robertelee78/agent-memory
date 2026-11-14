@@ -4,7 +4,7 @@ use agent_memory::process::Status;
 use agent_memory::{repository_config as config, scope_binding};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::{Duration, Instant};
 use support::cutover::*;
 use support::{RunOptions, World};
@@ -105,9 +105,9 @@ fn repository_worker() {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
-    agent_memory::cli::use_development_pack(Some(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-    ));
+    // The fixture World is installed; this in-process worker is not the owned
+    // `am`, so its frontier and pack come from that installation.
+    support::installed_runtime::register_component_runtime();
     let request = json::decode_bytes(&fs::read(input).unwrap(), Default::default()).unwrap();
     let repo = Path::new(string(&request, "repo"));
     let mode = string(&request, "mode");
@@ -131,7 +131,7 @@ fn repository_worker() {
     } else if mode == "discover" {
         agent_memory::project_identity::discover(repo, None, Default::default())
     } else {
-        let pack = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
+        let pack = agent_memory::cli::pack_root().unwrap();
         scope_binding::private_enrollment_context(repo, &pack).and_then(|context| {
             if !mutation.is_empty() {
                 let other = repo.join("late-locator/MEMORY.md");
@@ -192,7 +192,6 @@ fn repository_worker() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_changed_head_with_deleted_competing_router_refuses_enrollment_exit
 fn changed_head_with_deleted_competing_router_refuses_enrollment() {
     let r = fixture();
@@ -207,7 +206,6 @@ fn changed_head_with_deleted_competing_router_refuses_enrollment() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_index_untracked_and_raw_locators_added_after_scope_read_refuse_exit
 fn late_indexed_untracked_and_raw_locators_refuse_enrollment() {
     for kind in ["indexed", "untracked", "raw-only"] {
@@ -220,7 +218,6 @@ fn late_indexed_untracked_and_raw_locators_refuse_enrollment() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_earlier_real_config_refusal_beats_every_later_child_failure
 fn invalid_real_config_precedes_every_later_child_failure() {
     for command_name in ["ls-files", "ls-tree"] {
@@ -259,7 +256,6 @@ fn invalid_real_config_precedes_every_later_child_failure() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_malformed_config_child_output_never_accepts_speculative_names
 fn malformed_config_child_output_never_accepts_speculative_names() {
     for printf in [
@@ -285,7 +281,6 @@ fn malformed_config_child_output_never_accepts_speculative_names() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_malformed_name_children_refuse_after_valid_real_config
 fn malformed_inventory_children_refuse_after_valid_real_config() {
     for (command_name, printf) in [
@@ -308,7 +303,6 @@ fn malformed_inventory_children_refuse_after_valid_real_config() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_parent_traversal_name_never_adopts_outside_router
 fn parent_traversal_inventory_never_adopts_outside_router() {
     let mut r = fixture();
@@ -332,7 +326,6 @@ fn parent_traversal_inventory_never_adopts_outside_router() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_real_config_validation_time_is_charged_to_unresolved_inventory_child
 fn config_observation_time_is_charged_to_pending_inventory_deadline() {
     let mut r = fixture();
@@ -351,7 +344,6 @@ fn config_observation_time_is_charged_to_pending_inventory_deadline() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_sampled_head_is_immutable_and_next_settings_read_observes_later_commit
 fn sampled_head_is_immutable_and_next_settings_read_observes_later_commit() {
     let mut r = fixture();
@@ -372,7 +364,6 @@ fn sampled_head_is_immutable_and_next_settings_read_observes_later_commit() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_timeout_and_launch_failure_never_mint_identity_from_partial_output
 fn timeout_and_git_launch_failures_never_mint_identity_from_partial_output() {
     for body in [
@@ -404,7 +395,6 @@ fn timeout_and_git_launch_failures_never_mint_identity_from_partial_output() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_tracked_body_and_enrollment_boundaries_have_no_live_query_children
 fn tracked_body_and_enrollment_boundaries_leave_no_live_query_children() {
     let mut r = fixture();
@@ -423,7 +413,6 @@ fn tracked_body_and_enrollment_boundaries_leave_no_live_query_children() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_interrupt_in_real_config_validation_preserves_traceback_and_cancels_siblings
 fn interrupt_during_real_config_observation_cancels_siblings_and_preserves_bank() {
     for signal in ["INT", "TERM"] {

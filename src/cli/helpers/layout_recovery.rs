@@ -222,8 +222,7 @@ fn run(matches: &Matches, context: &Context<'_>) -> CommandResult {
             }
         },
     };
-    let runtime_root = crate::cli::runtime_root();
-    let runtime_root = match runtime_root {
+    let runtime_root = match crate::cli::pack_root() {
         Ok(root) => root,
         Err(error) => return crate::cli::refusal(context.prog, &error.to_string()),
     };

@@ -44,63 +44,6 @@ fn shell_quote(value: &OsStr) -> String {
     format!("'{}'", value.to_str().unwrap().replace('\'', "'\\''"))
 }
 
-// Deliberately copied from tests/t1_recovery_transactions.rs; Main deduplicates.
-fn installed_runtime(world: &World) -> (PathBuf, PathBuf) {
-    fn copy_assets(source: &Path, target: &Path) {
-        fs::create_dir_all(target).unwrap();
-        for entry in fs::read_dir(source).unwrap() {
-            let entry = entry.unwrap();
-            if entry.file_type().unwrap().is_dir() {
-                copy_assets(&entry.path(), &target.join(entry.file_name()));
-            } else if entry.file_type().unwrap().is_file() {
-                fs::copy(entry.path(), target.join(entry.file_name())).unwrap();
-            }
-        }
-    }
-    let source = world.inside("development-runtime").unwrap();
-    copy_assets(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-        &source.join("skills/agent-memory"),
-    );
-    for relative in ["target/release/am", "bin/am"] {
-        let binary = source.join(relative);
-        fs::create_dir_all(binary.parent().unwrap()).unwrap();
-        fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
-        fs::set_permissions(binary, fs::Permissions::from_mode(0o755)).unwrap();
-    }
-    let output = world
-        .am(vec![
-            OsString::from("--json"),
-            "install".into(),
-            "--development-source".into(),
-            source.into_os_string(),
-            "--mode".into(),
-            "link".into(),
-            "--presets".into(),
-            "none".into(),
-            "--no-guidance".into(),
-            "--bin-dir".into(),
-            world.inside("bin").unwrap().into_os_string(),
-        ])
-        .unwrap();
-    assert_eq!(output.status, Status::Code(0));
-    let receipt = decode(
-        &fs::read(
-            world
-                .inside("state/agent-memory/install/receipt.json")
-                .unwrap(),
-        )
-        .unwrap(),
-    );
-    let source = get(&receipt, "source");
-    let command = agent_memory::installation::source_binary(source).unwrap();
-    let pack = Path::new(t(source, "pack"));
-    (
-        pack.parent().unwrap().parent().unwrap().to_path_buf(),
-        command,
-    )
-}
-
 struct Fixture {
     root: PathBuf,
     repo: PathBuf,
@@ -111,8 +54,13 @@ struct Fixture {
     env: smoke::Environment,
 }
 impl Fixture {
-    fn prepare(world: &World, with_bank: bool) {
-        let (runtime, _) = installed_runtime(world);
+    fn prepare(world: &mut World, with_bank: bool) {
+        let runtime =
+            support::installed_runtime::install(&world.root, |argv| world.run(argv).unwrap());
+        world.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            runtime.command.as_os_str().to_owned(),
+        );
         let agent = world.inside("native smoke root").unwrap();
         fs::create_dir(&agent).unwrap();
         let installed = world
@@ -120,7 +68,7 @@ impl Fixture {
                 OsString::from("--json"),
                 "install".into(),
                 "--development-source".into(),
-                runtime.clone().into_os_string(),
+                runtime.source.as_os_str().to_owned(),
                 "--mode".into(),
                 "link".into(),
                 "--presets".into(),
@@ -130,7 +78,7 @@ impl Fixture {
                 "--omp-peers-upgraded".into(),
                 "--no-guidance".into(),
                 "--bin-dir".into(),
-                world.inside("bin").unwrap().into_os_string(),
+                runtime.command.parent().unwrap().as_os_str().to_owned(),
             ])
             .unwrap();
         assert_eq!(installed.status, Status::Code(0));
@@ -147,22 +95,34 @@ impl Fixture {
             for (path, value) in get(&rendered, "files").as_object().unwrap() {
                 fs::write(repo.join("memory-bank").join(path), value.as_str().unwrap()).unwrap();
             }
-            support::identity_fixtures::bind(world, &repo).unwrap();
+            support::identity_fixtures::bind_with_command(world, &repo, &runtime.command).unwrap();
         }
         private(
             &world.root.join("smoke-fixture.json"),
             &obj([
                 ("repo", s(repo.to_str().unwrap())),
-                ("runtime", s(runtime.to_str().unwrap())),
+                ("runtime", s(runtime.pack.to_str().unwrap())),
             ]),
         );
     }
     fn load(root: &Path) -> Self {
         agent_memory::cli::register_providers().unwrap();
+        support::installed_runtime::register_component_runtime();
         let value = smoke::read_json(&root.join("smoke-fixture.json")).unwrap();
         let receipt_path = root.join("state/agent-memory/install/receipt.json");
         let receipt = smoke::read_json(&receipt_path).unwrap();
         let am = Path::new(t(&receipt, "bin_dir")).join("am");
+        // The in-process body is not the installed `am`: the OMP activation
+        // locates through the receipt-owned command (as fanout_b_omp does).
+        agent_memory::omp_installation::register_activation(Some(std::sync::Arc::new(
+            agent_memory::installation::InstallationActivation {
+                env: agent_memory::installation::Environment::process(),
+                services: agent_memory::installation::Services::registered().unwrap(),
+                executable: am.clone(),
+                harness: agent_memory::omp_transport::InstalledHarness,
+            },
+        )))
+        .unwrap();
         let fixture = Self {
             root: root.to_path_buf(),
             repo: t(&value, "repo").into(),
@@ -329,8 +289,8 @@ fn isolated(name: &str, with_bank: bool, body: impl FnOnce(Fixture)) {
         body(Fixture::load(&root));
         return;
     }
-    let world = World::new().unwrap();
-    Fixture::prepare(&world, with_bank);
+    let mut world = World::new().unwrap();
+    Fixture::prepare(&mut world, with_bank);
     let output = world
         .run_with(
             [
@@ -712,7 +672,6 @@ fn test_unsupported_binary_refuses_before_native_launch_or_human_turns() {
 }
 
 #[test]
-#[ignore = "recovery_frontier"]
 fn test_historical_observers_cannot_qualify_new_current_session() {
     isolated(
         "test_historical_observers_cannot_qualify_new_current_session",
@@ -762,7 +721,6 @@ fn test_historical_observers_cannot_qualify_new_current_session() {
 }
 
 #[test]
-#[ignore = "recovery_frontier"]
 fn test_both_exact_current_human_turns_and_persistent_session_are_required() {
     isolated(
         "test_both_exact_current_human_turns_and_persistent_session_are_required",
@@ -776,7 +734,6 @@ fn test_both_exact_current_human_turns_and_persistent_session_are_required() {
 }
 
 #[test]
-#[ignore = "recovery_frontier"]
 fn test_source_verifier_binds_completed_human_ids_text_roots_and_digests() {
     isolated(
         "test_source_verifier_binds_completed_human_ids_text_roots_and_digests",
@@ -892,7 +849,6 @@ fn test_source_verifier_binds_completed_human_ids_text_roots_and_digests() {
 }
 
 #[test]
-#[ignore = "recovery_frontier"]
 fn test_source_verifier_waits_for_fault_free_shared_registration() {
     isolated(
         "test_source_verifier_waits_for_fault_free_shared_registration",
@@ -970,7 +926,6 @@ fn test_source_verifier_waits_for_fault_free_shared_registration() {
 }
 
 #[test]
-#[ignore = "recovery_frontier"]
 fn test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence() {
     isolated(
         "test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence",
@@ -1082,7 +1037,6 @@ fn human_entry_assistant(id: &str, content: &str) -> Value {
 }
 
 #[test]
-#[ignore = "recovery_frontier"]
 fn test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof() {
     isolated(
         "test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof",
@@ -1256,7 +1210,6 @@ fn source_digest_and_content_text_follow_baseline_canonical_bytes() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_observer_verification_cannot_enroll_or_promote_legacy_marker
 fn gaps_observer_verification_cannot_enroll_or_promote_legacy_marker() {
     isolated(
@@ -1298,7 +1251,6 @@ fn gaps_observer_verification_cannot_enroll_or_promote_legacy_marker() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_real_binding_proof_rejects_forgery_and_mid_instance_drift_before_source
 fn gaps_real_binding_proof_rejects_forgery_and_mid_instance_drift() {
     isolated(
@@ -1452,7 +1404,6 @@ fn gaps_install_call(w: &World, args: &[OsString], fault: Option<(&str, &str)>) 
     )
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_receipt_commit_separates_bank_activation_from_rollback
 fn gaps_receipt_commit_separates_bank_activation_from_rollback() {
     for (stage, mode, committed) in [
@@ -1505,7 +1456,6 @@ fn gaps_receipt_commit_separates_bank_activation_from_rollback() {
     }
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_prior_committed_activation_recovers_after_a_later_install_rolls_back
 fn gaps_prior_committed_activation_recovers_after_later_install_rolls_back() {
     let r = support::cutover::Recall::new();

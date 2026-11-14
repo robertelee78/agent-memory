@@ -779,7 +779,7 @@ impl Default for ObserveOptions<'_> {
         }
     }
 }
-/// Both executing runtime root and binary are explicit; never infer authority from __file__ or ambient globals.
+/// Both executing pack and binary are explicit; never infer authority from __file__ or ambient globals.
 pub fn observe(
     repo: &Path,
     operation_id: &str,
@@ -828,9 +828,8 @@ pub fn observe(
         )?;
     }
     let before_git = git_pins(&root)?;
-    let measured =
-        artifact::inspect_runtime(&runtime_root.join("skills/agent-memory"), runtime_binary)
-            .map_err(|error| err(&error.to_string()))?;
+    let measured = artifact::inspect_runtime(runtime_root, runtime_binary)
+        .map_err(|error| err(&error.to_string()))?;
     let runtime = object([
         (
             "artifact_digest",

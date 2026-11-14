@@ -1,12 +1,14 @@
 use agent_memory::clock::Deadline;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::error::{ContractError, Result};
+use agent_memory::scope_binding::RuntimeAuthority;
 use agent_memory::{bank_writes, host, private_state as private, process};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
 use std::os::unix::fs::{DirBuilderExt, MetadataExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+mod support;
 
 fn s(value: impl Into<String>) -> Value {
     Value::String(value.into())
@@ -144,6 +146,12 @@ fn isolated(name: &str, body: impl FnOnce(&Path)) {
         String::from_utf8_lossy(&output.stderr)
     );
 }
+fn runtime_pair() -> (&'static Path, &'static Path) {
+    (
+        Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/skills/agent-memory")),
+        Path::new(env!("CARGO_BIN_EXE_am")),
+    )
+}
 fn target() -> Value {
     object([("private_state_capabilities", array(&[]))])
 }
@@ -252,7 +260,11 @@ fn native_absence_observation_is_readonly() {
     let base = root.directory("private-base");
     let before = snapshot(&root.0);
     // The real native registry reader runs; any outcome leaves the world unchanged.
-    let _ = private::native_absence(&root.0, &base, &root.0.join("runtime"));
+    let _ = private::native_absence(
+        &root.0,
+        &base,
+        RuntimeAuthority::Executing(&root.0.join("runtime")),
+    );
     assert_eq!(snapshot(&root.0), before);
 }
 
@@ -264,7 +276,11 @@ fn present_native_barrier_is_not_mistaken_for_absence_or_rewritten() {
     write(&lock, b"RACED_PRIVATE_EVIDENCE_MUST_SURVIVE\n");
     let before = snapshot(&root.0);
     refusal(
-        private::native_absence(&root.0, &base, &root.0.join("runtime")),
+        private::native_absence(
+            &root.0,
+            &base,
+            RuntimeAuthority::Executing(&root.0.join("runtime")),
+        ),
         "Native source barrier appeared during observation",
     );
     assert_eq!(snapshot(&root.0), before);
@@ -274,7 +290,7 @@ fn present_native_barrier_is_not_mistaken_for_absence_or_rewritten() {
 fn lifecycle_paths_and_preserved_reader_are_required_before_hook_access() {
     let uninstall = object([("operation", s("uninstall"))]);
     assert_eq!(
-        private::prepare_lifecycle(&uninstall, false, Path::new("/runtime")).unwrap(),
+        private::prepare_lifecycle(&uninstall, false, runtime_pair()).unwrap(),
         None
     );
     for supplied in [
@@ -287,7 +303,7 @@ fn lifecycle_paths_and_preserved_reader_are_required_before_hook_access() {
             ("layout_quiescence", supplied),
         ]);
         refusal(
-            private::prepare_lifecycle(&plan, true, Path::new("/runtime")),
+            private::prepare_lifecycle(&plan, true, runtime_pair()),
             "Lifecycle quiescence inputs must be explicit protected-file paths",
         );
     }
@@ -296,7 +312,7 @@ fn lifecycle_paths_and_preserved_reader_are_required_before_hook_access() {
         ("layout_quiescence", array(&["/private/renewal.json"])),
     ]);
     refusal(
-        private::prepare_lifecycle(&plan, false, Path::new("/runtime")),
+        private::prepare_lifecycle(&plan, false, runtime_pair()),
         "Uninstall renewal needs an actually preserved capable reader",
     );
 }
@@ -342,7 +358,7 @@ fn lifecycle_selects_exact_changed_invocation_routes_without_publishing() {
         ("source", source.clone()),
         ("actions", Value::Array(actions)),
     ]);
-    let checked = private::prepare_lifecycle(&plan, true, Path::new("/runtime"))
+    let checked = private::prepare_lifecycle(&plan, true, runtime_pair())
         .unwrap()
         .unwrap();
     assert_eq!(
@@ -357,7 +373,7 @@ fn lifecycle_selects_exact_changed_invocation_routes_without_publishing() {
         ])
     );
     assert_eq!(g(&checked, "layout_quiescence_overrides"), &object([]));
-    let applied = private::prepare_lifecycle(&plan, false, Path::new("/runtime"))
+    let applied = private::prepare_lifecycle(&plan, false, runtime_pair())
         .unwrap()
         .unwrap();
     assert!(applied.get("layout_quiescence_overrides").is_none());
@@ -374,7 +390,7 @@ fn lifecycle_selects_exact_changed_invocation_routes_without_publishing() {
         ("preserved_private_state_reader", preserved),
         ("source", source),
     ]);
-    let result = private::prepare_lifecycle(&uninstall, true, Path::new("/runtime"))
+    let result = private::prepare_lifecycle(&uninstall, true, runtime_pair())
         .unwrap()
         .unwrap();
     assert_eq!(
@@ -411,46 +427,14 @@ fn renewal_envelope_has_exact_attestation_and_independent_review_keys() {
             ),
         ]);
         refusal(
-            private::prepare_lifecycle(&plan, true, Path::new("/runtime")),
+            private::prepare_lifecycle(&plan, true, runtime_pair()),
             "Lifecycle renewal uses the exact attestation/independent-review envelope",
         );
-        let applied = private::prepare_lifecycle(&plan, false, Path::new("/runtime"))
+        let applied = private::prepare_lifecycle(&plan, false, runtime_pair())
             .unwrap()
             .unwrap();
         assert!(applied.get("layout_quiescence_overrides").is_none());
     }
-}
-
-#[test]
-fn valid_envelope_requires_the_real_quiescence_validator() {
-    let renewal = object([
-        (
-            "attestation",
-            object([
-                ("operation_id", s("00000000-0000-4000-8000-000000000000")),
-                ("repo_root", s("/private/repo")),
-            ]),
-        ),
-        ("review", object([])),
-    ]);
-    let plan = object([
-        ("operation", s("update")),
-        (
-            "source",
-            object([
-                ("artifact_digest", s("a".repeat(64))),
-                ("reader_invocation_routes", array(&["/reader"])),
-            ]),
-        ),
-        (
-            "native_layout_quiescence_overrides",
-            Value::Array(vec![renewal]),
-        ),
-    ]);
-    refusal(
-        private::prepare_lifecycle(&plan, true, Path::new("/runtime")),
-        "recovery_frontier provider is not registered",
-    );
 }
 
 #[test]
@@ -468,10 +452,31 @@ fn inventory_observation_is_readonly() {
 // admission, source barrier or runtime-capability provider is installed here.
 // obligation: tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_routerless_notes_and_ordinary_receipts_remain_readonly_without_native_obligations
 #[test]
-#[ignore = "needs recovery_frontier registered (bank observation decides compatibility)"]
 fn routerless_notes_and_receipts_remain_readonly() {
     isolated("routerless_notes_and_receipts_remain_readonly", |root| {
         agent_memory::cli::register_providers().unwrap();
+        let environment: Vec<_> = std::env::vars_os().collect();
+        let runtime = support::installed_runtime::install(root, |argv| {
+            let spec = process::Spec {
+                argv,
+                env: &environment,
+                cwd: Some(root),
+                search_path: false,
+                stdin: process::Input::Null,
+                stdout: process::Target::Capture {
+                    limit: 8 * 1024 * 1024,
+                },
+                stderr: process::Target::Capture {
+                    limit: 8 * 1024 * 1024,
+                },
+                deadline: Deadline::from_absolute_ns(u64::MAX),
+                new_session: false,
+                file_size_limit: None,
+                umask: None,
+                pass_fds: &[],
+            };
+            process::run_for(&spec, Duration::from_secs(120)).unwrap()
+        });
         let (repo, bank, base) = setup_bank(root);
         for prior_receipt in [false, true] {
             if prior_receipt {
@@ -487,7 +492,7 @@ fn routerless_notes_and_receipts_remain_readonly() {
                 Some(&target()),
                 "install",
                 &repo,
-                &root.join("runtime"),
+                runtime.pair(),
             )
             .unwrap();
             let second = private::required_private_state_capabilities(
@@ -495,7 +500,7 @@ fn routerless_notes_and_receipts_remain_readonly() {
                 Some(&target()),
                 "install",
                 &repo,
-                &root.join("runtime"),
+                runtime.pair(),
             )
             .unwrap();
             assert_eq!(first, second);
@@ -518,8 +523,10 @@ fn native_absence_rechecks_normal_and_ordinary_failures() {
             let (repo, _, base) = setup_bank(root);
             for fail in [false, true] {
                 let mut saved = None;
-                let error =
-                    private::observation_barrier(&repo, &root.join("runtime"), |_| -> Result<()> {
+                let error = private::observation_barrier(
+                    &repo,
+                    RuntimeAuthority::Executing(&root.join("runtime")),
+                    |_| -> Result<()> {
                         agent_memory::fs::private_mkdir(&base).unwrap();
                         write(
                             &base.join("source-barrier.lock"),
@@ -531,8 +538,9 @@ fn native_absence_rechecks_normal_and_ordinary_failures() {
                         } else {
                             Ok(())
                         }
-                    })
-                    .unwrap_err();
+                    },
+                )
+                .unwrap_err();
                 assert_eq!(
                     error.message(),
                     "Native source barrier appeared during observation"
@@ -555,8 +563,10 @@ fn native_absence_preserves_original_unwind_and_raced_evidence() {
             let mut saved = None;
             let original = std::sync::Arc::new("original fatal unwind");
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                let _: Result<()> =
-                    private::observation_barrier(&repo, &root.join("runtime"), |_| {
+                let _: Result<()> = private::observation_barrier(
+                    &repo,
+                    RuntimeAuthority::Executing(&root.join("runtime")),
+                    |_| {
                         agent_memory::fs::private_mkdir(&base).unwrap();
                         write(
                             &base.join("source-barrier.lock"),
@@ -564,7 +574,8 @@ fn native_absence_preserves_original_unwind_and_raced_evidence() {
                         );
                         saved = Some(snapshot(root));
                         std::panic::panic_any(original.clone());
-                    });
+                    },
+                );
             }));
             let caught = result
                 .unwrap_err()
@@ -585,15 +596,21 @@ fn unchanged_native_absence_preserves_ordinary_refusal() {
             agent_memory::cli::register_providers().unwrap();
             let (repo, _, base) = setup_bank(root);
             let before = snapshot(root);
-            private::observation_barrier(&repo, &root.join("runtime"), |pin| {
-                assert!(pin.is_some());
-                Ok(())
-            })
+            private::observation_barrier(
+                &repo,
+                RuntimeAuthority::Executing(&root.join("runtime")),
+                |pin| {
+                    assert!(pin.is_some());
+                    Ok(())
+                },
+            )
             .unwrap();
             refusal(
-                private::observation_barrier(&repo, &root.join("runtime"), |_| -> Result<()> {
-                    Err(ContractError::new("original ordinary refusal"))
-                }),
+                private::observation_barrier(
+                    &repo,
+                    RuntimeAuthority::Executing(&root.join("runtime")),
+                    |_| -> Result<()> { Err(ContractError::new("original ordinary refusal")) },
+                ),
                 "original ordinary refusal",
             );
             assert!(!base.join("source-barrier.lock").exists());
@@ -634,7 +651,7 @@ fn saved_missing_repository_and_bank_remain_required_and_block_activation() {
                         Some(&target()),
                         "activate",
                         &root.join("repo"),
-                        &root.join("runtime"),
+                        (&root.join("runtime"), runtime_pair().1),
                     )
                     .unwrap();
                     assert_eq!(g(&proof, "decision"), &s("pending"));
@@ -645,7 +662,7 @@ fn saved_missing_repository_and_bank_remain_required_and_block_activation() {
                             Some(&target()),
                             "activate",
                             &root.join("repo"),
-                            &root.join("runtime"),
+                            (&root.join("runtime"), runtime_pair().1),
                             None,
                             |_| {
                                 activated = true;
@@ -677,7 +694,7 @@ fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
                 Some(&target()),
                 "install",
                 &repo,
-                &runtime,
+                (&runtime, runtime_pair().1),
                 None,
                 |_| {
                     let mut transition = || {
@@ -689,7 +706,7 @@ fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
                         Some(&target()),
                         "install",
                         &repo,
-                        &runtime,
+                        (&runtime, runtime_pair().1),
                         Some(&mut transition),
                         |_| Ok(()),
                     )
@@ -704,7 +721,7 @@ fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
                     Some(&target()),
                     "install",
                     &repo,
-                    &runtime,
+                    (&runtime, runtime_pair().1),
                     None,
                     |_| {
                         std::panic::panic_any(original.clone());
@@ -721,7 +738,7 @@ fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
                 Some(&target()),
                 "install",
                 &repo,
-                &runtime,
+                (&runtime, runtime_pair().1),
                 None,
                 |_| Ok(()),
             )
@@ -761,10 +778,14 @@ fn lockless_native_names_and_malformed_shared_sources_refuse_readonly() {
                 let before = snapshot(root);
                 let mut entered = false;
                 assert!(
-                    private::observation_barrier(&repo, &root.join("runtime"), |_| {
-                        entered = true;
-                        Ok(())
-                    })
+                    private::observation_barrier(
+                        &repo,
+                        RuntimeAuthority::Executing(&root.join("runtime")),
+                        |_| {
+                            entered = true;
+                            Ok(())
+                        }
+                    )
                     .is_err()
                 );
                 assert!(!entered);

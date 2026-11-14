@@ -8,10 +8,11 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 use support::cutover::*;
 use support::{RunOptions, World};
-fn request(repo: &Path, runtime: &Path, action: &str) -> Value {
+fn request(repo: &Path, runtime: &(PathBuf, PathBuf), action: &str) -> Value {
     object([
         ("repo", text(repo.to_str().unwrap())),
-        ("runtime", text(runtime.to_str().unwrap())),
+        ("pack", text(runtime.0.to_str().unwrap())),
+        ("binary", text(runtime.1.to_str().unwrap())),
         ("action", text(action)),
     ])
 }
@@ -78,9 +79,13 @@ fn observation_worker() {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
+    support::installed_runtime::register_component_runtime();
     let request = json::decode_bytes(&fs::read(path).unwrap(), Default::default()).unwrap();
     let repo = Path::new(string(&request, "repo"));
-    let runtime = Path::new(string(&request, "runtime"));
+    let runtime = (
+        Path::new(string(&request, "pack")),
+        Path::new(string(&request, "binary")),
+    );
     let result = match string(&request, "action") {
         "create-barrier" => {
             let base = agent_memory::omp_boundary::base(repo).unwrap();
@@ -102,6 +107,7 @@ fn observation_worker() {
         "banks" => agent_memory::updating::banks(
             &agent_memory::installation::Environment::process(),
             runtime,
+            Some(runtime),
             &[repo.to_str().unwrap().to_owned()],
             &object([
                 (
@@ -127,9 +133,9 @@ fn observation_worker() {
         json::encode(&value, json::DEFAULT).unwrap()
     );
 }
-fn routerless() -> (World, PathBuf, PathBuf, PathBuf) {
-    let w = World::new().unwrap();
-    let (runtime, _) = support::installed_runtime::installed_runtime(&w);
+fn routerless() -> (World, (PathBuf, PathBuf), PathBuf, PathBuf) {
+    let w = installed_world();
+    let runtime = installed_pair(&w);
     let repo = w.repository("notes-only", false).unwrap();
     let bank = repo.join("memory-bank");
     fs::create_dir(&bank).unwrap();
@@ -141,7 +147,6 @@ fn routerless() -> (World, PathBuf, PathBuf, PathBuf) {
     (w, runtime, repo, bank)
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_existing_barrier_deleted_before_open_is_not_recreated
 fn existing_barrier_deleted_before_open_is_not_recreated() {
     let (w, runtime, repo, bank) = routerless();
@@ -160,7 +165,6 @@ fn existing_barrier_deleted_before_open_is_not_recreated() {
     assert_eq!(fs::read(bank.join("my-note.md")).unwrap(), before);
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_native_barrier_appearing_during_layout_observation_refuses_without_erasing_it
 fn native_barrier_appearing_during_layout_observation_is_preserved() {
     let (w, runtime, repo, bank) = routerless();
@@ -177,12 +181,11 @@ fn native_barrier_appearing_during_layout_observation_is_preserved() {
     assert_eq!(physical(&bank), before);
 }
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_update_mutable_observations.py::FreshObservationControls.test_mutations_between_router_observations_refuse
 fn mutations_between_router_observations_refuse() {
     for mutation in ["head", "index", "config", "bank", "lock"] {
         let r = Recall::new();
-        let (runtime, _) = support::installed_runtime::installed_runtime(&r.world);
+        let runtime = installed_pair(&r.world);
         r.world
             .git_with(
                 ["add", "."],
@@ -274,12 +277,11 @@ fn mutations_between_router_observations_refuse() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_remote_query_cleanup_failure_cannot_become_successful_discovery
 fn remote_query_cleanup_failure_never_becomes_successful_discovery() {
     for close_fault in [false, true] {
         let mut r = Recall::new();
-        let (runtime, _) = support::installed_runtime::installed_runtime(&r.world);
+        let runtime = installed_pair(&r.world);
         r.world
             .git_with(
                 [

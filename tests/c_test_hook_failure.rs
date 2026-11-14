@@ -11,6 +11,24 @@ fn hook_driver() {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
+    // The in-process hook runs from the channel's pack (the same pack passed to
+    // `hooks::run`); the test binary is not installed, so the component
+    // locator names that pack explicitly instead of a receipt.
+    fn channel_runtime() -> agent_memory::error::Result<(PathBuf, PathBuf)> {
+        let raw = std::env::var("AGENT_MEMORY_FAULT_HOOK_REQUEST")
+            .map_err(|error| agent_memory::error::ContractError::new(error.to_string()))?;
+        let request = json::decode(&raw, Default::default())?;
+        let pack = PathBuf::from(text(&request, "pack"));
+        Ok((
+            agent_memory::fs::canonical_path(&pack, true)?,
+            agent_memory::host::current_executable()?,
+        ))
+    }
+    let frontier = std::sync::Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
+        channel_runtime,
+    ));
+    agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
+    agent_memory::bank_contract::register_recovery_coverage(Some(frontier));
     let request = json::decode(&raw, Default::default()).unwrap();
     let repo = PathBuf::from(text(&request, "repo"));
     let pack = PathBuf::from(text(&request, "pack"));
@@ -123,7 +141,6 @@ fn protected(
 
 // obligation: tests/contracts/test_hook_failure.py::HookFailureContract.test_source_compatibility_fault_is_not_misclassified_as_identity
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn corrupt_source_compatibility_marker_is_boundary_not_identity() {
     let world = World::new().unwrap();
     let fixture = Canary::new(&world);
@@ -160,7 +177,6 @@ fn find(path: &std::path::Path, name: &str) -> Vec<PathBuf> {
 
 // obligation: tests/contracts/test_hook_failure.py::HookFailureContract.test_stop_scope_loss_reports_identity_code_without_bank_change
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn missing_real_scope_binding_reports_identity_without_bank_change() {
     let world = World::new().unwrap();
     let fixture = Canary::new(&world);
@@ -192,7 +208,6 @@ fn missing_real_scope_binding_reports_identity_without_bank_change() {
 
 // obligation: tests/contracts/test_hook_failure.py::HookFailureContract.test_unexpected_exception_is_fixed_and_does_not_expose_exception_text
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn real_unreadable_git_configuration_fails_closed_without_private_detail() {
     for adapter in ["prompt", "stop"] {
         let world = World::new().unwrap();
