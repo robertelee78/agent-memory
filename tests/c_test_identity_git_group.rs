@@ -268,9 +268,10 @@ fn interrupt_worker() {
             0
         );
         if twice {
-            // TERM handlers keep every child alive throughout the reap window.
-            // The second real SIGINT therefore necessarily interrupts that window.
-            std::thread::sleep(Duration::from_millis(40));
+            // TERM handlers keep every child alive throughout the reap window;
+            // a child's handler output proves the reap has begun, so the second
+            // real SIGINT necessarily interrupts that window (no wall-clock wait).
+            wait_file(&signal_root.join("cancel-0"));
             assert_eq!(
                 unsafe { libc::pthread_kill(thread as libc::pthread_t, libc::SIGINT) },
                 0
