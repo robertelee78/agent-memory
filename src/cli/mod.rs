@@ -265,6 +265,18 @@ pub fn pack_root() -> Result<PathBuf> {
     provider.pack_root()
 }
 
+/// The executing runtime root: the directory holding `skills/agent-memory`
+/// (the registered pack) and the runtime's `bin/am`. Callers that measure
+/// the runtime (layout resolution, recovery quiescence) take this, never the
+/// pack itself.
+pub fn runtime_root() -> Result<PathBuf> {
+    let pack = pack_root()?;
+    pack.parent()
+        .and_then(std::path::Path::parent)
+        .map(std::path::Path::to_path_buf)
+        .ok_or_else(|| ContractError::new("Cannot locate installed runtime root"))
+}
+
 /// A registry that cannot be written (poisoned lock) stops the binary.
 fn wired(result: Result<()>) -> std::result::Result<(), crate::pack_validation::Invalid> {
     result.map_err(|error| {
@@ -415,6 +427,17 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     )));
     crate::layout_restore::register_layout_recovery(Some(Arc::new(
         crate::layout_recovery::LayoutRecovery,
+    )));
+    static SEMANTIC_SHARING: std::sync::LazyLock<std::result::Result<(), String>> =
+        std::sync::LazyLock::new(|| {
+            crate::sharing_hold_mapping::register_semantic_sharing(Box::new(
+                crate::semantic_sharing::SemanticSharing,
+            ))
+            .map_err(|error| error.to_string())
+        });
+    wired((*SEMANTIC_SHARING).clone().map_err(ContractError::new))?;
+    crate::bank_writes::register_recovery_transactions(Some(Arc::new(
+        crate::recovery_transactions::RecoveryTransactions,
     )));
     Ok(())
 }

@@ -61,6 +61,8 @@ pub enum Kind {
     PrivateInput,
     /// Source-bound semantic navigation failed without qualifying guidance.
     DiscoveryFailure { code: String, repair: String },
+    /// Explicit private semantic artifact output refused without clobbering.
+    PrivateOutput,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -282,6 +284,15 @@ impl ContractError {
                 code: code.into(),
                 repair: repair.into(),
             },
+            message: message.into(),
+        }
+    }
+}
+
+impl ContractError {
+    pub(crate) fn private_output(message: impl Into<String>) -> Self {
+        Self {
+            kind: Kind::PrivateOutput,
             message: message.into(),
         }
     }

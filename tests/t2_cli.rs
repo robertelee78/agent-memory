@@ -899,6 +899,12 @@ fn terminate_with(signal: libc::c_int) {
         stdout.is_empty(),
         "no further domain output after the signal"
     );
+    let mut stderr = String::new();
+    std::io::Read::read_to_string(&mut binary.stderr.take().unwrap(), &mut stderr).unwrap();
+    // SIGINT: the baseline's interrupt-cleanup note, with nothing left unreaped.
+    let note = "Owned child cleanup: 0 killed-but-unreaped or cancellation-unproved children handed to process exit; no further signals\n";
+    let expected = if signal == libc::SIGINT { note } else { "" };
+    assert_eq!(stderr, expected);
     assert!(
         sentinel.try_wait().unwrap().is_none(),
         "non-owned process signalled"

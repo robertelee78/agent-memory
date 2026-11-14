@@ -169,8 +169,14 @@ pub struct Scratch {
     retained: bool,
 }
 impl Scratch {
+    /// Baseline `tempfile.TemporaryDirectory(prefix=...)`: under an absolute
+    /// `TMPDIR` when set, otherwise `/tmp`; the parent must pass the trust check.
     pub fn new(prefix: &str) -> Result<Self> {
-        let parent = crate::fs::canonical_path(Path::new("/tmp"), true)?;
+        let base = std::env::var_os("TMPDIR")
+            .map(PathBuf::from)
+            .filter(|path| path.is_absolute())
+            .unwrap_or_else(|| PathBuf::from("/tmp"));
+        let parent = crate::fs::canonical_path(&base, true)?;
         crate::fs::trust::inspect(&parent, Default::default())?;
         let path = parent.join(format!("{prefix}{}", crate::host::uuid4()?));
         let parent_dir = Descriptor::open_directory(&parent)?;

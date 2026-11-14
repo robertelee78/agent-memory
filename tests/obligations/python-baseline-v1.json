@@ -170,49 +170,49 @@
   {
    "id": "tests/contracts/test_assembly.py::AssemblyContract.test_conflict_reference_cannot_bypass_scope_visibility_lifecycle_or_source_hash",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_assembly.py::AssemblyContract.test_disputed_evidence_outside_query_stays_together_and_routes_to_detecting_developer",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_assembly.py::AssemblyContract.test_diverse_whole_units_and_exact_duplicates_preserve_every_source_origin_and_condition",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_assembly.py::AssemblyContract.test_harness_counter_is_bound_to_exact_current_text_and_token_cap",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_assembly.py::AssemblyContract.test_overlapping_conflicts_form_one_indivisible_group",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_assembly.py::AssemblyContract.test_same_body_with_different_conditions_stays_distinct_and_orientation_is_not_admitted",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_assembly.py::AssemblyContract.test_small_budget_reports_omission_and_unknown_runtime_markers_never_produce_context",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -905,35 +905,35 @@
   {
    "id": "tests/contracts/test_checked_page_export.py::CheckedPageExportContract.test_bundle_matches_manifest_and_independent_public_pages",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checked_page_export.py::CheckedPageExportContract.test_changed_state_or_io_failure_never_completes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checked_page_export.py::CheckedPageExportContract.test_collisions_and_unsafe_paths_refuse_without_clobbering",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checked_page_export.py::CheckedPageExportContract.test_empty_inspection_has_only_a_complete_marker",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checked_page_export.py::CheckedPageExportContract.test_multiple_pages_preserve_every_real_source",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1465,35 +1465,35 @@
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_all_six_tracked_contexts_retain_git_evidence_without_claiming_uncommitted_bytes_are_shared",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_busy_or_interrupted_bank_is_not_repaired_by_state_loss",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_git_inspection_ignores_ambient_repo_redirection_and_does_not_execute_fsmonitor_or_write_trace",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_git_root_spelling_preserves_trailing_spaces",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_minimal_untracked_bank_survives_poisoned_then_removed_application_state",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2501,28 +2501,28 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_interrupt_in_timeout_cleanup_never_restarts_grace_or_signals_handoff",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_interrupt_reap_grace_is_shared_and_reports_unreaped_count",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_second_interrupt_during_reap_ends_all_remaining_waits",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_second_interrupt_stops_waits_but_finishes_kill_and_fd_cleanup",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2571,7 +2571,7 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_interrupt_during_ordinary_or_system_exit_reap_switches_to_shared_grace",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2613,7 +2613,7 @@
   {
    "id": "tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_ordinary_and_system_exit_keep_unbounded_os_wait_parity",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4341,28 +4341,28 @@
   {
    "id": "tests/contracts/test_layout_checkpoint_faults.py::LayoutCheckpointFaults.test_after_receipt_error",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_checkpoint_faults.py::LayoutCheckpointFaults.test_after_receipt_exit",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_checkpoint_faults.py::LayoutCheckpointFaults.test_before_receipt_error",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_checkpoint_faults.py::LayoutCheckpointFaults.test_before_receipt_exit",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5357,42 +5357,42 @@
   {
    "id": "tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_exact_nested_finish_resumes_after_marker_removal_without_canonical_replay",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_exact_nested_finish_resumes_after_sentinel_removal_without_canonical_replay",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_interrupted_pre_receipt_rollback_resumes_ordered_plan_not_forward_prefix",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_nested_reconciliation.py::NestedReconciliationContract.test_nested_retirement_resumes_active_binding_after_terminal_index",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11995,133 +11995,133 @@
   {
    "id": "tests/contracts/test_selector_local_reuse.py::SelectorLocalReuseContract.test_changed_body_and_framing_are_observed_on_the_next_call",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_selector_local_reuse.py::SelectorLocalReuseContract.test_exact_path_components_and_query_reuse_are_independent_of_selectors",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_selector_local_reuse.py::SelectorLocalReuseContract.test_more_than_256_distinct_queries_still_match_without_truncation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_selector_local_reuse.py::SelectorLocalReuseContract.test_uncached_and_bounded_reuse_preserve_framed_matches_and_edges",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_selector_local_reuse.py::SelectorLocalReuseContract.test_validation_still_precedes_matching_and_pending_is_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_introductions.py::SemanticIntroductionsContract.test_compatible_router_introduction_changes_preserve_both_meanings_and_routes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_introductions.py::SemanticIntroductionsContract.test_disputed_invalidation_caption_keeps_erasure_and_revocation_guards",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_introductions.py::SemanticIntroductionsContract.test_disputed_route_purpose_read_condition_and_omission_cannot_leak_into_independent_publication",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_introductions.py::SemanticIntroductionsContract.test_identical_prose_routed_under_multiple_conditions_cannot_claim_only_one_disjoint_variant",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_introductions.py::SemanticIntroductionsContract.test_router_and_custom_index_claims_are_disclosed_and_isolated_without_losing_independent_routes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_differently_worded_duplicate_combines_stable_identity_all_evidence_and_origins",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_disjoint_conditions_stay_distinct_unknown_conditions_cannot_claim_disjointness",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_explicit_clarifying_decision_corrects_then_consolidates_with_both_origins_and_history",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_hidden_other_kind_superseder_still_prevents_duplicate_reactivation",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_missing_pair_changed_sources_and_tampered_output_proof_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_new_disputed_context_keeps_omission_explanation_and_independent_plan_valid",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_only_explicit_dependent_updates_pause_with_conflict",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_same_file_nonoverlapping_compatible_changes_combine_without_landing_order",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_semantic_sharing.py::SemanticSharingContract.test_textually_clean_cross_file_yellow_blue_conflict_shows_both_origins_and_keeps_independent_work",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13202,9 +13202,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 526,
-   "ported": 332,
-   "unported": 1004
+   "partial": 570,
+   "ported": 340,
+   "unported": 952
   }
  }
 }

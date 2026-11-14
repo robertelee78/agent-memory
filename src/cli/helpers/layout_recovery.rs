@@ -222,12 +222,7 @@ fn run(matches: &Matches, context: &Context<'_>) -> CommandResult {
             }
         },
     };
-    let runtime_root = crate::cli::pack_root().and_then(|pack| {
-        pack.parent()
-            .and_then(Path::parent)
-            .map(Path::to_path_buf)
-            .ok_or_else(|| crate::error::ContractError::new("Cannot locate installed runtime root"))
-    });
+    let runtime_root = crate::cli::runtime_root();
     let runtime_root = match runtime_root {
         Ok(root) => root,
         Err(error) => return crate::cli::refusal(context.prog, &error.to_string()),

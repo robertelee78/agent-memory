@@ -2015,7 +2015,7 @@ pub fn validate_transaction(p: &Value, owner: Option<&[u8]>) -> Result<()> {
     )?;
     // Baseline layout_resolution.claims_for(p, owner=owned_lock); the claims are
     // validated there and their values are not used here.
-    layout_resolution::claims_for(p, owner, None, &crate::cli::pack_root()?)?;
+    layout_resolution::claims_for(p, owner, None, &crate::cli::runtime_root()?)?;
     check_sources(p, owner, None)
 }
 

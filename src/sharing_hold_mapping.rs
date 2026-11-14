@@ -32,6 +32,13 @@ pub trait SemanticSharing: Send + Sync {
     ) -> Result<()>;
     /// Baseline semantic_sharing.read_input(path, version2=).
     fn read_input(&self, path: &Path, version2: bool) -> Result<Value>;
+    fn inspect(&self, repo: &Path, base: Option<&str>) -> Result<Value>;
+    fn snapshots(
+        &self,
+        repo: &Path,
+        base: Option<&str>,
+        quarantine_records: bool,
+    ) -> Result<(std::path::PathBuf, Value, Value, Value, Value)>;
 }
 /// Implemented by `security` when that module is wired into the runtime.
 pub trait SecurityScan: Send + Sync {

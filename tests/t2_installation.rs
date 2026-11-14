@@ -3042,10 +3042,14 @@ fn interrupted_adoption_rolls_back_before_commit_and_never_after() {
     let value = release_recover(&world, &source);
     assert_eq!(text(&value, "status"), "rolled-back");
     assert!(!world.path("data/agent-memory/runtime").exists());
+    // The killed child cannot remove its TMPDIR scratch (baseline
+    // TemporaryDirectory leaks the same way); it is not install state.
+    let scratch = |k: &str| k == "tmp" || k.starts_with("tmp/");
     let mut restored = without_lock(snapshot(&world.root));
-    restored.retain(|k, _| !k.contains(".agent-memory-") && !k.starts_with("state/"));
+    restored
+        .retain(|k, _| !k.contains(".agent-memory-") && !k.starts_with("state/") && !scratch(k));
     let mut expected = python.clone();
-    expected.retain(|k, _| !k.starts_with("state/"));
+    expected.retain(|k, _| !k.starts_with("state/") && !scratch(k));
     assert_eq!(restored, expected);
     assert_eq!(
         text(&decode(&world.state().join("receipt.json")), "schema"),

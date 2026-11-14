@@ -6,6 +6,4 @@
 #     or: <module>::<register_fn> blocked by <reason>   (an API gap, not a missing module)
 bank_contract::register_recovery_coverage waits for recovery_frontier
 bank_writes::register_recovery_frontier waits for recovery_frontier
-bank_writes::register_recovery_transactions waits for recovery_transactions
-sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
 turn_check::register_memory_refresh waits for memory_refresh

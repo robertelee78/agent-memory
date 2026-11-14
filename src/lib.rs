@@ -7,6 +7,7 @@
 pub mod admission;
 pub mod admission_navigation;
 pub mod artifact;
+pub mod assembly;
 pub mod authority;
 pub mod bank_capacity;
 pub mod bank_contract;
@@ -79,6 +80,7 @@ pub mod purging;
 pub mod recall_catalog;
 pub mod records;
 pub mod recovery_quiescence;
+pub mod recovery_transactions;
 #[cfg(feature = "dev-tools")]
 #[path = "bin/am_dev/release.rs"]
 pub mod release_builder;
@@ -90,10 +92,13 @@ pub mod runtime_faults;
 pub mod scope_binding;
 pub mod scopes;
 pub mod security;
+pub mod semantic_sharing;
 pub mod sharing_boundary;
+pub mod sharing_frontier;
 pub mod sharing_hold_mapping;
 pub mod sharing_holds;
 pub mod sharing_limits;
+pub mod sharing_page_export;
 pub mod sharing_recovery;
 pub mod tombstones;
 pub mod trust_paths;

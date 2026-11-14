@@ -1516,3 +1516,486 @@ fn owned_process_uses_existing_three_slot_termination_registry() {
     .unwrap();
     assert_eq!(receipt, b"capacity/refusal/reuse verified\n");
 }
+
+// Interrupt cleanup (baseline identity_git `_cleanup` under KeyboardInterrupt):
+// one shared 250 ms reap budget, a second signal that ends the wait, and the
+// handoff of children still unreaped. Each case runs in a re-exec worker,
+// because the handler and its once-per-process cleanup are process-global.
+// The dev-tools seam cancels with SIGTERM instead of SIGKILL, so the
+// TERM-recording (or stopped) children below outlive their cancellation the
+// way a child in uninterruptible sleep outlives SIGKILL.
+#[cfg(feature = "dev-tools")]
+mod interrupt_reap {
+    use super::*;
+    use std::os::unix::process::ExitStatusExt;
+    use std::time::Instant;
+
+    const WORKER_ROOT: &str = "AM_T0_INTERRUPT_REAP_ROOT";
+    const WORKER_MODE: &str = "AM_T0_INTERRUPT_REAP_MODE";
+    const GRACE: Duration = Duration::from_millis(250);
+    /// Above one budget and below three: the budget is shared, not per child.
+    const SHARED_BOUND: Duration = Duration::from_millis(700);
+    const NOTE_THREE: &str = "Owned child cleanup: 3 killed-but-unreaped or cancellation-unproved children handed to process exit; no further signals";
+    /// Appends one line to `$0.term` per SIGTERM (the trap runs between short
+    /// sleeps) and exits by itself after about five seconds.
+    const RECORDER: &str = "trap 'echo t >> \"$0.term\"' TERM; echo $$ > \"$0.pid\"; i=0; while [ \"$i\" -lt 100 ]; do /bin/sleep 0.05; i=$((i+1)); done";
+    /// Ignores SIGTERM and exits by itself after 0.6 s.
+    const LINGERER: &str = "trap '' TERM; echo $$ > \"$0.pid\"; /bin/sleep 0.6";
+
+    /// SIGKILLs and reaps the worker's children however the worker ends.
+    struct Children(Vec<i32>);
+
+    impl Drop for Children {
+        fn drop(&mut self) {
+            for &pid in &self.0 {
+                let mut status = 0;
+                unsafe {
+                    libc::kill(pid, libc::SIGKILL);
+                    libc::waitpid(pid, &mut status, 0);
+                }
+            }
+        }
+    }
+
+    /// Sends `signal` to the creating thread `after` it is armed.
+    struct Signaller {
+        trigger: std::sync::mpsc::Sender<()>,
+        thread: std::thread::JoinHandle<u64>,
+    }
+
+    impl Signaller {
+        fn new(after: Duration, signal: libc::c_int) -> Self {
+            let target = unsafe { libc::pthread_self() } as usize;
+            let (trigger, armed) = std::sync::mpsc::channel::<()>();
+            let thread = std::thread::spawn(move || {
+                armed.recv().unwrap();
+                std::thread::sleep(after);
+                let sent_ns = monotonic_ns();
+                assert_eq!(
+                    unsafe { libc::pthread_kill(target as libc::pthread_t, signal) },
+                    0
+                );
+                sent_ns
+            });
+            Self { trigger, thread }
+        }
+
+        fn arm(&self) {
+            self.trigger.send(()).unwrap();
+        }
+
+        /// Monotonic time at which the signal was sent.
+        fn sent_ns(self) -> u64 {
+            self.thread.join().unwrap()
+        }
+    }
+
+    fn scripts(root: &Path, body: &str) -> Vec<Vec<OsString>> {
+        (0..3)
+            .map(|index| {
+                vec![
+                    OsString::from("/bin/sh"),
+                    OsString::from("-c"),
+                    OsString::from(body),
+                    root.join(format!("child-{index}")).into_os_string(),
+                ]
+            })
+            .collect()
+    }
+
+    fn child_pid(root: &Path, index: usize) -> i32 {
+        let path = root.join(format!("child-{index}.pid"));
+        let start = Instant::now();
+        loop {
+            if let Ok(raw) = fs::read_to_string(&path) {
+                if let Ok(pid) = raw.trim().parse() {
+                    return pid;
+                }
+            }
+            assert!(
+                start.elapsed() < Duration::from_secs(10),
+                "child {index} never started"
+            );
+            std::thread::sleep(Duration::from_millis(5));
+        }
+    }
+
+    fn children(root: &Path) -> Children {
+        Children((0..3).map(|index| child_pid(root, index)).collect())
+    }
+
+    /// SIGTERMs child `index` has recorded so far.
+    fn terms(root: &Path, index: usize) -> usize {
+        fs::read_to_string(root.join(format!("child-{index}.term")))
+            .map_or(0, |text| text.lines().count())
+    }
+
+    /// Long enough for every pending TERM trap to have run.
+    fn settle_traps() {
+        std::thread::sleep(Duration::from_millis(300));
+    }
+
+    /// Still this process's live, unreaped child.
+    fn unreaped(pid: i32) -> bool {
+        let mut status = 0;
+        unsafe { libc::waitpid(pid, &mut status, libc::WNOHANG) == 0 }
+    }
+
+    fn assert_handed_off_note() {
+        assert_eq!(
+            process::interrupt_cleanup_note().as_deref(),
+            Some(NOTE_THREE)
+        );
+    }
+
+    fn assert_interrupted_value(group: &mut Group<'_>, index: usize) {
+        let error = group.value(index).unwrap_err();
+        assert_eq!(error.reason, Refusal::Interrupted);
+        assert!(error.cleanup_error.is_none(), "{error}");
+        assert!(!error.evidence.unwrap().reaped);
+    }
+
+    fn assert_no_launch_after_interrupt(root: &Path) {
+        let args = argv(&["/bin/sh", "-c", ": > \"$0\"", "marker"]);
+        let refused = process::run(&spec(&args, root)).unwrap_err();
+        assert_eq!(refused.reason, Refusal::Interrupted);
+        assert!(refused.evidence.is_none());
+    }
+
+    fn assert_elapsed_after_signal(sent_ns: u64, returned_ns: u64) {
+        let elapsed = Duration::from_nanos(returned_ns - sent_ns);
+        assert!(elapsed >= GRACE, "returned {elapsed:?} after SIGINT");
+        assert!(elapsed < SHARED_BOUND, "returned {elapsed:?} after SIGINT");
+    }
+
+    // A SIGINT raised here runs the handler synchronously on this thread.
+    fn shared_budget(root: &Path) {
+        let argv = scripts(root, RECORDER);
+        let specs: Vec<Spec<'_>> = argv.iter().map(|argv| spec(argv, root)).collect();
+        let mut group = Group::launch(&specs, Duration::from_secs(60)).unwrap();
+        let pids = children(root);
+        // A stopped child acts on no cancellation signal but SIGKILL.
+        let mut status = 0;
+        assert_eq!(unsafe { libc::kill(pids.0[0], libc::SIGSTOP) }, 0);
+        assert_eq!(
+            unsafe { libc::waitpid(pids.0[0], &mut status, libc::WUNTRACED) },
+            pids.0[0]
+        );
+        assert!(libc::WIFSTOPPED(status));
+        let start = Instant::now();
+        assert_eq!(unsafe { libc::raise(libc::SIGINT) }, 0);
+        let elapsed = start.elapsed();
+        assert!(elapsed >= GRACE, "cleanup took {elapsed:?}");
+        assert!(elapsed < SHARED_BOUND, "cleanup took {elapsed:?}");
+        assert!(process::interrupted());
+        assert_handed_off_note();
+        // Handed off: supervision refuses at once, never signalling or waiting.
+        let start = Instant::now();
+        for index in 0..3 {
+            assert_interrupted_value(&mut group, index);
+        }
+        group.finish().unwrap();
+        assert!(start.elapsed() < GRACE);
+        settle_traps();
+        assert_eq!(terms(root, 0), 0);
+        assert_eq!(terms(root, 1), 1);
+        assert_eq!(terms(root, 2), 1);
+        for &pid in &pids.0 {
+            assert!(
+                unreaped(pid),
+                "handed-off child {pid} was signalled or reaped"
+            );
+        }
+        assert_no_launch_after_interrupt(root);
+    }
+
+    fn second_during_reap(root: &Path) {
+        let argv = scripts(root, RECORDER);
+        let specs: Vec<Spec<'_>> = argv.iter().map(|argv| spec(argv, root)).collect();
+        let mut group = Group::launch(&specs, Duration::from_secs(60)).unwrap();
+        let pids = children(root);
+        let second = Signaller::new(Duration::from_millis(60), libc::SIGINT);
+        second.arm();
+        let start = Instant::now();
+        assert_eq!(unsafe { libc::raise(libc::SIGINT) }, 0);
+        let elapsed = start.elapsed();
+        let returned_ns = monotonic_ns();
+        let sent_ns = second.sent_ns();
+        assert!(sent_ns <= returned_ns);
+        assert!(
+            elapsed < GRACE,
+            "a second SIGINT did not end the wait: {elapsed:?}"
+        );
+        assert!(process::interrupted());
+        assert_handed_off_note();
+        for index in 0..3 {
+            assert_interrupted_value(&mut group, index);
+        }
+        group.finish().unwrap();
+        settle_traps();
+        for (index, &pid) in pids.0.iter().enumerate() {
+            assert_eq!(terms(root, index), 1);
+            assert!(
+                unreaped(pid),
+                "handed-off child {pid} was signalled or reaped"
+            );
+        }
+        assert_no_launch_after_interrupt(root);
+    }
+
+    // Dies by SIGTERM; the parent test checks the timing and the kills.
+    fn pending_second(root: &Path) {
+        let argv = scripts(root, RECORDER);
+        let specs: Vec<Spec<'_>> = argv.iter().map(|argv| spec(argv, root)).collect();
+        let _group = Group::launch(&specs, Duration::from_secs(60)).unwrap();
+        for index in 0..3 {
+            child_pid(root, index);
+        }
+        // Both pending on this thread before either is delivered: the first
+        // invocation's kills run masked, and the bounded wait's unblock
+        // delivers the other signal before any reap poll.
+        let mut set: libc::sigset_t = unsafe { std::mem::zeroed() };
+        unsafe {
+            libc::sigemptyset(&mut set);
+            libc::sigaddset(&mut set, libc::SIGINT);
+            libc::sigaddset(&mut set, libc::SIGTERM);
+            assert_eq!(
+                libc::pthread_sigmask(libc::SIG_BLOCK, &set, std::ptr::null_mut()),
+                0
+            );
+            assert_eq!(libc::pthread_kill(libc::pthread_self(), libc::SIGINT), 0);
+            assert_eq!(libc::pthread_kill(libc::pthread_self(), libc::SIGTERM), 0);
+        }
+        fs::write(root.join("unblock.ns"), monotonic_ns().to_string()).unwrap();
+        unsafe {
+            libc::pthread_sigmask(libc::SIG_UNBLOCK, &set, std::ptr::null_mut());
+        }
+        panic!("the worker survived a SIGTERM");
+    }
+
+    fn timeout_cleanup(root: &Path) {
+        let argv = scripts(root, RECORDER);
+        let specs: Vec<Spec<'_>> = argv.iter().map(|argv| spec(argv, root)).collect();
+        let mut group = Group::launch(&specs, Duration::from_millis(200)).unwrap();
+        let pids = children(root);
+        let interrupt = Signaller::new(Duration::from_millis(600), libc::SIGINT);
+        interrupt.arm();
+        // Child 0 times out, is cancelled by the supervisor and ignores it:
+        // its ordinary reap would wait until SIGINT switches to the budget.
+        let error = group.value(0).unwrap_err();
+        let returned_ns = monotonic_ns();
+        assert_elapsed_after_signal(interrupt.sent_ns(), returned_ns);
+        assert_eq!(error.reason, Refusal::Deadline);
+        assert!(error.cleanup_error.is_none(), "{error}");
+        let evidence = error.evidence.unwrap();
+        assert!(evidence.killed && !evidence.reaped);
+        assert_handed_off_note();
+        for index in 1..3 {
+            assert_interrupted_value(&mut group, index);
+        }
+        group.finish().unwrap();
+        // A later SIGINT neither restarts the budget nor signals anything.
+        let start = Instant::now();
+        assert_eq!(unsafe { libc::raise(libc::SIGINT) }, 0);
+        assert!(start.elapsed() < Duration::from_millis(100));
+        assert_handed_off_note();
+        settle_traps();
+        for (index, &pid) in pids.0.iter().enumerate() {
+            assert_eq!(terms(root, index), 1, "child {index} signalled again");
+            assert!(
+                unreaped(pid),
+                "handed-off child {pid} was signalled or reaped"
+            );
+        }
+        assert_no_launch_after_interrupt(root);
+    }
+
+    fn ordinary_reap(root: &Path) {
+        let argv = scripts(root, RECORDER);
+        let specs: Vec<Spec<'_>> = argv.iter().map(|argv| spec(argv, root)).collect();
+        let group = Group::launch(&specs, Duration::from_secs(60)).unwrap();
+        let pids = children(root);
+        let interrupt = Signaller::new(Duration::from_millis(300), libc::SIGINT);
+        interrupt.arm();
+        // Ordinary cleanup cancels all three, then waits without a bound
+        // until SIGINT switches it to the one shared budget.
+        drop(group);
+        let returned_ns = monotonic_ns();
+        assert_elapsed_after_signal(interrupt.sent_ns(), returned_ns);
+        assert!(process::interrupted());
+        assert_handed_off_note();
+        settle_traps();
+        for (index, &pid) in pids.0.iter().enumerate() {
+            assert_eq!(terms(root, index), 1, "child {index} signalled again");
+            assert!(
+                unreaped(pid),
+                "handed-off child {pid} was signalled or reaped"
+            );
+        }
+    }
+
+    fn ordinary_unbounded(root: &Path) {
+        let argv = scripts(root, LINGERER);
+        let specs: Vec<Spec<'_>> = argv.iter().map(|argv| spec(argv, root)).collect();
+        let group = Group::launch(&specs, Duration::from_secs(60)).unwrap();
+        let pids = children(root);
+        let start = Instant::now();
+        drop(group);
+        let elapsed = start.elapsed();
+        assert!(
+            elapsed > GRACE,
+            "ordinary cleanup stopped waiting after {elapsed:?}"
+        );
+        for &pid in &pids.0 {
+            let mut status = 0;
+            assert_eq!(
+                unsafe { libc::waitpid(pid, &mut status, libc::WNOHANG) },
+                -1
+            );
+            assert_eq!(
+                std::io::Error::last_os_error().raw_os_error(),
+                Some(libc::ECHILD)
+            );
+        }
+        assert!(!process::interrupted());
+        assert_eq!(process::interrupt_cleanup_note(), None);
+    }
+
+    /// The parent's SIGINT/SIGTERM block around fork does not leak into the
+    /// child, and the parent's own mask is unchanged afterwards.
+    fn child_mask(root: &Path) {
+        let query = || {
+            let mut mask: libc::sigset_t = unsafe { std::mem::zeroed() };
+            assert_eq!(
+                unsafe { libc::pthread_sigmask(libc::SIG_BLOCK, std::ptr::null(), &mut mask) },
+                0
+            );
+            [libc::SIGINT, libc::SIGTERM].map(|signal| unsafe { libc::sigismember(&mask, signal) })
+        };
+        let before = query();
+        for (signal, name) in [(libc::SIGINT, "INT"), (libc::SIGTERM, "TERM")] {
+            let script = format!("kill -{name} $$; echo blocked");
+            let args = argv(&["/bin/sh", "-c", &script]);
+            let output = process::run(&spec(&args, root)).unwrap();
+            assert_eq!(output.status, Status::Signal(signal));
+            assert!(output.stdout.is_empty());
+        }
+        assert_eq!(query(), before);
+        assert_eq!(before, [0, 0]);
+    }
+
+    #[test]
+    fn worker() {
+        let Some(root) = std::env::var_os(WORKER_ROOT) else {
+            return;
+        };
+        let root = PathBuf::from(root);
+        let mode = std::env::var(WORKER_MODE).unwrap();
+        process::set_cancellation_signal(libc::SIGTERM).unwrap();
+        process::install_termination_handler().unwrap();
+        match mode.as_str() {
+            "shared-budget" => shared_budget(&root),
+            "second-during-reap" => second_during_reap(&root),
+            "pending-second" => pending_second(&root),
+            "timeout-cleanup" => timeout_cleanup(&root),
+            "ordinary-reap" => ordinary_reap(&root),
+            "ordinary-unbounded" => ordinary_unbounded(&root),
+            "child-mask" => child_mask(&root),
+            other => panic!("unknown worker mode {other}"),
+        }
+        fs::write(root.join("worker.completed"), mode.as_bytes()).unwrap();
+    }
+
+    fn run_worker(mode: &str) -> (PrivateDir, std::process::ExitStatus, String) {
+        let dir = PrivateDir::new();
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "interrupt_reap::worker",
+                "--nocapture",
+                "--test-threads=1",
+            ])
+            .env(WORKER_ROOT, &dir.0)
+            .env(WORKER_MODE, mode)
+            .output()
+            .unwrap();
+        let text = format!(
+            "stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        (dir, output.status, text)
+    }
+
+    fn passes(mode: &str) {
+        let (dir, status, text) = run_worker(mode);
+        assert!(status.success(), "{text}");
+        assert_eq!(
+            fs::read(dir.0.join("worker.completed")).unwrap(),
+            mode.as_bytes(),
+            "{text}"
+        );
+    }
+
+    // obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_interrupt_reap_grace_is_shared_and_reports_unreaped_count
+    #[test]
+    fn interrupt_reap_budget_is_shared_bounded_and_reports_unreaped_count() {
+        passes("shared-budget");
+    }
+
+    // obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_second_interrupt_during_reap_ends_all_remaining_waits
+    #[test]
+    fn second_interrupt_during_the_bounded_reap_ends_every_remaining_wait() {
+        passes("second-during-reap");
+    }
+
+    // obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_second_interrupt_stops_waits_but_finishes_kill_and_fd_cleanup
+    #[test]
+    fn signal_pending_at_the_bounded_wait_stops_it_before_any_reap_after_every_kill() {
+        let (dir, status, text) = run_worker("pending-second");
+        let died_ns = monotonic_ns();
+        assert_eq!(status.signal(), Some(libc::SIGTERM), "{text}");
+        let unblocked_ns: u64 = fs::read_to_string(dir.0.join("unblock.ns"))
+            .unwrap()
+            .parse()
+            .unwrap();
+        let elapsed = Duration::from_nanos(died_ns - unblocked_ns);
+        assert!(elapsed < GRACE, "the worker waited {elapsed:?} for reaps");
+        // Every kill was attempted although the second signal came first.
+        let start = Instant::now();
+        while (0..3).any(|index| terms(&dir.0, index) == 0) {
+            assert!(
+                start.elapsed() < Duration::from_secs(5),
+                "a child never received its cancellation"
+            );
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        settle_traps();
+        for index in 0..3 {
+            assert_eq!(terms(&dir.0, index), 1);
+        }
+    }
+
+    // obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_interrupt_in_timeout_cleanup_never_restarts_grace_or_signals_handoff
+    #[test]
+    fn interrupt_in_timeout_cleanup_never_restarts_the_budget_or_signals_a_handoff() {
+        passes("timeout-cleanup");
+    }
+
+    // obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_interrupt_during_ordinary_or_system_exit_reap_switches_to_shared_grace
+    #[test]
+    fn interrupt_during_an_ordinary_reap_switches_to_the_shared_budget() {
+        passes("ordinary-reap");
+    }
+
+    // obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_ordinary_and_system_exit_keep_unbounded_os_wait_parity
+    #[test]
+    fn ordinary_cleanup_without_an_interrupt_keeps_waiting_beyond_the_budget() {
+        passes("ordinary-unbounded");
+    }
+
+    #[test]
+    fn owned_children_start_with_the_callers_signal_mask() {
+        passes("child-mask");
+    }
+}

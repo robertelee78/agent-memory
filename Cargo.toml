@@ -31,11 +31,12 @@ unicode-normalization = { version = "0.1", default-features = false }
 flate2 = { version = "=1.1.11", default-features = false, features = ["rust_backend"] }
 regex = { version = "=1.12.2", default-features = false, features = ["std", "perf"] }
 
-# Dev/test builds keep line tables only (backtraces keep file:line): with full
-# debug info the Linux musl debug `am` exceeds release_distribution::MAX_BINARY
-# (64 MiB), which the installer and updater tests apply to the real binary.
+# Dev/test builds carry no debug info: even line tables push the Linux musl
+# debug `am` past release_distribution::MAX_BINARY (64 MiB), which the
+# installer and updater tests apply to the real binary. Panic messages keep
+# their file:line (std::panic::Location does not need debug info).
 [profile.dev]
-debug = "line-tables-only"
+debug = false
 
 [profile.release]
 panic = "abort"

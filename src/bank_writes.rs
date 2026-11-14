@@ -264,6 +264,15 @@ pub trait RecoveryFrontier: Send + Sync {
         predecessor: Option<&crate::scope_binding::VerifiedEnrollmentHold>,
         runtime_root: &Path,
     ) -> Result<Value>;
+    /// Baseline recovery_frontier._observe_index, validating a projected retained index.
+    fn observe_index(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        indexed: &Value,
+        runtime_root: &Path,
+    ) -> Result<Value>;
 }
 /// Baseline recovery_frontier marker schemas; recovery_frontier reuses these.
 pub const HOLD: &str = "agent-memory/layout-frontier-hold-v1";

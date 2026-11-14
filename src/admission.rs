@@ -878,7 +878,7 @@ pub fn validate_transaction(p: &Value, owner: Option<&[u8]>) -> Result<()> {
     )?;
     // Baseline layout_resolution.claims_for(p, owner=owned_lock): it validates
     // the retained unit claims and admission discards the returned values.
-    layout_resolution::claims_for(p, owner, None, &crate::cli::pack_root()?)?;
+    layout_resolution::claims_for(p, owner, None, &crate::cli::runtime_root()?)?;
     Ok(())
 }
 pub fn check_sources(p: &Value, owner: Option<&[u8]>, marker: Option<&[u8]>) -> Result<()> {
