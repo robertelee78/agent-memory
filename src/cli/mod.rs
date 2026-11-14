@@ -268,7 +268,14 @@ pub fn pack_root() -> Result<PathBuf> {
 /// Later lanes add their provider registrations here.
 pub fn register_providers() -> std::result::Result<(), crate::pack_validation::Invalid> {
     let surface = surface::Declared::current()?;
-    crate::pack_validation::register_command_surface(Some(Arc::new(surface)))
+    crate::pack_validation::register_command_surface(Some(Arc::new(surface)))?;
+    crate::artifact::register_migration_contract(Some(Arc::new(
+        crate::migration_contract::Bundled,
+    )))
+    .map_err(|error| {
+        crate::pack_validation::Invalid::new("malformed-pack", ".", error.to_string())
+    })?;
+    Ok(())
 }
 
 /// The executable entry: choose console or direct mode from argv0 and run.

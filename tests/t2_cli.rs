@@ -864,3 +864,19 @@ fn owned_children_complete_normally_with_the_handler_installed() {
         assert_eq!(observed[0].get("value"), Some(&Value::String("Ada".into())));
     }
 }
+
+/// The binary registers the migration contract, so artifact inspection fails
+/// or succeeds on the pack itself, never on a missing provider. (The committed
+/// pack is refused today because its guides still name Python helper scripts.)
+#[test]
+fn artifact_inspection_has_its_migration_provider() {
+    let dir = PrivateDir::new();
+    let pack = concat!(env!("CARGO_MANIFEST_DIR"), "/skills/agent-memory");
+    let output = dir.run("am", &["artifact", "inspect", "--pack", pack]);
+    let stdout = text(&output.stdout);
+    assert!(
+        stdout.contains("\"schema\": \"agent-memory/artifact-inspection-v1\""),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("provider is not registered"), "{stdout}");
+}
