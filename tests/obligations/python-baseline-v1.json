@@ -848,7 +848,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_exact_count_and_byte_limits_allow_recovery_but_next_cache_refuses",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -862,7 +862,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_late_signed_payload_or_other_target_change_never_receives_race_qualification",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -876,7 +876,7 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_python_created_group_writable_cache_directories_below_private_source_recover",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -890,14 +890,14 @@
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_same_version_preview_fresh_acquisition_exact_backup_and_clean_noop",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_cache_update_recovery.py::CacheUpdateRecoveryContract.test_unqualified_payload_cache_types_and_bounds_preserve_every_target",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -1835,7 +1835,7 @@
   {
    "id": "tests/contracts/test_download_diagnostics.py::DownloadDiagnostics.test_private_bounded_redacted_evidence",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -1870,7 +1870,7 @@
   {
    "id": "tests/contracts/test_download_diagnostics.py::ReviewRegressions.test_diagnostic_redaction_normalizes_before_matching",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12484,7 +12484,7 @@
   {
    "id": "tests/contracts/test_signed_release_publisher.py::SignedPublisherContract.test_unsafe_signing_key_paths_refuse_before_output_or_key_use",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -13202,8 +13202,8 @@
   "unregistered": 33,
   "by_status": {
    "partial": 102,
-   "ported": 53,
-   "unported": 1707
+   "ported": 61,
+   "unported": 1699
   }
  }
 }

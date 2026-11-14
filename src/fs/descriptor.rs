@@ -555,6 +555,22 @@ impl Descriptor {
         names.sort();
         Ok(Some(names))
     }
+
+    /// Exclusively create a new child directory; never changes an existing inode.
+    pub fn create_directory(&self, name: &OsStr, mode: u32) -> io::Result<Self> {
+        let child = child_name(name)?;
+        status(unsafe { libc::mkdirat(self.as_raw_fd(), child.as_ptr(), mode as libc::mode_t) })?;
+        let directory = self.open_directory_at(name)?;
+        let opened = directory.stat()?;
+        if !opened.same_inode(self.stat_at(name)?) || !opened.is_directory() {
+            return Err(io::Error::other("New directory binding changed"));
+        }
+        status(unsafe { libc::fchmod(directory.as_raw_fd(), mode as libc::mode_t) })?;
+        if !directory.stat()?.same_inode(self.stat_at(name)?) {
+            return Err(io::Error::other("New directory binding changed"));
+        }
+        Ok(directory)
+    }
 }
 
 #[derive(Debug)]

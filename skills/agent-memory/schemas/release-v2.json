@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-memory/release-v2",
+  "title": "Signed Rust release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "repository", "tag", "version", "source_commit", "archive", "archive_size", "archive_sha256", "artifact_digest", "targets", "command_surface"],
+  "properties": {
+    "schema": {"const": "agent-memory/release-v2"},
+    "repository": {"const": "robertelee78/agent-memory"},
+    "tag": {"type": "string", "maxLength": 65, "pattern": "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"},
+    "version": {"type": "string", "maxLength": 64, "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "archive": {"const": "agent-memory.tar.gz"},
+    "archive_size": {"type": "integer", "minimum": 1, "maximum": 17825792},
+    "archive_sha256": {"$ref": "#/$defs/digest"},
+    "artifact_digest": {"$ref": "#/$defs/digest"},
+    "command_surface": {"type": "object"},
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-musl", "aarch64-unknown-linux-musl"],
+      "properties": {
+        "aarch64-apple-darwin": {"$ref": "#/$defs/binary"},
+        "x86_64-apple-darwin": {"$ref": "#/$defs/binary"},
+        "x86_64-unknown-linux-musl": {"$ref": "#/$defs/binary"},
+        "aarch64-unknown-linux-musl": {"$ref": "#/$defs/binary"}
+      }
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "binary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["size", "sha256", "artifact_digest"],
+      "properties": {
+        "size": {"type": "integer", "minimum": 1, "maximum": 67108864},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "artifact_digest": {"$ref": "#/$defs/digest"}
+      }
+    }
+  },
+  "$comment": "tag must equal v + version. Encoding: recursively sorted keys; compact comma/colon separators; ASCII escapes; finite JSON; one final LF. artifact_digest authenticates the portable inventory; target artifact_digest authenticates that inventory plus bin/am (sha256, mode 0o755)."
+}

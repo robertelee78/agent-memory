@@ -11,6 +11,7 @@ pub mod bank_contract;
 pub mod bank_layout;
 pub mod bank_writes;
 pub mod boundary_assessment;
+pub mod cache_recovery;
 pub mod cli;
 pub mod clock;
 pub mod codec;
@@ -31,6 +32,10 @@ pub mod pack_validation;
 pub mod process;
 pub mod project_identity;
 pub mod records;
+#[cfg(feature = "dev-tools")]
+#[path = "bin/am_dev/release.rs"]
+pub mod release_builder;
+pub mod release_distribution;
 pub mod remote_identity;
 pub mod repository_config;
 pub mod scopes;
