@@ -137,7 +137,7 @@ pub fn register_component_runtime() {
     let (pack, _) = component_runtime().unwrap();
     agent_memory::cli::use_development_pack(Some(pack));
     let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
-        component_runtime,
+        || component_runtime().map(Some),
     ));
     agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
     agent_memory::bank_contract::register_recovery_coverage(Some(frontier));

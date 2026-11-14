@@ -613,7 +613,12 @@ fn github(
                 "https://github.com/fixture/memory.git",
             ],
         )?;
-        bind(w, peer)?;
+        let receipt = support::identity_fixtures::link_with_command(
+            w,
+            peer,
+            Path::new(&w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")]),
+        )?;
+        assert_eq!(get(&receipt, "resolved"), &Value::Bool(true));
     }
     enforce(&remote)?;
     Ok(policy)

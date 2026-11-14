@@ -549,7 +549,12 @@ pub fn server(repo: &Path, remote: &str, branch: &str) -> Result<String> {
             err("Configured authority differs from the server default or is unresolved")
         })?;
         if reference == "HEAD" {
-            default = left.strip_prefix("ref: refs/heads/");
+            // Git advertises both the symbolic target and its object ID as HEAD.
+            if let Some(branch) = left.strip_prefix("ref: refs/heads/") {
+                default = Some(branch);
+            } else {
+                oid(left)?;
+            }
         } else if reference == branch_ref {
             observed = Some(oid(left)?.to_owned());
         }

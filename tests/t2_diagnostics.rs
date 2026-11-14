@@ -1985,7 +1985,10 @@ fn doctor_does_not_resume_a_separately_confirmed_purge() {
     assert!(interrupted.stderr.is_empty());
     let journal_path = world.state().join("purges").join(format!("{confirm}.json"));
     let journal = decode(&journal_path);
-    assert_eq!(get(&journal, "preview"), get(&preview, "preview"));
+    assert!(install::same(
+        get(&journal, "preview"),
+        get(&preview, "preview")
+    ));
     let quarantine = PathBuf::from(text(&journal, "stage"));
     assert!(quarantine.is_dir());
     assert!(!directory.exists());
@@ -2021,10 +2024,10 @@ fn doctor_does_not_resume_a_separately_confirmed_purge() {
         0,
     );
     assert_eq!(get(&completed, "verified"), &Value::Bool(true));
-    assert_eq!(
+    assert!(install::same(
         get(get(&completed, "receipt"), "preview"),
-        get(&preview, "preview")
-    );
+        get(&preview, "preview"),
+    ));
     assert_eq!(
         get(get(&completed, "receipt"), "deletion_readback_verified"),
         &Value::Bool(true)
@@ -2239,10 +2242,20 @@ impl Native {
         let world = World::new();
         let mut runtime =
             support::installed_runtime::install(&world.root, |argv| native_process(&world, argv));
+        // The bootstrap fixture deliberately disables guidance, and reinstall
+        // preserves that choice. Start a fresh installation to exercise both
+        // receipt-owned guidance and explicit --no-guidance without editing receipts.
+        let removed = native_cli(&world, &runtime, &["uninstall"], 0);
+        assert_eq!(get(&removed, "verified"), &Value::Bool(true));
+        assert!(
+            install::read_receipt(&world.env(), &world.state())
+                .unwrap()
+                .is_none()
+        );
         let agent = world.path("native root");
         std::fs::create_dir(&agent).unwrap();
         let mut argv = vec![
-            runtime.command.as_os_str().to_owned(),
+            runtime.binary.as_os_str().to_owned(),
             "--json".into(),
             "install".into(),
             "--development-source".into(),
@@ -2280,6 +2293,11 @@ impl Native {
             install::executing_runtime(&world.env(), &runtime.command).unwrap();
         bank(&world.path("repo"));
         let receipt = decode(&world.receipt_path());
+        assert_eq!(get(&receipt, "no_guidance"), &Value::Bool(no_guidance));
+        assert_eq!(
+            get(get(&receipt, "omp_binding"), "activation_target") == &Value::Null,
+            no_guidance,
+        );
         let source = runtime.source.clone();
         Self {
             installed: Installed { world, source },

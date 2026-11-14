@@ -92,6 +92,39 @@ fn inspect(w: &World, repo: &std::path::Path) -> Value {
 }
 
 #[test]
+fn active_invalid_receipt_never_degrades_to_absent_metadata_containment() {
+    let w = installed_world();
+    let (repo, _) = fixture(&w, false, false);
+    let healthy = inspect(&w, &repo);
+    let receipt = w.paths["state"].join("agent-memory/install/receipt.json");
+    fs::write(&receipt, b"{\"schema\":\"invalid-receipt\"}\n").unwrap();
+    let before = physical(&w.root);
+    let refused = refused(
+        &w,
+        "bank_state.py",
+        &[
+            "inspect".into(),
+            "--repo".into(),
+            repo.as_os_str().to_owned(),
+        ],
+    );
+    assert!(!yes(&refused, "valid"));
+    assert!(!yes(&refused, "writes_performed"));
+    assert!(
+        string(&refused, "error").starts_with("Invalid installation ownership receipt"),
+        "{refused:?}"
+    );
+    assert_eq!(physical(&w.root), before);
+
+    // No current installed receipt permits metadata containment, never identity.
+    fs::remove_file(&receipt).unwrap();
+    let before = physical(&w.root);
+    assert_eq!(inspect(&w, &repo), healthy);
+    assert_eq!(physical(&w.root), before);
+    assert!(!receipt.exists());
+}
+
+#[test]
 #[ignore = "needs am inspect route and recovery_frontier registered"]
 // obligation: tests/contracts/test_current_bank.py::CurrentBankContract.test_minimal_untracked_bank_survives_poisoned_then_removed_application_state
 fn untracked_bank_survives_poisoned_then_removed_application_state() {
@@ -243,7 +276,24 @@ fn git_root_spelling_preserves_trailing_spaces() {
     let (repo, _) = fixture(&w, true, false);
     let renamed = w.inside("repo with trailing space ").unwrap();
     fs::rename(repo, &renamed).unwrap();
-    let result = inspect(&w, &renamed);
+    // Renaming the repository also removes World's default child working directory.
+    let output = w
+        .run_with(
+            [
+                executable(&w).into_os_string(),
+                "--json".into(),
+                "inspect".into(),
+                "--repo".into(),
+                renamed.as_os_str().to_owned(),
+            ],
+            RunOptions {
+                cwd: Some(&renamed),
+                ..RunOptions::default()
+            },
+        )
+        .unwrap();
+    let result =
+        agent_memory::codec::json::decode_bytes(&output.stdout, Default::default()).unwrap();
     assert_eq!(string(get(&result, "git"), "status"), "checkout");
     assert!(
         get(get(&result, "git"), "not_indexed_paths")

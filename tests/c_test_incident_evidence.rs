@@ -279,7 +279,11 @@ fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
         std::fs::write(&path, bytes).unwrap();
         // Inventory preserves checkout modes; normalize only this separate
         // portable input, leaving the installed source and receipt untouched.
-        let mode = if permissions & 0o111 != 0 { 0o755 } else { 0o644 };
+        let mode = if permissions & 0o111 != 0 {
+            0o755
+        } else {
+            0o644
+        };
         support::lifecycle::mode(&path, mode);
     }
     let value = call(

@@ -100,7 +100,36 @@ fn relocated_binary_preserves_nested_bank_and_unknown_interruption_evidence() {
     let output = invoke();
     assert_eq!(output.status, Status::Code(0));
     let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
-    assert!(yes(&value, "valid"));
+    assert_eq!(string(&value, "schema"), "agent-memory/layout-result-v1");
+    assert_eq!(string(&value, "project_id"), PROJECT);
+    assert_eq!(
+        string(&value, "validation_scope"),
+        "routed-layout-and-record-format"
+    );
+    assert!(!yes(&value, "writes_performed"));
+    let leaf = get(&value, "entries")
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| string(entry, "path") == "episodes/retry notes.md")
+        .unwrap();
+    assert_eq!(
+        get(leaf, "scope_chain"),
+        &Value::Array(
+            [
+                "branch:feature/retry",
+                "component:src/retry",
+                "component:src/retry",
+            ]
+            .into_iter()
+            .map(text)
+            .collect()
+        )
+    );
+    assert_eq!(
+        get(leaf, "conditions"),
+        &object([("branch", text("feature/retry"))])
+    );
     for name in [".agent-memory.lock", MARKER] {
         let marker = bank.join(name);
         fs::write(&marker, "Preserve unknown interruption evidence\n").unwrap();

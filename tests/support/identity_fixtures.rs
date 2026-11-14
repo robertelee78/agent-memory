@@ -28,8 +28,35 @@ fn apply(world: &World, executable: &Path, helper: &str, proposal: &Value) -> Re
     )
 }
 
-/// Bind through the genuinely installed command, with its own strict locator.
+/// Explicitly adopt an unregistered bank through the genuinely installed command.
 pub fn bind_with_command(world: &World, repo: &Path, executable: &Path) -> Result<Value> {
+    setup_with_command(
+        world,
+        repo,
+        executable,
+        "bind",
+        "Explicit disposable fixture bank adoption",
+    )
+}
+
+/// Explicitly link another checkout of an already registered project.
+pub fn link_with_command(world: &World, repo: &Path, executable: &Path) -> Result<Value> {
+    setup_with_command(
+        world,
+        repo,
+        executable,
+        "link",
+        "Explicit disposable fixture checkout link",
+    )
+}
+
+fn setup_with_command(
+    world: &World,
+    repo: &Path,
+    executable: &Path,
+    action: &str,
+    reason: &str,
+) -> Result<Value> {
     let status_args = [
         OsString::from("status"),
         "--repo".into(),
@@ -61,15 +88,15 @@ pub fn bind_with_command(world: &World, repo: &Path, executable: &Path) -> Resul
                 "--repo".into(),
                 repo.as_os_str().to_owned(),
                 "--action".into(),
-                "bind".into(),
+                action.into(),
                 "--reason".into(),
-                "Explicit disposable fixture bank adoption".into(),
+                reason.into(),
             ],
         )?;
         let receipt = apply(world, executable, "scope_binding.py", &proposal)?;
         if !boolean(&receipt, "verified")? {
             return Err(WorldError::invalid(format!(
-                "Identity fixture adoption was not verified: {}",
+                "Identity fixture {action} was not verified: {}",
                 json::encode(&receipt, json::DEFAULT)?
             )));
         }

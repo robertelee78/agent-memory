@@ -1163,9 +1163,10 @@ fn private_plan_and_preview_keep_bodies_off_stdout() {
                 .contains("Stop after three attempts")
         );
         let stored = decode(&std::fs::read_to_string(output).unwrap());
+        // JSON object serialization may reorder paths; every path and body must match.
         assert_eq!(
-            get(get(&stored, "proposal"), "files"),
-            get(output_plan, "files")
+            json::encode(get(get(&stored, "proposal"), "files"), json::SORTED_UTF8).unwrap(),
+            json::encode(get(output_plan, "files"), json::SORTED_UTF8).unwrap()
         );
         assert_eq!(world.state(&repo, &bank), before);
         let done = consolidation::apply(get(&preview, "proposal")).unwrap();

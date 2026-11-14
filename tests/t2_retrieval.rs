@@ -1136,13 +1136,18 @@ fn source_version_uncertainty_and_missing_parent_refuse() {
 #[test]
 fn stable_id_resolves_current_discovered_version() {
     let f = Fixture::new();
+    let id = s(agent_memory::host::uuid4().unwrap());
     let old = f.add(
         "history/old.md",
         "# Retained old retry\n",
         &[
+            ("id", id.clone()),
             ("status", s("superseded")),
             ("state-reason", s("Replaced by corrected version")),
-            ("superseded-by", Value::Array(vec![])),
+            (
+                "superseded-by",
+                Value::Array(vec![obj([("id", id), ("version", Value::Int(2.into()))])]),
+            ),
         ],
     );
     let new = f.add(
@@ -1163,10 +1168,25 @@ fn stable_id_resolves_current_discovered_version() {
     let mut r = request();
     set(&mut r, "ids", Value::Array(vec![get(&old, "id").clone()]));
     set(&mut r, "discovery", f.trace(&["topics/new.md"]));
-    let (ok, value, _) = f.recall(&r);
-    assert!(ok);
+    let before = f.state();
+    let code = f.code();
+    let (ok, value, stdout) = f.recall(&r);
+    assert!(ok, "{stdout}");
     assert_eq!(rows(get(&value, "results")).len(), 1);
     assert_eq!(get(&rows(get(&value, "results"))[0], "record"), &new);
+    let row = &rows(get(&value, "results"))[0];
+    assert_eq!(get(row, "path"), &s("topics/new.md"));
+    assert_eq!(
+        get(row, "body"),
+        &s("# Revised retry\n\nThe corrected fixture allows four attempts.\n")
+    );
+    assert_eq!(
+        get(row, "source_sha256"),
+        get(&rows(get(get(&r, "discovery"), "sources"))[0], "sha256")
+    );
+    assert_eq!(get(get(row, "selection"), "current"), &Value::Bool(true));
+    assert_eq!(f.state(), before);
+    assert_eq!(f.code(), code);
 }
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_withheld_source_hashes_and_labels_are_not_echoed_by_qualified_read
 // obligation: tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_successful_orientation_and_empty_qualification_are_not_promoted_to_current_guidance

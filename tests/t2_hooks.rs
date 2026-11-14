@@ -1403,9 +1403,10 @@ fn actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session(
     world
         .git(["config", "--local", "agent-memory.authorityBranch", "main"])
         .unwrap();
-    let proposal = decode(include_str!(
+    let mut proposal = decode(include_str!(
         "../skills/agent-memory/templates/router-proposal.example.json"
     ));
+    *proposal.get_mut("project-id").unwrap() = Value::String(agent_memory::host::uuid4().unwrap());
     let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
     let bank = repo.join("memory-bank");
     for (path, body) in get(&rendered, "files").as_object().unwrap() {
@@ -1919,7 +1920,7 @@ fn unresolved_identity_retains_fixed_metadata_without_bank_change() {
         |case| {
             let (repo, bank) = case.bank();
             let before = case.snapshot(&repo, &bank);
-            let registry = case.root.join("config/agent-memory/projects.json");
+            let (_, registry, _) = agent_memory::local_registry::paths("projects").unwrap();
             let mut value = decode(&std::fs::read_to_string(&registry).unwrap());
             *value.get_mut("checkouts").unwrap() = Value::Object(Vec::new());
             std::fs::write(&registry, json::encode(&value, json::DEFAULT).unwrap()).unwrap();

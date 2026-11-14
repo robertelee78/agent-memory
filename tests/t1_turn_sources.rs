@@ -637,10 +637,10 @@ fn in_repository(
             })?;
         let frontier = std::sync::Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
             || {
-                Ok((
+                Ok(Some((
                     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
                     PathBuf::from(env!("CARGO_BIN_EXE_am")),
-                ))
+                )))
             },
         ));
         agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));

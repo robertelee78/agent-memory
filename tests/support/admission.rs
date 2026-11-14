@@ -38,7 +38,14 @@ impl World {
     }
     pub fn command(&self, argv: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
         let mut env = self.env();
-        env.extend(extra.iter().map(|(k, v)| ((*k).into(), v.clone())));
+        for (key, value) in extra {
+            let key = OsString::from(*key);
+            if let Some((_, current)) = env.iter_mut().find(|(name, _)| name == &key) {
+                *current = value.clone();
+            } else {
+                env.push((key, value.clone()));
+            }
+        }
         let spec = process::Spec {
             argv,
             env: &env,

@@ -1204,7 +1204,7 @@ fn test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged() {
             "HEAD",
         ],
     );
-    support::identity_fixtures::bind_with_command(&f.w, &other, &f.runtime.command).unwrap();
+    support::identity_fixtures::link_with_command(&f.w, &other, &f.runtime.command).unwrap();
     fs::write(
         other.join("code.rs"),
         "const VALUE: u8 = 3; // separate observer work\n",

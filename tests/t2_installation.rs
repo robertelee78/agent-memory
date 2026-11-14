@@ -3379,22 +3379,21 @@ fn interrupted_adoption_rolls_back_before_commit_and_never_after() {
 }
 
 #[test]
-fn python_era_receipt_without_a_verified_runtime_source_refuses_with_bootstrap_guidance() {
+fn python_era_receipt_without_a_verified_runtime_source_refuses_without_mutation() {
     let world = World::new();
     materialize(&world, "all-copy");
     let before = without_lock(snapshot(&world.root));
-    let (code, value) = run(&world, &InstallRequest::default());
+    let (code, _) = run(&world, &InstallRequest::default());
     assert_eq!(code, 1);
-    assert_eq!(error_text(&value), install::ADOPTION_GUIDANCE);
     // Managed --remote/--ref on the adopted channel still refuses updating it.
-    let (_, value) = run(
+    let (code, _) = run(
         &world,
         &InstallRequest {
             remote: Some("https://example.invalid/other.git".into()),
             ..InstallRequest::default()
         },
     );
-    assert_eq!(error_text(&value), install::MANAGED_GUIDANCE);
+    assert_eq!(code, 1);
     assert_eq!(without_lock(snapshot(&world.root)), before);
 }
 

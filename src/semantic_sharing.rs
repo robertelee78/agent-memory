@@ -236,7 +236,7 @@ pub fn final_sources(
             &writes::snapshot(root, owned_lock)?.1,
             get(get(binding, "source_hashes"), "local"),
         )
-        || recovery::command(root, &["rev-parse", "--verify", "HEAD"], false, 4096, false)?
+        || recovery::command(root, &["rev-parse", "--verify", "HEAD"], false, 4096, false)?.trim()
             != text(get(observation, "local_head"))?
     {
         return Err(err(

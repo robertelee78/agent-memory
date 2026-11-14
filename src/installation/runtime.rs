@@ -140,6 +140,15 @@ pub fn verified_receipt_runtime(
     let source = get(receipt, "source");
     let root = text(source, "path")
         .ok_or_else(|| ContractError::new("Receipt has no lifecycle runtime source"))?;
+    if let Err(error) = std::fs::symlink_metadata(root) {
+        if error.kind() == std::io::ErrorKind::NotFound {
+            return Err(ContractError::new(format!(
+                "Recorded lifecycle runtime source is missing; preserve the receipt, journal and backups and use a trusted complete package to reconcile ownership: {error}",
+            ))
+            .into());
+        }
+        return Err(error.into());
+    }
     verified_source(env, services, source, Path::new(root), false)
 }
 pub(crate) fn plan_source(plan: &super::Plan) -> Result<Value> {

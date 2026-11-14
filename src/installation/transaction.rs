@@ -1834,6 +1834,7 @@ fn install_value(
             let receipt = old
                 .as_ref()
                 .ok_or_else(|| ContractError::new(super::RELEASE_GUIDANCE))?;
+            require(!super::python_era_kind(receipt), super::ADOPTION_GUIDANCE)?;
             super::verified_receipt_runtime(env, services, receipt)?;
         }
     }

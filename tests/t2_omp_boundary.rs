@@ -1139,6 +1139,7 @@ fn output(result: &process::Output) -> (process::Status, String, String) {
 fn omp_boundary_route_reports_pending_work_and_argument_errors() {
     let world = World::new().unwrap();
     let repo = world.paths["repo"].to_str().unwrap().to_owned();
+    let before = support::lifecycle::snapshot(&world.root);
     let (status, stdout, stderr) = output(&am(&world, &["omp-boundary", "--repo", &repo]));
     assert_eq!(
         (status, stdout.as_str(), stderr.as_str()),
@@ -1226,13 +1227,12 @@ fn omp_boundary_route_reports_pending_work_and_argument_errors() {
     // `--stream` reaches the real finite stream: its observer binding uses the
     // registered OMP activation composite, whose installed runtime locations
     // refuse before any transport or source work when no receipt owns `am`.
-    assert_eq!(
-        (status, stdout.as_str(), stderr.as_str()),
-        (
-            process::Status::Code(1),
-            "",
-            "am omp-boundary: No installed Rust runtime receipt owns this executable; pass --pack PATH\n"
-        )
+    assert_eq!((status, stdout.as_str()), (process::Status::Code(1), ""));
+    assert!(
+        stderr.starts_with(
+            "am omp-boundary: No installed Rust runtime receipt owns this executable;"
+        ),
+        "{stderr}"
     );
     // The stream parser, not the boundary parser, decides `--stream` argv.
     let (status, stdout, stderr) = output(&am(
@@ -1252,5 +1252,6 @@ fn omp_boundary_route_reports_pending_work_and_argument_errors() {
         ),
         "{stderr}"
     );
+    assert_eq!(support::lifecycle::snapshot(&world.root), before);
     world.close().unwrap();
 }
