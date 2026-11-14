@@ -443,7 +443,11 @@ exit "$(cat "$call/code")"
             b"Real native release fixture, not a public release.\n",
             0o600,
         );
-        let binary = native_binary();
+        // Cargo may uplift the built `am` as a hard link; release inputs must
+        // be ordinary single-link files, so publish a private copy.
+        let binary = root.join("am");
+        fs::copy(native_binary(), &binary).unwrap();
+        fs::set_permissions(&binary, fs::Permissions::from_mode(0o755)).unwrap();
         let binaries = release::TARGETS
             .into_iter()
             .map(|target| (target.to_owned(), binary.clone()))
