@@ -47,8 +47,7 @@ pub fn pack_root(env: &Environment, executable: &Path) -> Result<PathBuf> {
 pub struct RuntimePackRoot;
 impl crate::cli::PackRoot for RuntimePackRoot {
     fn pack_root(&self) -> crate::error::Result<PathBuf> {
-        let executable =
-            std::env::current_exe().map_err(|error| ContractError::new(error.to_string()))?;
+        let executable = crate::host::current_executable()?;
         pack_root(&Environment::process(), &executable).map_err(into_contract)
     }
 }

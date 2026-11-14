@@ -29,6 +29,10 @@ pub static ENTRIES: &[Entry] = &[
     route("identity", &helpers::scope_binding::HELPER),
     route("init", &helpers::initialization::HELPER),
     route("bank", &helpers::bank_contract::HELPER),
+    route("search", &helpers::retrieval::HELPER),
+    route("discover", &helpers::discovery::HELPER),
+    route("get", &helpers::retrieval::HELPER),
+    route("explain", &helpers::retrieval::HELPER),
     Entry::Route(Route {
         name: "capture",
         helper: &helpers::admission::HELPER,
@@ -40,6 +44,7 @@ pub static ENTRIES: &[Entry] = &[
     route("checkpoint", &helpers::checkpoint::HELPER),
     route("sharing", &helpers::sharing_boundary::HELPER),
     route("exchange", &helpers::sharing_recovery::HELPER),
+    route("projection", &helpers::projections::HELPER),
     route("writes", &helpers::bank_writes::HELPER),
     route("migrate", &helpers::migration::HELPER),
     route("artifact", &helpers::artifact::HELPER),

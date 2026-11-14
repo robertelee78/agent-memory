@@ -374,6 +374,8 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     let checkpoint = Arc::new(crate::checkpoint::Checkpoint);
     crate::bank_writes::register_checkpoint(Some(checkpoint.clone()));
     crate::handoff::register_checkpoint(Some(checkpoint));
+    crate::bank_state::register_comparison_view(Some(Arc::new(crate::retrieval::ComparisonView)));
+    crate::diagnostics::register_projections(Some(Arc::new(crate::projections::Projections)));
     Ok(())
 }
 

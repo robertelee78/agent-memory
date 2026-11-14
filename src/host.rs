@@ -304,3 +304,8 @@ pub fn random_bytes(buffer: &mut [u8]) -> Result<()> {
     }
     Ok(())
 }
+
+/// The executing native artifact; callers must independently qualify its installation.
+pub fn current_executable() -> Result<PathBuf> {
+    std::env::current_exe().map_err(|_| ContractError::new("Cannot locate executing runtime"))
+}

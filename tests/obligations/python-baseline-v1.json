@@ -1625,7 +1625,7 @@
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_changed_unvisited_source_rejects_old_navigation_before_recall_or_comparison",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1639,7 +1639,7 @@
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_exact_source_after_semantic_navigation_has_no_literal_overlap_requirement",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1660,70 +1660,70 @@
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_source_version_uncertainty_and_missing_parent_never_become_novelty",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_traced_empty_selection_never_falls_back_to_literal_or_full_inventory",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_traced_stable_id_resolves_current_discovered_version_without_historical_trace",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_changed_map_explains_the_problem_and_restart_repairs_navigation",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_comparison_read_refuses_hidden_source_without_returning_request_or_source_trace",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_comparison_read_retains_discovered_matches_despite_unrelated_literal_searches",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_limited_start_cannot_certify_a_bank_with_a_broken_unrelated_record",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_successful_orientation_and_empty_qualification_are_not_promoted_to_current_guidance",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_topic_navigation_qualifies_actual_sources_and_returns_only_safe_recall_state",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery_workflow.py::DiscoveryWorkflowContract.test_withheld_source_hashes_and_labels_are_not_echoed_by_qualified_read",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -10139,56 +10139,56 @@
   {
    "id": "tests/contracts/test_projection_contract.py::ProjectionContract.test_bounded_and_deeply_malformed_input_refuses_without_echo_or_canonical_change",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_projection_contract.py::ProjectionContract.test_canonical_deletion_rejects_older_projection_and_rebuild_cannot_recreate_record",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_projection_contract.py::ProjectionContract.test_changed_source_or_interrupted_bank_invalidates_without_echoing_old_hashes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_projection_contract.py::ProjectionContract.test_exact_shape_project_and_reference_substitution_refuse_even_with_current_source_hashes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_projection_contract.py::ProjectionContract.test_interrupted_multi_file_write_is_detected_and_original_recovery_precedes_projection_rebuild",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_projection_contract.py::ProjectionContract.test_observed_write_conflict_replay_and_projection_freshness_preserve_later_corrections",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_projection_contract.py::ProjectionContract.test_projection_contains_only_canonical_references_and_rebuilds_after_disposable_file_loss",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_projection_contract.py::ProjectionContract.test_same_bank_projection_checks_in_explicitly_linked_clone_without_machine_or_developer_namespace",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11224,91 +11224,91 @@
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_conditions_are_anded_component_prefixes_are_exact_and_checkout_cannot_be_spoofed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_deleted_id_never_returns_from_older_lookup_and_invalid_bank_is_not_no_matches",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_exact_id_path_and_text_work_without_indexes_preserving_complete_evidence_and_local_code",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_instructions_credentials_and_unsafe_filenames_are_quarantined_without_echo_or_execution",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_lifecycle_time_trust_type_and_unknown_applicability_exclude_before_even_exact_ranking",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_nested_index_conditions_and_detached_checkout_keep_unknown_branch_out_of_current_results",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_new_machine_and_different_developer_recall_same_project_without_rewriting_original_provenance",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_oversized_possible_replacements_fail_recall_instead_of_resurrecting_old_guidance",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_plain_context_requires_explicit_orientation_and_never_fabricates_record_trust",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_result_budget_keeps_complete_lessons_deterministic_and_reports_honest_counts",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_revision_condition_uses_actual_head_and_unmerged_origin_stays_visibly_conditional",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_scope_bounds_unknown_markers_and_audit_failure_refuse_without_claiming_empty_memory",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_retrieval.py::RetrievalContract.test_type_query_or_hidden_replacement_never_reactivate_an_applicable_superseded_version",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 373,
-   "ported": 288,
-   "unported": 1201
+   "partial": 405,
+   "ported": 289,
+   "unported": 1168
   }
  }
 }

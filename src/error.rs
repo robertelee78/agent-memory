@@ -59,6 +59,8 @@ pub enum Kind {
     },
     /// Protected admission input was unavailable, redirected or publicly mutable.
     PrivateInput,
+    /// Source-bound semantic navigation failed without qualifying guidance.
+    DiscoveryFailure { code: String, repair: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -271,6 +273,15 @@ impl ContractError {
     pub(crate) fn private_input(message: impl Into<String>) -> Self {
         Self {
             kind: Kind::PrivateInput,
+            message: message.into(),
+        }
+    }
+    pub(crate) fn discovery_failure(code: &str, message: &str, repair: &str) -> Self {
+        Self {
+            kind: Kind::DiscoveryFailure {
+                code: code.into(),
+                repair: repair.into(),
+            },
             message: message.into(),
         }
     }

@@ -67,10 +67,6 @@ pub trait Comparison: Send + Sync {
         owner: Option<&[u8]>,
     ) -> Result<Value>;
 }
-/// Discovery remains explicitly incomplete until the caller selects and reviews sources.
-pub trait Discovery: Send + Sync {
-    fn start(&self, repo: &Path, task: &Value, purpose: &str) -> Result<Value>;
-}
 static COMPARISON: RwLock<Option<Arc<dyn Comparison>>> = RwLock::new(None);
 pub fn register_comparison(value: Option<Arc<dyn Comparison>>) {
     *COMPARISON.write().unwrap_or_else(|e| e.into_inner()) = value;
@@ -81,17 +77,6 @@ pub(crate) fn comparison_provider() -> Result<Arc<dyn Comparison>> {
         .unwrap_or_else(|e| e.into_inner())
         .clone()
         .ok_or_else(|| ContractError::missing_provider("Comparison provider is not registered"))
-}
-static DISCOVERY: RwLock<Option<Arc<dyn Discovery>>> = RwLock::new(None);
-pub fn register_discovery(value: Option<Arc<dyn Discovery>>) {
-    *DISCOVERY.write().unwrap_or_else(|e| e.into_inner()) = value;
-}
-pub(crate) fn discovery_provider() -> Result<Arc<dyn Discovery>> {
-    DISCOVERY
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| ContractError::missing_provider("Discovery provider is not registered"))
 }
 
 fn err(message: &str) -> ContractError {
@@ -534,7 +519,12 @@ pub fn start(repo: &Path, value: &Value) -> Result<Value> {
     let eligible = get(&captured, "decision").as_str() == Some("eligible");
     let discovery = if eligible {
         comparison_provider()?.request_value(&comparison_request)?;
-        discovery_provider()?.start(repo, get(value, "task"), "comparison")?
+        crate::discovery::start(
+            repo,
+            get(value, "task"),
+            "comparison",
+            &object(Vec::<(String, Value)>::new()),
+        )?
     } else {
         Value::Null
     };
