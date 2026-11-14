@@ -29,6 +29,13 @@ sha1 = "=0.11.0"
 sha2 = "0.11"
 unicode-normalization = { version = "0.1", default-features = false }
 flate2 = { version = "=1.1.11", default-features = false, features = ["rust_backend"] }
+regex = { version = "=1.12.2", default-features = false, features = ["std", "perf"] }
+
+# Dev/test builds keep line tables only (backtraces keep file:line): with full
+# debug info the Linux musl debug `am` exceeds release_distribution::MAX_BINARY
+# (64 MiB), which the installer and updater tests apply to the real binary.
+[profile.dev]
+debug = "line-tables-only"
 
 [profile.release]
 panic = "abort"

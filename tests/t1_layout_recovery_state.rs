@@ -491,28 +491,13 @@ fn bank_runtime_and_operation_guards_preserve_refusal_strings() {
     );
 }
 
-struct FixtureLabels;
-impl agent_memory::repository_config::SecurityScan for FixtureLabels {
-    fn has_reasons(&self, value: &str) -> agent_memory::error::Result<bool> {
-        // This fixture supplies exactly the known default bank label, not a security implementation.
-        assert_eq!(value, "memory-bank");
-        Ok(false)
-    }
-    fn scan(&self, _body: &str) -> agent_memory::error::Result<agent_memory::codec::json::Value> {
-        // Body scanning belongs to the security module; this label fixture refuses it.
-        Err(agent_memory::error::ContractError::new(
-            "Security body scan is not available in this label fixture",
-        ))
-    }
-}
-
 #[test]
 fn public_bind_and_index_publish_and_preserve_identity() {
     if !isolated("public_bind_and_index_publish_and_preserve_identity") {
         return;
     }
     agent_memory::repository_config::register_security_scan(Some(std::sync::Arc::new(
-        FixtureLabels,
+        agent_memory::security::Security,
     )))
     .unwrap();
     let (repo, bank, runtime) = fixture();

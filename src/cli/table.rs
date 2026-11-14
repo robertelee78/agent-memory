@@ -36,6 +36,7 @@ pub static ENTRIES: &[Entry] = &[
     route("lifecycle-model", &helpers::lifecycle::HELPER),
     route("record-contract", &helpers::records::HELPER),
     route("scope-policy", &helpers::scopes::HELPER),
+    route("security-policy", &helpers::security::HELPER),
     route("validate-pack", &helpers::pack_validation::HELPER),
     Entry::Native(helpers::installation::INSTALL_NATIVE),
     Entry::Native(helpers::updating::UPDATE_NATIVE),

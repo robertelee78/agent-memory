@@ -885,7 +885,7 @@ fn darwin_provenance_is_exact_and_foreign_xattrs_acl_and_flags_refuse() {
 }
 
 #[test]
-#[ignore = "needs security registered"]
+#[ignore = "needs the am capture route (admission) registered"]
 fn complete_observation_retains_private_evidence_and_rechecks_every_pin() {
     isolated(
         "complete_observation_retains_private_evidence_and_rechecks_every_pin",

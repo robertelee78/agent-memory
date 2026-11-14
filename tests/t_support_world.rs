@@ -537,7 +537,7 @@ fn fixture_mapping_uses_real_registered_commands_and_refuses_unknown_helpers() {
 }
 
 #[test]
-#[ignore = "needs security registered (the bound repository boundary check needs the security scan provider)"]
+#[ignore = "needs initialization registered: binding refuses until the bank has a stable project ID"]
 fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregistered_binding() {
     let world = World::new().unwrap();
     let repo = world.repository("repo", false).unwrap();

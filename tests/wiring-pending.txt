@@ -11,11 +11,8 @@ bank_transactions::register_transaction_validator waits for admission, consolida
 bank_writes::register_checkpoint waits for checkpoint
 bank_writes::register_recovery_frontier waits for recovery_frontier
 bank_writes::register_recovery_transactions waits for recovery_transactions
-bank_writes::register_security waits for security
 handoff::register_checkpoint waits for checkpoint
 omp_installation::register_activation waits for installation, omp_boundary, omp_projection, omp_stream, omp_transport, turn_sources
-repository_config::register_security_scan waits for security
-sharing_hold_mapping::register_security_scan waits for security
 sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
 turn_check::register_memory_refresh waits for memory_refresh
 private_state::register_private_state_hooks waits for installation, omp_boundary, admission
@@ -25,3 +22,4 @@ installation::seams::register_private_state blocked by private_state::activation
 doctor_fix::register_diagnostics waits for diagnostics
 turn_sources::register_publication_gate waits for memory_publication, sharing_recovery
 omp_stream::register_omp_transport waits for omp_transport
+security::register_migration_audit waits for migration

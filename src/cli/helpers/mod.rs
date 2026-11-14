@@ -14,5 +14,6 @@ pub mod purging;
 pub mod records;
 pub mod scope_binding;
 pub mod scopes;
+pub mod security;
 pub mod uninstallation;
 pub mod updating;

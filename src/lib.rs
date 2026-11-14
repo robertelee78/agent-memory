@@ -58,6 +58,7 @@ pub mod repository_config;
 pub mod runtime_faults;
 pub mod scope_binding;
 pub mod scopes;
+pub mod security;
 pub mod sharing_hold_mapping;
 pub mod sharing_holds;
 pub mod sharing_limits;

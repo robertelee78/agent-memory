@@ -682,7 +682,6 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
 
 // obligation: tests/contracts/test_private_workspace.py::PrivateWorkspaceContract.test_explicit_private_input_and_refusals
 #[test]
-#[ignore = "needs security registered for repository_config::SecurityScan; uses only real project/developer providers"]
 fn explicit_private_input_and_refusals_through_am_private() {
     in_world(
         "explicit_private_input_and_refusals_through_am_private",
@@ -879,7 +878,6 @@ fn explicit_private_input_and_refusals_through_am_private() {
 }
 
 #[test]
-#[ignore = "needs security registered for repository_config::SecurityScan; no layout recovery provider is needed for historical checkout reads"]
 fn historical_checkout_check_ignores_bank_health_but_requires_exact_registered_identity() {
     in_world(
         "historical_checkout_check_ignores_bank_health_but_requires_exact_registered_identity",
