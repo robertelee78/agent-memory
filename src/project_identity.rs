@@ -545,7 +545,13 @@ pub fn discover(
         )?
     };
     let bank = root.join(&settings.bank_root);
-    if stat_optional(&root, OsStr::new(&settings.bank_root))?.is_some_and(|s| s.is_symlink())
+    let bank_parent = bank
+        .parent()
+        .ok_or_else(|| err("Bank directory cannot be safely pinned"))?;
+    let bank_name = bank
+        .file_name()
+        .ok_or_else(|| err("Bank directory cannot be safely inspected"))?;
+    if stat_optional(bank_parent, bank_name)?.is_some_and(|s| s.is_symlink())
         || stat_optional(&bank, OsStr::new("MEMORY.md"))?.is_some_and(|s| s.is_symlink())
     {
         return Err(err("Bank/router must not be symlinks"));
@@ -566,7 +572,7 @@ pub fn discover(
             let Some(info) = info else {
                 continue;
             };
-            if info.is_symlink() {
+            if info.is_symlink() && (name != ".agent-memory.lock" || owned.is_some()) {
                 return Err(err(
                     "Bank busy or interrupted; inspect/recover before resolving identity",
                 ));
