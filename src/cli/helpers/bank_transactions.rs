@@ -77,7 +77,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "bank_transactions.py",
+    command: "am transaction",
     module: "bank_transactions",
     parser: &PARSER,
     routes: &[],

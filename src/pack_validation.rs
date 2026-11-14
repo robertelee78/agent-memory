@@ -1431,9 +1431,10 @@ pub struct Dispatch {
     pub flags: BTreeSet<String>,
     pub routes: BTreeMap<String, CommandRoute>,
 }
-/// Supplies only authenticated command-surface data. It never parses Python.
+/// Supplies only authenticated command-surface data; nothing is executed or parsed.
 pub trait CommandSurface: Send + Sync {
-    fn dispatch(&self, script: &str, files: &Inventory) -> Result<Dispatch>;
+    /// Resolve a declared helper command (`am <name>`, or the root `am`).
+    fn dispatch(&self, command: &str) -> Result<Dispatch>;
     /// Resolve a public command and its fixed helper prefix from the declaration.
     fn command(&self, name: &str) -> Result<Option<(Dispatch, Vec<String>)>>;
 }
@@ -1565,7 +1566,6 @@ fn declared_assets(prose: &str) -> Vec<&str> {
 fn check_dispatch(
     prose_path: &str,
     argv: &[String],
-    files: &Inventory,
     surface: Option<&dyn CommandSurface>,
     dispatches: &mut BTreeMap<String, (Dispatch, Vec<String>)>,
 ) -> Result<Value> {
@@ -1672,10 +1672,9 @@ fn check_dispatch(
                 prose_path,
                 &format!("Delegated command nesting exceeds its bound for {label}"),
             )?;
-            let child = format!("scripts/{}", route.helper);
             let mut child_tail = route.prefix.clone();
             child_tail.extend(tail.into_iter().skip(1));
-            delegated = provider.dispatch(&child, files)?;
+            delegated = provider.dispatch(&route.helper)?;
             current = &delegated;
             tail = child_tail;
             depth += 1;
@@ -2000,13 +1999,7 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
                     ]));
                     continue;
                 }
-                mappings.push(check_dispatch(
-                    path,
-                    &argv,
-                    files,
-                    surface,
-                    &mut dispatches,
-                )?);
+                mappings.push(check_dispatch(path, &argv, surface, &mut dispatches)?);
                 count += 1;
             }
         }
@@ -2108,10 +2101,16 @@ fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -
 }
 
 /// Brackets the caller's complete inspection, including later declaration reads.
-/// The surface is this binary's declared command table.
-pub fn with_validated<T>(pack: &Path, body: impl FnOnce(&Path, &Value) -> Result<T>) -> Result<T> {
+/// The surface is this binary's declared command table; the body receives it
+/// for its own declared-command checks.
+pub fn with_validated<T>(
+    pack: &Path,
+    body: impl FnOnce(&Path, &Value, &dyn CommandSurface) -> Result<T>,
+) -> Result<T> {
     let surface = crate::cli::surface::Declared::current()?;
-    validated_inner(pack, Some(&surface), Some(0), body)
+    validated_inner(pack, Some(&surface), Some(0), |root, value| {
+        body(root, value, &surface)
+    })
 }
 pub fn with_validated_surface<T>(
     pack: &Path,
@@ -2176,7 +2175,7 @@ fn validated_inner<T>(
     Ok(result)
 }
 pub fn validate(pack: &Path) -> Result<Value> {
-    with_validated(pack, |_, v| Ok(v.clone()))
+    with_validated(pack, |_, v, _| Ok(v.clone()))
 }
 pub fn validate_with_surface(pack: &Path, surface: Option<&dyn CommandSurface>) -> Result<Value> {
     with_validated_surface(pack, surface, |_, v| Ok(v.clone()))

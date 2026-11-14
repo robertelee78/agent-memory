@@ -36,7 +36,7 @@ fn preview(w: &World, repo: &Path, body: &str) -> Value {
     fs::write(&content, body).unwrap();
     good(
         w,
-        "bank_writes.py",
+        "am writes",
         &[
             "preview".into(),
             "--repo".into(),
@@ -51,7 +51,7 @@ fn preview(w: &World, repo: &Path, body: &str) -> Value {
 fn apply(w: &World, p: &Value) -> (agent_memory::process::Output, Value) {
     command(
         w,
-        "bank_writes.py",
+        "am writes",
         &[
             "apply".into(),
             "--proposal".into(),
@@ -124,7 +124,7 @@ fn stale_manual_edit_is_preserved_and_fresh_validation_accepts_valid_change() {
     fs::write(&target, "   \n").unwrap();
     refused(
         &w,
-        "bank_writes.py",
+        "am writes",
         &[
             "preview".into(),
             "--repo".into(),
@@ -153,7 +153,7 @@ fn readback_and_receipt_creation_happen_under_lock() {
     no_receipts(&w);
     refused(
         &w,
-        "bank_writes.py",
+        "am writes",
         &["recover".into(), "--repo".into(), repo.into_os_string()],
     );
     fs::write(release, b"").unwrap();
@@ -212,7 +212,7 @@ fn live_foreign_and_unknown_stale_locks_are_preserved() {
         fs::write(&lock, &raw).unwrap();
         refused(
             &w,
-            "bank_writes.py",
+            "am writes",
             &[
                 "recover".into(),
                 "--repo".into(),
@@ -235,7 +235,7 @@ fn runtime_state_is_excluded_and_interrupted_bank_routes_to_recovery() {
     .unwrap();
     let inspected = good(
         &w,
-        "bank_writes.py",
+        "am writes",
         &[
             "inspect".into(),
             "--repo".into(),
@@ -295,7 +295,7 @@ fn runtime_state_is_excluded_and_interrupted_bank_routes_to_recovery() {
     let before = physical(&bank);
     refused(
         &w,
-        "bank_writes.py",
+        "am writes",
         &[
             "inspect".into(),
             "--repo".into(),
@@ -306,7 +306,7 @@ fn runtime_state_is_excluded_and_interrupted_bank_routes_to_recovery() {
     fs::write(&content, "# Focus\n\nDo not bypass recovery.\n").unwrap();
     refused(
         &w,
-        "bank_writes.py",
+        "am writes",
         &[
             "preview".into(),
             "--repo".into(),

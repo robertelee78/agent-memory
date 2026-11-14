@@ -31,7 +31,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "bank_state.py",
+    command: "am inspect",
     module: "bank_state",
     parser: &PARSER,
     routes: &[],

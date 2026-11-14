@@ -1190,12 +1190,11 @@ printf 200
     impl crate::pack_validation::CommandSurface for NoExecutableSurface {
         fn dispatch(
             &self,
-            script: &str,
-            _: &crate::pack_validation::Inventory,
+            command: &str,
         ) -> crate::pack_validation::Result<crate::pack_validation::Dispatch> {
             Err(crate::pack_validation::Invalid::new(
                 "dispatch",
-                script,
+                command,
                 "Fixture has no executable routes",
             ))
         }
@@ -1250,7 +1249,7 @@ printf 200
             let mut files = BTreeMap::from([
                 ("SKILL.md", "---\nname: agent-memory\ndescription: Portable publication fixture\nmetadata: {\"version\":\"0.0.15\"}\n---\n\n## Route\n| Inspect | [bank](bank/GUIDE.md) | [inspect](inspect/GUIDE.md) |\n".to_owned()),
                 ("bank/GUIDE.md", "---\nkind: domain\n---\n\n[Inspect](../inspect/GUIDE.md).\n".to_owned()),
-                ("schemas/runtime-compatibility.json", r#"{"schema":"agent-memory/runtime-compatibility-v1","python_minimum":"3.11","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"git_required_for":["sharing"],"optional_adapters":[],"required_python_packages":[],"required_agent_clients":[]}"#.to_owned()),
+                ("schemas/runtime-compatibility.json", r#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"git_required_for":["sharing"],"optional_adapters":[],"required_agent_clients":[]}"#.to_owned()),
                 ("schemas/bank-router.json", r#"{"properties":{"schema":{"const":"agent-memory/v1"}}}"#.to_owned()),
                 ("keys/allowed-signers", release::ALLOWED_SIGNERS.to_owned()),
             ]);

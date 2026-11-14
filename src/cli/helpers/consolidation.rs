@@ -63,7 +63,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "consolidate_learning.py",
+    command: "am compact",
     module: "consolidation",
     parser: &PARSER,
     routes: &[],

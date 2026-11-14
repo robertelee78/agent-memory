@@ -20,7 +20,7 @@ impl Admission {
             "# Observed result\n\nA disposable measured fixture, not actual project admission.\n",
         )
         .unwrap();
-        let status = good(&recall.world, "developer_identity.py", &["status".into()]);
+        let status = good(&recall.world, "am developer", &["status".into()]);
         let actor = string(&status, "developer_id").to_owned();
         Self { recall, actor }
     }
@@ -96,9 +96,8 @@ impl Admission {
     fn capture(&self, request: &Value) -> Value {
         good(
             &self.recall.world,
-            "admit_learning.py",
+            "am capture",
             &[
-                "capture".into(),
                 "--repo".into(),
                 self.recall.repo.as_os_str().to_owned(),
                 "--request".into(),
@@ -122,7 +121,7 @@ impl Admission {
         let input = save(w, &compared, "comparison-request.json");
         let inspected = good(
             w,
-            "compare_learning.py",
+            "am compare",
             &[
                 "inspect".into(),
                 "--repo".into(),
@@ -143,7 +142,7 @@ impl Admission {
         ]);
         let reviewed = good(
             w,
-            "compare_learning.py",
+            "am compare",
             &[
                 "review".into(),
                 "--repo".into(),
@@ -156,7 +155,7 @@ impl Admission {
         );
         good(
             w,
-            "admit_learning.py",
+            "am admission",
             &[
                 "preview".into(),
                 "--repo".into(),
@@ -176,7 +175,7 @@ impl Admission {
     fn apply(&self, p: &Value, env: &[(OsString, OsString)]) -> (Output, Value) {
         command_fault(
             &self.recall.world,
-            "admit_learning.py",
+            "am admission",
             &[
                 "apply".into(),
                 "--proposal".into(),
@@ -196,7 +195,7 @@ impl Admission {
         let w = &self.recall.world;
         let p = good(
             w,
-            "bank_writes.py",
+            "am writes",
             &[
                 "recover".into(),
                 "--repo".into(),
@@ -205,7 +204,7 @@ impl Admission {
         );
         let receipt = good(
             w,
-            "bank_writes.py",
+            "am writes",
             &[
                 "recover".into(),
                 "--repo".into(),
@@ -219,7 +218,7 @@ impl Admission {
     fn recovery(&self, mode: &str) -> (Output, Value) {
         command(
             &self.recall.world,
-            "bank_transactions.py",
+            "am transaction",
             &[
                 "recover".into(),
                 "--repo".into(),
@@ -234,7 +233,7 @@ impl Admission {
         assert_eq!(output.status, Status::Code(0));
         good(
             &self.recall.world,
-            "bank_transactions.py",
+            "am transaction",
             &[
                 "recover".into(),
                 "--repo".into(),
@@ -499,7 +498,7 @@ fn recorded_admission_recovers_lost_response_without_requiring_new_evidence() {
             assert_eq!(a.state(), before);
             good(
                 &a.recall.world,
-                "bank_contract.py",
+                "am bank",
                 &[
                     "validate".into(),
                     "--repo".into(),

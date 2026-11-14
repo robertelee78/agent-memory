@@ -1,9 +1,10 @@
 # First-release safety canaries
 
-The top-level gate runs `security-canaries` and `identity-isolation` from
-`tests/contracts.json`. Both copy the portable skill into a disposable world
-and invoke its public scripts with argument lists. They do not import product
-algorithms, use a live account, contact a server or rely on optional indexes.
+The cargo test gate runs the `c_test_release_canaries` (security) and
+`c_test_identity_canaries` (identity isolation) targets. Both copy the portable
+skill into a disposable world and invoke the real `am` binary with argument
+lists. They do not use a live account, contact a server or rely on optional
+indexes.
 
 | Boundary | Observable check |
 | --- | --- |

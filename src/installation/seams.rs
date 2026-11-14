@@ -97,11 +97,14 @@ impl ArtifactInspection for RegisteredArtifacts {
     }
 }
 
-/// Where and with which trust roots the signed release is fetched. Production
-/// is the pinned GitHub release with the compiled allowed-signers.
+/// Where and with which trust roots the signed release is fetched. Bootstrap
+/// pins its compiled version; ordinary update discovers the latest release.
 #[derive(Clone)]
 pub struct ReleaseAccess {
+    /// Version-pinned bootstrap manifest; never follow latest during install.
     pub first_manifest_url: String,
+    /// Latest stable manifest used only by ordinary signed-channel updates.
+    pub latest_manifest_url: String,
     pub assets: String,
     pub options: DownloadOptions,
     pub signers: String,
@@ -115,6 +118,11 @@ impl Default for ReleaseAccess {
                 "{}/v{}/{}",
                 release::ASSETS,
                 env!("CARGO_PKG_VERSION"),
+                release::MANIFEST
+            ),
+            latest_manifest_url: format!(
+                "https://github.com/{}/releases/latest/download/{}",
+                release::REPOSITORY,
                 release::MANIFEST
             ),
             assets: release::ASSETS.to_owned(),

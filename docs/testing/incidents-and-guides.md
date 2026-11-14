@@ -19,10 +19,14 @@ cargo test --features dev-tools --test t2_sharing_recovery -- \
 The first case captures/consolidates, revokes, compacts and attempts legacy replay;
 the second exercises discarded and actually retained merge outcomes. A successful
 replay runs a nonzero number of tests with none ignored. The incident catalog
-names the actual work keys and the baseline regression names. The baseline
-incident runner has no Rust port; its incident-evidence contract tests are
-unported in `tests/obligations/python-baseline-v1.json`, and the two Rust
-regressions above are recorded there as partial.
+names the actual work keys and, per incident, the native test `target` and
+`test` function; each named function must be directly annotated with its
+`// obligation:` ledger id. After building the test targets (`cargo test
+--features dev-tools --no-run`), `cargo run --features dev-tools --bin am-dev --
+run-incident INCIDENT_ID` runs exactly those tests in a private credential-free
+environment and reports an `agent-memory/incident-result-v1` result. Its
+incident-evidence obligations keep their status in
+`tests/obligations/python-baseline-v1.json`.
 
 An in-scope failure SHOULD first receive the smallest public-interface reproduction
 that fails on the observed old behavior. Its regression name SHOULD retain the

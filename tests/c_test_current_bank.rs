@@ -82,12 +82,8 @@ fn fixture(w: &World, tracked: bool, complete: bool) -> (PathBuf, PathBuf) {
 fn inspect(w: &World, repo: &std::path::Path) -> Value {
     good(
         w,
-        "bank_state.py",
-        &[
-            "inspect".into(),
-            "--repo".into(),
-            repo.as_os_str().to_owned(),
-        ],
+        "am inspect",
+        &["--repo".into(), repo.as_os_str().to_owned()],
     )
 }
 
@@ -268,12 +264,8 @@ fn busy_or_interrupted_bank_is_not_repaired_by_state_loss() {
         let before = physical(&bank);
         refused(
             &w,
-            "bank_state.py",
-            &[
-                "inspect".into(),
-                "--repo".into(),
-                repo.as_os_str().to_owned(),
-            ],
+            "am inspect",
+            &["--repo".into(), repo.as_os_str().to_owned()],
         );
         assert_eq!(physical(&bank), before);
         fs::remove_file(marker).unwrap();

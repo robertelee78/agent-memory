@@ -5,20 +5,20 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
 
-fn command(world: &World, helper: &str, args: &[OsString]) -> Result<Value> {
-    let output = world.helper(helper, args)?;
+fn command(world: &World, command: &str, args: &[OsString]) -> Result<Value> {
+    let output = world.am_json(command, args)?;
     Ok(json::decode_bytes(
         &output.stdout,
         json::DecodePolicy::default(),
     )?)
 }
 
-fn apply(world: &World, helper: &str, proposal: &Value) -> Result<Value> {
+fn apply(world: &World, command: &str, proposal: &Value) -> Result<Value> {
     let path = world.inside("fixture-identity-proposal.json")?;
     fs::write(&path, json::encode(proposal, json::DEFAULT)?)?;
-    command(
+    self::command(
         world,
-        helper,
+        command,
         &["apply".into(), "--proposal".into(), path.into_os_string()],
     )
 }
@@ -29,11 +29,11 @@ pub fn bind(world: &World, repo: &Path) -> Result<Value> {
         "--repo".into(),
         repo.as_os_str().to_owned(),
     ];
-    let developer = command(world, "developer_identity.py", &status_args)?;
+    let developer = command(world, "am developer", &status_args)?;
     if boolean(&developer, "setup_required")? {
         let proposal = command(
             world,
-            "developer_identity.py",
+            "am developer",
             &[
                 "preview".into(),
                 "--create".into(),
@@ -41,13 +41,13 @@ pub fn bind(world: &World, repo: &Path) -> Result<Value> {
                 "Disposable test developer".into(),
             ],
         )?;
-        apply(world, "developer_identity.py", &proposal)?;
+        apply(world, "am developer", &proposal)?;
     }
-    let current = command(world, "scope_binding.py", &status_args)?;
+    let current = command(world, "am identity", &status_args)?;
     if !boolean(&current, "resolved")? {
         let proposal = command(
             world,
-            "scope_binding.py",
+            "am identity",
             &[
                 OsString::from("preview"),
                 "--repo".into(),
@@ -58,7 +58,7 @@ pub fn bind(world: &World, repo: &Path) -> Result<Value> {
                 "Explicit disposable fixture bank adoption".into(),
             ],
         )?;
-        let receipt = apply(world, "scope_binding.py", &proposal)?;
+        let receipt = apply(world, "am identity", &proposal)?;
         if !boolean(&receipt, "verified")? {
             return Err(WorldError::invalid(format!(
                 "Identity fixture adoption was not verified: {}",
@@ -66,7 +66,7 @@ pub fn bind(world: &World, repo: &Path) -> Result<Value> {
             )));
         }
     }
-    command(world, "scope_binding.py", &status_args)
+    command(world, "am identity", &status_args)
 }
 
 fn boolean(value: &Value, key: &str) -> Result<bool> {

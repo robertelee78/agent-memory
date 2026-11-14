@@ -481,15 +481,15 @@ fn real_git_repository_bare_clone_and_fixed_author_ignore_host_identity() {
 }
 
 #[test]
-fn fixture_mapping_uses_real_registered_commands_and_refuses_unknown_helpers() {
+fn fixture_commands_run_native_am_invocations_and_refuse_script_names() {
     let world = World::new().unwrap();
     let record = world.inside("fixture.md").unwrap();
     let body = "# Preserved fixture\n\nPublic CLI validation must not rewrite this.\n";
     let text = record_fixtures::record_text(body, "75b38e17-c36e-4fab-8ba9-5fa51f25de91").unwrap();
     fs::write(&record, text.as_bytes()).unwrap();
     let output = world
-        .helper(
-            "scripts/record_contract.py",
+        .am_json(
+            "am record-contract",
             [
                 OsStr::new("validate"),
                 OsStr::new("--file"),
@@ -518,53 +518,48 @@ fn fixture_mapping_uses_real_registered_commands_and_refuses_unknown_helpers() {
         status.get("setup_required").and_then(Value::as_bool),
         Some(true)
     );
-    let error = world.helper("future_fixture.py", ["apply"]).unwrap_err();
+    // A script name is never translated or executed: only `am …` paths run.
+    let error = world.am_json("future_fixture.py", ["apply"]).unwrap_err();
     assert!(
         error
             .to_string()
-            .contains("Unknown fixture helper: future_fixture.py")
+            .contains("Fixture command must be a native am invocation: future_fixture.py")
     );
-    for (script, route) in [
-        ("bank_state.py", "inspect"),
-        ("admit_learning.py", "capture"),
-    ] {
-        let result = world::helper_arguments(script, [route, "--help"]);
-        match agent_memory::cli::table::route_named(route) {
-            Some(_) => assert_eq!(result.unwrap(), [OsString::from(route), "--help".into()]),
-            None => assert!(result.unwrap_err().to_string().contains("not registered")),
-        }
-    }
+    assert!(world::native_arguments("amx writes", ["--help"]).is_err());
+    assert_eq!(
+        world::native_arguments("am bank recover-layout", ["--help"]).unwrap(),
+        [
+            OsString::from("bank"),
+            "recover-layout".into(),
+            "--help".into()
+        ]
+    );
+    assert_eq!(
+        world::native_arguments("am", ["--help"]).unwrap(),
+        [OsString::from("--help")]
+    );
 }
 
 #[test]
 #[ignore = "needs recovery_frontier registered"]
-fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregistered_binding() {
+fn identity_fixture_creates_developer_and_verifies_binding() {
     let world = World::new().unwrap();
     let repo = world.repository("repo", false).unwrap();
     let result: support::Result<_> = support::identity_fixtures::bind(&world, &repo);
-    if agent_memory::cli::table::route_named("identity").is_some() {
-        assert_eq!(
-            result.unwrap().get("resolved").and_then(Value::as_bool),
-            Some(true)
-        );
-        assert_eq!(
-            support::identity_fixtures::bind(&world, &repo)
-                .unwrap()
-                .get("resolved")
-                .and_then(Value::as_bool),
-            Some(true)
-        );
-    } else {
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("scope_binding.py requires am identity, which is not registered")
-        );
-    }
+    assert_eq!(
+        result.unwrap().get("resolved").and_then(Value::as_bool),
+        Some(true)
+    );
+    assert_eq!(
+        support::identity_fixtures::bind(&world, &repo)
+            .unwrap()
+            .get("resolved")
+            .and_then(Value::as_bool),
+        Some(true)
+    );
     let output = world
-        .helper(
-            "developer_identity.py",
+        .am_json(
+            "am developer",
             [OsStr::new("status"), OsStr::new("--repo"), repo.as_os_str()],
         )
         .unwrap();

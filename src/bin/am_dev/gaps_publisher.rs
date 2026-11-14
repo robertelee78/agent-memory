@@ -800,7 +800,6 @@ fn gh_worker() {
     save(&call.join("code"), code.to_string(), 0o600);
 }
 #[test]
-#[ignore = "needs Gate C Python removal (native adapter entrypoint)"]
 // obligation: tests/contracts/test_signed_release_publisher.py::SignedPublisherContract.test_one_command_first_publish_exact_resume_and_harmless_descendant
 fn one_command_first_publish_exact_resume_and_harmless_descendant() {
     if !isolated(
@@ -885,7 +884,6 @@ fn one_command_first_publish_exact_resume_and_harmless_descendant() {
     );
 }
 #[test]
-#[ignore = "needs Gate C Python removal (native adapter entrypoint)"]
 // obligation: tests/contracts/test_signed_release_publisher.py::SignedPublisherContract.test_wrong_tags_and_incompatible_or_racing_main_never_claim_default_activation
 fn wrong_tags_and_incompatible_or_racing_main_never_claim_default_activation() {
     if !isolated(

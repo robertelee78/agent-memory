@@ -187,7 +187,7 @@ pub static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "recover_layout.py",
+    command: "am recover-layout",
     module: "layout_recovery",
     parser: &PARSER,
     routes: &[],

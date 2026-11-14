@@ -101,7 +101,7 @@ fn preview(w: &World, repo: &Path, body: &str) -> Value {
     fs::write(&content, body).unwrap();
     good(
         w,
-        "bank_writes.py",
+        "am writes",
         &[
             "preview".into(),
             "--repo".into(),
@@ -116,7 +116,7 @@ fn preview(w: &World, repo: &Path, body: &str) -> Value {
 fn apply(w: &World, p: &Value) -> (Output, Value) {
     command(
         w,
-        "bank_writes.py",
+        "am writes",
         &[
             "apply".into(),
             "--proposal".into(),
@@ -410,7 +410,7 @@ fn killed_transaction_owner_cannot_be_stolen_and_explicit_recovery_preserves_ban
     assert_eq!(fs::read(&lock).unwrap(), lock_before);
     refused(
         &b.world,
-        "bank_writes.py",
+        "am writes",
         &[
             "recover".into(),
             "--repo".into(),
@@ -426,7 +426,7 @@ fn killed_transaction_owner_cannot_be_stolen_and_explicit_recovery_preserves_ban
     b.unlock();
     refused(
         &b.world,
-        "bank_writes.py",
+        "am writes",
         &[
             "inspect".into(),
             "--repo".into(),
@@ -478,7 +478,7 @@ fn distinct_worktrees_hold_independent_locks_and_share_only_canonical_paths() {
     for root in [&repo, &other] {
         refused(
             &w,
-            "sharing_boundary.py",
+            "am sharing",
             &["--repo".into(), root.as_os_str().to_owned()],
         );
     }
@@ -498,7 +498,7 @@ fn distinct_worktrees_hold_independent_locks_and_share_only_canonical_paths() {
     for root in [&repo, &other] {
         let boundary = good(
             &w,
-            "sharing_boundary.py",
+            "am sharing",
             &["--repo".into(), root.as_os_str().to_owned()],
         );
         let paths: std::collections::BTreeSet<_> = get(&boundary, "eligible_memory_paths")

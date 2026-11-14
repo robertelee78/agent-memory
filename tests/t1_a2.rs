@@ -473,7 +473,7 @@ mod pack_contract {
         for _cached in [false, true] {
             let root = PackDir::fixture();
             pack::validate(&root.0).unwrap();
-            let error = pack::with_validated(&root.0, |_, _| {
+            let error = pack::with_validated(&root.0, |_, _, _| {
                 root.write("arrival.txt", b"new");
                 Ok(())
             })
@@ -615,7 +615,7 @@ mod pack_contract {
         let root = PackDir::fixture();
         root.write(
             "schemas/runtime-compatibility.json",
-            r#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"python_minimum":"3.11","git_required_for":["git-sharing"],"required_python_packages":[],"required_agent_clients":[],"optional_adapters":[]}"#,
+            r#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"git_required_for":["git-sharing"],"required_agent_clients":[],"optional_adapters":[]}"#,
         );
         root.write(
             "schemas/bank-router.json",

@@ -36,61 +36,44 @@ fn object(fields: impl IntoIterator<Item = (&'static str, Value)>) -> Value {
             .collect(),
     )
 }
-fn native_test(root: &Path, obligation: &str) -> Result<(String, String)> {
-    let directory = DirectoryChain::open(&root.join("tests"))?;
-    let names = directory
-        .directory()
-        .entries_bounded(MAX_TEST_FILES)?
-        .ok_or_else(|| error("Test source inventory exceeds its bound"))?;
-    let mut found = Vec::new();
-    for name in names {
-        let path = Path::new(&name);
-        if path.extension().is_none_or(|extension| extension != "rs") {
-            continue;
-        }
-        let raw = release::regular(&root.join("tests").join(path), MAX_SOURCE)?;
-        let source =
-            std::str::from_utf8(&raw).map_err(|_| error("Native test source is not UTF-8"))?;
-        let annotation = format!("// obligation: {obligation}");
-        let mut selected = false;
-        for line in source.lines() {
-            let line = line.trim();
-            if line == annotation {
-                selected = true;
-            } else if selected {
-                if let Some(rest) = line.strip_prefix("fn ") {
-                    let function = rest
-                        .split_once('(')
-                        .map(|(name, _)| name)
-                        .ok_or_else(|| error("Invalid native test declaration"))?;
-                    if function.is_empty()
-                        || !function
-                            .bytes()
-                            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
-                    {
-                        return Err(error("Invalid native test name"));
-                    }
-                    let target = path
-                        .file_stem()
-                        .and_then(|name| name.to_str())
-                        .ok_or_else(|| error("Invalid native test target"))?;
-                    found.push((target.to_owned(), function.to_owned()));
-                    selected = false;
-                } else if !line.is_empty() && !line.starts_with("//") && !line.starts_with("#[") {
-                    return Err(error("Obligation is not directly bound to a native test"));
-                }
+fn test_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+}
+/// One catalog case names a native test target and function; the function must
+/// be directly bound to its `// obligation:` annotation in `tests/<target>.rs`.
+fn native_test(root: &Path, case: &Value) -> Result<(String, String)> {
+    let target = text(case, "target")?;
+    let function = text(case, "test")?;
+    if !test_identifier(target) || !test_identifier(function) {
+        return Err(error("Invalid native incident test name"));
+    }
+    let raw = release::regular(&root.join("tests").join(format!("{target}.rs")), MAX_SOURCE)?;
+    let source = std::str::from_utf8(&raw).map_err(|_| error("Native test source is not UTF-8"))?;
+    let mut annotated = false;
+    let mut found = 0;
+    for line in source.lines() {
+        let line = line.trim();
+        if line.starts_with("// obligation: ") {
+            annotated = true;
+        } else if let Some(rest) = line.strip_prefix("fn ") {
+            let name = rest.split_once('(').map(|(name, _)| name);
+            if annotated && name == Some(function) {
+                found += 1;
             }
+            annotated = false;
+        } else if !line.is_empty() && !line.starts_with("//") && !line.starts_with("#[") {
+            annotated = false;
         }
     }
-    directory.recheck()?;
-    if found.len() != 1 {
+    if found != 1 {
         return Err(error(
-            "Incident must bind to exactly one native contract test",
+            "Incident must name exactly one obligation-annotated native contract test",
         ));
     }
-    found
-        .pop()
-        .ok_or_else(|| error("Missing native incident test"))
+    Ok((target.to_owned(), function.to_owned()))
 }
 fn test_binary(target: &str) -> Result<PathBuf> {
     let executable = std::env::current_exe()?;
@@ -190,11 +173,7 @@ fn run(root: &Path, id: &str) -> Result<Value> {
     let mut errors = 0;
     let mut skipped = 0;
     for case in cases {
-        let name = case
-            .as_str()
-            .ok_or_else(|| error("Invalid incident selector"))?;
-        let obligation = format!("{}::{}.{name}", text(item, "suite")?, text(item, "class")?);
-        let (target, function) = native_test(root, &obligation)?;
+        let (target, function) = native_test(root, case)?;
         let binary = test_binary(&target)?;
         let argv: Vec<OsString> = [
             binary.as_os_str().to_owned(),

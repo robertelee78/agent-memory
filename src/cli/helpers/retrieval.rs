@@ -13,7 +13,7 @@ static PARSER: Parser = Parser {
     subcommands: None,
 };
 pub static HELPER: Helper = Helper {
-    script: "retrieve.py",
+    command: "am search",
     module: "retrieval",
     parser: &PARSER,
     routes: &[],

@@ -35,7 +35,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "authority_policy.py",
+    command: "am authority-policy",
     module: "authority",
     parser: &PARSER,
     routes: &[],

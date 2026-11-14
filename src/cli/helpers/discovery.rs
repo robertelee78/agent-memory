@@ -71,7 +71,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "discover_memory.py",
+    command: "am discover",
     module: "discovery",
     parser: &PARSER,
     routes: &[],

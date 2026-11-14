@@ -95,7 +95,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "project_identity.py",
+    command: "am project",
     module: "project_identity",
     parser: &PARSER,
     routes: &[],

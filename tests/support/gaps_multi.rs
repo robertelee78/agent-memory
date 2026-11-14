@@ -29,13 +29,13 @@ fn profile<T>(
 fn actor(w: &World, repo: &Path, adopt: Option<&str>) -> TestResult<String> {
     let status = good(
         w,
-        "scope_binding.py",
+        "am identity",
         &[os("status"), os("--repo"), repo.as_os_str()],
     )?;
     if get(get(&status, "developer"), "setup_required") == &Value::Bool(true) {
         let p = good(
             w,
-            "developer_identity.py",
+            "am developer",
             &[
                 os("preview"),
                 os(if adopt.is_some() {
@@ -52,19 +52,19 @@ fn actor(w: &World, repo: &Path, adopt: Option<&str>) -> TestResult<String> {
         let path = save(w, &p, "profile-developer.json")?;
         good(
             w,
-            "developer_identity.py",
+            "am developer",
             &[os("apply"), os("--proposal"), path.as_os_str()],
         )?;
     }
     let status = good(
         w,
-        "scope_binding.py",
+        "am identity",
         &[os("status"), os("--repo"), repo.as_os_str()],
     )?;
     if get(&status, "resolved") != &Value::Bool(true) {
         let p = good(
             w,
-            "scope_binding.py",
+            "am identity",
             &[
                 os("preview"),
                 os("--repo"),
@@ -78,14 +78,14 @@ fn actor(w: &World, repo: &Path, adopt: Option<&str>) -> TestResult<String> {
         let path = save(w, &p, "profile-binding.json")?;
         good(
             w,
-            "scope_binding.py",
+            "am identity",
             &[os("apply"), os("--proposal"), path.as_os_str()],
         )?;
     }
     Ok(field(
         &good(
             w,
-            "scope_binding.py",
+            "am identity",
             &[os("status"), os("--repo"), repo.as_os_str()],
         )?,
         "developer_id",
@@ -342,7 +342,7 @@ fn reviewed(
     let input = save(w, &j, "gap-sharing-judgment.json")?;
     good(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("review"),
             os("--repo"),
@@ -374,7 +374,7 @@ fn publication(
 ) -> TestResult<(Value, Value)> {
     let inspection = good(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[os("inspect"), os("--repo"), repo.as_os_str()],
     )?;
     let review = reviewed(
@@ -389,7 +389,7 @@ fn publication(
     let input = save(w, get(&review, "proof"), "gap-sharing-proof.json")?;
     let prepared = good(
         w,
-        "publish_memory.py",
+        "am publish",
         &[
             os("prepare"),
             os("--repo"),
@@ -423,7 +423,7 @@ fn prepare_refresh(
 ) -> TestResult<(Value, Value)> {
     let view = good(
         w,
-        "refresh_memory.py",
+        "am refresh",
         &[os("inspect"), os("--repo"), repo.as_os_str()],
     )?;
     let review = reviewed(
@@ -442,7 +442,7 @@ fn prepare_refresh(
     let input = save(w, &request, "gap-refresh-input.json")?;
     let prepared = good(
         w,
-        "refresh_memory.py",
+        "am refresh",
         &[
             os("prepare"),
             os("--repo"),
@@ -457,7 +457,7 @@ fn apply_refresh(w: &World, p: &Value) -> TestResult<Value> {
     let input = save(w, p, "gap-refresh-proposal.json")?;
     good(
         w,
-        "refresh_memory.py",
+        "am refresh",
         &[os("apply"), os("--input"), input.as_os_str()],
     )
 }
@@ -579,7 +579,7 @@ fn compatible_three_clones_and_linked_worktree() -> TestResult {
             rows(
                 &good(
                     w,
-                    "retrieve.py",
+                    "am search",
                     &[
                         os("--repo"),
                         f.c.as_os_str(),
@@ -746,7 +746,7 @@ fn indexed(w: &World, repo: &Path, claims: &[String]) -> TestResult<(PathBuf, Va
     let initial = w.root.join("indexed-initial.json");
     good(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("inspect-v2"),
             os("--repo"),
@@ -782,7 +782,7 @@ fn indexed(w: &World, repo: &Path, claims: &[String]) -> TestResult<(PathBuf, Va
     let path = w.root.join("indexed-selected.json");
     good(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("inspect-v2"),
             os("--repo"),
@@ -856,7 +856,7 @@ fn indexed_fixture(w: &World) -> TestResult<(PathBuf, PathBuf, PathBuf, Vec<Stri
     let dev = field(
         &good(
             w,
-            "scope_binding.py",
+            "am identity",
             &[os("status"), os("--repo"), repo.as_os_str()],
         )?,
         "developer_id",
@@ -899,7 +899,7 @@ fn indexed_review(
     }
     let (code, value) = call(
         w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("review-indexed-v2"),
             os("--repo"),
@@ -925,7 +925,7 @@ fn indexed_review_requires_every_pair_and_preserves_conflict() -> TestResult {
     for page in rows(&view, "pages") {
         let exposed = good(
             &w,
-            "reconcile_memory.py",
+            "am semantic",
             &[
                 os("worklist-v2"),
                 os("--repo"),
@@ -1046,7 +1046,7 @@ fn wrong_project_recovery_preserves_private_state_and_stale_marker() -> TestResu
     let before = support::lifecycle::snapshot(&w.root);
     let (code, _) = call(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("recover-holds"),
             os("--repo"),
@@ -1060,7 +1060,7 @@ fn wrong_project_recovery_preserves_private_state_and_stale_marker() -> TestResu
     assert!(bank.join(".agent-memory.lock").exists());
     let result = good(
         &w,
-        "reconcile_memory.py",
+        "am semantic",
         &[
             os("recover-holds"),
             os("--repo"),
@@ -1273,7 +1273,7 @@ fn erasure_survives_ordinary_code_merge_and_old_refresh_replay() -> TestResult {
     let dev = field(
         &good(
             &w,
-            "scope_binding.py",
+            "am identity",
             &[os("status"), os("--repo"), repo.as_os_str()],
         )?,
         "developer_id",
@@ -1332,7 +1332,7 @@ fn erasure_survives_ordinary_code_merge_and_old_refresh_replay() -> TestResult {
     let input = save(&w, &deletion, "deletion.json")?;
     let tomb = good(
         &w,
-        "tombstones.py",
+        "am tombstones",
         &[os("render"), os("--input"), input.as_os_str()],
     )?;
     let shared = peer.join("memory-bank");
@@ -1435,14 +1435,14 @@ fn erasure_survives_ordinary_code_merge_and_old_refresh_replay() -> TestResult {
     );
     good(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[os("validate"), os("--repo"), repo.as_os_str()],
     )?;
     let after_merge = state(&w, &repo, &bank)?;
     let input = save(&w, &old, "pre-erasure-proposal.json")?;
     let (code, replayed) = call(
         &w,
-        "refresh_memory.py",
+        "am refresh",
         &[os("apply"), os("--input"), input.as_os_str()],
     )?;
     assert!(code == 0 || code == 1);
@@ -1482,7 +1482,7 @@ fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> T
     let project = get(
         &good(
             &w,
-            "scope_binding.py",
+            "am identity",
             &[os("status"), os("--repo"), f.a.as_os_str()],
         )?,
         "project_id",
@@ -1567,9 +1567,8 @@ fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> T
     let input = save(&w, &request, "capture-request.json")?;
     let captured = good(
         &w,
-        "admit_learning.py",
+        "am capture",
         &[
-            os("capture"),
             os("--repo"),
             f.a.as_os_str(),
             os("--request"),
@@ -1591,7 +1590,7 @@ fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> T
     let input = save(&w, &compared, "capture-comparison.json")?;
     let view = good(
         &w,
-        "compare_learning.py",
+        "am compare",
         &[
             os("inspect"),
             os("--repo"),
@@ -1629,7 +1628,7 @@ fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> T
     let judgment = save(&w, &j, "capture-judgment.json")?;
     let proof = good(
         &w,
-        "compare_learning.py",
+        "am compare",
         &[
             os("review"),
             os("--repo"),
@@ -1644,7 +1643,7 @@ fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> T
     let proof = save(&w, get(&proof, "proof"), "capture-proof.json")?;
     let prepared = good(
         &w,
-        "admit_learning.py",
+        "am admission",
         &[
             os("preview"),
             os("--repo"),
@@ -1660,7 +1659,7 @@ fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> T
     let proposal = save(&w, get(&prepared, "proposal"), "capture-proposal.json")?;
     let admitted = good(
         &w,
-        "admit_learning.py",
+        "am admission",
         &[os("apply"), os("--proposal"), proposal.as_os_str()],
     )?;
     assert_eq!(get(&admitted, "admission_verified"), &Value::Bool(true));

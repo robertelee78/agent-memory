@@ -28,7 +28,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "publish_memory.py",
+    command: "am publish",
     module: "memory_publication",
     parser: &PARSER,
     routes: &[],

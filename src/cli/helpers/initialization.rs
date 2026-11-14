@@ -74,7 +74,7 @@ static PARSER: Parser = Parser {
     }),
 };
 pub static HELPER: Helper = Helper {
-    script: "initialize.py",
+    command: "am init",
     module: "initialization",
     parser: &PARSER,
     routes: &[],

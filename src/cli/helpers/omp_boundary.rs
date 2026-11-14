@@ -35,7 +35,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "omp_boundary.py",
+    command: "am omp-boundary",
     module: "omp_boundary",
     parser: &PARSER,
     routes: &[],

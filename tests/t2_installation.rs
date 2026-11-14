@@ -192,7 +192,7 @@ fn services() -> Services {
 
 // ----- fixtures -----
 
-const COMPATIBILITY: &str = r#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"python_minimum":"3.11","installed_commands":["am","agent-memory"],"installation_receipt_schemas":["agent-memory/install-receipt-v1","agent-memory/install-receipt-v2","agent-memory/install-receipt-v3"],"git_required_for":["git-sharing"],"required_python_packages":[],"required_agent_clients":[],"optional_adapters":[]}"#;
+const COMPATIBILITY: &str = r#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"installed_commands":["am","agent-memory"],"installation_receipt_schemas":["agent-memory/install-receipt-v1","agent-memory/install-receipt-v2","agent-memory/install-receipt-v3"],"git_required_for":["git-sharing"],"required_agent_clients":[],"optional_adapters":[]}"#;
 
 fn write(path: &Path, body: impl AsRef<[u8]>) {
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -484,7 +484,8 @@ fn signed_release_with_surface(
         &raw,
     );
     let tag = root.join(format!("assets/v{}", env!("CARGO_PKG_VERSION")));
-    write(&tag.join(release::MANIFEST), raw);
+    write(&tag.join(release::MANIFEST), &raw);
+    write(&root.join("latest").join(release::MANIFEST), &raw);
     write(&tag.join(release::SIGNATURE), signature);
     write(&tag.join(release::ARCHIVE), archive);
     write(&root.join("bootstrap"), binary);
@@ -502,6 +503,7 @@ fn release_services(root: &Path) -> Services {
             env!("CARGO_PKG_VERSION"),
             release::MANIFEST
         ),
+        latest_manifest_url: format!("file://{}/latest/{}", url_root, release::MANIFEST),
         assets: format!("file://{}/assets", url_root),
         options: release::DownloadOptions {
             allow_file: true,
@@ -588,6 +590,14 @@ fn bootstrap_manifest_and_following_assets_are_version_pinned() {
         )
     );
     assert!(!access.first_manifest_url.contains("/latest/"));
+    assert_eq!(
+        access.latest_manifest_url,
+        format!(
+            "https://github.com/{}/releases/latest/download/{}",
+            release::REPOSITORY,
+            release::MANIFEST,
+        )
+    );
     let world = World::new();
     let root = signed_release(&world, "release", STAND_IN);
     let access = release_services(&root).release;

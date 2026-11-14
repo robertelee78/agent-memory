@@ -7,7 +7,7 @@ use agent_memory::cli::surface::{self, Declared};
 use agent_memory::cli::{self, Entry};
 use agent_memory::codec::json::{self, DecodePolicy, Value};
 use agent_memory::console::{self, Channel, Transcript};
-use agent_memory::pack_validation::{CommandSurface, Inventory};
+use agent_memory::pack_validation::CommandSurface;
 use std::collections::BTreeSet;
 use std::ffi::OsString;
 use std::fs::{self, DirBuilder};
@@ -611,13 +611,6 @@ fn walk(parser: &Parser<'_>, commands: &mut BTreeSet<String>, flags: &mut BTreeS
     }
 }
 
-fn inventory(scripts: &[&str]) -> Inventory {
-    scripts
-        .iter()
-        .map(|script| (format!("scripts/{script}"), (Vec::new(), 0o644)))
-        .collect()
-}
-
 // obligation: tests/contracts/test_skill_routes.py::SkillRouteContract.test_missing_delegated_helper_cannot_be_hidden_behind_the_installed_command
 #[test]
 fn command_surface_declaration_equals_the_parser_table() {
@@ -641,54 +634,75 @@ fn command_surface_declaration_equals_the_parser_table() {
         sort(&mut sorted);
         sorted
     });
-    let scripts: Vec<&str> = cli::table::ENTRIES
+    // Each helper is named by the native command of its first table route
+    // without a fixed prefix (else its first route).
+    let routes_of = |module: &'static str| {
+        cli::table::ENTRIES
+            .iter()
+            .filter_map(move |entry| match entry {
+                Entry::Route(route) if route.helper.module == module => Some(route),
+                _ => None,
+            })
+    };
+    for entry in cli::table::ENTRIES {
+        let Entry::Route(route) = entry else { continue };
+        let module = route.helper.module;
+        let primary = routes_of(module)
+            .find(|route| route.prefix.is_empty())
+            .or_else(|| routes_of(module).next())
+            .unwrap();
+        assert_eq!(
+            route.helper.command,
+            format!("am {}", primary.name),
+            "{module}"
+        );
+    }
+    let helper_commands: BTreeSet<&str> = cli::table::ENTRIES
         .iter()
         .filter_map(|entry| match entry {
-            Entry::Route(route) => Some(route.helper.script),
+            Entry::Route(route) => Some(route.helper.command),
             Entry::Native(_) => None,
         })
         .collect();
-    let mut files = scripts.clone();
-    files.push(surface::ROOT_SCRIPT);
-    let files = inventory(&files);
     let help: BTreeSet<String> = ["-h", "--help"].iter().map(|f| (*f).to_owned()).collect();
     for entry in cli::table::ENTRIES {
         let Entry::Route(route) = entry else { continue };
-        let dispatch = declared
-            .dispatch(&format!("scripts/{}", route.helper.script), &files)
-            .unwrap();
+        let dispatch = declared.dispatch(route.helper.command).unwrap();
         let mut commands = BTreeSet::new();
         let mut flags = help.clone();
         walk(route.helper.parser, &mut commands, &mut flags);
-        assert_eq!(dispatch.commands, commands, "{}", route.helper.script);
-        assert_eq!(dispatch.flags, flags, "{}", route.helper.script);
-        assert_eq!(
-            dispatch.module,
-            format!("scripts/agent_memory/{}.py", route.helper.module)
-        );
+        assert_eq!(dispatch.commands, commands, "{}", route.helper.command);
+        assert_eq!(dispatch.flags, flags, "{}", route.helper.command);
+        assert_eq!(dispatch.module, route.helper.module);
         assert_eq!(dispatch.routes.len(), route.helper.routes.len());
     }
-    let root = declared.dispatch("scripts/installer.py", &files).unwrap();
+    let root = declared.dispatch(surface::ROOT_COMMAND).unwrap();
     let names: BTreeSet<String> = cli::table::ENTRIES
         .iter()
         .map(|e| e.name().to_owned())
         .collect();
     assert_eq!(root.commands, names);
-    assert_eq!(root.module, "scripts/agent_memory/installation.py");
+    assert_eq!(root.module, surface::ROOT_MODULE);
     for entry in cli::table::ENTRIES {
         if let Entry::Route(route) = entry {
             let declared_route = &root.routes[route.name];
-            assert_eq!(declared_route.helper, route.helper.script);
+            assert_eq!(declared_route.helper, route.helper.command);
             assert_eq!(declared_route.prefix, route.prefix.to_vec());
         }
     }
     assert_eq!(
-        declared.scripts().count(),
-        scripts.iter().collect::<BTreeSet<_>>().len() + 1
+        declared.helper_commands().collect::<BTreeSet<_>>(),
+        helper_commands
+            .iter()
+            .copied()
+            .chain([surface::ROOT_COMMAND])
+            .collect()
     );
-    // Native commands are in the binary, not executable files in the pack.
-    let empty = Inventory::new();
-    assert!(declared.dispatch("scripts/installer.py", &empty).is_ok());
+    // No declared identifier names a script, module path or interpreter.
+    let encoded = text(&surface::canonical_bytes(&declaration).unwrap());
+    for forbidden in [".py", "scripts/", "python"] {
+        assert!(!encoded.contains(forbidden), "{forbidden}");
+    }
     assert!(declared.command("developer").unwrap().is_some());
     assert!(
         declared
@@ -696,10 +710,9 @@ fn command_surface_declaration_equals_the_parser_table() {
             .unwrap()
             .is_none()
     );
-    let unknown = declared
-        .dispatch("scripts/not_a_declared_helper.py", &files)
-        .unwrap_err();
-    assert_eq!(unknown.code, "dispatch");
+    for unknown in ["am not-a-declared-helper", "scripts/installer.py"] {
+        assert_eq!(declared.dispatch(unknown).unwrap_err().code, "dispatch");
+    }
     // A tampered declaration is refused, never partially trusted.
     let mut tampered = declaration.clone();
     if let Value::Object(pairs) = &mut tampered {
@@ -1225,17 +1238,17 @@ fn native_guide_surface() -> Declared {
     };
     let bank = helpers
         .iter_mut()
-        .find(|helper| helper.get("script").and_then(Value::as_str) == Some("bank_contract.py"))
+        .find(|helper| helper.get("command").and_then(Value::as_str) == Some("am bank"))
         .unwrap();
     // A nested route exercises child operation/flag checks independently of
     // the top-level bank parser; both parsers come from the actual table.
     *declaration_field_mut(bank, "routes") =
-        decode(r#"[{"name":"render","helper":"authority_policy.py","prefix":[]}]"#);
+        decode(r#"[{"name":"render","helper":"am authority-policy","prefix":[]}]"#);
     let Value::Array(commands) = declaration_field_mut(&mut declaration, "commands") else {
         panic!("Declaration commands");
     };
     commands.push(decode(
-        r#"{"kind":"route","route":{"name":"status-prefix","helper":"developer_identity.py","prefix":["status"]}}"#,
+        r#"{"kind":"route","route":{"name":"status-prefix","helper":"am developer","prefix":["status"]}}"#,
     ));
     Declared::from_value(&declaration).unwrap()
 }
@@ -1303,22 +1316,14 @@ fn native_guides_refuse_unknown_commands_operations_flags_and_python_forms() {
 }
 
 #[test]
-fn native_surface_resolves_only_commands_in_the_table_without_pack_scripts() {
+fn native_surface_resolves_only_commands_in_the_table() {
     let declared = Declared::current().unwrap();
     for entry in cli::table::ENTRIES {
         let (dispatch, prefix) = declared.command(entry.name()).unwrap().unwrap();
         match entry {
             Entry::Route(route) => {
                 assert_eq!(prefix, route.prefix);
-                assert_eq!(
-                    dispatch,
-                    declared
-                        .dispatch(
-                            &format!("scripts/{}", route.helper.script),
-                            &Inventory::new()
-                        )
-                        .unwrap()
-                );
+                assert_eq!(dispatch, declared.dispatch(route.helper.command).unwrap());
             }
             Entry::Native(native) => {
                 let mut operations = BTreeSet::new();

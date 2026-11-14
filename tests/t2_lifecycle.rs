@@ -19,6 +19,8 @@ use std::process::Command;
 use std::sync::Arc;
 use std::time::Duration;
 
+mod support;
+
 const STAND_IN: &[u8] = b"#!/bin/sh\nprintf 'stand-in am %s\\n' \"$*\"\n";
 const BASE: &str = "0.0.15";
 const NEXT: &str = "0.0.16";
@@ -221,7 +223,7 @@ fn services_with(world: &World, release: ReleaseAccess) -> Services {
 
 // ----- small helpers -----
 
-const COMPATIBILITY: &str = r#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"python_minimum":"3.11","installed_commands":["am","agent-memory"],"installation_receipt_schemas":["agent-memory/install-receipt-v1","agent-memory/install-receipt-v2","agent-memory/install-receipt-v3"],"git_required_for":["git-sharing"],"required_python_packages":[],"required_agent_clients":[],"optional_adapters":[]}"#;
+const COMPATIBILITY: &str = r#"{"schema":"agent-memory/runtime-compatibility-v1","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"installed_commands":["am","agent-memory"],"installation_receipt_schemas":["agent-memory/install-receipt-v1","agent-memory/install-receipt-v2","agent-memory/install-receipt-v3"],"git_required_for":["git-sharing"],"required_agent_clients":[],"optional_adapters":[]}"#;
 
 fn write(path: &Path, body: impl AsRef<[u8]>) {
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -380,6 +382,10 @@ impl Channel {
     fn access(&self) -> ReleaseAccess {
         ReleaseAccess {
             first_manifest_url: format!(
+                "file://{}",
+                self.assets(BASE).join(release::MANIFEST).display()
+            ),
+            latest_manifest_url: format!(
                 "file://{}",
                 self.root.join("latest").join(release::MANIFEST).display()
             ),
@@ -819,6 +825,26 @@ fn current_update_checks_ownership_and_manifest_without_archive_or_bank_scan() {
         std::fs::read(installed.world.receipt_path()).unwrap(),
         before
     );
+}
+
+#[test]
+fn update_check_finds_published_latest_without_following_the_bootstrap_pin() {
+    let world = support::World::new().unwrap();
+    let channel = support::distribution::Channel::new(&world);
+    channel.publish(env!("CARGO_PKG_VERSION"), &"a".repeat(40));
+    let installed = channel.install(&world, "all", "copy");
+    assert!(flag(&installed, "verified"), "{installed:?}");
+    channel.publish(NEXT, &"b".repeat(40));
+    let before = support::lifecycle::snapshot(&world.root);
+    let result = channel.run(&world, "update", &["--check"], 0);
+    assert!(flag(&result, "check_complete"), "{result:?}");
+    assert!(flag(&result, "update_available"), "{result:?}");
+    assert_eq!(support::lifecycle::snapshot(&world.root), before);
+    // The real signed executable remains runnable after the read-only check.
+    let binary = support::lifecycle::command(get(&installed, "receipt"));
+    world.run([binary.as_os_str(), "--help".as_ref()]).unwrap();
+    let receipt = decode(&support::lifecycle::state(&world).join("receipt.json"));
+    assert_eq!(text(get(&receipt, "source"), "version"), BASE);
 }
 
 // obligation: tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_read_only_check_valid_update_and_repeat_preserve_user_text_and_source_channel
@@ -1395,6 +1421,13 @@ impl Installed {
     fn bootstrap_services(&self, version: &str) -> Services {
         let mut access = self.channel.access();
         access.version = version.into();
+        access.first_manifest_url = format!(
+            "file://{}",
+            self.channel
+                .assets(version)
+                .join(release::MANIFEST)
+                .display()
+        );
         services_with(&self.world, access)
     }
     fn bootstrap_update(&self, binary: &Path, check: bool) -> (i32, Value) {
@@ -1462,16 +1495,14 @@ fn rerun_bootstrap_update_refuses_unbound_or_missing_binary_bytes_before_writes(
             assert_eq!(refused(code, &result), expected);
         }
     }
-    // A bootstrap binary for another compiled version is never bound.
+    // Even a misdirected pinned endpoint cannot bind another signed version.
     let request = UpdateRequest {
         bootstrap_binary: Some(installed.channel.binary(NEXT)),
         ..UpdateRequest::default()
     };
-    let result = updating::update_command(
-        &installed.world.env(),
-        &installed.bootstrap_services(BASE),
-        &request,
-    );
+    let mut misdirected = installed.bootstrap_services(NEXT);
+    misdirected.release.version = BASE.into();
+    let result = updating::update_command(&installed.world.env(), &misdirected, &request);
     assert_eq!(
         refused(result.exit_code, result.value.as_ref().unwrap()),
         "Bootstrap binary version differs from its signed release; re-run the trusted bootstrap"
@@ -1519,6 +1550,145 @@ fn uninstall_request(check: bool) -> UninstallRequest {
         check,
         ..UninstallRequest::default()
     }
+}
+
+#[test]
+fn signed_uninstall_retains_receipt_listed_rollback_nodes_including_dangling_links() {
+    let world = support::World::new().unwrap();
+    let channel = support::distribution::Channel::new(&world);
+    channel.publish(env!("CARGO_PKG_VERSION"), &"a".repeat(40));
+    let installed = channel.install(&world, "all", "copy");
+    let previous = get(&installed, "receipt");
+    assert!(get(previous, "backups").as_array().unwrap().is_empty());
+    let uninstalled = support::lifecycle::run(&world, &["uninstall"], 0);
+    assert!(flag(&uninstalled, "verified"));
+    assert!(flag(&uninstalled, "uninstalled"));
+    assert_eq!(get(&uninstalled, "preserved"), &Value::Array(vec![]));
+    let receipt = get(&uninstalled, "receipt");
+    assert_eq!(get(receipt, "preserved"), &Value::Array(vec![]));
+    let state = support::lifecycle::state(&world);
+    assert!(install::same(&decode(&state.join("receipt.json")), receipt));
+    let journal = decode(&state.join("journal.json"));
+    assert_eq!(text(&journal, "status"), "complete");
+    let transaction = text(&journal, "transaction");
+    let actions = get(&journal, "actions").as_array().unwrap();
+    let backups = get(receipt, "backups").as_array().unwrap();
+    assert_eq!(actions.len(), targets(previous).len());
+    assert_eq!(backups.len(), actions.len() * 2 + 1);
+    let mut retained = BTreeSet::new();
+    let mut dangling = 0;
+    for (index, action) in actions.iter().enumerate() {
+        let original = Path::new(text(action, "path"));
+        assert!(std::fs::symlink_metadata(original).is_err());
+        assert_eq!(get(action, "after"), &Value::Null);
+        let parent = original.parent().unwrap();
+        for (key, prefix) in [
+            ("backup", ".agent-memory-backup-"),
+            ("stage", ".agent-memory-"),
+        ] {
+            let path = parent.join(format!("{prefix}{transaction}-{index}"));
+            assert_eq!(text(action, key), path.to_str().unwrap());
+            let mut fields = vec![
+                ("path".into(), Value::String(path.to_str().unwrap().into())),
+                ("original_path".into(), get(action, "path").clone()),
+                ("identity".into(), get(action, "before").clone()),
+                ("available".into(), Value::Bool(true)),
+            ];
+            if key == "backup" {
+                fields.push((
+                    "kind".into(),
+                    Value::String("pre-activation-snapshot".into()),
+                ));
+            }
+            let expected = Value::Object(fields);
+            assert!(
+                backups
+                    .iter()
+                    .any(|backup| install::same(backup, &expected)),
+                "{expected:?}"
+            );
+            assert!(install::same(
+                &install::fingerprint(&path).unwrap(),
+                get(action, "before")
+            ));
+            assert!(retained.insert(path.clone()));
+            if text(get(action, "before"), "kind") == "link" {
+                assert_eq!(
+                    std::fs::read_link(&path).unwrap(),
+                    PathBuf::from(text(get(action, "before"), "target"))
+                );
+                assert!(
+                    !path.exists(),
+                    "backup link should dangle: {}",
+                    path.display()
+                );
+                dangling += 1;
+            }
+        }
+    }
+    // OpenCode plugin plus the two command aliases each retain a link pair.
+    assert_eq!(dangling, 6);
+    let actual: BTreeSet<_> = walk(&world.root)
+        .into_iter()
+        .filter(|path| {
+            path.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with(".agent-memory-")
+        })
+        .collect();
+    assert_eq!(actual, retained);
+    let before = without_owner(snapshot(&world.root));
+    let recovered = support::lifecycle::run(&world, &["recover"], 0);
+    assert_eq!(text(&recovered, "status"), "complete");
+    assert_eq!(without_owner(snapshot(&world.root)), before);
+}
+
+#[test]
+fn signed_update_write_29_recovery_reports_the_retained_pre_activation_backup() {
+    let mut world = support::World::new().unwrap();
+    let channel = support::distribution::Channel::new(&world);
+    channel.publish(env!("CARGO_PKG_VERSION"), &"a".repeat(40));
+    let installed = channel.install(&world, "all", "copy");
+    let previous = get(&installed, "receipt").clone();
+    channel.publish(NEXT, &"b".repeat(40));
+    channel.fault(&mut world, "update", "update-write-29-after");
+    let recovered = support::lifecycle::run(&world, &["recover"], 0);
+    assert_eq!(text(&recovered, "status"), "rolled-back");
+    assert!(flag(&recovered, "verified"));
+    let state = support::lifecycle::state(&world);
+    assert!(install::same(
+        &decode(&state.join("receipt.json")),
+        &previous
+    ));
+    let journal = decode(&state.join("journal.json"));
+    let mut retained = Vec::new();
+    let mut runtime_backup = None;
+    for action in get(&journal, "actions").as_array().unwrap() {
+        assert!(install::same(
+            &install::fingerprint(Path::new(text(action, "path"))).unwrap(),
+            get(action, "before")
+        ));
+        for key in ["stage", "backup"] {
+            if let Some(path) = get(action, key).as_str() {
+                if std::fs::symlink_metadata(path).is_ok() {
+                    retained.push(Value::String(path.into()));
+                    if key == "backup" && text(action, "kind") == "source" {
+                        runtime_backup = Some(PathBuf::from(path));
+                    }
+                }
+            }
+        }
+    }
+    assert_eq!(
+        get(&recovered, "preserved_backups"),
+        &Value::Array(retained)
+    );
+    let runtime_backup = runtime_backup.expect("write 29 preserves the runtime snapshot");
+    assert_eq!(
+        std::fs::read(runtime_backup.join("bin/am")).unwrap(),
+        std::fs::read(env!("CARGO_BIN_EXE_am")).unwrap()
+    );
 }
 
 // obligation: tests/contracts/test_runtime_uninstall.py::RuntimeUninstallContract.test_preview_remove_repeat_and_reinstall_preserve_bank_original_settings_and_backups

@@ -51,13 +51,15 @@ jobs:
         run: cargo test --locked --no-fail-fast --features dev-tools --target '${{ matrix.target }}'
 
   musl:
-    name: Static build (${{ matrix.target }})
+    name: Release build (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         include:
+          - os: macos-15
+            target: aarch64-apple-darwin
           - os: ubuntu-24.04
             target: x86_64-unknown-linux-musl
           - os: ubuntu-24.04-arm
@@ -72,7 +74,8 @@ jobs:
       - name: Build
         shell: sh
         run: cargo build --locked --release --bins --target '${{ matrix.target }}'
-      - name: Require a static am
+      - name: Require a static am on Linux
+        if: endsWith(matrix.target, '-linux-musl')
         shell: sh
         run: |
           binary='target/${{ matrix.target }}/release/am'
@@ -94,7 +97,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Require every test and static build
+      - name: Require every test and release build
         env:
           TESTS: ${{ needs.test.result }}
           BUILDS: ${{ needs.musl.result }}

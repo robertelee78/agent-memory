@@ -1725,8 +1725,8 @@ fn unlock(f: &Fixture) -> TestResult {
     Ok(())
 }
 fn recover(f: &Fixture, mode: &str) -> TestResult<Value> {
-    let outcome = f.world.helper(
-        "bank_transactions.py",
+    let outcome = f.world.am_json(
+        "am transaction",
         [
             os("recover"),
             os("--repo"),
@@ -1737,8 +1737,8 @@ fn recover(f: &Fixture, mode: &str) -> TestResult<Value> {
     )?;
     let preview = json::decode_bytes(&outcome.stdout, Default::default())?;
     let path = save(&f.world, &preview, "recover.json")?;
-    let outcome = f.world.helper(
-        "bank_transactions.py",
+    let outcome = f.world.am_json(
+        "am transaction",
         [
             os("recover"),
             os("--repo"),

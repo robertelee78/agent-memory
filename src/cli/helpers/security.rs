@@ -18,7 +18,7 @@ static PARSER: Parser = Parser {
     subcommands: None,
 };
 pub static HELPER: Helper = Helper {
-    script: "security_policy.py",
+    command: "am security-policy",
     module: "security",
     parser: &PARSER,
     routes: &[],

@@ -39,7 +39,7 @@ fn preview(w: &World, repo: &Path, body: &str) -> (agent_memory::process::Output
     fs::write(&path, body).unwrap();
     command(
         w,
-        "bank_writes.py",
+        "am writes",
         &[
             "preview".into(),
             "--repo".into(),
@@ -54,7 +54,7 @@ fn preview(w: &World, repo: &Path, body: &str) -> (agent_memory::process::Output
 fn apply(w: &World, p: &Value) -> (agent_memory::process::Output, Value) {
     command(
         w,
-        "bank_writes.py",
+        "am writes",
         &[
             "apply".into(),
             "--proposal".into(),
@@ -227,7 +227,7 @@ fn visible_lock_and_interruption_stop_mediated_resume_without_repair() {
         .unwrap();
         refused(
             &w,
-            "bank_writes.py",
+            "am writes",
             &[
                 "inspect".into(),
                 "--repo".into(),

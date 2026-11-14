@@ -205,8 +205,8 @@ impl Fixture {
         );
         let proposal = save(&self.w, &proposal, "apply.json");
         self.w
-            .helper(
-                "bank_transactions.py",
+            .am_json(
+                "am transaction",
                 [
                     OsStr::new("apply"),
                     OsStr::new("--proposal"),

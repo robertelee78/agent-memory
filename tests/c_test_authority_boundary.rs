@@ -15,10 +15,10 @@ fn bank(w: &World, body: &str) -> PathBuf {
     );
     bank
 }
-fn apply(w: &World, helper: &str, p: &Value) -> Value {
+fn apply(w: &World, command: &str, p: &Value) -> Value {
     let receipt = good(
         w,
-        helper,
+        command,
         &[
             "apply".into(),
             "--proposal".into(),
@@ -31,7 +31,7 @@ fn apply(w: &World, helper: &str, p: &Value) -> Value {
 fn developer(w: &World, label: &str) -> String {
     let p = good(
         w,
-        "developer_identity.py",
+        "am developer",
         &[
             "preview".into(),
             "--create".into(),
@@ -39,7 +39,7 @@ fn developer(w: &World, label: &str) -> String {
             label.into(),
         ],
     );
-    string(&apply(w, "developer_identity.py", &p), "developer_id").to_owned()
+    string(&apply(w, "am developer", &p), "developer_id").to_owned()
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn raw_read_and_edit_need_no_identity_or_cli_audit() {
     .unwrap();
     let receipt = good(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -99,7 +99,7 @@ fn developer_attribution_does_not_change_bank_permissions_or_visibility() {
     let bank = bank(&w, "# Goals\n\nShared project learning.\n");
     let p = good(
         &w,
-        "project_identity.py",
+        "am project",
         &[
             "preview".into(),
             "--repo".into(),
@@ -110,7 +110,7 @@ fn developer_attribution_does_not_change_bank_permissions_or_visibility() {
             "Shared project fixture".into(),
         ],
     );
-    apply(&w, "project_identity.py", &p);
+    apply(&w, "am project", &p);
     let a = developer(&w, "Developer A");
     let original = physical(&bank);
     let permissions = || {
@@ -131,13 +131,13 @@ fn developer_attribution_does_not_change_bank_permissions_or_visibility() {
     for id in [&a, &b, &a] {
         let p = good(
             &w,
-            "developer_identity.py",
+            "am developer",
             &["preview".into(), "--select".into(), id.into()],
         );
-        apply(&w, "developer_identity.py", &p);
+        apply(&w, "am developer", &p);
         let status = good(
             &w,
-            "project_identity.py",
+            "am project",
             &[
                 "status".into(),
                 "--repo".into(),
@@ -155,7 +155,7 @@ fn developer_attribution_does_not_change_bank_permissions_or_visibility() {
         );
     }
     assert_eq!(original.len(), 2);
-    let status = good(&w, "developer_identity.py", &["status".into()]);
+    let status = good(&w, "am developer", &["status".into()]);
     assert!(!yes(&status, "identity_authenticated"));
     assert!(string(&status, "security_boundary").contains("not authentication"));
 }
@@ -177,7 +177,7 @@ fn hostile_memory_never_executes_or_replaces_explicit_identity() {
     let before = fs::read(&registry).unwrap();
     for (helper, args) in [
         (
-            "bank_contract.py",
+            "am bank",
             vec![
                 "validate".into(),
                 "--repo".into(),
@@ -185,20 +185,20 @@ fn hostile_memory_never_executes_or_replaces_explicit_identity() {
             ],
         ),
         (
-            "bank_writes.py",
+            "am writes",
             vec![
                 "inspect".into(),
                 "--repo".into(),
                 w.paths["repo"].as_os_str().to_owned(),
             ],
         ),
-        ("developer_identity.py", vec!["status".into()]),
+        ("am developer", vec!["status".into()]),
     ] {
         assert!(!yes(&good(&w, helper, &args), "writes_performed"));
     }
     assert!(!sentinel.exists());
     assert_eq!(fs::read(registry).unwrap(), before);
-    let attribution = good(&w, "developer_identity.py", &["status".into()]);
+    let attribution = good(&w, "am developer", &["status".into()]);
     assert_eq!(string(&attribution, "developer_id"), actual);
     assert_ne!(actual, claimed);
     assert!(!yes(&attribution, "identity_authenticated"));
@@ -208,7 +208,7 @@ fn hostile_memory_never_executes_or_replaces_explicit_identity() {
     );
     let inspected = good(
         &w,
-        "bank_writes.py",
+        "am writes",
         &[
             "inspect".into(),
             "--repo".into(),
@@ -238,7 +238,7 @@ fn remembered_cross_project_claim_never_binds_another_repository() {
     let before = physical(&bank);
     let status = good(
         &w,
-        "project_identity.py",
+        "am project",
         &[
             "status".into(),
             "--repo".into(),

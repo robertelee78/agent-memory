@@ -25,7 +25,7 @@ fn fixture(w: &World) -> PathBuf {
 fn validate(w: &World) -> Value {
     good(
         w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -100,7 +100,7 @@ fn router_never_routes_runtime_outside_or_personal_paths() {
         .unwrap();
         refused(
             &w,
-            "bank_contract.py",
+            "am bank",
             &[
                 "validate".into(),
                 "--repo".into(),
@@ -115,7 +115,7 @@ fn router_never_routes_runtime_outside_or_personal_paths() {
     symlink(&outside, bank.join("projectbrief.md")).unwrap();
     refused(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -163,7 +163,7 @@ fn optional_topic_is_readable_but_runtime_is_not_routed() {
     fs::write(bank.join(".agent-memory.lock"), "writer").unwrap();
     refused(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),
@@ -174,7 +174,7 @@ fn optional_topic_is_readable_but_runtime_is_not_routed() {
     fs::write(bank.join(MARKER), "interrupted").unwrap();
     refused(
         &w,
-        "bank_contract.py",
+        "am bank",
         &[
             "validate".into(),
             "--repo".into(),

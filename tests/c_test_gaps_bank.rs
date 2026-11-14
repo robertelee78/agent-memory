@@ -1071,8 +1071,8 @@ fn doctor_recognizes_and_persists_old_device_binding() {
         .unwrap();
     let preview =
         f.r.world
-            .helper(
-                "scope_binding.py",
+            .am_json(
+                "am identity",
                 &[
                     "preview".into(),
                     "--repo".into(),
@@ -1087,8 +1087,8 @@ fn doctor_recognizes_and_persists_old_device_binding() {
     let proposal: Value = json::decode_bytes(&preview.stdout, Default::default()).unwrap();
     let path = save(&f.r.world, &proposal, "historical-rebind.json");
     f.r.world
-        .helper(
-            "scope_binding.py",
+        .am_json(
+            "am identity",
             &["apply".into(), "--proposal".into(), path.into_os_string()],
         )
         .unwrap();

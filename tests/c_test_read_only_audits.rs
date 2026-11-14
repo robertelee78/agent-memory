@@ -73,9 +73,8 @@ fn repeated_installed_and_source_audits_preserve_all_runtime_bytes_and_modes() {
         let source = development_source(&w, "audit-source");
         let installed = good(
             &w,
-            "installer.py",
+            "am install",
             &[
-                "install".into(),
                 "--development-source".into(),
                 source.as_os_str().to_owned(),
                 "--presets".into(),
@@ -119,9 +118,8 @@ fn outside_receipt_aware_audit_refuses_and_preserves_opaque_cache_drift() {
     let source = development_source(&w, "audit-source");
     let installed = good(
         &w,
-        "installer.py",
+        "am install",
         &[
-            "install".into(),
             "--development-source".into(),
             source.as_os_str().to_owned(),
             "--presets".into(),

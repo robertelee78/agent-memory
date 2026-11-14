@@ -461,12 +461,13 @@ impl World {
         self.command_argv(argv, options)?.run()
     }
 
-    pub fn helper<I, S>(&self, script: &str, args: I) -> Result<Output>
+    /// Run `am --json <command path> <args>`, e.g. `am_json("am writes", …)`.
+    pub fn am_json<I, S>(&self, command: &str, args: I) -> Result<Output>
     where
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
-        let args = helper_arguments(script, args)?;
+        let args = native_arguments(command, args)?;
         let argv = [
             OsString::from(env!("CARGO_BIN_EXE_am")),
             OsString::from("--json"),
@@ -602,139 +603,27 @@ pub fn require_world(env: &Environment, cwd: &Path) -> Result<PathBuf> {
     Ok(root)
 }
 
-/// Translate source fixture names, never execute or discover a script.
-pub fn helper_arguments<I, S>(script: &str, args: I) -> Result<Vec<OsString>>
+/// The argv of one native invocation: `command` is the literal `am …` command
+/// path (`am writes`, `am bank recover-layout`, `am install`), followed by
+/// `args`. Nothing is translated, discovered or executed by name.
+pub fn native_arguments<I, S>(command: &str, args: I) -> Result<Vec<OsString>>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
-    let script = script.strip_prefix("scripts/").unwrap_or(script);
-    let mut args: Vec<OsString> = args
-        .into_iter()
-        .map(|arg| arg.as_ref().to_owned())
-        .collect();
-    let (route, consumed, nested) = match script {
-        "developer_identity.py" => ("developer", 0, false),
-        "project_identity.py" => ("project", 0, false),
-        "scope_binding.py" => ("identity", 0, false),
-        "initialize.py" => ("init", 0, false),
-        "bank_state.py" if args.first().is_some_and(|arg| arg == "inspect") => {
-            ("inspect", 1, false)
-        }
-        "bank_state.py" => {
-            return Err(WorldError::invalid(
-                "bank_state.py requires the registered inspect prefix",
-            ));
-        }
-        "bank_contract.py" => ("bank", 0, false),
-        "retrieve.py" => ("search", 0, false),
-        "discover_memory.py" => ("discover", 0, false),
-        "assemble_context.py" => ("context", 0, false),
-        "admit_learning.py" if args.first().is_some_and(|arg| arg == "capture") => {
-            ("capture", 1, false)
-        }
-        "admit_learning.py" => ("admission", 0, false),
-        "claude_boundary.py" => ("claude-boundary", 0, false),
-        "codex_boundary.py" => ("codex-boundary", 0, false),
-        "omp_boundary.py" => ("omp-boundary", 0, false),
-        "private_workspace.py" => ("private", 0, false),
-        "compare_learning.py" => ("compare", 0, false),
-        "consolidate_learning.py" => ("compact", 0, false),
-        "checkpoint.py" => ("checkpoint", 0, false),
-        "govern_memory.py" => ("govern", 0, false),
-        "publish_memory.py" => ("publish", 0, false),
-        "refresh_memory.py" => ("refresh", 0, false),
-        "reconcile_memory.py" => ("semantic", 0, false),
-        "sharing_boundary.py" => ("sharing", 0, false),
-        "sharing_recovery.py" => ("exchange", 0, false),
-        "projection.py" => ("projection", 0, false),
-        "bank_writes.py" => ("writes", 0, false),
-        "bank_transactions.py" => ("transaction", 0, false),
-        "migrate_bank.py" => ("migrate", 0, false),
-        "recover_layout.py" => ("bank", 0, true),
-        "artifact.py" => ("artifact", 0, false),
-        "authority_policy.py" => ("authority-policy", 0, false),
-        "bank_layout.py" => ("bank-layout", 0, false),
-        "lifecycle_model.py" => ("lifecycle-model", 0, false),
-        "record_contract.py" => ("record-contract", 0, false),
-        "scope_policy.py" => ("scope-policy", 0, false),
-        "validate_pack.py" => ("validate-pack", 0, false),
-        "security_policy.py" => ("security-policy", 0, false),
-        "inactive_records.py" => ("inactive-records", 0, false),
-        "tombstones.py" => ("tombstones", 0, false),
-        "update_runtime.py" => ("update", 0, false),
-        "uninstall_runtime.py" => ("uninstall", 0, false),
-        "diagnose.py" | "installer.py" | "am_console.py" => {
-            let Some(command) = args.first().and_then(|arg| arg.to_str()) else {
-                return Ok(args);
-            };
-            if matches!(command, "--help" | "-h" | "help") {
-                return Ok(args);
-            }
-            if !agent_memory::cli::table::ENTRIES
-                .iter()
-                .any(|entry| entry.name() == command)
-            {
-                return Err(WorldError::invalid(format!(
-                    "Fixture command unavailable: am {command} is not registered"
-                )));
-            }
-            return Ok(args);
-        }
-        _ => {
-            return Err(WorldError::invalid(format!(
-                "Unknown fixture helper: {script}; no script or shell fallback is available"
-            )));
-        }
-    };
-    let entry = agent_memory::cli::table::ENTRIES
-        .iter()
-        .find(|entry| entry.name() == route)
+    let path = command
+        .strip_prefix("am")
+        .filter(|rest| rest.is_empty() || rest.starts_with(' '))
         .ok_or_else(|| {
             WorldError::invalid(format!(
-                "Fixture command unavailable: {script} requires am {route}, which is not registered"
+                "Fixture command must be a native am invocation: {command}"
             ))
         })?;
-    if let agent_memory::cli::Entry::Route(registered) = entry {
-        if !nested && registered.helper.script != script {
-            return Err(WorldError::invalid(format!(
-                "Fixture command mapping disagrees with registered helper: {script} -> am {route}"
-            )));
-        }
-        let expected_prefix = if route == "inspect" {
-            "inspect"
-        } else {
-            "capture"
-        };
-        if consumed > 0 && registered.prefix != [expected_prefix] {
-            return Err(WorldError::invalid(format!(
-                "Fixture command prefix disagrees with registered route: am {route}"
-            )));
-        }
-        if nested
-            && !registered
-                .helper
-                .routes
-                .iter()
-                .any(|route| route.name == "recover-layout" && route.helper.script == script)
-        {
-            return Err(WorldError::invalid(
-                "Fixture command unavailable: am bank recover-layout is not registered",
-            ));
-        }
-    } else if nested {
-        return Err(WorldError::invalid(
-            "Fixture command unavailable: am bank recover-layout is not registered",
-        ));
-    }
-    args.drain(..consumed);
-    let mut mapped = Vec::with_capacity(args.len() + 2);
-    mapped.push(route.into());
-    if nested {
-        mapped.push("recover-layout".into());
-    }
-    mapped.extend(args);
-    Ok(mapped)
+    Ok(path
+        .split_whitespace()
+        .map(OsString::from)
+        .chain(args.into_iter().map(|arg| arg.as_ref().to_owned()))
+        .collect())
 }
 
 impl World {

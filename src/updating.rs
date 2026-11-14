@@ -1015,7 +1015,7 @@ pub fn run(env: &Environment, services: &Services, request: &UpdateRequest) -> R
     } else if text(source, "kind") == Some("release") {
         let access = &services.release;
         let observed = release::probe_with(
-            &access.first_manifest_url,
+            &access.latest_manifest_url,
             &access.assets,
             access.options,
             &access.signers,

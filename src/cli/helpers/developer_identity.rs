@@ -80,7 +80,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "developer_identity.py",
+    command: "am developer",
     module: "developer_identity",
     parser: &PARSER,
     routes: &[],

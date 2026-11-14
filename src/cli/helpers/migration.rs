@@ -90,7 +90,7 @@ pub static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "migrate_bank.py",
+    command: "am migrate",
     module: "migration",
     parser: &PARSER,
     routes: &[],

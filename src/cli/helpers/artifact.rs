@@ -20,7 +20,7 @@ static PARSER: Parser = Parser {
 };
 
 pub static HELPER: Helper = Helper {
-    script: "artifact.py",
+    command: "am artifact",
     module: "artifact",
     parser: &PARSER,
     routes: &[],
