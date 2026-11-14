@@ -713,6 +713,8 @@ fn close_range_falls_back_only_for_compatibility_errnos() {
     let errno: i32 = errno.to_str().unwrap().parse().unwrap();
     let dir = PrivateDir::new();
     let mut passed_file = dir.file("passed");
+    // Force multi-digit coverage without relying on descriptors inherited by the worker.
+    let passed = duplicate_at(passed_file.as_raw_fd(), 64);
     // More than one getdents64 stack buffer, with inheritable descriptors.
     let hidden: Vec<OwnedFd> = (0..200)
         .map(|_| duplicate_at(passed_file.as_raw_fd(), 3))
@@ -723,11 +725,11 @@ fn close_range_falls_back_only_for_compatibility_errnos() {
         .collect::<Vec<_>>()
         .join(" ");
     let script = format!(
-        "echo x >&\"$1\"; for fd in {hidden_numbers}; do if [ -e /proc/self/fd/$fd ]; then exit 91; fi; done"
+        "echo x > /dev/fd/\"$1\"; for fd in {hidden_numbers}; do if [ -e /proc/self/fd/$fd ]; then exit 91; fi; done"
     );
-    let number = passed_file.as_raw_fd().to_string();
+    let number = passed.as_raw_fd().to_string();
     let args = argv(&["/bin/sh", "-c", &script, "fallback-test", &number]);
-    let pass_fds = [passed_file.as_fd()];
+    let pass_fds = [passed.as_fd()];
     let mut request = spec(&args, &dir.0);
     request.pass_fds = &pass_fds;
     deny_syscalls(&[libc::SYS_close_range], errno);
