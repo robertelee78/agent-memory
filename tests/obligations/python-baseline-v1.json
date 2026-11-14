@@ -3550,14 +3550,14 @@
   {
    "id": "tests/contracts/test_large_refresh_security.py::LargeRefreshSecurityContract.test_complete_refresh_security_primitive_scans_late_sources_and_keeps_other_action_bounds",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_large_refresh_security.py::LargeRefreshSecurityContract.test_complete_v2_delta_above_sixty_four_sources_imports_and_qualifies_peer_learning",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -11924,70 +11924,70 @@
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_deleted_record_id_suppresses_cached_text_before_audited_retrieval_output",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_governed_checkpoint_and_primitive_checkpoint_refuse_secrets_before_canonical_writes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_hostile_authority_identity_and_conversation_text_quarantine_without_echo_or_execution",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_initialization_rejects_secret_in_reviewed_summary_before_creating_bank",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_interrupted_checkpoint_audit_and_write_replay_converge_without_payload_copies",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_procedure_eligibility_requires_separate_exact_project_content_version_approval",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_required_audit_failure_stops_write_and_same_operation_retries_after_repair",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_secret_candidates_are_redacted_and_audit_never_copies_payload_or_secret_hashes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_source_classes_remain_distinct_and_repository_bytes_are_actually_checked",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_security_policy.py::SecurityPolicyContract.test_wrong_project_oversize_private_evidence_and_embedded_approval_claims_do_not_authorize",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13142,7 +13142,7 @@
   {
    "id": "tests/contracts/test_validation_memo.py::ValidationMemoContract.test_security_budget_redaction_results_and_failed_checks_remain_distinct",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 153,
-   "ported": 76,
-   "unported": 1633
+   "partial": 164,
+   "ported": 78,
+   "unported": 1620
   }
  }
 }

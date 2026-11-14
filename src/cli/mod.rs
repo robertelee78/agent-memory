@@ -295,6 +295,16 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
         Arc::new(wiring::WriterOperations),
     )))?;
     crate::bank_writes::register_scope_binding(Some(Arc::new(crate::scope_binding::ScopeBinding)));
+    crate::bank_writes::register_security(Some(Arc::new(crate::security::Security)));
+    wired(crate::repository_config::register_security_scan(Some(
+        Arc::new(crate::security::Security),
+    )))?;
+    static SECURITY_SCAN: std::sync::LazyLock<std::result::Result<(), String>> =
+        std::sync::LazyLock::new(|| {
+            crate::sharing_hold_mapping::register_security_scan(Box::new(crate::security::Security))
+                .map_err(|error| error.to_string())
+        });
+    wired((*SECURITY_SCAN).clone().map_err(ContractError::new))?;
     Ok(())
 }
 

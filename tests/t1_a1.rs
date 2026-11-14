@@ -1131,7 +1131,7 @@ fn real_git_private_repositories_preserve_unborn_committed_and_linked_root_bytes
 #[test]
 fn security_source_classes_have_one_baseline_definition() {
     assert_eq!(
-        agent_memory::model_reference::CLASSES,
+        agent_memory::security::CLASSES,
         &[
             "assistant",
             "external",

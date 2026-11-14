@@ -642,8 +642,11 @@ fn valid_receipt(w: &World, p: &Value, outcome: &str) -> Value {
 
 // obligation: tests/contracts/test_admission.py::AdmissionContract.test_complete_receipt_schema_and_bindings_govern_cleanup_and_historical_replay
 #[test]
-#[ignore = "needs security registered"]
 fn complete_receipt_schema_and_every_binding_are_required() {
+    agent_memory::repository_config::register_security_scan(Some(std::sync::Arc::new(
+        agent_memory::security::Security,
+    )))
+    .unwrap();
     let w = World::new();
     w.mkdir("repo/memory-bank");
     let p = proposal(&w.path("repo"));
@@ -651,8 +654,10 @@ fn complete_receipt_schema_and_every_binding_are_required() {
         let receipt = valid_receipt(&w, &p, outcome);
         w.write("receipt", &encoded(&receipt).unwrap());
         assert_eq!(
-            txn::receipt_value(&w.path("receipt"), &p).unwrap(),
-            Some(receipt.clone())
+            txn::receipt_value(&w.path("receipt"), &p)
+                .unwrap()
+                .map(|value| encoded(&value).unwrap()),
+            Some(encoded(&receipt).unwrap())
         );
         for key in txn::RECEIPT_FIELDS {
             let mut bad = receipt.clone();
@@ -928,7 +933,7 @@ fn real_files_inventory_accepts_empty_bank_and_ignores_runtime_payloads() {
 
 // obligation: tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_every_interruption_boundary_refuses_normal_reads_and_converges_in_both_directions
 #[test]
-#[ignore = "needs recovery_frontier, security registered"]
+#[ignore = "needs recovery_frontier registered"]
 fn real_partial_rename_converges_finish_and_rollback_at_every_file_boundary() {
     real_observer();
     for mode in ["finish", "rollback"] {

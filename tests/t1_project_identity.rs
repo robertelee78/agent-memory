@@ -79,21 +79,6 @@ fn command(argv: &[OsString], env: &[(OsString, OsString)], cwd: Option<&Path>) 
     };
     process::run_for(&spec, Duration::from_secs(120)).unwrap()
 }
-struct LabelScan;
-impl repository_config::SecurityScan for LabelScan {
-    fn has_reasons(&self, value: &str) -> Result<bool> {
-        // Real deterministic scan for the boundary labels used by these tests.
-        Ok(value.to_ascii_lowercase().contains("password=")
-            || value.contains("PRIVATE KEY")
-            || value.contains("token="))
-    }
-    fn scan(&self, _body: &str) -> Result<agent_memory::codec::json::Value> {
-        // Body scanning belongs to the security module; this label fixture refuses it.
-        Err(agent_memory::error::ContractError::new(
-            "Security body scan is not available in this label fixture",
-        ))
-    }
-}
 struct World {
     root: PathBuf,
 }
@@ -279,7 +264,8 @@ impl World {
 static OUTER_LAUNCH: std::sync::Mutex<()> = std::sync::Mutex::new(());
 fn in_world(name: &str, body: impl FnOnce(&World)) {
     if std::env::var("AM_PROJECT_CASE").ok().as_deref() == Some(name) {
-        repository_config::register_security_scan(Some(Arc::new(LabelScan))).unwrap();
+        repository_config::register_security_scan(Some(Arc::new(agent_memory::security::Security)))
+            .unwrap();
         let world = World {
             root: PathBuf::from(std::env::var_os("AM_PROJECT_ROOT").unwrap()),
         };

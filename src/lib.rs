@@ -49,6 +49,7 @@ pub mod remote_identity;
 pub mod repository_config;
 pub mod scope_binding;
 pub mod scopes;
+pub mod security;
 pub mod sharing_hold_mapping;
 pub mod sharing_limits;
 pub mod tombstones;

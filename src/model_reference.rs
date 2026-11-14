@@ -3,14 +3,7 @@ use crate::codec::json::{self, DecodePolicy, DuplicateKeys, NonFinite, Value};
 use crate::error::{ContractError, Result};
 use crate::lifecycle::{get, text};
 
-// Baseline owner: security.CLASSES (security.py:22); security batch moves this to security::CLASSES and imports it here.
-pub const CLASSES: &[&str] = &[
-    "assistant",
-    "external",
-    "tool",
-    "user",
-    "verified-repository",
-];
+use crate::security::CLASSES;
 
 pub const AUTHORITY_GUIDANCE: &str = r#"A session MUST identify what kind of fact it needs before deciding which source
 is stronger. It MUST read the current applicable source, including its evidence,

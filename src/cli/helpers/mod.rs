@@ -11,3 +11,4 @@ pub mod pack_validation;
 pub mod records;
 pub mod scope_binding;
 pub mod scopes;
+pub mod security;
