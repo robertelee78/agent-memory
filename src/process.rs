@@ -1853,3 +1853,107 @@ mod inherited_git_context_tests {
         }
     }
 }
+
+/// An owned direct child. Launch data and borrowed descriptors may be dropped
+/// immediately after `spawn_owned`; only argv0 and pending byte input survive.
+/// As with `Group`, termination-registry capacity and signal ownership are
+/// enforced by the existing spawn path.
+pub struct OwnedProcess {
+    active: Option<Active<'static>>,
+    argv0: OsString,
+    payload: Vec<u8>,
+}
+
+impl Active<'_> {
+    // Moving fields changes only the input slice's lifetime, never OS ownership.
+    fn with_payload<'a>(self, payload: &'a [u8]) -> Active<'a> {
+        Active {
+            owner: self.owner,
+            input: self.input,
+            stdout: self.stdout,
+            stderr: self.stderr,
+            payload,
+            sent: self.sent,
+            out: self.out,
+            err: self.err,
+            stdout_limit: self.stdout_limit,
+            stderr_limit: self.stderr_limit,
+            start: self.start,
+            launch_elapsed_ns: self.launch_elapsed_ns,
+            deadline: self.deadline,
+            interval_deadline: self.interval_deadline,
+            poll_wakeups: self.poll_wakeups,
+        }
+    }
+}
+
+/// Launch through the same registry, descriptor, deadline and exec machinery as
+/// `Group`. No thread or detached supervisor is created.
+pub fn spawn_owned(spec: &Spec<'_>) -> std::result::Result<OwnedProcess, ProcessError> {
+    let active = spawn(spec, Timing::Absolute)?;
+    let payload = active.payload.to_vec();
+    // Successful spawn established a nonempty argv in the existing validator.
+    let argv0 = spec.argv.first().expect("Spawn validated argv").clone();
+    Ok(OwnedProcess {
+        active: Some(active.with_payload(&[])),
+        argv0,
+        payload,
+    })
+}
+
+impl OwnedProcess {
+    /// Collect once, without widening the original absolute spawn deadline.
+    /// All capture, timeout and collection errors retain Group's evidence.
+    pub fn finish(mut self, deadline: Deadline) -> std::result::Result<Output, ProcessError> {
+        let Some(mut active) = self.active.take() else {
+            return Err(invalid("Owned child is already closed"));
+        };
+        active.deadline = active.deadline.min(deadline);
+        let mut group = Group {
+            queries: std::array::from_fn(|_| Query {
+                argv0: OsStr::new(""),
+                active: None,
+                outcome: None,
+                cleanup_error: None,
+            }),
+            len: 1,
+            next: 0,
+            failed: false,
+            failure: None,
+            exit_poll_interval: DEFAULT_EXIT_POLL_INTERVAL,
+            closed: false,
+        };
+        group.queries[0] = Query {
+            argv0: &self.argv0,
+            active: Some(active.with_payload(&self.payload)),
+            outcome: None,
+            cleanup_error: None,
+        };
+        consume_one(group)
+    }
+
+    /// Cancel and reap only this still-owned child. Explicit close reports
+    /// collection failures; Drop makes the same best-effort cleanup on unwind.
+    pub fn close(&mut self) -> std::result::Result<(), ProcessError> {
+        let Some(mut active) = self.active.take() else {
+            return Ok(());
+        };
+        let cancellation = active.owner.stop().err();
+        let pipes = active.close_pipes().err();
+        if cancellation.is_some() || pipes.is_some() {
+            return Err(active.refuse(
+                self.argv0.clone(),
+                Refusal::Infrastructure,
+                cancellation,
+                pipes,
+            ));
+        }
+        Ok(())
+    }
+}
+
+impl Drop for OwnedProcess {
+    fn drop(&mut self) {
+        let _ = self.close();
+    }
+}
