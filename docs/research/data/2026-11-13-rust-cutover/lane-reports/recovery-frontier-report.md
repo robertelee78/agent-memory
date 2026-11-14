@@ -232,3 +232,40 @@ The four reported lifecycle failures all reached the invalid zero-context render
 
 Exact additional files beyond the original seventeen are src/installation/providers.rs, src/installation.rs, src/cli/mod.rs, tests/t2_installation.rs and tests/t2_cli.rs (22 total). Obligation TSV remains 22 partial/20 unported; parent owns ledger marking and actual GNU/musl proof.
 
+## Parent verification and blocked checkpoint
+
+Source checkpoint `cec1fc79ae8c6e33e2a108d46a55bcf16e103ca9` contains the authorized runtime/fixture batch on approved base `a725b97b34033221d8927cc7ecb95ddeaf694130`; subsequent report-only commits do not change those source bytes. This is **not final lane acceptance**. Lead independent reviewer `ReviewRecoveryFrontierWave` (Opus 5.5 high) accepted the owned source and the authorized runtime delta, confidence 0.8, while explicitly excluding future-base constant/trait integration and unexecuted lifecycle behavior.
+
+Observed final checks on this source:
+
+- `cargo fmt --check`: exit 0.
+- `cargo check --offline --all-targets --features dev-tools`: exit 0.
+- GNU development-only affected targets (`obligations_ledger`, `t1_recovery_frontier`, `t1_scope_binding`, `t2_cli`, `wiring`): **68 passed, 0 failed, 6 ignored**, five top-level harnesses. The new development-receipt locator regression in `t2_installation` separately passed.
+- Actual GNU `am validate-pack` launched in isolated empty HOME/XDG roots refused with the new trusted-bootstrap-installer guidance; wrapper exit 1. Postchecks found zero created files or links and no obsolete `pass --pack` guidance. The throwaway roots were removed without rerunning the CLI.
+- Musl affected-target run: **197 passed, 2 failed, 7 ignored**, eight top-level harnesses. Per-target results follow. No full-green or three-consecutive-final-run claim is made.
+
+| Musl target | Passed | Failed | Ignored |
+| --- | ---: | ---: | ---: |
+| obligations_ledger | 5 | 0 | 0 |
+| t1_recovery_frontier | 20 | 0 | 0 |
+| t1_scope_binding | 17 | 0 | 5 |
+| t1_turn_sources | 22 | 0 | 0 |
+| t2_cli | 24 | 0 | 0 |
+| t2_installation | 65 | 0 | 0 |
+| t2_lifecycle | 42 | 2 | 1 |
+| wiring | 2 | 0 | 1 |
+
+The unchanged full 128-registration/128-ACK capacity journey passes within the authorized 600-second bound; its target took 492.82 seconds. The earlier 120-second diagnostic showed active work, with 7,300 execve calls, 900,402 openat calls and only 0.000740 seconds in 183 flock calls during that window. This justified a test-only qualification bound, not a production performance shortcut or a claim about unobserved later execution. The actual passing run resolves the slow-versus-stuck question for this source.
+
+Both remaining failures are the complete native purge journeys: `broad_path_preview_confirm_and_repeat_purge_only_the_confirmed_bank` and `purge_interruptions_and_lost_response_converge_on_the_same_confirmation`. Their actual `am` subprocess correctly refuses without an installed Rust receipt. In-process injected Frontier callbacks do not reach or authorize that subprocess. The router fixture is now valid; the two existing negative purge tests pass. No ignore, substitute provider, forged receipt, source/current-executable fallback, fault-exit substitution or weakened assertion was added.
+
+Parent marked the exact 22 proposed IDs partial using the existing built `am-dev`; twenty proposed unported IDs remain unported. The actual status change is six previously-unported entries becoming partial; the other proposed entries were already partial. This ledger file is parent-owned in addition to the 22 authored files above.
+
+### Unresolved owner boundaries
+
+1. Owner explicitly requires rebasing onto the integration base it will post after the current gate and checkpoint merge. That hash has not been delivered. Marker constants must then use the single `bank_writes` definitions, and the newly required trait delegates must be implemented against their actual signatures, not guessed or stubbed.
+2. Genuine positive native purge proof needs a real production development installation in the same isolated World before bank creation. Copy actual built `am` bytes to `dev-source/target/release/am` with mode 0755 and actual portable pack assets, run the real install CLI with registered production services, then launch every purge/fault/recovery child through the receipt-owned installed `am` link. Preserve confirmation/count/fault-entry/exit-86/recovery/repeat assertions. Frozen a725 lacks the real private-state lifecycle guard/hooks; the owner reports their registration on the future base. No successful cold-start installation is inferred.
+3. Existing explicit runtime callers need an owner-coordinated cutover. `uninstallation.rs:571-576` passes `locations.runtime_pack()` instead of its trusted current `plan.pack_source`; the latter is the executing context, unlike the separately selected preserved reader. `updating::Runtime::banks:1148-1161` likewise fabricates `runtime_pack()` but has no current-receipt context parameter; candidate compatibility is separately qualified and cannot substitute for the executing root. `purging.rs:285-286` observes via the actual pair but indexes using a different guessed root. No edits to those three owner files were made without a decision.
+4. Bootstrap updates expose a genuine architecture boundary: the incoming downloaded executable can reach active-hold bank scans after separate old/candidate qualification, but is not the old receipt-owned executable. The implicit hold check reaches receipt authentication before the later explicit-root check. Passing `old.pack` alone cannot mint executing authority; an unconditional locator in the bank scanner would also reject fresh no-receipt installation. The owner must choose explicit existing-owned-`am update` guidance or an internally verified bootstrap-runtime capability/context. No raw-JSON authority, candidate-as-running-root selection or fallback is supplied here.
+
+These questions, exact caller chains and the real-fixture preparation are retained in `/tmp/agent-memory-recovery-frontier-proof/runtime-caller-blockers.txt` and were sent to the sole integration/tracker owner. Commands, platform, original failures, diagnostic data, corrected affected-target logs and independent verdicts remain in the same proof directory. Owner policy now treats GNU release-fixture failures as expected development-only results; beast qualification is the supported x86_64 musl suite. Full qualification, repeated final focused runs, native installation proof and final integration remain blocked, not deferred as completed work. The two parent todo items stay open.
