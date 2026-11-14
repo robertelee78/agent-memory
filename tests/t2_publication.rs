@@ -3089,3 +3089,578 @@ fn recovery_land_refuses_authority_advance_after_prepare() -> TestResult {
 fn eight_resolved_units_land_and_recall_in_an_empty_profile() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_validation_memo.py::ValidationMemoContract.test_public_land_rechecks_source_authority_index_and_policy_after_first_check
+fn fanout_d_public_land_rechecks_source_authority_index_and_policy() -> TestResult {
+    for action in ["source", "authority", "index", "policy"] {
+        let mut w = World::new()?;
+        let (repo, bank, peer, _) = fixture(&w)?;
+        let policy = github(&mut w, &repo, &bank, Some(&peer), false)?;
+        fs::write(
+            bank.join("activeContext.md"),
+            "# Current focus\n\nRetain the authored local learning.\n",
+        )?;
+        let request = get(&prepared(&w, &repo)?, "request").clone();
+        let before = state(&w, &repo, &bank)?;
+        let head = git(&w, &repo, &["ls-remote", "origin", "refs/heads/main"])?;
+        let input = save(&w, &request, "fanout-final-review.json")?;
+        let pause = w.inside("fanout-final-review")?;
+        let stage = "publication-before-final-review";
+        let env = [
+            ("AGENT_MEMORY_FAULT_STAGE".into(), stage.into()),
+            ("AGENT_MEMORY_FAULT_MODE".into(), "pause".into()),
+            (
+                "AGENT_MEMORY_FAULT_DIR".into(),
+                pause.as_os_str().to_owned(),
+            ),
+        ];
+        let child = w.spawn_with(
+            [
+                OsString::from(env!("CARGO_BIN_EXE_am")),
+                "--json".into(),
+                "publish".into(),
+                "land".into(),
+                "--repo".into(),
+                repo.as_os_str().to_owned(),
+                "--input".into(),
+                input.into_os_string(),
+            ],
+            RunOptions {
+                check: false,
+                env: &env,
+                ..RunOptions::default()
+            },
+        )?;
+        let deadline = agent_memory::clock::Deadline::after(Duration::from_secs(8))?;
+        while !pause.join(format!("{stage}.ready")).exists() {
+            assert!(
+                !deadline.expired(),
+                "publication did not reach final review"
+            );
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        match action {
+            "source" => {
+                let target = bank.join("activeContext.md");
+                fs::write(
+                    &target,
+                    fs::read_to_string(&target)? + "\nLater local evidence stays preserved.\n",
+                )?;
+            }
+            "authority" => {
+                git(
+                    &w,
+                    &peer,
+                    &[
+                        "commit",
+                        "--allow-empty",
+                        "-m",
+                        "Later authority observation",
+                    ],
+                )?;
+                git(&w, &peer, &["push", "origin", "HEAD:main"])?;
+            }
+            "index" => {
+                fs::write(
+                    repo.join("independent-feature.txt"),
+                    "Later staged feature work.\n",
+                )?;
+                git(&w, &repo, &["add", "independent-feature.txt"])?;
+            }
+            "policy" => {
+                let mut value = decode(&fs::read(&policy)?)?;
+                set(&mut value, "push", Value::Bool(false));
+                fs::write(&policy, encode(&value)?)?;
+            }
+            _ => unreachable!(),
+        }
+        fs::write(pause.join(format!("{stage}.release")), b"")?;
+        let output = child.wait()?;
+        assert_eq!(output.status, agent_memory::process::Status::Code(1));
+        assert!(
+            !get(&decode(&output.stdout)?, "publication_verified")
+                .as_bool()
+                .unwrap_or(false)
+        );
+        let after = state(&w, &repo, &bank)?;
+        assert_eq!(before.1, after.1);
+        assert_eq!(before.3, after.3);
+        assert_eq!(before.4, after.4);
+        if action == "index" {
+            assert_ne!(before.2, after.2);
+        } else {
+            assert_eq!(before.2, after.2);
+        }
+        if action == "source" {
+            assert!(
+                fs::read_to_string(bank.join("activeContext.md"))?.contains("Later local evidence")
+            );
+        } else {
+            assert_eq!(before.0, after.0);
+        }
+        let actual = git(&w, &repo, &["ls-remote", "origin", "refs/heads/main"])?;
+        if action == "authority" {
+            assert_ne!(actual, head);
+            assert!(actual.starts_with(git(&w, &peer, &["rev-parse", "HEAD"])?.trim()));
+        } else {
+            assert_eq!(actual, head);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn cutover_dispatch_worker() {
+    support::cutover::dispatch_worker();
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_claude_boundary.py::ClaudeBoundaryContract.test_published_ack_requires_real_authority_readback
+fn fanout_d_claude_published_ack_requires_real_authority_readback() -> TestResult {
+    let mut w = World::new()?;
+    let (repo, bank, _) = bootstrap(&w)?;
+    github(&mut w, &repo, &bank, None, false)?;
+    let session = agent_memory::host::uuid4()?;
+    let prompt = agent_memory::host::uuid4()?;
+    let message = agent_memory::host::uuid4()?;
+    let transcript = w.inside("transcript-publish.jsonl")?;
+    let row = obj([
+        ("type", s("user")),
+        ("sessionId", s(&session)),
+        ("promptId", s(&prompt)),
+        ("uuid", s(&message)),
+        (
+            "message",
+            obj([("role", s("user")), ("content", s("Synthetic decision"))]),
+        ),
+    ]);
+    fs::write(&transcript, encode(&row)? + "\n")?;
+    let event = obj([
+        ("hook_event_name", s("Stop")),
+        ("stop_hook_active", Value::Bool(false)),
+        ("session_id", s(&session)),
+        ("prompt_id", s(&prompt)),
+        ("cwd", s(repo.to_str().unwrap())),
+        ("transcript_path", s(transcript.to_str().unwrap())),
+        ("last_assistant_message", s("Synthetic answer")),
+    ]);
+    let (code, stdout, stderr) =
+        support::cutover::dispatch(&w, &["hook".into(), "claude-stop".into()], Some(&event));
+    assert_eq!(code, 2, "{stdout}\n{stderr}");
+    let request = get(&prepared(&w, &repo)?, "request").clone();
+    let sha = agent_memory::developer_identity::digest(Some(b"Synthetic decision")).unwrap();
+    let value = obj([
+        ("session", s(&session)),
+        ("prompt", s(&prompt)),
+        ("source_uuid", s(&message)),
+        ("source_sha256", s(sha)),
+        ("outcome", s("published")),
+        (
+            "assessment",
+            s("The reviewed candidate reflects the source."),
+        ),
+        ("publication_request", request.clone()),
+    ]);
+    let input = save(&w, &value, "publish-ack.json")?;
+    let args = [
+        OsString::from("--json"),
+        "claude-boundary".into(),
+        "--repo".into(),
+        repo.as_os_str().to_owned(),
+        "--input".into(),
+        input.into_os_string(),
+    ];
+    assert_ne!(support::cutover::dispatch(&w, &args, None).0, 0);
+    assert_eq!(
+        get(&land(&w, &repo, &request)?, "publication_verified"),
+        &Value::Bool(true)
+    );
+    let (code, stdout, stderr) = support::cutover::dispatch(&w, &args, None);
+    assert_eq!(code, 0, "{stdout}\n{stderr}");
+    let after = decode(stdout.as_bytes())?;
+    assert_eq!(get(&after, "publication_verified"), &Value::Bool(true));
+    assert_eq!(
+        get(&after, "assessment_is_agent_assertion"),
+        &Value::Bool(true)
+    );
+    let (code, stdout, stderr) = support::cutover::dispatch(&w, &args, None);
+    assert_eq!(code, 0, "{stdout}\n{stderr}");
+    let retry = decode(stdout.as_bytes())?;
+    assert_eq!(get(&retry, "already_completed"), &Value::Bool(true));
+    assert_eq!(get(&retry, "publication_verified"), &Value::Bool(true));
+    Ok(())
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_opencode_boundary_ledger.py::PublishedAcknowledgmentContract.test_requires_real_witnessed_publication
+fn fanout_d_opencode_ack_requires_real_witnessed_publication() -> TestResult {
+    let mut w = World::new()?;
+    let (repo, bank, _) = bootstrap(&w)?;
+    github(&mut w, &repo, &bank, None, false)?;
+    let request = get(&prepared(&w, &repo)?, "request").clone();
+    let invoke = |action: &str, repository: &Path| {
+        let payload = obj([
+            ("root", s(w.root.to_str().unwrap())),
+            ("session", s("fixture-session")),
+            ("source", s("fixture-source")),
+            ("action", s(action)),
+            ("repo", s(repository.to_str().unwrap())),
+            ("publication_request", request.clone()),
+        ]);
+        let (code, stdout, stderr) = support::cutover::dispatch(
+            &w,
+            &["hook".into(), "boundary-ledger".into()],
+            Some(&payload),
+        );
+        let value = decode(stdout.as_bytes()).unwrap_or_else(|e| panic!("{e}: {stdout}\n{stderr}"));
+        (code, value)
+    };
+    assert_eq!(get(&invoke("reserve", &repo).1, "status"), &s("reserved"));
+    let (code, before) = invoke("published", &repo);
+    assert_ne!(code, 0);
+    assert_eq!(get(&before, "status"), &s("pending"));
+    let landed = land(&w, &repo, &request)?;
+    assert_eq!(get(&landed, "publication_verified"), &Value::Bool(true));
+    let (code, proof) = invoke("published", &repo);
+    assert_eq!(code, 0);
+    assert_eq!(get(&proof, "publication_verified"), &Value::Bool(true));
+    assert_eq!(
+        get(&proof, "source_publication_link_verified"),
+        &Value::Bool(false)
+    );
+    assert_eq!(
+        get(&proof, "witnessed_commit"),
+        get(&landed, "witnessed_commit")
+    );
+    assert_eq!(
+        get(&invoke("inspect", &repo).1, "status"),
+        &s("completed-source")
+    );
+    let (code, retry) = invoke("published", &repo);
+    assert_eq!(code, 0);
+    assert_eq!(get(&retry, "already_completed"), &Value::Bool(true));
+    assert_eq!(get(&retry, "publication_verified"), &Value::Bool(true));
+    let other = w.repository("other-repository", false)?;
+    assert_ne!(invoke("published", &other).0, 0);
+    Ok(())
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_concurrent_bank_writers.py::ConcurrentBankWriters.test_publication_refuses_a_live_bank_lock_then_lands_without_runtime_state
+fn fanout_d_publication_refuses_live_bank_lock_then_lands_only_canonical_paths() -> TestResult {
+    let mut w = World::new()?;
+    let (repo, bank, _) = bootstrap(&w)?;
+    github(&mut w, &repo, &bank, None, false)?;
+    let initial = get(&prepared(&w, &repo)?, "request").clone();
+    let content = w.inside("defensive-race.md")?;
+    fs::write(
+        &content,
+        fs::read_to_string(bank.join("projectbrief.md"))?
+            + "\nRetain this actual defensive race result.\n",
+    )?;
+    let proposal = good(
+        &w,
+        "bank_writes.py",
+        &[
+            os("preview"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--path"),
+            os("projectbrief.md"),
+            os("--content"),
+            content.as_os_str(),
+        ],
+    )?;
+    let input = save(&w, &proposal, "defensive-race.json")?;
+    let pause = w.inside("defensive-race")?;
+    let stage = "locked-before-inventory";
+    let env = [
+        ("AGENT_MEMORY_FAULT_STAGE".into(), stage.into()),
+        ("AGENT_MEMORY_FAULT_MODE".into(), "pause".into()),
+        (
+            "AGENT_MEMORY_FAULT_DIR".into(),
+            pause.as_os_str().to_owned(),
+        ),
+    ];
+    let child = w.spawn_with(
+        [
+            OsString::from(env!("CARGO_BIN_EXE_am")),
+            "--json".into(),
+            "writes".into(),
+            "apply".into(),
+            "--proposal".into(),
+            input.into_os_string(),
+        ],
+        RunOptions {
+            check: false,
+            env: &env,
+            ..RunOptions::default()
+        },
+    )?;
+    let deadline = agent_memory::clock::Deadline::after(Duration::from_secs(8))?;
+    while !pause.join(format!("{stage}.ready")).exists() {
+        assert!(!deadline.expired());
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    let lock = bank.join(".agent-memory.lock");
+    let lock_bytes = fs::read(&lock)?;
+    let remote = git(&w, &repo, &["ls-remote", "origin", "refs/heads/main"])?;
+    assert_ne!(publish(&w, &repo, "land", &initial)?.0, 0);
+    assert_eq!(fs::read(&lock)?, lock_bytes);
+    assert_eq!(
+        git(&w, &repo, &["ls-remote", "origin", "refs/heads/main"])?,
+        remote
+    );
+    fs::write(pause.join(format!("{stage}.release")), b"")?;
+    let output = child.wait()?;
+    assert_eq!(output.status, agent_memory::process::Status::Code(0));
+    assert_eq!(
+        get(&decode(&output.stdout)?, "verified"),
+        &Value::Bool(true)
+    );
+    let before = state(&w, &repo, &bank)?;
+    let request = get(&prepared(&w, &repo)?, "request").clone();
+    assert_eq!(
+        get(&land(&w, &repo, &request)?, "publication_verified"),
+        &Value::Bool(true)
+    );
+    assert_eq!(state(&w, &repo, &bank)?, before);
+    let tree = git(
+        &w,
+        &repo,
+        &[
+            "ls-tree",
+            "-r",
+            "--name-only",
+            text(get(&request, "candidate")),
+            "--",
+            "memory-bank",
+        ],
+    )?;
+    let mut files = BTreeMap::new();
+    files_below(&bank, &bank, &mut files)?;
+    let expected: std::collections::BTreeSet<_> = files
+        .keys()
+        .filter(|p| p.ends_with(".md") && !p.starts_with(".agent-memory"))
+        .map(|p| format!("memory-bank/{p}"))
+        .collect();
+    assert_eq!(
+        tree.lines()
+            .map(str::to_owned)
+            .collect::<std::collections::BTreeSet<_>>(),
+        expected
+    );
+    assert!(!tree.contains(".agent-memory"));
+    assert_eq!(
+        git(
+            &w,
+            &repo,
+            &[
+                "show",
+                &format!("{}:code.py", text(get(&request, "candidate")))
+            ]
+        )?,
+        "VALUE = 1\n"
+    );
+    Ok(())
+}
+
+fn fanout_d_new_index(
+    w: &World,
+    bank: &Path,
+    name: &str,
+    purpose: &str,
+    introduction: Option<&str>,
+    source: Option<&[u8]>,
+    stamp: &str,
+) -> TestResult<String> {
+    let router = bank.join("MEMORY.md");
+    let original = fs::read_to_string(&router)?;
+    let project = support::record_fixtures::project_id(&original)?;
+    let path = format!("topics/{name}.md");
+    fs::create_dir_all(bank.join("topics"))?;
+    let raw = match source {
+        Some(bytes) => bytes.to_vec(),
+        None => support::record_fixtures::record_text(
+            &format!("# Archive policy\n\nRetain the independently evidenced {name} policy.\n"),
+            project.as_str().unwrap(),
+        )?
+        .into_bytes(),
+    };
+    fs::write(bank.join(&path), raw)?;
+    let request = obj([
+        ("path", s("topics/shared-policy.md")),
+        ("project-id", project),
+        ("updated", s(stamp)),
+        (
+            "routes",
+            Value::Array(vec![obj([
+                ("path", s(&path)),
+                ("purpose", s(purpose)),
+                ("scope", s("repository")),
+                ("lifecycle", s("active")),
+                (
+                    "read-when",
+                    s("When inspecting this archive policy dimension"),
+                ),
+            ])]),
+        ),
+    ]);
+    let input = save(w, &request, "fanout-index.json")?;
+    let rendered = good(
+        w,
+        "bank_layout.py",
+        &[os("render-index"), os("--input"), input.as_os_str()],
+    )?;
+    let content = match introduction {
+        Some(prose) => text(get(&rendered, "content"))
+            .replace("\n## Routes\n", &format!("\n{prose}\n\n## Routes\n")),
+        None => text(get(&rendered, "content")).to_owned(),
+    };
+    fs::write(bank.join("topics/shared-policy.md"), content)?;
+    let row = "| [topics/shared-policy.md](<topics/shared-policy.md>) | Archive policy map | repository | active | When inspecting archive policy |\n";
+    // The newly created record is routed only through its shared index.
+    fs::write(
+        router,
+        original.replace(
+            "\n## Omitted contexts",
+            &(row.to_owned() + "\n## Omitted contexts"),
+        ),
+    )?;
+    Ok(path)
+}
+
+fn fanout_d_review_new_index(w: &World, repo: &Path) -> TestResult<(i32, Value)> {
+    let inspection = good(
+        w,
+        "reconcile_memory.py",
+        &[os("inspect"), os("--repo"), repo.as_os_str()],
+    )?;
+    let input = save(w, &judgment(&inspection)?, "fanout-index-judgment.json")?;
+    call(
+        w,
+        "reconcile_memory.py",
+        &[
+            os("review"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            input.as_os_str(),
+        ],
+    )
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_new_topic_merge.py::NewTopicMergeContract.test_new_index_with_identical_introduction_and_distinct_routes_preserves_both_sources
+fn fanout_d_new_shared_index_preserves_both_independent_source_routes() -> TestResult {
+    let w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&w)?;
+    let first = fanout_d_new_index(
+        &w,
+        &bank,
+        "retention",
+        "Archive policy",
+        None,
+        None,
+        "2026-10-23T00:00:00Z",
+    )?;
+    let second = fanout_d_new_index(
+        &w,
+        &peer.join("memory-bank"),
+        "inspection",
+        "Archive policy",
+        None,
+        None,
+        "2026-10-24T00:00:00Z",
+    )?;
+    let request = get(&prepared(&w, &peer)?, "request").clone();
+    land(&w, &peer, &request)?;
+    let before = state(&w, &repo, &bank)?;
+    let (code, plan) = fanout_d_review_new_index(&w, &repo)?;
+    assert_eq!(code, 0, "{plan:?}");
+    assert_eq!(get(&plan, "conflicts_pending"), &Value::Bool(false));
+    for key in ["refresh_files", "publish_files"] {
+        let candidate = get(&plan, key);
+        assert_eq!(
+            text(get(candidate, &first)),
+            fs::read_to_string(bank.join(&first))?
+        );
+        assert_eq!(
+            text(get(candidate, &second)),
+            fs::read_to_string(peer.join("memory-bank").join(&second))?
+        );
+        let index = text(get(candidate, "topics/shared-policy.md"));
+        assert!(index.contains(&first));
+        assert!(index.contains(&second));
+    }
+    assert_eq!(state(&w, &repo, &bank)?, before);
+    Ok(())
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_new_topic_merge.py::NewTopicMergeContract.test_absent_prose_baseline_does_not_license_different_new_introductions
+fn fanout_d_absent_prose_baseline_does_not_license_conflicting_introductions() -> TestResult {
+    let w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&w)?;
+    fanout_d_new_index(
+        &w,
+        &bank,
+        "retention",
+        "Archive policy",
+        Some("The shared policy requires a yellow finish."),
+        None,
+        "2026-10-23T00:00:00Z",
+    )?;
+    fanout_d_new_index(
+        &w,
+        &peer.join("memory-bank"),
+        "inspection",
+        "Archive policy",
+        Some("The shared policy requires a blue finish."),
+        None,
+        "2026-10-23T00:00:00Z",
+    )?;
+    land(&w, &peer, get(&prepared(&w, &peer)?, "request"))?;
+    let before = state(&w, &repo, &bank)?;
+    assert_eq!(fanout_d_review_new_index(&w, &repo)?.0, 1);
+    assert_eq!(state(&w, &repo, &bank)?, before);
+    Ok(())
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_new_topic_merge.py::NewTopicMergeContract.test_absent_route_baseline_does_not_choose_between_different_captions_for_one_target
+fn fanout_d_absent_route_baseline_never_chooses_conflicting_captions() -> TestResult {
+    let w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&w)?;
+    let path = fanout_d_new_index(
+        &w,
+        &bank,
+        "shared-source",
+        "Retention interpretation",
+        None,
+        None,
+        "2026-10-23T00:00:00Z",
+    )?;
+    fanout_d_new_index(
+        &w,
+        &peer.join("memory-bank"),
+        "shared-source",
+        "Inspection interpretation",
+        None,
+        Some(&fs::read(bank.join(path))?),
+        "2026-10-23T00:00:00Z",
+    )?;
+    land(&w, &peer, get(&prepared(&w, &peer)?, "request"))?;
+    let before = state(&w, &repo, &bank)?;
+    assert_eq!(fanout_d_review_new_index(&w, &repo)?.0, 1);
+    assert_eq!(state(&w, &repo, &bank)?, before);
+    Ok(())
+}

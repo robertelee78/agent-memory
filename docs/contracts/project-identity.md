@@ -7,20 +7,20 @@ Developer IDs supply separate provenance; this registry stores repository
 identity metadata, never personal memory. Repository and OS permissions remain
 the security boundary; a project ID is not an ACL or authentication.
 
-The portable algorithm lives in `agent_memory/project_identity.py` and
-`remote_identity.py`. Clients MUST call it rather than infer an ID themselves.
-From a checkout, its public entry point is:
+The portable algorithm lives in `src/project_identity.rs` and
+`src/remote_identity.rs`. Clients MUST call it rather than infer an ID themselves.
+Its public entry point is `am project`:
 
 ```sh
-python3 -I scripts/project_identity.py status --repo /path/to/repository
-python3 -I scripts/project_identity.py preview --repo /path/to/repository \
+am project status --repo /path/to/repository
+am project preview --repo /path/to/repository \
   --action create --reason 'Initialize this new repository bank' > proposal.json
-python3 -I scripts/project_identity.py apply --proposal proposal.json
+am project apply --proposal proposal.json
 ```
 
-A copied pack uses `scripts/project_identity.py` inside that pack. These helpers
-require Python and Git, and have no installed CLI, attribution registry, existing
-bank, hosting login, network or credentials prerequisite. Status and preview
+These commands need the `am` binary and Git, and have no installation receipt,
+attribution registry, existing bank, hosting login, network or credentials
+prerequisite. Status and preview
 write nothing, including on first use. Every operation emits one JSON document.
 Exit 0 means the operation completed, exit 1 means refusal and exit 2 means
 invalid CLI arguments. `status` can complete while `resolved` is false; callers
@@ -141,8 +141,8 @@ Status MUST remain read-only. A leftover lock blocks new writes. Inspect a
 bounded recovery proposal, then apply that exact proposal:
 
 ```sh
-python3 -I scripts/project_identity.py recover > recovery.json
-python3 -I scripts/project_identity.py recover --proposal recovery.json
+am project recover > recovery.json
+am project recover --proposal recovery.json
 ```
 
 Automatic recovery requires a recognized same-host lock whose process is

@@ -1,62 +1,72 @@
 # Portable runtime installation
 
-`scripts/installer.py` invokes the installer carried inside the portable package.
-`install.sh` is a local-checkout and standalone/stdin bootstrap for that same `install` operation. This
-contract covers #46; update, uninstall, diagnostics and the complete installed
-command surface retain separate execution tasks.
+`am install` is the installer compiled into the static `am` binary
+(`src/installation.rs`). `install.sh` is the POSIX `sh` bootstrap for that same
+`install` operation. This contract covers #46; update, uninstall, diagnostics and
+the complete installed command surface retain separate execution tasks.
 
 The AWA-style fresh-machine entry point (#153) requires no existing checkout:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | sh
 ```
 
-The Bash 3.2+ bootstrap checks Python 3.11+ and Git, stages a temporary checkout
-of the selected managed remote/branch, and forwards installation arguments to
-the existing Python installer. The temporary loader is removed on normal exit,
-failure and handled interruption; the owned runtime never points into it.
-`--help` requires no source download. Explicit `--remote`/`--ref` options select
-the same channel for bootstrap and installation. A complete local checkout is
-resolved from the script's location, independently of the caller's directory.
+The bootstrap selects the release target from `uname -s`/`uname -m`. Only
+`aarch64-apple-darwin`, `x86_64-unknown-linux-musl` and
+`aarch64-unknown-linux-musl` have a signed `am`; other hosts refuse with
+`unsupported-target`. It requires `curl` and OpenSSH `ssh-keygen`, creates a
+private 0700 temporary directory, downloads the per-target `am` binary and its
+`.sshsig`, and verifies them with `ssh-keygen -Y verify` against the allowed
+signer pinned in the script (namespace `agent-memory.release-binary`). Only then
+does it run `am install --bootstrap-binary PATH` with the forwarded options. The
+binary refuses unless the signed release manifest's version and target digest
+match its own bytes, then stages the signed portable pack and installs those same
+bytes; it never downloads the binary again. The temporary directory is removed on
+every exit path, including handled signals. Failures before the binary runs print
+one fixed `agent-memory/bootstrap-failure-v1` JSON line. `--help` requires no
+download, and option syntax is checked before any download. Running `./install.sh`
+from a checkout performs the same signed download; it does not install that
+checkout.
 
 ```sh
 ./install.sh --check
 ./install.sh
 ```
 
-Normal installation stages a clean Git clone of the recorded remote/branch under
-`${XDG_DATA_HOME:-$HOME/.local/share}/agent-memory/source`. The initial default
-channel is HTTPS `main`; it is not a signed immutable release channel. Reinstall
-uses the recorded revision, not an implicit fetch/update. An unexpected channel,
-branch, source revision, dirty managed checkout or unrelated destination refuses.
-An explicitly selected local source is never copied into or mutated as a managed
-checkout:
+Signed releases are the only installation channel. The owned runtime lives
+under `${XDG_DATA_HOME:-$HOME/.local/share}/agent-memory/runtime`. Managed Git
+`--remote`/`--ref` channels are refused with re-bootstrap guidance; an existing
+Python-era managed checkout is adopted read-only and left in place. An unexpected
+source, unrelated runtime destination or changed signed artifact refuses. An
+explicitly selected local source is never copied into or mutated as a managed
+runtime:
 
 ```sh
-./install.sh --development-source /absolute/path/to/checkout --presets none --target-dir /absolute/custom/skills --mode copy
+target/release/am install --development-source "$PWD" --presets none --target-dir /absolute/custom/skills --mode copy
 ```
 
-A complete copied package also works as `--development-source`. It is identified
-as `unversioned` when it is not itself a checkout root. A checkout reports its
-actual revision and dirty qualification. Python 3.11+, Git, and native atomic
-no-replace/exchange on Linux or macOS are required. No agent client, credentials,
+A development source must already contain a prebuilt `target/release/am`; the
+installer never invokes Cargo and refuses with that path when it is missing. A
+source that is not itself a checkout root is identified as `unversioned`; a
+checkout reports its actual revision and dirty qualification. Git and native
+atomic no-replace/exchange on Linux or macOS are required; no interpreter or
+Cargo is needed for a signed installation. No agent client, credentials,
 principal registry or existing bank is needed for installation.
 
 The default `all` preset creates generic, Codex, Claude and OpenCode discovery
 paths, plus small bounded activation shims in the relevant client instruction
 files. `--presets` accepts `none` or a comma-separated selection of `agents`,
 `codex`, `claude`, `opencode`. Repeated `--target-dir` adds custom discovery
-roots. `--no-guidance` omits shims. The command wrapper defaults to
-`~/.local/bin/am`, with an owned `agent-memory` compatibility wrapper in the same
-directory; `--bin-dir` overrides it. A source without the additive
-`installed_commands` declaration retains only its legacy command so old planners
-are not stranded. Every path
+roots. `--no-guidance` omits shims. The commands default to `~/.local/bin/am`,
+with an owned `agent-memory` compatibility command in the same directory; both
+are receipt-owned links to the runtime's `bin/am`. `--bin-dir` overrides the
+directory. A source without the additive `installed_commands` declaration
+retains only its legacy command so old planners are not stranded. Every path
 argument is absolute. Link and copy modes bind the same complete artifact digest.
 
 The public JSON plan reports every target's before/after identity, source
 revision/version/dirty qualification, adapters and repository-local memory policy.
-Check/dry-run leaves targets and installation records unchanged. A fresh managed
-check uses an ephemeral clone that is removed after inspection.
+Check/dry-run leaves targets and installation records unchanged.
 
 Activation follows complete target inventory/preflight, staging, pre-activation
 backup snapshots, native atomic replacement of each target, target/package
@@ -83,17 +93,20 @@ The authoritative receipt is
 It binds the installation ID, source, artifact, enabled targets, pre/post target
 identities, backup identities/paths, created directories, runtime state and data
 ownership. The journal, historical journals and receipt backups live beside it,
-outside the checkout. Replaced nodes and their pre-activation snapshots are
+outside the owned runtime. Replaced nodes and their pre-activation snapshots are
 retained beside their respective target, with their exact paths in the receipt.
 An unchanged reinstall preserves the receipt, installed targets and loaded
 content and returns no restart guidance. Copy/link conversion with identical
 content also needs no restart; newly enabled or changed loaded content does.
 
-Ordinary activation errors roll back. A killed process leaves a journal. The
-trusted source helper remains usable before the wrapper exists:
+Ordinary activation errors roll back. A killed process leaves a journal. Run
+`am recover`. If the installed command is unavailable, download the signed
+`am-<target>` binary and its `.sshsig` for this host from the release, verify
+them with the `ssh-keygen -Y verify` command and allowed signer pinned in
+`install.sh`, and run that verified binary directly:
 
 ```sh
-python3 -I skills/agent-memory/scripts/installer.py recover
+./am-aarch64-apple-darwin recover
 ```
 
 Recovery verifies a receipt that reached its commit point or restores an
@@ -105,9 +118,10 @@ activation is recovered as committed, and repeating install converges.
 
 Project Memory Banks are not installer-owned data roots. Installation does not
 initialize, migrate, commit, publish or remove them. The [portable guide](../../skills/agent-memory/lifecycle/install/GUIDE.md)
-provides the progressive agent workflow. [Installer public-command tests](../../tests/contracts/test_installer.py)
-run only in disposable homes and client/config roots, with isolated credentials
-and file-only Git channels.
+provides the progressive agent workflow. Installer public-command tests
+(`tests/t2_installation.rs`, `tests/t2_bootstrap.rs`) run only in disposable
+homes and client/config roots; the bootstrap tests use a throwaway signing key
+and `file://` release assets.
 
 Native API references: [Apple XNU rename flags](https://raw.githubusercontent.com/apple-oss-distributions/xnu/refs/heads/main/bsd/sys/stdio.h)
 and [Linux renameat2 semantics](https://man7.org/linux/man-pages/man2/renameat2.2.html).

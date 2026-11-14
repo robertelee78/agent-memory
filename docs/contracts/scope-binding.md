@@ -2,7 +2,7 @@
 
 The portable [identity guide](../../skills/agent-memory/identity/GUIDE.md) defines
 the public status, preview/apply, initialization handoff and recovery workflow.
-`scripts/scope_binding.py` invokes the same implementation as a copied skill.
+`am identity` invokes that workflow (`src/scope_binding.rs`).
 The common resolver composes the existing developer and project registries;
 clients do not have independent identity algorithms.
 

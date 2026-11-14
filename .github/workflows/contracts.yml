@@ -26,29 +26,30 @@ jobs:
           - os: macos-15
             target: aarch64-apple-darwin
           - os: ubuntu-24.04
-            target: x86_64-unknown-linux-gnu
+            target: x86_64-unknown-linux-musl
           - os: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
+            target: aarch64-unknown-linux-musl
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust toolchain
+      - name: Install Rust toolchain and target
         shell: sh
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt
+          rustup toolchain install stable --profile minimal --component rustfmt --target '${{ matrix.target }}'
           rustup default stable
           rustc --version --verbose
-      - name: Require the host triple
+      - name: Require a host that runs the target natively
         shell: sh
         run: |
-          test "$(rustc --version --verbose | sed -n 's/^host: //p')" = '${{ matrix.target }}'
+          host=$(rustc --version --verbose | sed -n 's/^host: //p')
+          test "${host%%-*}" = "$(printf '%s' '${{ matrix.target }}' | cut -d- -f1)"
       - name: Format
         shell: sh
         run: cargo fmt --check
       - name: Test
         shell: sh
-        run: cargo test --locked
+        run: cargo test --locked --features dev-tools --target '${{ matrix.target }}'
 
   musl:
     name: Static build (${{ matrix.target }})

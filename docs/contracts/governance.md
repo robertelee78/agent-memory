@@ -2,7 +2,7 @@
 
 Work key: `robertelee78/agent-memory:ADR-0005:forgetting`.
 The portable [guide](../../skills/agent-memory/governance/GUIDE.md) teaches
-`govern_memory.py preview/apply`. The helper uses the existing lifecycle model,
+`am govern preview/apply` (`src/governance.rs`). The helper uses the existing lifecycle model,
 identity resolver, evidence qualification, comparison and observed-write journal.
 It grants no authentication, semantic truth, publication or latest-main freshness.
 
@@ -49,7 +49,7 @@ inactive identity through a new version and current period; a deleted identity
 remains terminal. Arbitrary external stores and Git history are separate retention
 boundaries, and semantic paraphrase completeness remains agent judgment.
 
-`tests/contracts/test_governance_recovery.py` adds real process interruptions:
+`tests/t2_governance.rs` adds real process interruptions:
 partial correction requires owned-lock recovery and rollback before fresh
 comparison; evidence changed at readback prevents commit while rollback preserves
 the external edit; an exact completed receipt cleans up without source replay;

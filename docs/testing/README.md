@@ -1,82 +1,61 @@
-# Offline contract gate
+# Offline contract tests
 
-From a clean checkout with Python 3.11+ and Git, run:
+From a clean checkout with a Rust toolchain and Git, run on each release triple:
 
 ```sh
-scripts/test.sh
-scripts/test.sh --json
-scripts/test.sh --release --json
-scripts/test.sh --release --jobs 2 --json
+cargo test --features dev-tools                                         # aarch64-apple-darwin
+cargo test --features dev-tools --target x86_64-unknown-linux-musl      # Linux x86_64
+cargo test --features dev-tools --target aarch64-unknown-linux-musl     # Linux arm64
+cargo test --features dev-tools --test t2_cli                           # one test target
 ```
 
+Add `--offline` when the dependencies in `Cargo.lock` are already fetched. The
+`dev-tools` feature builds the developer-only `am-dev` binary (release building
+and the obligations ledger); it is never shipped. Tests run the real `am` built
+by Cargo. A passing run establishes the coverage of the tests that exist; it
+does not by itself establish release readiness. Release acceptance also requires
+the story-specific independent verdicts and delivery evidence in the
+[execution contract](../design/v0.0.1-execution.md).
 
-The default mode runs every implemented suite and reports the remaining
-contracts as `pending`. A default pass establishes incremental coverage only.
-`--release` MUST fail until every v0.0.1 contract is implemented, nonempty,
-executed without skips or expected failures, and passing. Release acceptance
-also requires the story-specific independent verdicts and delivery evidence
-in the [execution contract](../design/v0.0.1-execution.md); this test receipt
-alone does not establish release readiness.
+Every baseline obligation is accounted for in
+`tests/obligations/python-baseline-v1.json`: 1,862 test methods, plus the
+incidents, both matrix files and the evaluation entry points. Each test method
+is `unported`, `partial`, `ported`, `implementation-only`, `blocker` or
+`not-applicable`;
+`tests/obligations_ledger.rs` checks the ledger's consistency. Report the
+current state with:
+
+```sh
+cargo run --features dev-tools --bin am-dev -- obligations summary
+```
+
+An unported or partial obligation is not covered by a passing `cargo test`.
 
 The [portable lifecycle matrix](../contracts/portable-lifecycle.md) binds every
-approved lifecycle obligation to registered executable cases and adds installed
+approved lifecycle obligation to executable cases and adds installed
 copy/all-client and link/custom-only journeys. Routine qualification runs locally
-on the available macOS and Linux machines, retaining source-bound results.
-The manually dispatched CI workflow runs Ubuntu/macOS and Python 3.11/3.15
-when explicitly needed. Pushes and releases do not automatically start that
-expensive matrix. Each cell is divided into three registry-ordinal shards;
-each shard uses at most two isolated workers, a 300-second deadline per suite,
-and a 180-minute job budget. Shard receipts are partial, never release-complete.
-The cell aggregation requires all three compatible successful receipts and
-rechecks both batch and lifecycle-fault coverage before claiming completeness.
-The final gate requires every shard and every cell. CI retains shard and cell
-receipts, diagnostics, and checked-out commit/tree evidence.
+on the available macOS and Linux machines, retaining source-bound results. The
+manually dispatched CI workflow (`.github/workflows/contracts.yml`) runs
+`cargo fmt --check` and `cargo test --locked` on `aarch64-apple-darwin`,
+`x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu` runners and builds
+the static musl release binaries; a final job requires every test and build job
+to succeed. Pushes and releases do not automatically start it. A per-branch
+concurrency group queues a later manual run rather than overlapping or
+cancelling the running one.
 
-The contract and cell-aggregation phases each cap their matrix at two concurrent
-jobs. They run sequentially through their dependency, followed by the final
-gate. A per-branch concurrency group queues a later manual run rather than
-overlapping or cancelling the running one. These limits apply to this workflow
-and branch; they are not an account-wide runner cap across other branches.
+### Baseline gate obligations
 
-For example, on Linux with Python 3.11, run each index 0, 1, and 2:
-
-```sh
-scripts/test.sh --release --jobs 2 --json --shard-index 0 --shard-count 3 \
-  --cell-os ubuntu-latest --cell-python 3.11 --output shard-0.json
-```
-
-Merge with `scripts/test.sh --release --json --shard-count 3 --cell-os
-ubuntu-latest --cell-python 3.11 --output cell.json --merge-shards shard-0.json
-shard-1.json shard-2.json`. Each shard uses `mode:release` and remains
-`release_complete:false`; a passing shard is not a complete release. The
-declared OS and Python must match the actual interpreter; all receipts and the
-merger must match the same observed cell and checkout source hash. The hash
-covers skills, scripts, tests, the checked-in memory bank, installer, workflow,
-and recall-qualification label, receipt and controller fixtures, excluding
-Python bytecode. It rejects symlinks in source inputs. Changes to these inputs
-while a shard or merge runs invalidate its receipt.
-
-Local unsharded invocation defaults to one worker; `--jobs 2` permits two
-concurrent workers, each in a separate disposable World with its own home,
-registries, credentials directory and owned process supervisor. Distribution
-does not change required coverage, assertions, or suite deadlines.
-
-Results and buffered diagnostics remain in registry order. A fatal collector
-error cancels unstarted work, waits for started Worlds to finish their bounded
-cleanup, and retains their results plus the original suite/stage/exception chain.
-Worker concurrency does not establish that the full matrix fits its budget:
-that requires an actual complete hosted receipt.
-
-The registry explicitly recognizes the implemented `v0.0.15` feature suites;
-their version scope does not make them optional or exempt them from that
-deadline. Registry validation alone does not execute a suite.
-
-For expensive independent interruption cases, the gate requires every declared
-batch and aggregates actual fault proofs before reporting completeness. The
-proofs must describe the same runtime artifact and observed write inventory,
-with no missing or duplicate interruption/recovery/retry. Controlled gate
-fixtures exercise rejection of absent/incomplete proofs; their simulated
-metadata is not production interruption evidence.
+The baseline gate's contract remains a release obligation, recorded in the
+ledger: a release gate MUST fail until every required contract is implemented,
+nonempty, executed without skips or expected failures, and passing; each suite
+keeps a 300-second deadline; a partial shard or batch is never release-complete;
+completeness is claimed only from aggregated actual receipts bound to one
+observed platform cell and source hash; batching MUST NOT change assertions,
+omit subcases, introduce skips or raise a deadline; and expensive interruption
+cases require every declared batch's actual fault proofs for the same runtime
+artifact and write inventory, with no missing or duplicate
+interruption/recovery/retry. Worker concurrency or registry validation alone
+never establishes that a suite ran or that the matrix fits its budget.
 
 The [shared-learning matrix](../contracts/multi-machine-learning.md) retains all
 approved multi-machine obligations and adds installed-command journeys for
@@ -85,38 +64,9 @@ cross-developer contradictions. It preserves feature state across independent
 clones and a linked worktree, alongside the existing capture, initialization,
 pruning, offline recovery and later-code-merge contracts.
 
-`tests/contracts.json` routes the pack, lifecycle, bank, concurrency, client,
-optional and evaluation layers. Each feature story MUST add public-interface
-cases to its applicable suite and replace its pending entry with a test path.
-Optional stores are explicitly outside v0.0.1; they are not a skipped required
-test. An enabled but missing, empty, skipped, timed-out or failing suite MUST
-fail both modes. Tests SHOULD invoke the shipped CLI, scripts and ordinary
-files; direct calls to internal algorithms alone are not acceptance evidence.
-
-An expensive contract file MAY be registered as several named batches using
-`tests`, a nonempty array of TestCase class or `Class.test_method` selectors.
-The worker's `--suite NAME` selects the registered batch. Before any test runs,
-the worker MUST verify that all batches for that file are disjoint and cover
-every discovered case; omissions, overlaps, empty or unknown selectors refuse.
-The gate independently aggregates the actual per-batch case inventories and
-execution counts before reporting completeness. Existing lifecycle write-fault
-proofs remain separately required. Batching MUST NOT change assertions, omit
-subcases, introduce skips or increase the 300-second worker deadline.
-
-The transaction and quarantined-sharing contracts also use complete-method
-batches after their whole-file workers exceeded 300 seconds on hosted
-macOS/Python 3.15. All 21 transaction methods and four quarantined-sharing
-methods remain required. A passing registry check proves only exhaustive
-selection; actual worker and final platform receipts establish execution.
-
-The recovery and publication contracts use one complete discovered method per
-worker, including the physical inventory boundaries; the selection proof still
-requires every method exactly once. The frontier consumer imports comparison
-fixtures without exposing their TestCase as another discovered suite: comparison
-cases remain owned by their registered comparison contract. This removes
-duplicate execution, not frontier-specific assertions. Individual method
-deadlines and the total hosted runtime still require platform evidence; neither
-batching nor sharding establishes that each job fits its 180-minute budget.
+Tests SHOULD invoke the shipped `am` binary and ordinary files; direct calls to
+internal algorithms alone are not acceptance evidence. Optional stores are
+explicitly outside v0.0.1; they are not a skipped required test.
 
 The [first-release safety canaries](canaries.md) cover structural routes,
 lifecycle selection, project isolation, shared developer attribution,
@@ -167,16 +117,16 @@ The [bounded resume contract](../contracts/bounded-resume.md) selects only curre
 task/component context through exact recall, with no personal layer or optional
 store dependency and with explicit pending sharing freshness.
 
-`tests/world.py` provides private temporary home, XDG, client, repository, bank,
-runtime, cache, credential and backup roots. It constructs an allowlisted
-subprocess environment instead of inheriting credentials or live config, and
-only allows local-file Git transport. Tests MUST use `World.run`/`World.git`
-for commands and `World.inside` for write targets. The factory can create bare
-remotes, independent clones and separate worktrees using real Git commands.
-It rejects escaping paths, symlink escapes and root/auth environment overrides.
-Workers validate their world before loading suites. Temporary cleanup does not
-follow symlinks out of the world. No installed agent-memory or existing bank is
-needed to run the gate.
+`tests/support/world.rs` provides private temporary home, XDG, client,
+repository, bank, cache, credential and backup roots under a fresh 0700
+directory. It constructs its own subprocess environment instead of inheriting
+credentials or live config, and only allows local-file Git transport. Tests run
+commands through `World::am`/`World::git` and resolve write targets with
+`World::inside`, which rejects paths that escape the world; only explicit
+`AGENT_MEMORY_FAULT_*` overrides are accepted, and shell execution is disabled.
+The factory can create bare remotes, independent clones and separate worktrees
+using real Git commands. No installed agent-memory or existing bank is needed to
+run the tests.
 
 This is an isolated test harness, not an operating-system sandbox for untrusted
 test code. Test code has ordinary process permissions and MUST obey these
@@ -185,12 +135,11 @@ needed by the default suite. Product fault/recovery fixtures are enabled as
 their write operations ship; the harness already propagates command failures
 and enforces bounded subprocess timeouts.
 
-Receipts use `agent-memory/test-gate-v1`: each suite reports its layer, status
-and test counts; `release_complete` remains false while a required contract is
-pending or failed. `passed` applies to the selected mode. Exit 0 means the mode
-passed, exit 1 means a failing/incomplete gate, and exit 2 means invalid command
-arguments. Diagnostics and unittest output go to stderr; `--json` stdout is one
-JSON document. Generated state is temporary and is not committed to the bank.
+Cargo reports each test target's pass/fail counts; exit 0 means every selected
+test passed. The baseline gate's `agent-memory/test-gate-v1` JSON receipts,
+registry layers, `pending` entries and `release_complete` flag are ledger
+obligations without a Rust runner yet; a Cargo run is not such a receipt.
+Generated state is temporary and is not committed to the bank.
 
 The [incident and guide evidence workflow](incidents-and-guides.md) retains actual
 public-interface reproductions with work/acceptance/integration/delivery links,
@@ -201,20 +150,21 @@ English equivalence or replace AWA's delivery evidence.
 
 ### Disposable public smoke recipe
 
-From a trusted development checkout with Python 3.11+ and Git, the following
+From a trusted development checkout with a Rust toolchain and Git, the following
 synthetic public-command cases use disposable homes/registries/runtime/repository
 roots and no provider/network/real incident data:
 
 ```sh
-PYTHONPATH="$PWD/tests" python3 -B -m unittest \
-  contracts.test_layout_recovery.LayoutRecoveryContract.test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original \
-  contracts.test_layout_recovery.LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index \
-  contracts.test_layout_recovery_frontier.RecoveryFrontierContract.test_reported_size_pending_repair_retains_exact_private_originals_and_qualified_recall
+cargo test --features dev-tools --test t2_layout_recovery -- \
+  reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original \
+  all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index
 ```
 
 They construct exactly 79,054-byte contextual guidance and a 28,478-byte
 eight-policy unadmitted handoff, demonstrate the normal prerequisite refusal,
-then exercise installed `am bank recover-layout` inspection/pages/review/apply.
+then exercise the built `am bank recover-layout` inspection/pages/review/apply.
+The baseline's third case (pending repair that retains exact private originals
+and qualified recall) is unported in the ledger.
 The all-preserve case separates eligibility/completion from the pending case;
 the latter retains every original, real canonical mandatory witness records
 and all eight private units with incomplete qualified recall. Controlled test
@@ -223,14 +173,17 @@ authored cases alone do not prove repair of the unavailable original incident,
 platform/legacy-reader crash behavior, native provider sessions or release
 publication/fresh-second-clone acceptance.
 
-The registered `layout-recovery-legacy-consumers` contract uses the complete
+The baseline `layout-recovery-legacy-consumers` contract used the complete
 published v0.0.14 portable archive offline, checking its release-asset digest and
-every archived file's bytes and mode before execution. It exercises the actual
-old CLI against a pending layout hold and checks preservation of the bank,
+every archived file's bytes and mode before execution. It exercised the actual
+old CLI against a pending layout hold and checked preservation of the bank,
 private recovery operation, staged index, HEAD and feature bytes. This is a
 cooperative mediated-reader check, not a fence against direct edits, already
 running readers, other installations or copied checkouts. The fixture records
-release provenance; it does not claim independent signature verification.
+release provenance; it does not claim independent signature verification. It is
+unported in the ledger; the legacy runtime archives leave the tree and are
+replaced by captured state snapshots
+([cutover design](../design/v0.0.15-rust-cutover.md#coverage-obligations-and-legacy-fixtures)).
 
 An additional disposable public-CLI observation exercised a genuine normal
 repository-evidenced admission whose one reviewed canonical record covered all
@@ -259,16 +212,16 @@ canonical source hashes (`/tmp/am244-catalog-smoke-raw-2.txt`). This standalone
 candidate did not produce an authenticated warm catalog hit. Its warm-hit
 assertion remains required; no combined-candidate catalog qualification is
 inferred from the presence of the separately integrated #206 changes.
-Exact 16,384/16,385 source bytes are already covered by
-`test_bounded_bank_observation.py`. The 64/65 mandatory-row and exact
+Exact 16,384/16,385 source bytes are covered by the bounded bank-observation
+tests (`tests/t1_bank_observation.rs`). The 64/65 mandatory-row and exact
 65,536/65,537 disclosure/proof edges are not claimed by these observations:
 mandatory worst-case proof reservation can refuse well before 64 pending rows,
 and exact encoded sizes must be demonstrated with valid complete artifacts,
 not patched limits or fabricated row counts.
 
-`LayoutRecoveryInventoryBounds` in the same module exercises the actual raw
+The inventory-bound tests in `tests/t2_layout_recovery_observation.rs` exercise the actual raw
 observer with 67,108,864 source bytes, 65,536 ordinary source files and 131,072
-physical directory entries, then one over each limit. It checks the complete
+physical directory entries, then one over each limit. They check the complete
 accepted inventory and that refusal preserves every source/directory. These
 real-count API checks do not lower constants, substitute fake counts or prove
 installed/native/hosted publication. The existing public file/depth tests

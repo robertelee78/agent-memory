@@ -6,19 +6,23 @@ first observed bad candidate, independently accepted correction, requirement,
 actual integration and merge delivery. These are historical evidence links,
 not a second writable copy of current AWA work state.
 
-From a checkout, replay either retained symptom through real public interfaces:
+From a checkout, replay either retained symptom through its Rust regression,
+which drives the real `am` binary in isolated `World` processes:
 
 ```sh
-python3 -I scripts/run_incident.py compacted-legacy-capture-reappears
-python3 -I scripts/run_incident.py discarded-merge-side-claims-publication
+cargo test --features dev-tools --test t2_governance -- journey_legacy_flat_consumed_capture_stays_pending
+cargo test --features dev-tools --test t2_sharing_recovery -- \
+  test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness \
+  test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction
 ```
 
-The runner invokes the named actual contract cases in isolated `World` processes.
 The first case captures/consolidates, revokes, compacts and attempts legacy replay;
 the second exercises discarded and actually retained merge outcomes. A successful
-receipt has `passed: true`, a nonzero test count and no skipped/expected-failure
-substitutes. The incident catalog names the actual work keys. These commands
-passed during implementation; the surrounding contract gate reruns them.
+replay runs a nonzero number of tests with none ignored. The incident catalog
+names the actual work keys and the baseline regression names. The baseline
+incident runner has no Rust port; its incident-evidence contract tests are
+unported in `tests/obligations/python-baseline-v1.json`, and the two Rust
+regressions above are recorded there as partial.
 
 An in-scope failure SHOULD first receive the smallest public-interface reproduction
 that fails on the observed old behavior. Its regression name SHOULD retain the
@@ -31,28 +35,27 @@ the catalog links the actual reviews performed that way.
 
 ## Capture guide examples from actual commands
 
-```sh
-python3 -I scripts/capture_guide_examples.py > /private/observed-examples.json
-```
-
-The script executes three public `bank_contract.py` commands in a credential-free
-isolated world. It records the actual argument vector, result/status hashes and
-observed JSON fields or stderr, the Python runtime version, and the complete
-portable artifact file hashes. Runtime-dependent cosmetic argparse differences
-MUST NOT be mistaken for a product semantic change; quote the actual captured
-runtime output.
+The baseline capture tool executed three public `bank_contract` commands in a
+credential-free isolated world. It recorded the actual argument vector,
+result/status hashes and observed JSON fields or stderr, the runtime version, and
+the complete portable artifact file hashes. It has no Rust port; its contract
+tests are unported ledger obligations, so no capture exists for the Rust `am`
+yet. Runtime-dependent cosmetic argument-parser
+differences MUST NOT be mistaken for a product semantic change; quote the actual
+captured runtime output.
 Its `command` field is a display template: `$SKILL_DIR` and input filenames replace
 actual disposable paths. Those are placeholders, not a claim that a shell expanded
 them during capture. `observed_file_paths` lists actual keys in the rendered
 `files` map; it does not claim that the product returned an array there.
 
 The retained [observed example projection](observed-guide-examples.json) names the
-actual runtime source commit and complete artifact hashes. Volatile raw argument
-paths stay outside the repository; the projection retains the capture digest.
-It is evidence for that source version, not an assertion that every future
-version behaves identically. A quoted guide command, result field, error or
-exit meaning MUST come from observed output for the relevant runtime version.
-A changed command/result MUST be recaptured and its affected examples reviewed.
+actual runtime source commit and complete artifact hashes. It was captured from
+the superseded baseline runtime and is evidence for that source version only, not
+for the Rust `am`. Volatile raw argument paths stay outside the repository; the
+projection retains the capture digest. A quoted guide command, result field,
+error or exit meaning MUST come from observed output for the relevant runtime
+version. A changed command/result MUST be recaptured and its affected examples
+reviewed.
 
 Observed examples from that capture:
 
@@ -68,19 +71,11 @@ Observed examples from that capture:
 ## Preserve every normative rule through a refactor
 
 Keep the immutable old source available, for example in a separate detached
-worktree. Before editing, capture its actual portable pack:
-
-```sh
-python3 -I scripts/guide_evidence.py snapshot --pack /path/to/old/skills/agent-memory > /private/before.json
-```
-
-After editing, inspect the new snapshot and prepare an explicit mapping for each
-changed normative paragraph:
-
-```sh
-python3 -I scripts/guide_evidence.py snapshot --pack skills/agent-memory > /private/after.json
-python3 -I scripts/guide_evidence.py check --before /private/before.json --before-pack /path/to/old/skills/agent-memory --pack skills/agent-memory --map /private/rule-map.json
-```
+worktree. Before editing, capture its actual portable pack as a rule snapshot;
+after editing, snapshot the new pack and prepare an explicit mapping for each
+changed normative paragraph. The baseline snapshot/check tool has no Rust port;
+its contract tests are unported ledger obligations, so the mechanical checks
+below do not run for the Rust tree yet.
 
 A map is an object keyed by an old snapshot rule ID. Each entry has exactly
 `new_rules` (one or more actual new rule IDs), `reason` (the actual meaning review)
@@ -107,7 +102,7 @@ reviewer's assertion. `semantic_equivalence_verified` remains false. The source
 files and their Git history remain authoritative; private snapshots/maps are
 review evidence and MUST NOT become a second writable requirements store.
 
-The incident/evidence contract tests prove exact-text moves, an explicit wording
+The baseline incident/evidence contract tests proved exact-text moves, an explicit wording
 map, refusal of lost/weakened/inverted/unreachable instructions, actual old-source
 readback, complete current-pack reachability and the observed public examples.
 Exit 0 from the checker means these mechanical checks passed; exit 1 means the

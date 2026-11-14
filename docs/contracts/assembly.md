@@ -1,7 +1,7 @@
 # Bounded context assembly
 
 The portable [assembly guide](../../skills/agent-memory/assembly/GUIDE.md)
-defines `assemble_context.py preview` and `check`. They use fresh policy-qualified
+defines `am context preview` and `check` (`src/assembly.rs`). They use fresh policy-qualified
 recall, preserve complete source metadata and lifecycle labels, group exact
 duplicates without losing provenance, and select across useful memory types.
 Different conditions or validity remain separate. Whole serialized context,

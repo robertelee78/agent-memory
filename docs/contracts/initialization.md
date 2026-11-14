@@ -3,7 +3,7 @@
 The portable [initialization guide](../../skills/agent-memory/initialize/GUIDE.md)
 defines the ordered existing-memory/source inspection, AWA skill handoff,
 reviewed interpretation, focused product questions and observed apply workflow.
-The checkout and copied artifact both expose `scripts/initialize.py`.
+Installed and development `am` binaries expose the same `am init` (`src/initialization.rs`).
 
 The helper inventories bounded local documentation/planning/code/test sources,
 respects Git ignore rules, and reports incomplete coverage explicitly. AWA work

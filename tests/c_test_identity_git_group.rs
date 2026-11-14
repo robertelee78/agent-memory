@@ -1,0 +1,464 @@
+mod support;
+
+use agent_memory::clock::Deadline;
+use agent_memory::identity_git;
+use agent_memory::process::{self, Group, Input, Refusal, Spec, Status, Target};
+use std::ffi::OsString;
+use std::fs;
+use std::path::Path;
+use std::time::{Duration, Instant};
+use support::World;
+
+fn args(body: &str) -> Vec<OsString> {
+    vec!["/bin/sh".into(), "-c".into(), body.into()]
+}
+
+fn spec<'a>(argv: &'a [OsString], root: &'a Path) -> Spec<'a> {
+    Spec {
+        argv,
+        env: &[],
+        cwd: Some(root),
+        search_path: false,
+        stdin: Input::Null,
+        stdout: Target::Capture { limit: 1024 * 1024 },
+        stderr: Target::Capture { limit: 1024 * 1024 },
+        deadline: Deadline::from_absolute_ns(0),
+        new_session: false,
+        file_size_limit: None,
+        umask: None,
+        pass_fds: &[],
+    }
+}
+
+fn reaped(pid: u32) {
+    let mut status = 0;
+    // The PID came from the real owned child; only collect that exact child.
+    assert_eq!(
+        unsafe { libc::waitpid(pid as i32, &mut status, libc::WNOHANG) },
+        -1
+    );
+    assert_eq!(
+        std::io::Error::last_os_error().raw_os_error(),
+        Some(libc::ECHILD)
+    );
+    assert!(!process::pid_is_alive(pid as i32).unwrap());
+}
+
+fn wait_pid(path: &Path) -> u32 {
+    let deadline = Deadline::after(Duration::from_secs(5)).unwrap();
+    loop {
+        if let Ok(raw) = fs::read_to_string(path) {
+            if let Ok(pid) = raw.trim().parse() {
+                return pid;
+            }
+        }
+        assert!(!deadline.expired(), "child failed to announce itself");
+        std::thread::sleep(Duration::from_millis(2));
+    }
+}
+
+fn closed_pipe_observation(quiet_sibling: bool) {
+    let world = World::new().unwrap();
+    let root = world.inside("repo").unwrap();
+    let first =
+        args("printf '%s\\n' $$ > first.pid; exec 1>&- 2>&-; while [ ! -e release ]; do :; done");
+    let second = args("printf '%s\\n' $$ > second.pid; exec /bin/sleep 30");
+    let mut requests = vec![spec(&first, &root)];
+    if quiet_sibling {
+        requests.push(spec(&second, &root));
+    }
+    let mut group = Group::launch(&requests, Duration::from_secs(5)).unwrap();
+    group
+        .set_exit_poll_interval(Duration::from_millis(50))
+        .unwrap();
+    let pid = wait_pid(&root.join("first.pid"));
+    let sibling = quiet_sibling.then(|| wait_pid(&root.join("second.pid")));
+    let release = root.join("release");
+    let releaser = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(100));
+        fs::write(release, b"release").unwrap();
+    });
+    let start = Instant::now();
+    let output = group.value(0).unwrap();
+    assert_eq!(output.status, Status::Code(0));
+    assert!(output.stdout.is_empty());
+    assert!(output.stderr.is_empty());
+    assert!(output.poll_wakeups <= 20, "closed pipes must not busy-spin");
+    assert!(start.elapsed() < Duration::from_secs(2));
+    reaped(pid);
+    if quiet_sibling {
+        let error = group.finish().unwrap_err();
+        assert!(error.incomplete);
+        reaped(sibling.unwrap());
+    } else {
+        group.finish().unwrap();
+    }
+    releaser.join().unwrap();
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b1_closed_pipe_child_is_observed_before_quiet_sibling_deadline
+fn b1_closed_pipe_child_is_observed_before_quiet_sibling_deadline() {
+    closed_pipe_observation(true);
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b1_no_readable_fds_uses_bounded_owner_wait_then_observes_exit
+fn b1_no_readable_fds_uses_bounded_owner_wait_then_observes_exit() {
+    closed_pipe_observation(false);
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_descendant_held_pipes_timeout_without_waiting_for_descendant_eof
+fn descendant_held_pipes_timeout_without_waiting_for_descendant_eof() {
+    let world = World::new().unwrap();
+    let root = world.inside("repo").unwrap();
+    let argv = args(
+        "(printf '%s\\n' \"$!\" > unused; while [ ! -e release ]; do :; done; printf released > descendant-released) & printf '%s\\n' $! > descendant.pid; exit 0",
+    );
+    let requests = [spec(&argv, &root)];
+    let mut group = Group::launch(&requests, Duration::from_millis(300)).unwrap();
+    let descendant = wait_pid(&root.join("descendant.pid"));
+    let start = Instant::now();
+    let error = group.value(0).unwrap_err();
+    assert_eq!(error.reason, Refusal::Deadline);
+    let evidence = error.evidence.as_ref().unwrap();
+    assert!(evidence.reaped);
+    assert!(
+        !evidence.killed,
+        "the exited direct child must not be signalled"
+    );
+    reaped(evidence.pid);
+    assert!(start.elapsed() < Duration::from_secs(2));
+    assert!(process::pid_is_alive(descendant as i32).unwrap());
+    group.finish().unwrap();
+    fs::write(root.join("release"), b"release").unwrap();
+    let deadline = Deadline::after(Duration::from_secs(5)).unwrap();
+    while !root.join("descendant-released").exists() {
+        assert!(!deadline.expired());
+        std::thread::sleep(Duration::from_millis(2));
+    }
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_each_deadline_starts_at_own_popen_return_not_first_launch
+fn each_deadline_starts_at_own_launch_return() {
+    let world = World::new().unwrap();
+    let root = world.inside("repo").unwrap();
+    let first = args("printf first");
+    let second = args("printf second");
+    // Absolute deadlines are already expired: Group must assign a fresh interval
+    // separately at each child's launch, not inherit either Spec deadline.
+    let requests = [spec(&first, &root), spec(&second, &root)];
+    let mut group = Group::launch(&requests, Duration::from_secs(2)).unwrap();
+    for (index, expected) in [b"first".as_slice(), b"second"].into_iter().enumerate() {
+        let output = group.value(index).unwrap();
+        assert_eq!(output.stdout, expected);
+        assert_eq!(output.status, Status::Code(0));
+        reaped(output.pid);
+    }
+    group.finish().unwrap();
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_later_timeout_does_not_cancel_earlier_pending_success
+fn later_timeout_does_not_cancel_earlier_success() {
+    let world = World::new().unwrap();
+    let root = world.inside("repo").unwrap();
+    let first = args("printf first");
+    let second = args("printf partial; exec /bin/sleep 30");
+    let requests = [spec(&first, &root), spec(&second, &root)];
+    let mut group = Group::launch(&requests, Duration::from_millis(300)).unwrap();
+    let output = group.value(0).unwrap();
+    assert_eq!(output.stdout, b"first");
+    reaped(output.pid);
+    let error = group.value(1).unwrap_err();
+    assert_eq!(error.reason, Refusal::Deadline);
+    let evidence = error.evidence.unwrap();
+    assert_eq!(evidence.stdout, b"partial");
+    assert!(evidence.killed && evidence.reaped);
+    reaped(evidence.pid);
+    group.finish().unwrap();
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_earlier_parser_refusal_survives_later_command_and_cleanup_faults
+fn earlier_parser_refusal_survives_later_command_failure() {
+    let world = World::new().unwrap();
+    let repo = world.repository("identity", false).unwrap();
+    let commands = [
+        (vec!["rev-parse".into(), "--show-toplevel".into()], false),
+        (vec!["not-a-real-git-command".into()], false),
+    ];
+    let env: Vec<_> = world
+        .env
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    let error =
+        identity_git::git_group_with(&repo, &commands, &env, Duration::from_secs(2), |group| {
+            assert!(group.value(0, false)?.is_some());
+            Err::<(), _>(identity_git::Error::Contract(
+                agent_memory::error::ContractError::new("owned malformed earlier config"),
+            ))
+        })
+        .unwrap_err();
+    assert_eq!(error.to_string(), "owned malformed earlier config");
+    assert!(error.contract().is_some());
+}
+
+fn interrupt_case(stage: &str, twice: bool) {
+    let world = World::new().unwrap();
+    let root = world.inside("repo").unwrap();
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "interrupt_worker",
+            "--nocapture",
+            "--test-threads=1",
+        ])
+        .env_clear()
+        .envs(&world.env)
+        .env("AM_FANOUT_INTERRUPT_ROOT", &root)
+        .env("AM_FANOUT_INTERRUPT_STAGE", stage)
+        .env(
+            "AM_FANOUT_INTERRUPT_TWICE",
+            if twice { "yes" } else { "no" },
+        )
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+}
+
+#[test]
+fn interrupt_worker() {
+    let Some(root) = std::env::var_os("AM_FANOUT_INTERRUPT_ROOT") else {
+        return;
+    };
+    let root = std::path::PathBuf::from(root);
+    process::install_termination_handler().unwrap();
+    let stage = std::env::var("AM_FANOUT_INTERRUPT_STAGE").unwrap();
+    let twice = std::env::var("AM_FANOUT_INTERRUPT_TWICE").unwrap() == "yes";
+    let argv: Vec<_> = (0..3)
+        .map(|index| {
+            args(&format!(
+                "printf '%s\\n' $$ > child-{index}; exec /bin/sleep 30"
+            ))
+        })
+        .collect();
+    let requests: Vec<_> = argv.iter().map(|argv| spec(argv, &root)).collect();
+    let mut group = Group::launch(
+        &requests,
+        Duration::from_millis(if stage == "timeout" { 100 } else { 5000 }),
+    )
+    .unwrap();
+    let pids: Vec<_> = (0..3)
+        .map(|index| wait_pid(&root.join(format!("child-{index}"))))
+        .collect();
+    let thread = unsafe { libc::pthread_self() } as usize;
+    let signaller = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(20));
+        assert_eq!(
+            unsafe { libc::pthread_kill(thread as libc::pthread_t, libc::SIGINT) },
+            0
+        );
+        if twice {
+            std::thread::sleep(Duration::from_millis(1));
+            assert_eq!(
+                unsafe { libc::pthread_kill(thread as libc::pthread_t, libc::SIGINT) },
+                0
+            );
+        }
+    });
+    let start = Instant::now();
+    if stage == "parse" || stage == "ordinary" {
+        while !process::interrupted() {
+            std::thread::yield_now();
+        }
+    }
+    for index in 0..3 {
+        let error = group.value(index).unwrap_err();
+        assert_eq!(error.reason, Refusal::Interrupted);
+        assert!(error.cleanup_error.is_none(), "{error}");
+    }
+    group.finish().unwrap();
+    assert!(
+        start.elapsed() < Duration::from_millis(500),
+        "interrupt cleanup exceeded shared grace"
+    );
+    signaller.join().unwrap();
+    for pid in pids {
+        reaped(pid);
+    }
+    assert!(!root.join("partial-write").exists());
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_interrupt_reap_grace_is_shared_and_reports_unreaped_count
+fn b2_interrupt_reap_grace_is_shared_and_reports_unreaped_count() {
+    interrupt_case("poll", false);
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_second_interrupt_stops_waits_but_finishes_kill_and_fd_cleanup
+fn b2_second_interrupt_stops_waits_but_finishes_kill_and_fd_cleanup() {
+    interrupt_case("poll", true);
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_second_interrupt_during_reap_ends_all_remaining_waits
+fn b2_second_interrupt_during_reap_ends_all_remaining_waits() {
+    interrupt_case("ordinary", true);
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_interrupt_during_ordinary_or_system_exit_reap_switches_to_shared_grace
+fn interrupt_during_ordinary_or_system_exit_reap_switches_to_shared_grace() {
+    interrupt_case("ordinary", false);
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_b2_interrupt_in_timeout_cleanup_never_restarts_grace_or_signals_handoff
+fn b2_interrupt_in_timeout_cleanup_never_restarts_grace_or_signals_handoff() {
+    interrupt_case("timeout", true);
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_interrupts_during_launch_select_and_parsing_preserve_primary_and_cleanup
+fn interrupts_during_launch_select_and_parsing_preserve_primary_and_cleanup() {
+    for stage in ["launch", "poll", "parse"] {
+        interrupt_case(stage, false);
+    }
+}
+
+fn infrastructure_case(mode: &str) {
+    let world = World::new().unwrap();
+    let root = world.inside("repo").unwrap();
+    let env = [
+        ("AGENT_MEMORY_FAULT_IDENTITY_INFRA".into(), mode.into()),
+        (
+            "AGENT_MEMORY_FAULT_IDENTITY_ROOT".into(),
+            root.into_os_string(),
+        ),
+    ];
+    let output = world
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                "infrastructure_worker".into(),
+                "--nocapture".into(),
+                "--test-threads=1".into(),
+            ],
+            support::RunOptions {
+                env: &env,
+                ..support::RunOptions::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(output.status, Status::Code(0));
+}
+
+fn descriptors() -> std::collections::BTreeSet<i32> {
+    (3..1024)
+        .filter(|fd| unsafe { libc::fcntl(*fd, libc::F_GETFD) } >= 0)
+        .collect()
+}
+
+#[test]
+fn infrastructure_worker() {
+    let Some(mode) = std::env::var_os("AGENT_MEMORY_FAULT_IDENTITY_INFRA") else {
+        return;
+    };
+    let root =
+        std::path::PathBuf::from(std::env::var_os("AGENT_MEMORY_FAULT_IDENTITY_ROOT").unwrap());
+    let before = descriptors();
+    let missing = vec![root.join("missing-owned-git").into_os_string()];
+    let first = args("printf '%s\\n' $$ > first.pid; exec /bin/sleep 30");
+    let second = args("printf '%s\\n' $$ > second.pid; exec /bin/sleep 30");
+    let precedence = mode == "precedence" || mode == "optional-precedence";
+    let requests = [
+        spec(if precedence { &missing } else { &first }, &root),
+        spec(&second, &root),
+    ];
+    let mut group = Group::launch(&requests, Duration::from_secs(5)).unwrap();
+    let second_pid = wait_pid(&root.join("second.pid"));
+    let first_pid = (!precedence).then(|| wait_pid(&root.join("first.pid")));
+    let opened = descriptors();
+    let fd = *opened.difference(&before).next().unwrap();
+    // A real EBADF on an owned capture pipe, not a substituted selector.
+    assert_eq!(unsafe { libc::close(fd) }, 0);
+    if precedence {
+        let output = identity_git::_git_output(group.value(0), mode == "optional-precedence");
+        if mode == "optional-precedence" {
+            assert!(output.unwrap().is_none());
+        } else {
+            assert!(matches!(
+                output.unwrap_err(),
+                identity_git::Error::Contract(_)
+            ));
+        }
+        let error = group.value(1).unwrap_err();
+        assert_eq!(error.reason, Refusal::Infrastructure);
+        assert!(identity_git::_git_output(Err(error), true).is_err());
+    } else {
+        let error = group.value(0).unwrap_err();
+        assert_eq!(error.reason, Refusal::Infrastructure);
+        assert!(identity_git::_git_output(Err(error), true).is_err());
+        let error = group.value(1).unwrap_err();
+        assert_eq!(error.reason, Refusal::Infrastructure);
+    }
+    let cleanup = group.finish().unwrap_err();
+    assert_eq!(cleanup.reason, Refusal::Infrastructure);
+    if let Some(pid) = first_pid {
+        reaped(pid);
+    }
+    reaped(second_pid);
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_selector_and_fd_infrastructure_never_become_optional_absence
+fn real_capture_fd_failure_never_becomes_optional_absence() {
+    infrastructure_case("capture");
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_terminal_earlier_command_precedence_and_optional_progress_to_fatal_barrier
+fn terminal_earlier_command_precedes_later_real_infrastructure_fault() {
+    infrastructure_case("precedence");
+    infrastructure_case("optional-precedence");
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_cleanup_faults_attempt_remaining_real_kills_closes_and_reaps
+fn cleanup_real_fd_fault_still_finishes_other_children() {
+    infrastructure_case("capture");
+}
+
+#[test]
+// obligation: tests/contracts/test_identity_git_group.py::IdentityGitGroup.test_ordinary_and_system_exit_keep_unbounded_os_wait_parity
+fn ordinary_refusal_and_nonzero_exit_finish_all_owned_children() {
+    let world = World::new().unwrap();
+    let root = world.inside("repo").unwrap();
+    for exit in [0, 7] {
+        let first = args(&format!("exit {exit}"));
+        let second = args("printf '%s\\n' $$ > ordinary.pid; exec /bin/sleep 30");
+        let requests = [spec(&first, &root), spec(&second, &root)];
+        let mut group = Group::launch(&requests, Duration::from_secs(5)).unwrap();
+        let pid = wait_pid(&root.join("ordinary.pid"));
+        let output = group.value(0).unwrap();
+        assert_eq!(output.status, Status::Code(exit));
+        if exit != 0 {
+            assert!(identity_git::_git_output(Ok(output), false).is_err());
+        }
+        assert!(group.finish().unwrap_err().incomplete);
+        reaped(pid);
+        fs::remove_file(root.join("ordinary.pid")).unwrap();
+    }
+}

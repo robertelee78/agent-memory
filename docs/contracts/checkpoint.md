@@ -2,7 +2,7 @@
 
 The portable [checkpoint guide](../../skills/agent-memory/checkpoint/GUIDE.md)
 defines inspect, reviewed fields, preview/apply, omitted-context preparation and
-recovery. Checkout and copied pack expose the same `scripts/checkpoint.py`.
+recovery. Installed and development `am` binaries expose the same `am checkpoint` (`src/checkpoint.rs`).
 
 The helper captures current focus, meaningful recent changes, open questions and
 the next concrete step. It preserves unrecognized sections, source conditions,

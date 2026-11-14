@@ -1,40 +1,32 @@
 # Manual public release checks
 
-`scripts/evaluations/public_release.py` checks the real anonymous public channel
-in disposable World homes. It deliberately allows HTTPS for its own fixture Git
-transport. It is separate from the offline contract gate: it requires network
+The public-release evaluator checks the real anonymous public channel in
+disposable World homes. It deliberately allows HTTPS for its own fixture Git
+transport. It is separate from the offline contract tests: it requires network
 access and an actual published release, and never uses production credentials,
-client configuration, banks or signing material. Run with assertions enabled,
-from a trusted frozen source checkout, with private output outside that checkout.
+client configuration, banks or signing material. It runs from a trusted frozen
+source checkout, with private output outside that checkout.
 
-Before promoting main, prepare two distinct baselines on each supported platform:
+The evaluator has no Rust port. It is an unported evaluation obligation in
+`tests/obligations/python-baseline-v1.json`; until it is ported, none of the
+journeys below can be run against the Rust release, and earlier results qualify
+only the releases they observed. The journeys remain the release obligation.
 
-```sh
-python3 -B scripts/evaluations/public_release.py prepare-legacy --source . --out /tmp/am-public-old-one-line
-python3 -B scripts/evaluations/public_release.py prepare-legacy --source . --out /tmp/am-public-old-cli
-```
-
-Preparation executes the current public one-line installer, requires a managed
-v0.0.2 installation from official main, and retains its isolated World and exact
-receipt. Each World includes staged consumer code, a separate explicitly bound
-consumer bank and existing client instructions. Preparation is not evidence of
-a v0.0.3 upgrade or publisher authentication.
+Before promoting main, the evaluator prepares two distinct legacy baselines on
+each supported platform: one later upgraded by the one-line installer and one
+later upgraded through the installed CLI. Each World includes staged consumer
+code, a separate explicitly bound consumer bank and existing client
+instructions. Preparation is not evidence of an upgrade or publisher
+authentication.
 
 After the publisher has verified signed public assets and default activation,
-replace `FULL_RELEASE_COMMIT` below with that exact signed source identity:
-
-```sh
-python3 -B scripts/evaluations/public_release.py upgrade-legacy --source . --out /tmp/am-public-old-one-line --expected-source FULL_RELEASE_COMMIT
-python3 -B scripts/evaluations/public_release.py upgrade-via-cli --source . --out /tmp/am-public-old-cli --expected-source FULL_RELEASE_COMMIT
-python3 -B scripts/evaluations/public_release.py fresh --source . --out /tmp/am-public-fresh --expected-source FULL_RELEASE_COMMIT
-```
-
-The first upgrade fetches the public bootstrap anew. The direct-CLI journey
-instead executes the already installed v0.0.2 updater, requires its first
-transition to remain explicitly unsigned/managed, then invokes the newer updater
-to adopt the signed source. The old executing process cannot authenticate its
-own first transition. The [security contract](../contracts/lifecycle-security.md)
-defines that boundary.
+the upgrade journeys and a fresh installation run against that exact signed
+source identity. For v0.0.15, an installation of v0.0.14 or older cannot update
+itself: its upgrade journey re-runs the trusted bootstrap, which adopts the
+existing installation. The old updater's refusal of the Rust release, with its
+exact message, MUST be observed with the real v0.0.14 runtime before
+publication. The [security contract](../contracts/lifecycle-security.md)
+defines the authentication boundary.
 
 Final checks require the exact release source, fresh pinned-signature observation,
 portable-only installed layout, no development bank or Git metadata, a verified
@@ -56,37 +48,31 @@ Four public v0.0.2 preparations succeeded on macOS/Linux at default source
 `31f10a29fcd2e03c668cdc9fc5f163ea45dc8cb5`. Their
 [source-bound summaries and apparatus reviews](../research/data/2026-10-26-public-lifecycle/)
 retain the two original test-evidence gaps, their repairs and final Opus static
-approval. The optimized-Python guard also refused before any product command.
-These are historical preparation records, not the current release status.
-Preparation and static approval do not substitute for actual delivery checks;
-consult each release's source-bound qualification report for subsequent results.
+approval. The baseline runtime's optimized-interpreter guard also refused before
+any product command. These are historical preparation records, not the current
+release status. Preparation and static approval do not substitute for actual
+delivery checks; consult each release's source-bound qualification report for
+subsequent results.
 
 
-## Current signed-to-signed release checks
+## Signed-to-signed release checks
 
-For a signed v0.0.9 baseline and v0.0.10 target, prepare once on each supported
-platform before publication:
+Signed-to-signed checks prepare a signed baseline once on each supported platform
+before publication, then, after publication and verified activation, pass the
+exact signed release commit as the expected source to the installed-CLI upgrade
+against that retained output and to a fresh installation in a separate new output
+directory. A failed attempt is retained, never overwritten. Run these probes in
+disposable profiles, not operator homes. Each public command stream and its
+bank/code/index preservation are checked independently of source-contract
+qualification. From v0.0.15 on, both sides of such a check are Rust releases;
+v0.0.14 → v0.0.15 is the bootstrap adoption journey above.
 
-```sh
-python3 -I -B scripts/evaluations/public_release.py prepare-legacy --source . --out /tmp/am-public-v010-upgrade --legacy-version 0.0.9 --release-version 0.0.10
-```
-
-After publication and verified activation, pass the exact signed release commit
-to `--expected-source`, retaining those same version options, for
-`upgrade-via-cli` against that retained output and `fresh` against a separate
-new output directory. A failed attempt is retained, never overwritten. Run
-these probes in disposable profiles, not operator homes. Each public command
-stream and its bank/code/index preservation are checked independently of
-source-contract qualification.
-
-The trusted support checkout includes root `scripts/` wrappers as well as
-`tests/` and `skills/`; copying only the package and tests cannot run the identity
-fixtures. A setup error before a product assertion is apparatus evidence, not a
-runtime pass or failure. Python diagnostic/test launchers use `-I -B`.
+A setup error before a product assertion is apparatus evidence, not a runtime
+pass or failure.
 
 ## Disposable #244 publication and retention qualification
 
-The recovery publication/retention suites use the packaged public CLI, exact
+The recovery publication/retention tests use the built public `am`, exact
 79,054-byte synthetic authority context, real bare Git transport, source ledgers,
 separate review inputs, original feature/index/HEAD checks, and a second clone
 with an empty private recovery profile. The offline GitHub protocol adapter is
@@ -95,27 +81,12 @@ permissions, independent semantic acceptance, macOS/Linux qualification or a
 release-delivery receipt**. These commands are a runnable recipe, not a claim
 that this revision has passed.
 
-From the trusted frozen checkout, run the two registered workers inside a valid
-disposable World (the runner deliberately refuses a bare invocation):
+From the trusted frozen checkout, run the publication and layout-recovery test
+targets; they create their own disposable Worlds. The ledger records the
+baseline publication and retention suites as only partially ported:
 
 ```sh
-python3 -I -B - <<'PY'
-from pathlib import Path
-import sys
-root = Path.cwd().resolve()
-sys.path.insert(0, str(root / 'tests'))
-from world import World
-for name in ('test_layout_recovery_publication.py', 'test_layout_recovery_retention.py'):
-    with World() as world:
-        completed = world.run(
-            [sys.executable, '-I', '-B', root / 'scripts/run_contract_suite.py',
-             root / 'tests/contracts' / name],
-            check=False, timeout=300)
-        print(completed.stdout)
-        print(completed.stderr, file=sys.stderr)
-        if completed.returncode:
-            raise SystemExit(completed.returncode)
-PY
+cargo test --features dev-tools --test t2_publication --test t2_layout_recovery
 ```
 
 The publication test repairs the local layout first; retains independently
@@ -146,6 +117,6 @@ runtime marker and normal explicit project binding. Verify qualified recall and
 ordinary capture after fully terminal publication; local repair alone is not
 publication or cross-machine import.
 
-The standard release gate remains `scripts/test.sh --release --json` on the
+The standard release check remains `cargo test --features dev-tools` on each release triple for the
 integrated immutable candidate. Do not run these workers concurrently with
 milestone performance/stress qualification or enlarge their existing deadlines.

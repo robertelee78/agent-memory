@@ -953,3 +953,296 @@ fn preview_and_apply_create_a_reviewed_source_linked_bank() {
     );
     assert_eq!(get(&applied, "verified"), &Value::Bool(true));
 }
+
+fn fanout_d_component_claim(value: i64) -> Value {
+    let mut value = claim(
+        "implementation",
+        Value::Int(value.into()),
+        "src/app.py",
+        "retry-limit",
+        "techContext.md",
+        None,
+    );
+    set(
+        &mut value,
+        "conditions",
+        Value::Object(vec![("component".into(), text_value("src"))]),
+    );
+    set(
+        &mut value,
+        "applicability_review",
+        text_value(
+            "The inspected retry constant belongs to this component, independently of the memory-bootstrap checkout; qualify the source bytes before use.",
+        ),
+    );
+    value
+}
+
+fn fanout_d_init_apply(world: &World, prepared: &Value) -> (i32, Value) {
+    let file = world.save(prepared, "fanout-apply.json");
+    command(
+        world,
+        &["init", "apply", "--proposal", file.to_str().unwrap()],
+    )
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_observation_applicability.py::ObservationApplicability.test_unchanged_evidence_survives_memory_only_head_and_capture_branch_changes_without_duplication
+fn fanout_d_unchanged_evidence_survives_memory_head_and_branch_changes() {
+    let world = World::new();
+    let (repo, project, _) = setup(&world);
+    world.git(&repo, &["add", "."]);
+    world.git(&repo, &["commit", "-m", "Reviewed actual source fixture"]);
+    world.git(&repo, &["checkout", "-b", "bootstrap-memory"]);
+    let original_head =
+        std::fs::read_to_string(repo.join(".git/refs/heads/bootstrap-memory")).unwrap();
+    let claim = fanout_d_component_claim(3);
+    let p = preview(
+        &world,
+        &repo,
+        &reviewed(&inventory(&world, &repo, None), vec![claim.clone()], vec![]),
+    );
+    assert_eq!(fanout_d_init_apply(&world, &p).0, 0);
+    let bank = repo.join("memory-bank");
+    let before: BTreeMap<_, _> = std::fs::read_dir(&bank)
+        .unwrap()
+        .map(|e| {
+            let p = e.unwrap().path();
+            (p.file_name().unwrap().to_owned(), std::fs::read(p).unwrap())
+        })
+        .collect();
+    let body = std::fs::read_to_string(bank.join("techContext.md")).unwrap();
+    let provenance = body
+        .lines()
+        .find_map(|line| {
+            line.strip_prefix("Observation provenance: `")
+                .and_then(|s| s.strip_suffix("`."))
+        })
+        .unwrap();
+    let provenance = json::decode(provenance, Default::default()).unwrap();
+    let source = std::fs::read(repo.join("src/app.py")).unwrap();
+    let observed = get(get(&provenance, "sources"), "src/app.py");
+    assert_eq!(
+        text(observed, "sha256"),
+        agent_memory::developer_identity::digest(Some(&source)).unwrap()
+    );
+    assert_eq!(get(observed, "bytes"), &Value::Int(source.len().into()));
+    assert_eq!(
+        text(get(&provenance, "observed_checkout"), "branch"),
+        "bootstrap-memory"
+    );
+    assert_eq!(
+        text(get(&provenance, "observed_checkout"), "head"),
+        original_head.trim()
+    );
+    assert_eq!(
+        get(&provenance, "checkout_context_only"),
+        &Value::Bool(true)
+    );
+    assert_eq!(
+        get(&provenance, "publication_verified"),
+        &Value::Bool(false)
+    );
+    let applicability = body
+        .lines()
+        .find(|line| line.starts_with("Applicability:"))
+        .unwrap();
+    assert!(applicability.contains("\"component\": \"src\""));
+    assert!(!applicability.contains("branch") && !applicability.contains("revision"));
+    assert!(body.contains("Applicability review:"));
+    world.git(&repo, &["add", "memory-bank"]);
+    world.git(&repo, &["commit", "-m", "Memory-only capture"]);
+    world.git(&repo, &["checkout", "-b", "another-session"]);
+    let request = Value::Object(vec![
+        ("project_id".into(), text_value(&project)),
+        ("query".into(), text_value("")),
+        ("ids".into(), Value::Array(vec![])),
+        (
+            "paths".into(),
+            Value::Array(vec![text_value("techContext.md")]),
+        ),
+        (
+            "context".into(),
+            Value::Object(vec![("component".into(), text_value("src"))]),
+        ),
+        ("kinds".into(), Value::Array(vec![])),
+        ("minimum_trust".into(), text_value("reviewed")),
+        ("limit".into(), Value::Int(16.into())),
+        ("include_context".into(), Value::Bool(true)),
+    ]);
+    let input = world.save(&request, "fanout-recall.json");
+    let recalled = good(
+        &world,
+        &[
+            "get",
+            "--repo",
+            repo.to_str().unwrap(),
+            "--request",
+            input.to_str().unwrap(),
+        ],
+    );
+    let row = &get(&recalled, "results").as_array().unwrap()[0];
+    assert_eq!(text(row, "selection_class"), "orientation-only");
+    assert_eq!(get(row, "trust"), &Value::Null);
+    assert_eq!(get(row, "source_assertions_verified"), &Value::Bool(false));
+    assert_eq!(text(row, "body"), body);
+    let mut duplicate = claim;
+    set(&mut duplicate, "context", text_value("progress.md"));
+    let again = preview(
+        &world,
+        &repo,
+        &reviewed(&inventory(&world, &repo, None), vec![duplicate], vec![]),
+    );
+    assert!(
+        get(&again, "changed_memory_paths")
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        !gaps(&again)
+            .iter()
+            .any(|g| g.contains("Existing implementation observation"))
+    );
+    let after: BTreeMap<_, _> = std::fs::read_dir(&bank)
+        .unwrap()
+        .map(|e| {
+            let p = e.unwrap().path();
+            (p.file_name().unwrap().to_owned(), std::fs::read(p).unwrap())
+        })
+        .collect();
+    assert_eq!(before, after);
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_observation_applicability.py::ObservationApplicability.test_changed_source_refuses_stale_write_and_existing_changed_hash_requires_review_without_duplicate
+fn fanout_d_changed_source_refuses_stale_write_without_duplicate_observation() {
+    let world = World::new();
+    let (repo, _, _) = setup(&world);
+    let claim = fanout_d_component_claim(3);
+    let p = preview(
+        &world,
+        &repo,
+        &reviewed(&inventory(&world, &repo, None), vec![claim], vec![]),
+    );
+    write(&repo.join("src/app.py"), "RETRY_LIMIT = 4\n");
+    assert_ne!(fanout_d_init_apply(&world, &p).0, 0);
+    assert!(!repo.join("memory-bank").exists());
+    let claim = fanout_d_component_claim(4);
+    let p = preview(
+        &world,
+        &repo,
+        &reviewed(&inventory(&world, &repo, None), vec![claim.clone()], vec![]),
+    );
+    assert_eq!(fanout_d_init_apply(&world, &p).0, 0);
+    let bank = repo.join("memory-bank");
+    let original = std::fs::read(bank.join("techContext.md")).unwrap();
+    write(
+        &repo.join("src/app.py"),
+        "RETRY_LIMIT = 4\n# Additional implementation evidence to inspect.\n",
+    );
+    let mut duplicate = claim;
+    set(&mut duplicate, "context", text_value("progress.md"));
+    let p = preview(
+        &world,
+        &repo,
+        &reviewed(&inventory(&world, &repo, None), vec![duplicate], vec![]),
+    );
+    assert!(
+        get(&p, "changed_memory_paths")
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        gaps(&p)
+            .iter()
+            .any(|g| g.contains("inspected source bytes differ"))
+    );
+    assert_eq!(
+        std::fs::read(bank.join("techContext.md")).unwrap(),
+        original
+    );
+    assert!(proposed(&p).get("progress.md").is_none());
+}
+
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+// obligation: tests/contracts/test_observation_applicability.py::ObservationApplicability.test_legacy_inputs_and_real_branch_conditions_stay_conservative_and_unknown_old_hashes_remain_qualified
+fn fanout_d_legacy_observations_and_explicit_branch_conditions_stay_conservative() {
+    let world = World::new();
+    let (repo, _, _) = setup(&world);
+    let mut claim = claim(
+        "implementation",
+        Value::Int(3.into()),
+        "src/app.py",
+        "retry-limit",
+        "techContext.md",
+        None,
+    );
+    let p = preview(
+        &world,
+        &repo,
+        &reviewed(&inventory(&world, &repo, None), vec![claim.clone()], vec![]),
+    );
+    assert_eq!(fanout_d_init_apply(&world, &p).0, 0);
+    let target = repo.join("memory-bank/techContext.md");
+    let text = std::fs::read_to_string(&target).unwrap();
+    assert!(text.contains("\"branch\": \"main\""));
+    let legacy = text
+        .lines()
+        .filter(|line| !line.starts_with("Observation provenance:"))
+        .collect::<Vec<_>>()
+        .join("\n")
+        + "\n";
+    write(&target, &legacy);
+    let mut duplicate = claim.clone();
+    set(&mut duplicate, "context", text_value("progress.md"));
+    let p = preview(
+        &world,
+        &repo,
+        &reviewed(&inventory(&world, &repo, None), vec![duplicate], vec![]),
+    );
+    assert!(
+        get(&p, "changed_memory_paths")
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        gaps(&p)
+            .iter()
+            .any(|g| g.contains("recorded byte binding is unknown"))
+    );
+    world.git(&repo, &["checkout", "-b", "other-branch"]);
+    set(
+        &mut claim,
+        "applicability_review",
+        text_value("This reason does not override an explicit main-branch condition."),
+    );
+    assert_ne!(
+        try_preview(
+            &world,
+            &repo,
+            &reviewed(&inventory(&world, &repo, None), vec![claim.clone()], vec![])
+        )
+        .0,
+        0
+    );
+    if let Value::Object(rows) = &mut claim {
+        rows.retain(|(key, _)| key != "applicability_review");
+    }
+    set(&mut claim, "conditions", Value::Object(vec![]));
+    assert_ne!(
+        try_preview(
+            &world,
+            &repo,
+            &reviewed(&inventory(&world, &repo, None), vec![claim], vec![])
+        )
+        .0,
+        0
+    );
+    assert_eq!(std::fs::read_to_string(target).unwrap(), legacy);
+}

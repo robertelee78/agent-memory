@@ -17,12 +17,13 @@ tokens and learned project content MUST NOT be stored in this registry.
 ## Checkout-first setup
 
 No installation, client, service, existing registry or project Memory Bank is
-needed. These public commands are exercised by the isolated contract suite:
+needed; the installed `am` or a developer-built `target/release/am` runs these
+public commands:
 
 ```sh
-python3 -I scripts/developer_identity.py status
-python3 -I scripts/developer_identity.py preview --create --label 'Developer A' > proposal.json
-python3 -I scripts/developer_identity.py apply --proposal proposal.json
+am developer status
+am developer preview --create --label 'Developer A' > proposal.json
+am developer apply --proposal proposal.json
 ```
 
 To reuse an existing stable ID, the agent MUST explicitly use `preview --adopt
@@ -50,9 +51,9 @@ caller MUST resolve the change rather than silently relabel that learning.
 Conflicting provenance MUST remain visible for clarification by the detecting
 developer/session.
 
-The portable equivalent is
-`skills/agent-memory/scripts/developer_identity.py`. Both entrypoints use the
-same implementation and schema. All output is JSON. Exit 0 means a status,
+The implementation is `src/developer_identity.rs`; the `agent-memory`
+compatibility command accepts the same arguments and schema. All output is
+JSON. Exit 0 means a status,
 preview or verified operation; exit 1 means a refusal; exit 2 means invalid
 command arguments. Read-only commands MUST NOT create config/runtime files.
 

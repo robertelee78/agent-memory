@@ -8,14 +8,14 @@ same definition. A caller MUST NOT maintain its own lifecycle or currentness
 table. The model guide MUST be regenerated when the definition changes:
 
 ```sh
-python3 -I scripts/lifecycle_model.py definition
-python3 -I scripts/lifecycle_model.py guide
-python3 -I scripts/lifecycle_model.py current --input selection.json
-python3 -I scripts/lifecycle_model.py transition --input transition.json
+am lifecycle-model definition
+am lifecycle-model guide
+am lifecycle-model current --input selection.json
+am lifecycle-model transition --input transition.json
 ```
 
-The portable entrypoint is `skills/agent-memory/scripts/lifecycle_model.py`.
-These are read-only evaluators exercised by the offline contract suite. They
+The evaluator is `src/lifecycle.rs`, reached through `am lifecycle-model`.
+These are read-only evaluators. They
 write no bank, registry, journal, event or projection. Exit 0 means the request
 was evaluated, including a negative decision; the caller MUST inspect
 `result.current` or `result.legal`. Exit 1 means malformed inputs; exit 2 means

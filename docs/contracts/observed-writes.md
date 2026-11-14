@@ -16,13 +16,14 @@ The [common scope resolver](scope-binding.md) now guards public mediated writes.
 Checkpoint's product-specific fields remain a separate caller.
 
 ```sh
-python3 -I scripts/bank_writes.py inspect --repo /path/to/repository
-python3 -I scripts/bank_writes.py preview --repo /path/to/repository \
+am writes inspect --repo /path/to/repository
+am writes preview --repo /path/to/repository \
   --path activeContext.md --content reviewed-context.md > proposal.json
-python3 -I scripts/bank_writes.py apply --proposal proposal.json
+am writes apply --proposal proposal.json
 ```
 
-The copied artifact has the same `scripts/bank_writes.py` entry point. Commands
+The implementation is `src/bank_writes.rs`; the `agent-memory` compatibility
+command accepts the same arguments. Commands
 emit one JSON document; exit 0 means the command completed, exit 1 means refusal
 or an interrupted/uncertain result requiring inspection, exit 2 means invalid
 arguments. A preview binds a random operation ID, stable bank project ID,
@@ -108,8 +109,8 @@ external edit while attempting rollback.
 ## Stale locks and filesystem limits
 
 ```sh
-python3 -I scripts/bank_writes.py recover --repo /path/to/repository > recovery.json
-python3 -I scripts/bank_writes.py recover --repo /path/to/repository \
+am writes recover --repo /path/to/repository > recovery.json
+am writes recover --repo /path/to/repository \
   --proposal recovery.json
 ```
 

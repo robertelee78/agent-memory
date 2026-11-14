@@ -135,14 +135,14 @@ than truncating, deleting, skipping, raising limits or initializing over them.
 
 ## Public file workflow
 
-From a checkout, these commands were exercised by the isolated router suite:
+The installed `am` exposes this workflow (`src/bank_contract.rs`):
 
 ```sh
-python3 -I scripts/bank_contract.py render --input proposal.json
-python3 -I scripts/bank_contract.py validate --repo /path/to/repository
+am bank render --input proposal.json
+am bank validate --repo /path/to/repository
 ```
 
-The portable equivalent is `skills/agent-memory/scripts/bank_contract.py`.
+The `agent-memory` compatibility command accepts the same arguments.
 Both commands emit one JSON document and write no bank or runtime files.
 `render` emits a map of relative file names to Markdown contents; it MUST NOT
 apply that proposal or overwrite existing memory. `validate` inspects only the

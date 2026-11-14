@@ -56,9 +56,10 @@ suites and optional/pending substitutions. The public gate must actually execute
 all registered suites; discovery alone, one selected journey or a previous
 source revision cannot certify the complete matrix.
 
-Run `scripts/test.sh --release --json` from the final integrated checkout with
-Python 3.11+ and Git. Each suite retains the ordinary 300-second deadline and
-requires nonempty execution without skips or expected failures. All failures
+Run `cargo test --offline --features dev-tools` from the final integrated
+checkout with Git on each release triple. The baseline gate's ordinary
+300-second suite deadline and nonempty execution without skips or expected
+failures remain release obligations. All failures
 and timeouts remain evidence. Milestone release acceptance additionally requires
 every approved story's independent verdict and delivery evidence, plus the
 actual published release.

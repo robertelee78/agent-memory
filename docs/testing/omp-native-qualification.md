@@ -30,8 +30,10 @@ They do not transfer merely because the version gate admits this target.
 - The Linux clock gate admits only the exact reviewed 18.16 and 18.19 arm64
   images. The 18.19 image is
   `61826bf89c2c0512417fee05fa2f486e60ee11b23ea95a17257a6c49edb6b8d5`.
-  Actual Python 3.11/3.15 private clock probes exercised image rejection and
-  same-clock admission. This is not automatic-wake, elapsed-rate, native
+  The earlier private clock probes that exercised image rejection and
+  same-clock admission ran against the superseded baseline runtime; the Rust
+  guard (`src/omp_stream.rs`) keeps the same image allowlist and needs its own
+  probes. This is not automatic-wake, elapsed-rate, native
   workflow or timing qualification; those cells remain required.
 - Exact recognition of receipt-owned manual reads is not yet qualified for
   18.19. Unknown renderer differences remain ordinary screened evidence/gaps,
@@ -55,10 +57,10 @@ The stored-source-v2 cutover requires a renewed explicit attestation for the
 new capability and artifact; an older saved rollout approval is insufficient.
 Different clones with different private state do not share this source index.
 Preview a trusted complete candidate, then apply the same arguments without
-`--check`:
+`--check`. For a development candidate, use the `am` built in that candidate:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" install --check --development-source /absolute/candidate --presets omp --omp-agent-dir /absolute/omp-agent --omp-peers-upgraded
+/absolute/candidate/target/release/am install --check --development-source /absolute/candidate --presets omp --omp-agent-dir /absolute/omp-agent --omp-peers-upgraded
 ```
 
 The preview names three independently owned destinations: the skill directory,
@@ -69,12 +71,13 @@ extension configuration is changed. `PI_CODING_AGENT_DIR` may select that
 **already chosen** native root when launching omp; it never redirects saved
 update/uninstall ownership. Restart native clients after an installed change.
 
-The explicit native installation emits `install-receipt-v2` with its exact
-`omp_binding`. Non-omp installations retain v1. Omitted update configuration
+The Rust installer emits `install-receipt-v3`, including the exact
+`omp_binding` for an explicit native installation. Omitted update configuration
 preserves the saved root. Reinstalling into a different root, or selecting
 `all` to remove an existing native binding implicitly, refuses; use explicit
-owned uninstall/reinstall. Modified/unowned files are preserved. An older
-runtime cannot adopt v2 ownership as if it were v1, even after sources drain.
+owned uninstall/reinstall. Modified/unowned files are preserved. Adopting a
+Python-era v2 receipt re-issues the binding for the Rust artifact and never
+inherits its rollout attestation: `--omp-peers-upgraded` must be supplied again.
 
 The apply path uses that same explicit/saved root when validating lifecycle
 write boundaries, including the extension destination. Qualification MUST
@@ -82,11 +85,9 @@ exercise actual application in both copy and link modes; a successful
 `--check` does not prove installation or native extension loading.
 The compiled native binary does not resolve the SDK as an external npm package:
 the adapter uses erased type-only imports and the injected `pi.pi.VERSION`
-runtime export. The fixed observer launcher also initializes its own local
-source import path under isolated Python; public-console tests alone do not
-exercise that callback route. The installed long-segment regression drives the
-actual `/bin/sh .../python3.sh .../omp_boundary.py` route before inspecting and
-assessing retained sources through the public command.
+runtime export. The receipt-owned extension spawns the owned `am` binary
+directly as `am omp-boundary --stream …`; public-console tests alone do not
+exercise that callback route.
 The signed one-line installer accepts these same explicit native selection and
 quiescence options; its generated loader and checked-in loader MUST agree.
 
@@ -108,10 +109,10 @@ The extension can retain **private source evidence and bounded advisory
 requests only**. It cannot admit/correct/consolidate memory, refresh/exchange
 Git, acknowledge assessments, change permissions, force a model, execute
 model-selected shell commands or rewrite the substantive answer. It launches
-only its fixed installed observer helper through the receipt-owned
-`/bin/sh .../python3.sh` supported-interpreter selector. This is not an
-interpreter-pinned security claim. Canonical operations use ordinary model
-tools with the person's unchanged native permissions.
+only the receipt-owned `am` executable recorded in its binding, with the fixed
+`omp-boundary --stream` arguments. This is not a sandbox claim. Canonical
+operations use ordinary model tools with the person's unchanged native
+permissions.
 
 `message_end` and `tool_call` are cheap neutral metadata hints, never body,
 role/attribution or reported tool-ID source ownership. Their closed identity is
@@ -207,8 +208,8 @@ helpers are never killed during shared writes. ONE armed source-first seal,
 with a fresh nonce and terminal false, is handed off before CLOCK/CLOCK-ACK.
 There is no prewarm or second seal. The worker commits the source outcome
 before considering the one existing root wake; bounded registration follows
-the response attempt and guard unwind. Bun hrtime and Python monotonic have
-different epochs.
+the response attempt and guard unwind. Bun hrtime and the `am` monotonic clock
+have different epochs.
 Four timestamps bound their offset; use the conservative lower bound and
 subtract the platform rate uncertainty before the pre-reservation check.
 The provisional 100 ms margin must cover measured post-reservation p99.
@@ -258,14 +259,16 @@ A successful registration whose response was lost is recovered from the exact
 shared reference/digest. A shared fault or an uncertain attempted write is
 retained and never blindly registered again or erased by transport retry.
 
-The migrated `NativeSources` contracts in `tests/contracts/test_omp_boundary.py`
-and dedicated `tests/contracts/test_omp_enrollment_progress.py` regressions cover
-large retained segments, bounded oldest-first progress, new arrivals, lost
-success, uncertain attempts and retained shared faults. The latter also drives
-an explicitly installed finite-stream/source/no-learning journey with 151
-stored entries. The removed public `--observer --stdin` write route must refuse
-before source writes. These are real transport/CLI checks, not native callback,
-extension-loading or model/provider qualification.
+The baseline `NativeSources` and enrollment-progress regressions covered large
+retained segments, bounded oldest-first progress, new arrivals, lost success,
+uncertain attempts and retained shared faults, plus an explicitly installed
+finite-stream/source/no-learning journey with 151 stored entries; the removed
+public `--observer --stdin` write route must refuse before source writes. They
+are mostly unported in `tests/obligations/python-baseline-v1.json`; the Rust
+`tests/t2_omp_boundary.rs`, `tests/t2_omp_stream.rs` and
+`tests/t2_omp_transport.rs` carry the ported cases. These are real
+transport/CLI checks, not native callback, extension-loading or model/provider
+qualification.
 
 Read every source before assessment. Use exactly one original observation per
 `am omp-boundary --repo ... --stdin --quiet --refresh` invocation, with exact
@@ -384,11 +387,13 @@ frames; an earlier settled response cannot qualify a later duplicate or unsettle
 The report retains source/binary/receipt identity and current human observation
 references without copying arbitrary display payloads.
 
-The actual native run must exercise the loaded receipt-owned hook's `/bin/sh hooks/python3.sh scripts/omp_boundary.py --stream` route. The report records that receipt-owned route and actual stream receipts, without claiming a separate process-argv trace. A public `am omp-boundary --stream` fixture is an internal-transport check only; raw framed source input grants no assessment/publication authority and is not native-loading proof.
+The actual native run must exercise the loaded receipt-owned extension's `am omp-boundary --stream` route. The report records that receipt-owned route and actual stream receipts, without claiming a separate process-argv trace. A public `am omp-boundary --stream` fixture is an internal-transport check only; raw framed source input grants no assessment/publication authority and is not native-loading proof.
 
-```sh
-python3 scripts/evaluations/omp_native_smoke.py --binary /absolute/omp --am /absolute/owned/bin/am --receipt /absolute/install/receipt.json --repo /absolute/disposable/project --output /absolute/new/private-smoke-output --model actual-provider/actual-model
-```
+The minimal native smoke driver has no Rust port; it is an unported evaluation
+obligation in `tests/obligations/python-baseline-v1.json`. Its required inputs
+are the absolute omp binary, the owned `bin/am`, the install receipt, a
+disposable project, a new private output directory and the actual
+provider/model.
 
 The driver never auto-approves. Headless UI requests are refused and preserved
 as such. A smoke pass is not a durable-capture/Git-exchange, full-mode,
@@ -409,8 +414,8 @@ qualified. The synthetic late-frame regression separately passed its normal,
 late-duplicate and late-unsettled subcases.
 
 The separate [Linux offline startup receipts](../research/data/2026-11-06-omp-native/linux-startup.json)
-bind the actual upstream arm64 binary and pinned Python 3.11.18/3.15.2
-bookworm carriers. Python, Git, shell, `omp --version` and `--help` each exited 0
+bind the actual upstream arm64 binary and the baseline runtime's pinned
+interpreter carriers on bookworm. The interpreter, Git, shell, `omp --version` and `--help` each exited 0
 with networking disabled, read-only roots, nonroot identity and dropped
 capabilities; all ten owned containers were absent afterward. No AM
 installation/extension, model, provider or session ran. These checks establish
@@ -425,7 +430,7 @@ pending warnings and coverage/tool rows are not completion. Public source
 verifier responses and private World file inventories agreed before and after
 each scoped evidence copy. Transient unknown-role processes exited before two
 empty samples and the copy; those samples are not a global writer fence or
-drain proof. The original conservative Python 3.11 override and the later
+drain proof. The original conservative baseline-interpreter override and the later
 parent scope clarification remain separate, hash-bound records.
 
 The source was a Git-tree-verified, mode-normalized archive export, not a Git

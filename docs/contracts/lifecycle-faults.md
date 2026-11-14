@@ -75,7 +75,7 @@ before removing the World, both on completion and timeout. A real worker/child
 socket fixture verifies descriptor closure; a preliminary reproduction retained
 a live child after the old direct-worker timeout and required explicit cleanup.
 
-The full `scripts/test_gate.py --release --json` still requires all named v1
+Release qualification still requires all named v1
 groups, including the separately tracked portable-lifecycle and complete
 installed-bank roundtrip gates. These fault shards supplement those gates;
 they do not clear pending groups or certify Linux/live services. Supported-runtime

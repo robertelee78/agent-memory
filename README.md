@@ -46,16 +46,20 @@ each. The synthetic 79,054/28,478-byte fixtures are not the original incident.
 Install on macOS or Linux with one command, just like AWA:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | sh
 ```
 
-The default command verifies delivery with a pinned publisher key.
-Requires Bash 3.2+, Python 3.11+, Git, curl and OpenSSH `ssh-keygen` with SSH
-signature support. No checkout, GitHub authentication, developer identity or
-initialized memory bank is needed. The bootstrap verifies the signed release
-manifest and portable archive before
-running candidate code, delegates to the owned installer, and removes private
-staging. The installed runtime lives in its own managed location; the archive
+The runtime is one static `am` binary. Signed binaries exist for
+`aarch64-apple-darwin` (Apple silicon macOS), `x86_64-unknown-linux-musl` and
+`aarch64-unknown-linux-musl`; other hosts are refused with a named-target
+message. The POSIX `sh` bootstrap requires `curl` and OpenSSH `ssh-keygen` with
+SSH signature support; the installed runtime uses Git. No interpreter, Cargo,
+checkout, GitHub authentication, developer identity or initialized memory bank
+is needed. The bootstrap downloads the `am` binary for this host into a private
+temporary directory and verifies its signature against the publisher key pinned
+in the script before running it. The verified binary then checks the signed
+release manifest and portable pack, installs its own bytes and removes private
+staging. The installed runtime lives in its own managed location; the pack
 contains no development memory from this repository. The fetched bootstrap itself
 remains the initial HTTPS trust anchor.
 Restart running agent sessions after installation so they load the skill.
@@ -64,23 +68,26 @@ Turn-boundary adapters supply the shared skill instruction in Claude, Codex and
 OpenCode. Codex may require you to review and trust the Agent Memory hook in
 `/hooks`; configuration alone does not prove a hook ran or that memory was
 captured. Conflicts and unavailable publication remain pending for the session.
-Keep Python 3.11+ available as `python3` on `PATH` when running `am`.
 Re-run the default one-line command to update an existing managed installation,
 or use `am update`.
 
-When upgrading from v0.0.3 with `am update`, run `am update` a second time
-to activate the new owned client hooks, then restart the agent sessions. The
-first update runs the old updater, which cannot install targets introduced by
-the new version. Check client hook trust and use `am doctor` if activation fails.
+Installations of v0.0.14 and older cannot update themselves to this release:
+re-run the default one-line command once. The verified binary adopts the
+existing installation, checks each recorded owned target against its receipt
+before replacing it and refuses without changes when a target was modified. The
+old runtime's source tree stays in place until `am uninstall`. Afterwards,
+`am update` updates from signed releases. Managed Git `--remote`/`--ref`
+channels are no longer installed or updated; re-run the bootstrap without them.
+Check client hook trust and use `am doctor` if activation fails.
 
-For an optional preview or custom install options, pass arguments to Bash:
+For an optional preview or custom install options, pass arguments to `sh`:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | bash -s -- --check
+curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | sh -s -- --check
 ```
 
-Remove `--check` to apply. From an existing complete checkout,
-`./install.sh` invokes the same installer.
+Remove `--check` to apply. From an existing checkout, `./install.sh` performs the
+same signed download; it does not install the checkout.
 
 Defaults include generic Agent Skills, Codex, Claude and OpenCode discovery.
 Use `--presets none` and repeated `--target-dir` arguments for custom discovery.
@@ -95,8 +102,9 @@ am --version
 
 If you choose a custom `--bin-dir`, use the receipt's `bin_dir` instead.
 Follow the [installation guide](skills/agent-memory/lifecycle/install/GUIDE.md)
-for ownership, recovery and explicit local/development sources. Development
-sources are separate from the managed channel and are not updated by the updater.
+for ownership, recovery and explicit local/development sources. A development
+source must contain a prebuilt `target/release/am` (the installer never runs
+Cargo); it is separate from the signed channel and is not updated by the updater.
 
 ### Explicit native omp binding
 
@@ -128,8 +136,9 @@ Current 18.19 qualification is still pending. Write-conflict continuation sessio
 are conservatively treated as forks: carried history is inherited and an
 unavailable final old view remains pending. Shutdown and own-manual-read behavior
 require current-producer qualification. The exact Linux 18.19 image is admitted
-by the same-clock guard after private Python 3.11/3.15 probes, but native wake
-and timing qualification remain open. These are release blockers, not accepted
+by the same-clock guard; its earlier private probes predate the Rust runtime and
+do not qualify it, and native wake and timing qualification remain open. These
+are release blockers, not accepted
 reductions in coverage.
 
 For a qualifying full read of the receipt-owned AM manual, the omp learning
@@ -205,26 +214,13 @@ am update --check
 ```
 
 The signed default follows the latest stable GitHub Release. It verifies the
-pinned publisher signature and complete artifact identity before activation;
-unsigned downloads are refused. The managed runtime is independent of your
-project checkouts. Explicit custom Git sources retain their recorded branch and
-fast-forward policy; development sources remain operator-selected. See the [update guide](skills/agent-memory/lifecycle/update/GUIDE.md)
+pinned publisher signature, the separately signed `am` binary for this host and
+the complete artifact identity before activation; unsigned downloads are
+refused. The managed runtime is independent of your project checkouts. Signed
+releases are the only update channel: a managed Git channel or an installation
+from v0.0.14 or older refuses with guidance to re-run the bootstrap, and
+development sources remain operator-selected. See the [update guide](skills/agent-memory/lifecycle/update/GUIDE.md)
 for source checks, retries and recovery.
-
-If you installed before `am` was introduced, run this one-time transition:
-
-```sh
-agent-memory update && agent-memory install
-```
-
-The shipped older updater upgrades the runtime first; the new installer then
-adds the owned `am` command. Afterward, use `am update`. An unrelated existing
-`am` is preserved and reported instead of replaced.
-
-An already-running v0.0.2 updater cannot authenticate its first transition.
-The new updater reports that activation as legacy unsigned; the next verified
-update adopts the signed release. Re-running the trusted one-line installer
-verifies its candidate before activation.
 
 The repeated default one-line installer also performs the guarded update and
 refreshes owned commands. Default install/update/uninstall and diagnostic output
@@ -256,13 +252,22 @@ Use `am version`, `am status` and `am doctor`
 for diagnostics. If a runtime transaction was interrupted, use
 `am recover` and inspect its result before retrying the operation.
 
-If the installed command is unavailable, run recovery from a trusted complete
-checkout kept outside the managed installation targets:
+If the installed command is unavailable, download the signed `am` binary for
+this host, verify it with the allowed signer pinned in `install.sh`, and run it
+directly from a private directory:
 
 ```sh
-cd /path/to/agent-memory
-python3 -I skills/agent-memory/scripts/installer.py recover
+target=aarch64-apple-darwin  # or x86_64-unknown-linux-musl, aarch64-unknown-linux-musl
+base=https://github.com/robertelee78/agent-memory/releases/latest/download
+curl -fsSLO https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh
+curl -fsSLO "$base/am-$target" && curl -fsSLO "$base/am-$target.sshsig"
+sed -n "s/^AM_ALLOWED_SIGNERS='\(.*\)'\$/\1/p" install.sh > allowed-signers
+ssh-keygen -Y verify -f allowed-signers -I release@agent-memory \
+  -n agent-memory.release-binary -s "am-$target.sshsig" < "am-$target" &&
+  chmod 700 "am-$target" && "./am-$target" recover
 ```
+
+The same verified binary runs `status`, `doctor` and `uninstall`.
 
 See the [diagnostics guide](skills/agent-memory/lifecycle/diagnose/GUIDE.md)
 for interpreting findings and choosing a repair.
@@ -328,22 +333,25 @@ workflow. Release milestones show the current approved and planned work.
 The [installed common CLI](skills/agent-memory/maintain/cli/GUIDE.md) exposes
 identity, initialization, qualified recall, capture/admission, checkpointing,
 governance, consolidation and memory-only publication/refresh through the same
-portable helpers. The skill performs the evidence and semantic judgments at
+`am` binary. The skill performs the evidence and semantic judgments at
 natural turn boundaries; `am boundary` invokes the existing refresh
 protocol. The [file-only workflow](skills/agent-memory/offline/GUIDE.md) remains
-available when the command and helpers are absent.
+available when the command is absent.
 
-Run focused public-interface checks from a checkout with Python 3.11+ and Git.
-Use disposable test worlds and retain the source revision and results. Routine
-qualification runs locally on the available macOS and Linux machines; each test
-invocation should reasonably finish within 10–15 minutes. Run a broader or
-hosted matrix only when its coverage is needed.
+Run focused public-interface checks from a checkout with a Rust toolchain and
+Git. Use disposable test worlds and retain the source revision and results.
+Routine qualification runs locally on the available macOS and Linux machines;
+each test invocation should reasonably finish within 10–15 minutes. Run a
+broader or hosted matrix only when its coverage is needed.
 
-`scripts/test.sh` runs the registered offline suites; `scripts/test.sh --release`
-applies the historical complete gate. These full commands can take
-longer than the routine time limit and are not required for every release. See
-the [test gate guide](docs/testing/README.md) for their isolation and receipt
-format. Release evidence must identify the checks actually run and any limits.
+`cargo test --features dev-tools` runs the Rust contract tests; run it on each
+release triple (`aarch64-apple-darwin`, and `--target x86_64-unknown-linux-musl`
+or `--target aarch64-unknown-linux-musl` on Linux). Add `--test NAME` for one
+suite. `cargo run --features dev-tools --bin am-dev -- obligations summary`
+reports how the frozen baseline obligations in
+`tests/obligations/python-baseline-v1.json` are ported. See the
+[test guide](docs/testing/README.md) for isolation and evidence. Release
+evidence must identify the checks actually run and any limits.
 The [portable lifecycle matrix](docs/contracts/portable-lifecycle.md) connects
 the complete lifecycle requirements to real installed-command and fault cases.
 
@@ -351,7 +359,7 @@ The [bank router contract](docs/contracts/bank-router.md) defines the initial
 shared Markdown layout and its read-only render/validate helper. The [portable installer](docs/contracts/installation.md)
 provides preview, owned activation, repeated installation and bootstrap recovery.
 The [managed updater](docs/contracts/runtime-updates.md) provides read-only
-channel checks, staged fast-forward activation and recoverable retries. The
+signed-release checks, staged verified activation and recoverable retries. The
 [runtime uninstaller](docs/contracts/runtime-uninstall.md) preserves project
 memory and user edits; a separate inventory-bound, explicitly confirmed purge
 deletes only one selected local bank. Read-only `version`, `status` and `doctor`
@@ -433,8 +441,8 @@ tracking is kept distinct from publication and refreshed shared memory.
 The [runtime diagnostics](docs/contracts/runtime-diagnostics.md) provide
 `am version`, `status --repo PATH`, and `doctor --repo PATH`.
 They report measured runtime identity, quick setup state and deeper ownership/
-bank checks without initializing or repairing data. The portable
-`scripts/diagnose.py` helper works when the installed wrapper is broken.
+bank checks without initializing or repairing data. A separately downloaded and
+verified `am` binary runs them when the installed command is broken.
 
 The [installed layout contract](docs/contracts/installed-layout.md) ties the
 lifecycle commands to all supported discovery targets and separates runtime,

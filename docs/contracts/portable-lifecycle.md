@@ -80,31 +80,36 @@ expected failures remain unchanged.
 
 ## Run and retain evidence
 
-From a checkout with Python 3.11+ and Git:
+From a checkout with a Rust toolchain and Git, on each release triple
+(`aarch64-apple-darwin`, `x86_64-unknown-linux-musl`,
+`aarch64-unknown-linux-musl`):
 
 ```sh
-scripts/test.sh --release --json
+cargo test --offline --features dev-tools
 ```
 
-The [CI workflow](../../.github/workflows/contracts.yml) runs this same complete
-gate on Ubuntu and macOS with Python 3.11 and 3.15. It keeps JSON receipts,
-unittest/fault stderr, the actual interpreter/platform and checked-out commit/tree
-as artifacts even when a check fails. Each matrix cell must actually complete
-successfully; creating a workflow, starting a run or passing a different Python
-version is not a pass for that cell. Timeouts and failed runs remain evidence.
-Gate failures identify the active suite and stage, retain exception chains and
-include partial worker output when a timeout is followed by a collection error.
-A disposable-copy negative test verifies that this combination remains a failure
-with its original diagnostic evidence.
+The baseline registered-suite gate, its JSON receipts and the matrix aggregation
+described above are obligations recorded in
+`tests/obligations/python-baseline-v1.json`; `am-dev obligations summary`
+(built with `--features dev-tools`) reports their port status. A test command
+that passes does not by itself discharge an unported obligation.
+
+The manually dispatched [CI workflow](../../.github/workflows/contracts.yml)
+runs `cargo fmt --check` and `cargo test --locked` on `aarch64-apple-darwin`,
+`x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu` runners, and builds
+and checks the static `x86_64-unknown-linux-musl` and
+`aarch64-unknown-linux-musl` release binaries, retaining that unsigned output.
+Each matrix cell must actually complete successfully; creating a workflow or
+starting a run is not a pass for that cell. Timeouts and failed runs remain
+evidence.
 
 The workflow checks out code without persisting its repository credential and
-pins the official [checkout](https://github.com/actions/checkout),
-[Python setup](https://github.com/actions/setup-python) and
+pins the official [checkout](https://github.com/actions/checkout) and
 [artifact upload](https://github.com/actions/upload-artifact) actions to
-release commits. CI orchestration obtains source/interpreters and uploads logs;
-the actual product tests remain offline inside credential-free disposable
-Worlds. No live client configuration, real developer bank or provider account is
-used by those tests.
+release commits. CI orchestration obtains source and the Rust toolchain and
+uploads build output; the product tests remain offline inside credential-free
+disposable Worlds. No live client configuration, real developer bank or provider
+account is used by those tests.
 
 A complete contract receipt does not publish a release or replace milestone
 acceptance. The multi-machine scenario has its own story, and the final release

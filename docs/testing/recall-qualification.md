@@ -1,17 +1,22 @@
 # Source-bound recall qualification (#206)
 
-These controllers implement the approved B4/B5 protocol. Their presence is not a
-performance, quality, memo-retention, Linux, Python-matrix or release acceptance
-result. Run them only in the integration owner's exclusive host slot: timing,
-model qualification and #209 stress must not overlap. The historical `33c95bb`
-measurements are diagnostics, never the integrated comparison denominator.
+These controllers implement the approved B4/B5 protocol. They have no Rust port:
+each is an unported evaluation obligation in
+`tests/obligations/python-baseline-v1.json`, so the protocol below cannot yet run
+against the Rust `am`, and earlier observations qualify only the superseded
+baseline runtime. Their presence is not a performance, quality, memo-retention,
+Linux, platform-matrix or release acceptance result. Run them only in the
+integration owner's exclusive host slot: timing, model qualification and #209
+stress must not overlap. The historical `33c95bb` measurements are diagnostics,
+never the integrated comparison denominator.
 
 ## Environment and immutable builds
 
-Use clean, ordinary Git clones, Git with local-file transport, and CPython 3.11
-and 3.15 on the supported macOS and Linux host classes. The controllers and
-public fixtures use the standard library; no graph, vector store, service or
-model is needed for navigation, refresh or memo instrumentation. Semantic
+Use clean, ordinary Git clones, Git with local-file transport, and the release
+triples (`aarch64-apple-darwin`, `x86_64-unknown-linux-musl`,
+`aarch64-unknown-linux-musl`) on the supported macOS and Linux host classes. No
+graph, vector store, service or model is needed for navigation, refresh or memo
+instrumentation. Semantic
 quality alone needs the permitted real invoking model, its executable,
 credentials/normal permissions and recorded provider usage/cost. A missing
 provider or platform remains unqualified, not a simulated pass. Allow enough
@@ -20,23 +25,11 @@ memo inputs. Per-child refresh deadlines default to 7,200 seconds; whole matrix
 children default to 172,800 seconds. These are supervision limits, not targets.
 
 After freezing the final integrated source (including controller changes), run
-from that clean checkout. Select **one** interpreter/environment per invocation;
-use new output roots for every platform/Python cell. All paths below are actual
-controller arguments; set `ROOT` to the final clean checkout and `EVIDENCE` to a
-new external private directory, not a bank or source directory.
-
-```sh
-ROOT="$(pwd -P)"
-PYTHON=python3.11
-EVIDENCE=/tmp/am206-macos-py311
-mkdir -m 700 "$EVIDENCE"
-"$PYTHON" -B "$ROOT/scripts/evaluations/recall_comparison_builds.py" \
-  --root "$ROOT" --out "$EVIDENCE/builds"
-```
-
-Repeat with `PYTHON=python3.15` and new macOS output; repeat both on Linux with
-new Linux output roots. Do not infer any of those cells from another host or
-interpreter. `builds/builds.json` retains full commit/tree and per-file source
+from that clean checkout. Select **one** platform cell per invocation and use new
+output roots for every cell. The root is the final clean checkout; evidence goes
+to a new external private directory created with mode 0700, not a bank or source
+directory. Do not infer any cell from another host or target. The comparison
+builder's `builds/builds.json` retains full commit/tree and per-file source
 inventories, actual public artifact inspection results/digests, dependency
 versions and exact reverse patches. The builder creates independent clones:
 
@@ -50,14 +43,9 @@ outside the three reviewed #206 runtime paths must be byte/mode-identical. In
 particular it never removes #244/#249 dependencies or copies the repair into A.
 The controllers, frozen labels and every non-#206 feature remain identical. A
 source/inventory change invalidates the evidence and requires a new frozen
-comparison; do not carry forward old ratios. Before any local helper import,
-controllers reject bytecode anywhere under `tests/`, `scripts/` and the portable
-pack in the controller checkout; each target build receives the same check
-before fixture imports or source binding. Linked `__pycache__` directories are
-also rejected, including ignored, dangling or cyclic links, without traversing
-them: a matching stale helper cache can otherwise be read before source binding.
-`-B` alone only prevents writes and does not authenticate execution. Caches and
-links are never deleted or repaired: use a new bytecode-free source-equivalent
+comparison; do not carry forward old ratios. Each target build is checked
+against its frozen source binding before fixture execution. Stale build
+artifacts and links are never deleted or repaired: use a new source-equivalent
 clone instead.
 
 Tracked symlinks are permitted only as archived data under
@@ -75,13 +63,8 @@ hashes use those same verified bytes, not a later reread.
 ## Complete serial commands
 
 With the host slot and a permitted exact model selected, the complete controller
-runs all sizes, builds and stages serially:
-
-```sh
-"$PYTHON" -B "$ROOT/scripts/evaluations/recall_qualification_matrix.py" complete \
-  --builds "$EVIDENCE/builds/builds.json" --out "$EVIDENCE/complete" \
-  --model "$QUALIFICATION_MODEL" --timeout 7200 --controller-timeout 172800
-```
+runs all sizes, builds and stages serially, with the 7,200-second per-child and
+172,800-second controller limits above, for `QUALIFICATION_MODEL`.
 
 `QUALIFICATION_MODEL` is the integration owner's explicitly selected real model
 identifier/version, not a role or an inferred provider substitute. By default
@@ -138,27 +121,9 @@ parity enforce these flags; old observations without exact-request replay
 evidence are not retroactively passing qualification.
 
 The same stages can be invoked individually, in serial host slots, without
-repeating previously retained observations:
-
-```sh
-"$PYTHON" -B "$ROOT/scripts/evaluations/recall_qualification_matrix.py" performance \
-  --builds "$EVIDENCE/builds/builds.json" --out "$EVIDENCE/performance"
-"$PYTHON" -B "$ROOT/scripts/evaluations/recall_refresh_qualification.py" memo \
-  --builds "$EVIDENCE/builds/builds.json" --out "$EVIDENCE/memo" --count 1000
-"$PYTHON" -B "$ROOT/scripts/evaluations/recall_qualification_matrix.py" safety \
-  --builds "$EVIDENCE/builds/builds.json" --out "$EVIDENCE/safety"
-"$PYTHON" -B "$ROOT/scripts/evaluations/recall_quality_qualification.py" semantic \
-  --builds "$EVIDENCE/builds/builds.json" --out "$EVIDENCE/semantic" \
-  --model "$QUALIFICATION_MODEL"
-```
-
-For a standalone public refresh matrix:
-
-```sh
-"$PYTHON" -B "$ROOT/scripts/evaluations/recall_refresh_qualification.py" refresh \
-  --builds "$EVIDENCE/builds/builds.json" --out "$EVIDENCE/refresh-50000" \
-  --count 50000 --samples 5 --timeout 7200
-```
+repeating previously retained observations: performance, memo (1,000 operations),
+safety and semantic (with `QUALIFICATION_MODEL`). A standalone public refresh
+matrix uses 50,000 records, five samples and the 7,200-second child limit.
 
 A 1k or 10k refresh invocation is runnable diagnostic evidence, never the 50k
 acceptance gate. B4's 1k corpus is not a reduced session cohort: it still executes
@@ -168,15 +133,15 @@ Counts derive only from completed public operations, never planned iterations.
 
 ## What is measured and retained
 
-Navigation reuses `recall_navigation_qualification.py` and the existing authored
+Navigation reuses the baseline navigation-qualification controller and the existing authored
 `semantic_navigation_fixture.corpus`: actual public start/node/node/read,
 complete workflow wall, each child wall, first empty-derived-state observation
 and five sequential measured samples at 1k/10k/50k. There is no OS-cache flush or
 filesystem-cold claim. Known-path timing is not semantic quality.
 
-Refresh reuses `recall_refresh_smoke.completed_request`, the existing public
-sharing/recovery fixtures, semantic conflict fixture and the full retained
-`/tmp/agent-memory-v15-readiness/206-refresh-50000-v5.py` protocol (SHA-256
+Refresh reuses the recall-refresh smoke's completed request, the existing public
+sharing/recovery fixtures, semantic conflict fixture and the protocol recorded in
+the retained historical file `/tmp/agent-memory-v15-readiness/206-refresh-50000-v5.py` (SHA-256
 `39398f0dd1353ac5b0a02bef4549ae2a264bb577d126b6c864a0086d8586ccf0`). Its fixture
 is the same authored semantic-navigation corpus, with the real disposable
 canonical authority retained. This is not an invented small refresh facade.
@@ -192,7 +157,7 @@ Four conditions run under A/B/C on the **same restored frozen World**:
 2. Unchanged inventory with catalog load and publication disabled by the existing
    public `AGENT_MEMORY_NO_RECALL_CATALOG=1` control.
 3. Actual peer import invalidating the prior inventory. Recall uses the existing
-   `daily_use.py` non-discovery exact-ID request shape; a new actual discovery
+   daily-use controller's non-discovery exact-ID request shape; a new actual discovery
    operation runs after import. No pre-import trace is reused or invented.
 4. Real contradictory local/landed source claims retained as held conflict, with
    independently qualified guidance returned and disputed paths withheld.
@@ -228,8 +193,8 @@ rather than replaced by production impersonation or a fake identity. Corpus,
 Git timestamps, round order, imports and conflict labels are deterministic;
 paired operations use the exact same original bytes and operation order.
 
-The disposable `sys.setprofile` observer sees the **original executing**
-`validation_memo.Memo.checked` frames for `bank-format` and `security-scan`. It
+The disposable observer sees the **original executing** validation-memo checks
+(`src/validation_memo.rs`) for `bank-format` and `security-scan`. It
 never patches the runtime, makes synthetic validation calls, changes catalog
 engine function fingerprints or invents hits. Each call/return retains the
 namespace, complete typed key (including digest bytes and maximum/type keying),
@@ -265,12 +230,11 @@ The safety stage executes the full existing recall/memo/discovery,
 refresh/invalidation/conflict/recovery/security, multi-machine, and final
 #244 layout/frontier/publication/retention modules in disposable Worlds, not a
 narrowed test selection. It consumes actual verified-hold fixture interfaces
-from `tests/layout_recovery_fixtures.py` and
-`test_layout_recovery_frontier.py`; missing final integrated modules fail the
-stage rather than creating an empty frontier or v1 comparison fallback. Final
-integration's catalog-enabled/disabled hold/frontier and forced invalidation
-cells remain obligations of those public modules, not inferred from timing.
-The matrix receipt is explicitly one platform/interpreter only. Independent
-review, the combined native macOS/Linux 3.11/3.15 matrix and release gates are
-still required before acceptance; no cross-platform result is fabricated by
-these controllers.
+from the layout-recovery fixtures and frontier contract; missing final integrated
+modules fail the stage rather than creating an empty frontier or v1 comparison
+fallback. Final integration's catalog-enabled/disabled hold/frontier and forced
+invalidation cells remain obligations of those public modules, not inferred from
+timing. The matrix receipt is explicitly one platform cell only. Independent
+review, the combined native macOS/Linux matrix across the release triples and
+release gates are still required before acceptance; no cross-platform result is
+fabricated by these controllers.

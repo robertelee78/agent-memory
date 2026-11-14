@@ -2,7 +2,7 @@
 
 Work key: `robertelee78/agent-memory:ADR-0005:consolidation`.
 The portable [guide](../../skills/agent-memory/consolidation/GUIDE.md) documents
-the packaged `consolidate_learning.py` preview/apply interface. The agent judges
+the `am compact` plan/preview/apply interface (`src/consolidation.rs`). The agent judges
 meaning; the helper binds that judgment to observed sources, qualified capture,
 actual Git context and the complete recoverable canonical delta.
 
@@ -19,7 +19,7 @@ developer's conflicting claim produces a recommendation to clarify, never an
 automatic message. Distinct higher-order patterns remain proposals. Procedural
 captures require their separate explicit promotion review.
 
-The public copied-pack suite `tests/contracts/test_consolidation.py` exercises
+The public Rust suite `tests/t2_consolidation.rs` exercises
 duplicates with independent developer/session origins, primary selection that
 differs from lexical order, new capture provenance, no-op convergence and replay,
 unknown/mismatched conditions, valid-time and trust differences, contradictory

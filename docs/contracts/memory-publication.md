@@ -1,7 +1,7 @@
 # Memory-only publication
 
-The public portable helper is `skills/agent-memory/scripts/publish_memory.py`;
-`scripts/publish_memory.py` is the checkout entrypoint. The
+The public command is `am publish` (`src/memory_publication.rs`); the
+`agent-memory` compatibility command accepts the same arguments. The
 [operation guide](../../skills/agent-memory/sharing/publication/GUIDE.md) defines
 agent responsibilities and pending/recovery behavior.
 

@@ -1,14 +1,14 @@
 # Runtime and repository diagnostics
 
-The installed CLI and the portable `scripts/diagnose.py` provide `version`,
-`status` and `doctor`. All emit `agent-memory/diagnostic-result-v1` JSON;
-`--json` is accepted explicitly. Source helpers remain available when an owned
-wrapper or managed source is missing. Diagnostics perform no setup, network,
-repair, audit-log or canonical-memory writes.
+The `am` binary provides `version`, `status` and `doctor` (`src/diagnostics.rs`).
+All emit `agent-memory/diagnostic-result-v1` JSON; `--json` is accepted
+explicitly. When an owned command link or the runtime is missing, a separately
+downloaded and verified `am` binary runs the same diagnostics. Diagnostics
+perform no setup, network, repair, audit-log or canonical-memory writes.
 
-`version` measures the executing portable artifact's version, digest, source
+`version` measures the executing artifact's version, digest, source
 path, Git revision and cleanliness, alongside the external receipt's recorded
-installation mode, channel/ref, schema and source. An outside helper can have a
+installation mode, channel/ref, schema and source. An outside binary can have a
 different executing digest than the recorded installation. A digest is an
 identity measurement, not a signature or a runtime acceptance claim.
 
@@ -81,8 +81,8 @@ confirmation and deletion authorization; runtime recovery and doctor cannot
 authorize it. Missing installation/identity/bank setup does not prevent useful
 read-only diagnostics.
 
-`tests/contracts/test_runtime_diagnostics.py` invokes real helpers and installed
-commands in disposable homes. It covers healthy and modified installations,
+`tests/t2_diagnostics.rs` produces each report in a child process whose whole
+environment is a disposable World. It covers healthy and modified installations,
 source/channel drift, corrupt ownership, locks and interruption, bank format and
 permissions, stale projections, credential redaction and persistent-state
 preservation. Complete cross-platform lifecycle release verification remains

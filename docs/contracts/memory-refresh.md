@@ -1,6 +1,6 @@
 # Landed-memory refresh
 
-The portable `scripts/refresh_memory.py` entrypoint supports `inspect`, `prepare`
+The `am refresh` command (baseline module `memory_refresh`) supports `inspect`, `prepare`
 and `apply`. The [operation guide](../../skills/agent-memory/sharing/refresh/GUIDE.md)
 defines automatic turn-boundary use and pending/recovery responsibilities.
 

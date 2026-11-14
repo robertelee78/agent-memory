@@ -31,7 +31,7 @@ is not itself a bank. The fence still checks shared-source compatibility and
 excludes concurrent source observers. Malformed-layout recovery continues to
 use the separate raw locator.
 
-`sharing_boundary.py --repo` inspects canonical source safety, Git index modes,
+`am sharing --repo` (`src/sharing_boundary.rs`) inspects canonical source safety, Git index modes,
 ignore rules and the selected remote/default-branch observation without writes
 or networking. It names only eligible Markdown and reports blockers for ignored
 or untracked memory, tracked excluded artifacts and unresolved or unsafe state.

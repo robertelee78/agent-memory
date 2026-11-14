@@ -7,14 +7,15 @@ canonical files. Their separate admission, deletion, identity and evidence rules
 still apply. This mechanical helper does not authorize a remembered instruction,
 prove a developer's identity, publish Git changes, or provide cross-file atomicity.
 First bank creation is owned by the initialization operation; this helper requires
-an existing valid bank and has no installed CLI or developer-registry prerequisite.
+an existing valid bank and has no developer-registry prerequisite. It runs as
+`am transaction` (`src/bank_transactions.rs`).
 
 ## Preview and apply
 
 ```sh
-python3 -I scripts/bank_transactions.py preview --repo /path/to/repository \
+am transaction preview --repo /path/to/repository \
   --operation compact --files /tmp/desired-bank-files.json
-python3 -I scripts/bank_transactions.py apply --proposal /tmp/transaction.json
+am transaction apply --proposal /tmp/transaction.json
 ```
 
 The files input is a JSON object mapping every desired canonical relative
@@ -68,20 +69,20 @@ sensitive artifacts under its separate erasure contract.
 Readers and normal mutations MUST stop when the transaction marker is present.
 Deleting an index or state directory does not repair an interrupted bank.
 
-1. Inspect a remaining bank lock with `bank_writes.py recover`. Apply its reviewed
+1. Inspect a remaining bank lock with `am writes recover`. Apply its reviewed
    proposal only when the same-host owner is provably gone. Live, foreign or
    unknown locks require operator inspection; age is not proof.
 2. Choose a direction explicitly and inspect a read-only proposal:
 
    ```sh
-   python3 -I scripts/bank_transactions.py recover --repo /path/to/repository --mode finish
+   am transaction recover --repo /path/to/repository --mode finish
    # or --mode rollback
    ```
 
 3. Apply that exact proposal:
 
    ```sh
-   python3 -I scripts/bank_transactions.py recover --repo /path/to/repository \
+   am transaction recover --repo /path/to/repository \
      --proposal /tmp/recovery.json
    ```
 

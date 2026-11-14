@@ -94,13 +94,13 @@ operation, not automatic template repair.
 The [observed-write helper](observed-writes.md) supplies the mechanical baseline:
 
 ```sh
-python3 -I scripts/bank_writes.py inspect --repo /path/to/repository
-python3 -I scripts/bank_writes.py preview --repo /path/to/repository \
+am writes inspect --repo /path/to/repository
+am writes preview --repo /path/to/repository \
   --path activeContext.md --content reviewed-context.md > proposal.json
-python3 -I scripts/bank_writes.py apply --proposal proposal.json
+am writes apply --proposal proposal.json
 ```
 
-These are the same packaged scripts used by the isolated walkthrough, not a
+These are the same `am writes` commands used by the isolated walkthrough, not a
 prerequisite for the manual edit itself. Inspect/preview write no bank or runtime
 files. Apply of a stale proposal MUST refuse and preserve the manual bytes;
 starting a fresh preview after reading valid changes MAY proceed through the

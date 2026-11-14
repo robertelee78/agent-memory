@@ -62,9 +62,9 @@ initialize, bind, repair, remove caches, recover a journal, or create audit stat
 
 Unix trust checks cover ordinary paths, trusted ownership, relevant ancestor/write
 permissions and private lifecycle state. They neither audit all platform ACLs nor
-authenticate Python that is already executing. If an installed verifier may have
-been exposed, inspect/recover using a separately trusted complete outside helper;
-the affected helper's own success report cannot authenticate itself.
+authenticate an `am` binary that is already executing. If an installed verifier
+may have been exposed, inspect/recover using a separately downloaded and verified
+`am` binary; the affected binary's own success report cannot authenticate itself.
 
 Install/update preserve modified owned copies/wrappers and unrelated client text,
 refuse wrong recorded channels, unsupported/downgrade candidates, non-fast-forward

@@ -2,8 +2,8 @@
 
 The portable [security guide](../../skills/agent-memory/security/GUIDE.md)
 defines source classification, project authorization, bounded scans, quarantine,
-separate procedure-approval eligibility and private content-free audit. Checkout
-and copied pack expose the same `scripts/security_policy.py`.
+separate procedure-approval eligibility and private content-free audit.
+`am security-policy` runs the evaluator (`src/security.rs`).
 
 The evaluator distinguishes current user statements, assistant claims, tool
 observations, external content and explicitly verified repository source bytes.

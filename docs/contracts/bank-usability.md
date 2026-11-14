@@ -49,7 +49,7 @@ single-file update without claiming mediated guarantees.
 The existing read-only helper can check the structural baseline:
 
 ```sh
-python3 -I scripts/bank_contract.py validate --repo /path/to/repository
+am bank validate --repo /path/to/repository
 ```
 
 The helper reports routes, scope and lifecycle, writes nothing and does not

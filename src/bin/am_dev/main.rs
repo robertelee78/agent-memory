@@ -51,7 +51,7 @@ fn entry() -> Result<agent_memory::codec::json::Value> {
     if args.next().as_deref() != Some("release") {
         let usage = concat!(
             "Usage: am-dev release build|publish --private-key PATH ",
-            "--binary TRIPLE=PATH (four times) [--output PATH | ",
+            "--binary TRIPLE=PATH (once per release target) [--output PATH | ",
             "--notes-file PATH --integration-branch integrate/NAME] [--root PATH]"
         );
         return Err(ContractError::new(usage).into());

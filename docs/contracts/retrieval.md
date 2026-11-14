@@ -1,7 +1,7 @@
 # Project-bound baseline retrieval
 
 The portable [recall guide](../../skills/agent-memory/retrieval/GUIDE.md) teaches
-the public `retrieve.py --repo … --request …` operation. It resolves the actual
+the public `am search --repo … --request …` operation (`src/retrieval.rs`). It resolves the actual
 bank, inherited scope and observed Git context before ranking typed current
 records, using exact IDs/paths or ordinary text without optional stores. Active
 lifecycle, validity, trust, visibility, type, applicability and canonical

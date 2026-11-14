@@ -2,7 +2,7 @@
 
 The [portable reconciliation guide](../../skills/agent-memory/sharing/semantic/GUIDE.md)
 separates actual source observation, agent meaning judgments, format/currentness
-guards, output candidate banks and applied publication/refresh. `reconcile_memory.py`
+guards, output candidate banks and applied publication/refresh. `am semantic` (`src/semantic_sharing.rs`)
 provides inspect/review/check operations and never writes canonical memory or
 pushes a branch. The calling publication/refresh operation must recheck complete
 source/Git/scope pins, apply repository/security rules and read back actual writes.

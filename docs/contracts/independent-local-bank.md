@@ -3,8 +3,8 @@
 One project's Git-tracked Markdown is useful without a federation catalog,
 knowledge graph, vector store, daemon, network service, installed harness or
 cross-project export. The [offline guide](../../skills/agent-memory/offline/GUIDE.md)
-remains the plain-file route. The portable initialization, checkpoint, retrieval
-and validation helpers run directly from the copied package with Python and Git.
+remains the plain-file route. The `am` initialization, checkpoint, retrieval
+and validation commands need only the static binary and Git.
 Actual local developer/project binding and private write receipts are separate
 from a federation service; they do not create personal memory.
 

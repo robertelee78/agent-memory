@@ -65,14 +65,16 @@ update switches and verifies every owned copy. Installation, update and ordinary
 uninstall retain canonical memory, project Git/index state, local attribution
 and audit evidence, derived files and unrelated client settings/skills. Removal
 decommissions the runtime receipt but retains it and its backup evidence outside
-the deleted source; a trusted outside helper can reinstall against the same bank.
+the deleted runtime; re-running the trusted bootstrap can reinstall against the
+same bank.
 Data purge remains a distinct exact-preview and explicitly confirmed operation.
 
-`tests/contracts/test_installed_layout.py` exercises actual public commands in
-temporary homes and file-only Git channels. Its link/copy scenarios verify every
+The installed-layout public obligations (ledger
+`tests/obligations/python-baseline-v1.json`) exercise actual public commands in
+temporary homes and local release channels. Their link/copy scenarios verify every
 default client plus a custom client, two custom-only targets and no-client mode;
 they inspect physical targets and per-client artifact digests. The all-client
-scenario runs the installed lifecycle, a real fast-forward update, removal and
+scenario runs the installed lifecycle, a real update, removal and
 reinstall while preserving an existing bank, a real generated reference
 projection, private identity/audit state and staged unrelated source. Its opaque
 cache fixture verifies non-ownership, not an optional cache backend. It also

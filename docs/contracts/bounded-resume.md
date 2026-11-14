@@ -8,7 +8,7 @@ project map and confidently relevant task/component context; detailed records
 remain on demand. Whole-bank mechanical validation does not imply whole-bank
 prompt loading or constant I/O cost.
 
-The copied-pack public suite `tests/contracts/test_bounded_resume.py` runs three
+The bounded-resume public obligations (ledger `tests/obligations/python-baseline-v1.json`) cover three
 representative workflows: select only an API task's context while omitting
 unrelated details and optional stores; retain all hard gates during exact lookup;
 and keep a router-only ambiguous-task start separate from explicitly untrusted

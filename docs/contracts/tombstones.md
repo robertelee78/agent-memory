@@ -32,8 +32,8 @@ that a caller generated rather than fabricated a UUID.
 ## Format and placement
 
 ```sh
-python3 -I scripts/tombstones.py render --input /tmp/deletion-metadata.json
-python3 -I scripts/tombstones.py validate --file /path/to/tombstone.md
+am tombstones render --input /tmp/deletion-metadata.json
+am tombstones validate --file /path/to/tombstone.md
 ```
 
 Both commands write nothing. Render returns the proposed bytes and canonical
@@ -58,7 +58,7 @@ contracts. Raw file access remains governed by repository/OS permissions.
 ## Rebuild guard
 
 ```sh
-python3 -I scripts/tombstones.py filter --repo /path/to/repository \
+am tombstones filter --repo /path/to/repository \
   --input /tmp/source-projection.json
 ```
 

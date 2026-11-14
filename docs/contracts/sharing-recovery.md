@@ -1,7 +1,7 @@
 # Git sharing recovery foundation
 
 The [portable recovery guide](../../skills/agent-memory/sharing/recovery/GUIDE.md)
-describes the public `sharing_recovery.py` operations. The complete bank remains
+describes the public `am exchange` operations (`src/sharing_recovery.rs`). The complete bank remains
 canonical Markdown; no retry cursor, private receipt or shared mutable database
 is needed to read it. Fresh server observations pin the actual configured
 default branch and selected remote, without changing feature HEAD, index,
