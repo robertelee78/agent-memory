@@ -1088,6 +1088,7 @@ fn install_only(root: &Path, mode: &str) -> (PathBuf, Value, stream::FrameProof)
     )
     .unwrap()
     .unwrap();
+    assert_eq!(text(&receipt, "schema"), "agent-memory/install-receipt-v3");
     assert_eq!(
         turn_sources::encoded(get(&receipt, "omp_binding")).unwrap(),
         turn_sources::encoded(get(get(&preview, "omp"), "binding")).unwrap()
@@ -1184,7 +1185,7 @@ fn pair(witness: &omp_installation::OwnedManual) -> (Value, Value) {
     (invocation, result)
 }
 
-// pack-surface obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_exact_carrier_and_unforgeable_witness
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_exact_carrier_and_unforgeable_witness
 
 #[test]
 fn exact_owned_carrier_and_unforgeable_witness() {
@@ -1247,7 +1248,7 @@ fn exact_owned_carrier_and_unforgeable_witness() {
     });
 }
 
-// pack-surface obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_malformed_carriers_and_invocations_decline
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_malformed_carriers_and_invocations_decline
 
 #[test]
 fn malformed_owned_carriers_and_invocations_decline() {
@@ -1396,7 +1397,7 @@ fn malformed_owned_carriers_and_invocations_decline() {
     });
 }
 
-// pack-surface obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_witness_declines_changed_receipt_file_and_permissions
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_witness_declines_changed_receipt_file_and_permissions
 
 #[test]
 fn manual_witness_declines_changed_receipt_bytes_and_modes() {
@@ -1443,7 +1444,7 @@ fn manual_witness_declines_changed_receipt_bytes_and_modes() {
     );
 }
 
-// pack-surface obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_link_witness_declines_retargeted_owned_link
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_link_witness_declines_retargeted_owned_link
 
 #[test]
 fn link_witness_declines_retargeted_owned_link() {
@@ -1467,7 +1468,7 @@ fn link_witness_declines_retargeted_owned_link() {
     });
 }
 
-// pack-surface obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_historical_annotation_is_closed_and_installation_independent
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_historical_annotation_is_closed_and_installation_independent
 
 #[test]
 fn historical_annotation_is_closed_and_installation_independent() {
@@ -2480,7 +2481,7 @@ fn saved_root_changes_and_implicit_all_removal_refuse() {
     );
 }
 
-// pack-surface obligation: tests/contracts/test_omp_boundary.py::ExplicitNativeOwnership.test_explicit_native_install_applies_preview_for_copy_and_link
+// obligation: tests/contracts/test_omp_boundary.py::ExplicitNativeOwnership.test_explicit_native_install_applies_preview_for_copy_and_link
 
 #[test]
 fn explicit_native_copy_install_applies_reviewed_preview() {
@@ -2491,7 +2492,7 @@ fn explicit_native_copy_install_applies_reviewed_preview() {
         },
     );
 }
-// pack-surface obligation: tests/contracts/test_omp_boundary.py::ExplicitNativeOwnership.test_explicit_native_install_applies_preview_for_copy_and_link
+// obligation: tests/contracts/test_omp_boundary.py::ExplicitNativeOwnership.test_explicit_native_install_applies_preview_for_copy_and_link
 
 #[test]
 fn explicit_native_link_install_applies_reviewed_preview() {
@@ -2680,6 +2681,13 @@ fn held_fixture(root: &Path) -> HeldFixture {
         ("operation_id", string(&operation)),
         ("proposal_id", string(&proposal_id)),
         ("scope_context", scope.clone()),
+        (
+            "author",
+            object([
+                ("harness", string("custom")),
+                ("session", string("fixture-proposal")),
+            ]),
+        ),
         (
             "manifest_sha256",
             string(&transport::digest(&manifest).unwrap()),
@@ -3712,6 +3720,10 @@ fn native_operation_child() {
     };
     let root = support::require_current_world().unwrap();
     agent_memory::cli::register_providers().unwrap();
+    if operation.starts_with("b3-") {
+        b3_operation(&root, &operation);
+        return;
+    }
     if operation.starts_with("registry-") {
         registry_operation(&root, &operation);
         return;
@@ -3944,6 +3956,10 @@ fn native_operation_child() {
             if invalid { None } else { Some(nonce) },
             &raw,
         );
+        if root.join("case-reuse-nonce").exists() {
+            write(&root.join("first-finished"), b"", 0o600);
+            wait_path(&root.join("allow-second"));
+        }
         if root.join("case-followup.json").exists() {
             let followup =
                 transport::read(&root.join("case-followup.json"), transport::MAX_PAYLOAD).unwrap();
@@ -3952,7 +3968,7 @@ fn native_operation_child() {
                     &mut coverage,
                     "REQUEST",
                     2,
-                    None,
+                    root.join("case-reuse-nonce").exists().then_some(nonce),
                     &turn_sources::encoded(&envelope(followup, if invalid { 1 } else { 2 }))
                         .unwrap(),
                 )
@@ -6617,11 +6633,16 @@ fn run_finite_child(root: &Path, f: &Fixture, request: Value, open_input: bool) 
         wire.extend(stream::encode_frame("FINAL",2,&decode(r#"{"last_attempt_seq":1,"refused_count":0,"last_event_ordinal":1,"transition":null}"#),None).unwrap());
         Box::new(std::io::Cursor::new(wire))
     };
-    let output = std::fs::File::create(root.join("finite-response-wire")).unwrap();
-    let writer = Arc::new(stream::ResponseWriter::start(
-        stream::Output::Stream(Box::new(output)),
-        &instance,
-    ));
+    let output = if root.join("case-closed-output").exists() {
+        let (peer, writer) = std::os::unix::net::UnixStream::pair().unwrap();
+        drop(peer);
+        stream::Output::Stream(Box::new(writer))
+    } else {
+        stream::Output::Stream(Box::new(
+            std::fs::File::create(root.join("finite-response-wire")).unwrap(),
+        ))
+    };
+    let writer = Arc::new(stream::ResponseWriter::start(output, &instance));
     let mut startup = |repo: &Path, session: &str, instance: &str, life: &str| {
         let result =
             boundary::stream_startup(repo, session, instance, life, &f.receipt, &f.runtime);
@@ -9999,7 +10020,7 @@ fn noninstruction_packaged_artifact_retains_actual_ordinary_body_and_details() {
     );
 }
 
-// pack-surface obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_verification_races_refuse_selected_binding_payload_and_policy_changes
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_verification_races_refuse_selected_binding_payload_and_policy_changes
 
 #[test]
 fn owned_manual_verification_rejects_real_binding_payload_and_policy_races() {
@@ -11795,5 +11816,3497 @@ fn invalid_attempt_busy_exit_never_adopts_different_record() {
     isolated(
         "invalid_attempt_busy_exit_never_adopts_different_record",
         |root| invalid_attempt_busy_retry(root, "REQUEST", "different"),
+    );
+}
+
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_failed_first_ex_preserves_replacement_or_changed_empty_slot
+#[test]
+fn b3_failed_first_ex_preserves_changed_creator_slot() {
+    scenarios(
+        "b3_failed_first_ex_preserves_changed_creator_slot",
+        &["replacement", "mode", "hardlink", "nonempty"],
+        |case, mutation| {
+            turn_sources::private_mkdir(registry_path(case).parent().unwrap()).unwrap();
+            let stage = "registry.exclusive.before-first-ex";
+            let creator = operation_child(&case, Some(stage), "pause", "registry-once");
+            ready(&case, stage);
+            let path = registry_path(&case);
+            let holder = agent_memory::fs::PrivateLock::acquire(&path, false, true).unwrap();
+            match mutation {
+                "replacement" => {
+                    std::fs::rename(&path, path.with_extension("displaced")).unwrap();
+                    write(&path, b"foreign replacement", 0o600);
+                }
+                "mode" => {
+                    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o640)).unwrap()
+                }
+                "hardlink" => std::fs::hard_link(&path, path.with_extension("alias")).unwrap(),
+                _ => write(&path, b"{", 0o600),
+            }
+            release(&case, stage);
+            assert_eq!(
+                creator.wait().status,
+                agent_memory::process::Status::Code(0)
+            );
+            assert!(registry_result(&case).get("error").is_some());
+            assert_eq!(
+                std::fs::read(&path).unwrap(),
+                match mutation {
+                    "replacement" => b"foreign replacement".as_slice(),
+                    "nonempty" => b"{".as_slice(),
+                    _ => b"".as_slice(),
+                }
+            );
+            drop(holder);
+            // A forged effective UID is not a realizable unprivileged Rust input.
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_real_owner_publication_between_empty_samples_is_only_initialization
+#[test]
+fn b3_real_owner_publication_between_empty_samples_is_initializing() {
+    scenarios(
+        "b3_real_owner_publication_between_empty_samples_is_initializing",
+        &["after-initial-fstat", "after-empty-fstat"],
+        |case, boundary| {
+            let publication = "registry.exclusive.before-owner-write";
+            let writer = start_registry_writer(&case, Some(publication));
+            let stage = format!("registry.probe.{boundary}");
+            let probe = operation_child(&case, Some(&stage), "pause", "registry-probe");
+            ready(&case, &stage);
+            release(&case, publication);
+            wait_path(&case.join("registry-owner"));
+            let owner = std::fs::read(registry_path(&case)).unwrap();
+            release(&case, &stage);
+            assert_eq!(probe.wait().status, agent_memory::process::Status::Code(0));
+            assert_eq!(registry_result(&case), string("initializing"));
+            assert_eq!(std::fs::read(registry_path(&case)).unwrap(), owner);
+            finish_registry_writer(&case, writer);
+            assert!(!registry_path(&case).exists());
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_empty_held_and_unheld_slots_never_mint_scope_or_claim_known_writer
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_empty_slots_never_mint_scope_or_claim_known_writer() {
+    isolated(
+        "b3_empty_slots_never_mint_scope_or_claim_known_writer",
+        |root| {
+            let f = Fixture::new(root);
+            let path = f.repo.join("memory-bank/.agent-memory.lock");
+            for held in [false, true] {
+                write(&path, b"", 0o600);
+                let holder = held
+                    .then(|| agent_memory::fs::PrivateLock::acquire(&path, false, true).unwrap());
+                assert!(matches!(
+                    agent_memory::local_registry::check_canonical_writer(&path, &["bank-capture"]),
+                    Err(agent_memory::local_registry::CanonicalWriterError::Initializing)
+                ));
+                let error =
+                    agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                        .err()
+                        .unwrap();
+                assert!(matches!(
+                    error.kind(),
+                    agent_memory::error::Kind::SourceTransportBusy { initializing: true }
+                ));
+                assert_eq!(std::fs::read(&path).unwrap(), b"");
+                drop(holder);
+                std::fs::remove_file(&path).unwrap();
+            }
+        },
+    );
+}
+
+fn b3_frontier_marker_race(root: &Path, boundary: &str, writer: bool, empty: bool) {
+    let f = Fixture::new(root);
+    let stage = format!("frontier.{boundary}");
+    write(&root.join("case-request.json"), b"{}", 0o600);
+    let probe = operation_child(root, Some(&stage), "pause", "enrollment-mint");
+    ready(root, &stage);
+    let bank = f.repo.join("memory-bank");
+    let lock = bank.join(".agent-memory.lock");
+    let owner = if writer {
+        prepare_legacy_writer(root, &f, true);
+        Some(start_registry_writer(root, None))
+    } else {
+        None
+    };
+    if empty {
+        write(&lock, b"", 0o600);
+    }
+    let marker = bank.join(".agent-memory-transaction.md");
+    let original = std::fs::read(&marker).ok();
+    if boundary == "marker.before-read" {
+        if marker.exists() {
+            std::fs::remove_file(&marker).unwrap();
+        }
+        std::fs::create_dir(&marker).unwrap();
+    }
+    release(root, &stage);
+    assert_eq!(probe.wait().status, agent_memory::process::Status::Code(0));
+    let result = registry_result(root);
+    if writer {
+        assert_eq!(get(&result, "busy"), &Value::Bool(true));
+    } else {
+        assert!(result.get("error").is_some(), "{result:?}");
+        assert_eq!(get(&result, "busy"), &Value::Bool(false));
+    }
+    if marker.is_dir() {
+        std::fs::remove_dir(&marker).unwrap();
+        if let Some(raw) = original {
+            write(&marker, raw, 0o600);
+        }
+    }
+    if empty {
+        assert_eq!(std::fs::read(&lock).unwrap(), b"");
+        std::fs::remove_file(&lock).unwrap();
+    }
+    if let Some(owner) = owner {
+        finish_registry_writer(root, owner);
+        assert!(
+            agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime).is_ok()
+        );
+    } else {
+        assert!(!lock.exists());
+    }
+}
+
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_before_frontier_entry_is_exact_writer_deferral
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_late_transaction_before_frontier_entry_defers() {
+    isolated("b3_late_transaction_before_frontier_entry_defers", |root| {
+        b3_frontier_marker_race(root, "verified-hold.before-entry", true, false)
+    });
+}
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_during_failed_marker_read_is_exact_writer_deferral
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_late_transaction_during_failed_marker_read_defers() {
+    isolated(
+        "b3_late_transaction_during_failed_marker_read_defers",
+        |root| b3_frontier_marker_race(root, "marker.before-read", true, false),
+    );
+}
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_after_marker_read_is_exact_writer_deferral
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_late_transaction_after_marker_read_defers() {
+    isolated("b3_late_transaction_after_marker_read_defers", |root| {
+        b3_frontier_marker_race(root, "marker.after-read", true, false)
+    });
+}
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_arbitrary_marker_read_failure_without_writer_is_not_retryable
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_marker_read_failure_without_writer_is_not_retryable() {
+    isolated(
+        "b3_marker_read_failure_without_writer_is_not_retryable",
+        |root| b3_frontier_marker_race(root, "marker.before-read", false, false),
+    );
+}
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_failed_marker_read_with_unproven_empty_slot_keeps_original_refusal
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_failed_marker_read_with_empty_slot_keeps_refusal() {
+    isolated(
+        "b3_failed_marker_read_with_empty_slot_keeps_refusal",
+        |root| b3_frontier_marker_race(root, "marker.before-read", false, true),
+    );
+}
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_arriving_after_preflight_is_classified_at_actual_identity_guard
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_writer_after_preflight_defers_at_identity_guard() {
+    isolated(
+        "b3_writer_after_preflight_defers_at_identity_guard",
+        |root| b3_frontier_marker_race(root, "observe-bank.after-read", true, false),
+    );
+}
+
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_shared_source_barrier_reentrancy_and_lifecycle_contention_preserve_sources
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_held_barrier_reentrancy_and_contention_preserve_sources() {
+    isolated(
+        "b3_held_barrier_reentrancy_and_contention_preserve_sources",
+        |root| {
+            let h = held_fixture(root);
+            let f = &h.fixture;
+            let before = snapshot(&f.repo.join("memory-bank"));
+            let retained = snapshot(&h.directory);
+            let session = uid();
+            let life = uid();
+            let native = uid();
+            {
+                let outer =
+                    turn_sources::source_barrier(&f.repo, false, false, None, &f.runtime).unwrap();
+                let inner =
+                    turn_sources::source_barrier(&f.repo, false, false, None, &f.runtime).unwrap();
+                assert!(
+                    agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                        .unwrap()
+                        .held()
+                );
+                drop(inner);
+                assert!(
+                    turn_sources::source_barrier(&f.repo, true, false, None, &f.runtime).is_err()
+                );
+                outer.recheck().unwrap();
+            }
+            {
+                let outer =
+                    turn_sources::source_barrier(&f.repo, true, false, None, &f.runtime).unwrap();
+                assert_eq!(
+                    register_child(root, f, &session, &life, &native, None).status,
+                    agent_memory::process::Status::Code(1)
+                );
+                let inner =
+                    turn_sources::source_barrier(&f.repo, false, false, None, &f.runtime).unwrap();
+                assert!(
+                    agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                        .unwrap()
+                        .held()
+                );
+                inner.recheck().unwrap();
+                outer.recheck().unwrap();
+            }
+            assert_eq!(
+                register_child(root, f, &session, &life, &native, None).status,
+                agent_memory::process::Status::Code(0)
+            );
+            assert_eq!(
+                get(
+                    &turn_sources::inspect(&f.repo, "claude", &session, &life, &f.runtime).unwrap(),
+                    "sources"
+                )
+                .as_array()
+                .unwrap()
+                .len(),
+                1
+            );
+            assert_eq!(snapshot(&f.repo.join("memory-bank")), before);
+            assert_eq!(snapshot(&h.directory), retained);
+        },
+    );
+}
+
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_verified_hold_rejects_location_and_hold_changes_during_observation
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_verified_hold_rejects_location_and_hold_observation_changes() {
+    isolated(
+        "b3_verified_hold_rejects_location_and_hold_observation_changes",
+        |root| {
+            let h = held_fixture(root);
+            let f = &h.fixture;
+            let binding = agent_memory::local_registry::paths("layout-recovery-bindings")
+                .unwrap()
+                .1;
+            let mut foreign = transport::read(&binding, 16 * 1024 * 1024).unwrap();
+            set(
+                foreign
+                    .get_mut("bindings")
+                    .unwrap()
+                    .get_mut(&h.operation)
+                    .unwrap(),
+                "bank_path",
+                string(root.join("foreign-bank").to_str().unwrap()),
+            );
+            let config = f.repo.join(".git/config");
+            let mut changed_config = std::fs::read(&config).unwrap();
+            changed_config.extend_from_slice(b"\n[agent-memory]\n\tbankroot = foreign-bank\n");
+            for (target, replacement) in [
+                (config, changed_config),
+                (binding, turn_sources::encoded(&foreign).unwrap()),
+                (
+                    f.repo.join("memory-bank/.agent-memory-transaction.md"),
+                    b"{}\n".to_vec(),
+                ),
+            ] {
+                let old = std::fs::read(&target).unwrap();
+                let stage = "frontier.observe-bank.after-read";
+                let child = start_enrollment(root, &decode("{}"), stage, "enrollment-mint");
+                write(&target, replacement, 0o600);
+                let result = finish_enrollment(root, child, stage);
+                assert!(result.get("error").is_some(), "{result:?}");
+                write(&target, old, 0o600);
+                std::fs::remove_file(root.join("rendezvous").join(format!("{stage}.release")))
+                    .unwrap();
+                std::fs::remove_file(root.join("rendezvous").join(format!("{stage}.ready")))
+                    .unwrap();
+            }
+            assert!(
+                agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                    .unwrap()
+                    .held()
+            );
+            assert_eq!(
+                std::fs::read(h.directory.join(text(&h.original, "blob"))).unwrap(),
+                h.body
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_late_hold_registry_and_ledger_changes_retain_written_source_then_retry
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_late_hold_changes_retain_source_and_retry_same_observation() {
+    isolated(
+        "b3_late_hold_changes_retain_source_and_retry_same_observation",
+        |root| {
+            let h = held_fixture(root);
+            let f = &h.fixture;
+            let registry = agent_memory::local_registry::paths("projects").unwrap().1;
+            for target in [
+                f.repo.join("memory-bank/.agent-memory-transaction.md"),
+                registry,
+                h.directory.join("ledger-head.json"),
+                f.runtime.join("SKILL.md"),
+            ] {
+                let session = uid();
+                let native = uid();
+                let mut value = register_request(&session, &native, &"a".repeat(64));
+                set(&mut value, "harness", string("claude"));
+                let stage = "hold-source-before-final-recheck";
+                let child = start_enrollment(root, &value, stage, "enrollment-register");
+                let old = std::fs::read(&target).unwrap();
+                let index_path =
+                    agent_memory::layout_recovery_state::paths(&f.repo, None, &f.runtime)
+                        .unwrap()
+                        .2
+                        .join("index.json");
+                let index_before = std::fs::read(&index_path).unwrap();
+                if target.file_name().unwrap() == "ledger-head.json" {
+                    let ledger_path = h.directory.join("ledger/00000000.json");
+                    let mut ledger = transport::read(&ledger_path, transport::MAX_PAYLOAD).unwrap();
+                    let previous = transport::digest(&ledger).unwrap();
+                    set(&mut ledger, "generation", Value::Int(1u8.into()));
+                    set(&mut ledger, "previous_generation_sha256", string(&previous));
+                    agent_memory::layout_recovery_state::write_once(
+                        &h.directory.join("ledger/00000001.json"),
+                        &ledger,
+                    )
+                    .unwrap();
+                    let mut head = json::decode_bytes(&old, Default::default()).unwrap();
+                    set(&mut head, "generation", Value::Int(1u8.into()));
+                    set(
+                        &mut head,
+                        "sha256",
+                        string(&transport::digest(&ledger).unwrap()),
+                    );
+                    write(&target, turn_sources::encoded(&head).unwrap(), 0o600);
+                    let mut index = json::decode_bytes(&index_before, Default::default()).unwrap();
+                    set(
+                        index
+                            .get_mut("operations")
+                            .unwrap()
+                            .get_mut(&h.operation)
+                            .unwrap(),
+                        "ledger_head_sha256",
+                        string(&transport::digest(&head).unwrap()),
+                    );
+                    write(&index_path, turn_sources::encoded(&index).unwrap(), 0o600);
+                } else if target.file_name().unwrap() == ".agent-memory-transaction.md" {
+                    let mut hold = json::decode_bytes(&old, Default::default()).unwrap();
+                    set(&mut hold, "hold_id", string(&uid()));
+                    write(&target, turn_sources::encoded(&hold).unwrap(), 0o600);
+                } else {
+                    let mut changed = old.clone();
+                    changed.extend_from_slice(b"\n");
+                    write(&target, changed, 0o600);
+                }
+                assert!(finish_enrollment(root, child, stage).get("error").is_some());
+                write(&target, old, 0o600);
+                write(&index_path, index_before, 0o600);
+                let (ns, _) = turn_sources::private_namespace(
+                    &f.repo, "claude", &session, LIFE, false, &f.runtime,
+                )
+                .unwrap();
+                let intents =
+                    turn_sources::enrollment_inventory(&ns.directory, &ns.identity).unwrap();
+                assert_eq!(intents.len(), 1);
+                assert_eq!(text(&intents[0], "state"), "unverified");
+                let retried = turn_sources::register(
+                    &f.repo,
+                    "claude",
+                    &session,
+                    LIFE,
+                    &"a".repeat(64),
+                    Some(&native),
+                    None,
+                    None,
+                    &f.runtime,
+                )
+                .unwrap();
+                assert_eq!(
+                    get(&retried, "observation_id"),
+                    get(&intents[0], "observation_id")
+                );
+                assert_eq!(
+                    get(
+                        &turn_sources::inspect(&f.repo, "claude", &session, LIFE, &f.runtime)
+                            .unwrap(),
+                        "sources"
+                    )
+                    .as_array()
+                    .unwrap()
+                    .len(),
+                    1
+                );
+                for suffix in ["ready", "release"] {
+                    std::fs::remove_file(root.join("rendezvous").join(format!("{stage}.{suffix}")))
+                        .unwrap();
+                }
+            }
+            assert_eq!(
+                std::fs::read(h.directory.join(text(&h.original, "blob"))).unwrap(),
+                h.body
+            );
+        },
+    );
+}
+
+fn b3_cli(
+    root: &Path,
+    cwd: &Path,
+    args: &[&str],
+    input: Option<&Value>,
+    faults: &[(&str, &str)],
+) -> agent_memory::process::Output {
+    let installed = root.join("bin/am");
+    let binary = if installed.exists() {
+        installed
+    } else {
+        PathBuf::from(env!("CARGO_BIN_EXE_am"))
+    };
+    let argv = std::iter::once(binary.into_os_string())
+        .chain(args.iter().map(OsString::from))
+        .collect::<Vec<_>>();
+    let mut env = std::env::vars_os().collect::<Vec<_>>();
+    for (key, value) in faults {
+        env.push(((*key).into(), (*value).into()));
+    }
+    let raw = input
+        .map(|v| turn_sources::encoded(v).unwrap())
+        .unwrap_or_default();
+    let spec = agent_memory::process::Spec {
+        argv: &argv,
+        env: &env,
+        cwd: Some(cwd),
+        search_path: false,
+        stdin: if input.is_some() {
+            agent_memory::process::Input::Bytes(&raw)
+        } else {
+            agent_memory::process::Input::Null
+        },
+        stdout: agent_memory::process::Target::Capture {
+            limit: 16 * 1024 * 1024,
+        },
+        stderr: agent_memory::process::Target::Capture {
+            limit: 4 * 1024 * 1024,
+        },
+        deadline: agent_memory::clock::Deadline::after(Duration::from_secs(90)).unwrap(),
+        new_session: false,
+        file_size_limit: None,
+        umask: Some(0o077),
+        pass_fds: &[],
+    };
+    agent_memory::process::run_for(&spec, Duration::from_secs(90)).unwrap()
+}
+fn b3_json(output: agent_memory::process::Output, expected: i32) -> Value {
+    assert_eq!(
+        output.status,
+        agent_memory::process::Status::Code(expected),
+        "{output:?}"
+    );
+    json::decode_bytes(&output.stdout, Default::default()).unwrap()
+}
+fn b3_operation(root: &Path, operation: &str) {
+    if operation == "b3-signed" {
+        b3_signed_operation(root);
+        return;
+    }
+    if operation == "b3-recover-empty" {
+        let path = registry_path(root);
+        let result = agent_memory::local_registry::recover(
+            &path.with_file_name("registry.json"),
+            &path,
+            &["bank-capture"],
+            None,
+            "fixture",
+            Default::default(),
+        );
+        write(
+            &root.join("b3-recovery-result.json"),
+            turn_sources::encoded(&match result {
+                Ok(value) => value,
+                Err(error) => error_value(&error),
+            })
+            .unwrap(),
+            0o600,
+        );
+        return;
+    }
+    let f = Fixture::load(root);
+    let request = transport::read(&root.join("case-request.json"), transport::MAX_PAYLOAD).unwrap();
+    let result = if operation == "b3-checkpoint" {
+        agent_memory::checkpoint::apply(&request)
+    } else if operation == "b3-join-none" {
+        transport::segment_inventory(
+            &f.site(),
+            Path::new(text(&request, "directory")),
+            get(&request, "cursor"),
+        )
+        .map(Value::Array)
+    } else if operation == "b3-required" {
+        boundary::required_source_capabilities(&f.repo, &f.runtime)
+            .map(|values| Value::Array(values.into_iter().map(|v| string(&v)).collect()))
+    } else {
+        panic!("unknown b3 operation");
+    };
+    write(
+        &root.join("operation-result.json"),
+        turn_sources::encoded(&match result {
+            Ok(value) => value,
+            Err(error) => error_value(&error),
+        })
+        .unwrap(),
+        0o600,
+    );
+}
+
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_real_recovery_wins_first_ex_without_stranding_creators_empty_slot
+#[test]
+fn b3_real_recovery_wins_first_ex_and_creator_cleans_empty_slot() {
+    isolated(
+        "b3_real_recovery_wins_first_ex_and_creator_cleans_empty_slot",
+        |root| {
+            turn_sources::private_mkdir(registry_path(root).parent().unwrap()).unwrap();
+            let before_ex = "registry.exclusive.before-first-ex";
+            let creator = operation_child(root, Some(before_ex), "pause", "registry-once");
+            ready(root, before_ex);
+            let held = "registry.recovery.after-exclusive";
+            let recovery = operation_child(root, Some(held), "pause", "b3-recover-empty");
+            ready(root, held);
+            release(root, before_ex);
+            assert_eq!(
+                creator.wait().status,
+                agent_memory::process::Status::Code(0)
+            );
+            assert!(registry_result(root).get("error").is_some());
+            assert!(!registry_path(root).exists());
+            release(root, held);
+            assert_eq!(
+                recovery.wait().status,
+                agent_memory::process::Status::Code(0)
+            );
+            assert!(
+                transport::read(&root.join("b3-recovery-result.json"), 65536)
+                    .unwrap()
+                    .get("error")
+                    .is_some()
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_interrupt_during_marker_read_is_not_reclassified_as_writer_retry
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_marker_read_fatal_exit_never_becomes_writer_retry() {
+    scenarios(
+        "b3_marker_read_fatal_exit_never_becomes_writer_retry",
+        &["interrupt", "exit"],
+        |root, mode| {
+            let f = Fixture::new(root);
+            write(&root.join("case-request.json"), b"{}", 0o600);
+            let stage = "frontier.marker.before-read";
+            let probe = operation_child(root, Some(stage), "pause", "enrollment-mint");
+            ready(root, stage);
+            prepare_legacy_writer(root, &f, false);
+            let writer = start_registry_writer(root, None);
+            let owner = std::fs::read(f.repo.join("memory-bank/.agent-memory.lock")).unwrap();
+            let pid = std::fs::read_to_string(root.join("operation-pid")).unwrap();
+            command(
+                root,
+                &[
+                    "/bin/kill".into(),
+                    if mode == "interrupt" {
+                        "-INT".into()
+                    } else {
+                        "-TERM".into()
+                    },
+                    pid.trim().into(),
+                ],
+            );
+            assert_ne!(probe.wait().status, agent_memory::process::Status::Code(0));
+            assert_eq!(
+                std::fs::read(f.repo.join("memory-bank/.agent-memory.lock")).unwrap(),
+                owner
+            );
+            finish_registry_writer(root, writer);
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_no_context_preserves_fresh_per_reference_observations
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_unscoped_join_freshly_observes_each_reference() {
+    isolated("b3_unscoped_join_freshly_observes_each_reference", |root| {
+        let f = Fixture::new(root);
+        let s = segment(&f, true, false);
+        write(
+            &root.join("case-request.json"),
+            turn_sources::encoded(&object([
+                ("directory", string(s.directory.to_str().unwrap())),
+                ("cursor", s.cursor.clone()),
+            ]))
+            .unwrap(),
+            0o600,
+        );
+        let stage = "omp.join.after-unscoped-lookup";
+        let child = operation_child(root, Some(stage), "pause", "b3-join-none");
+        ready(root, stage);
+        let ns = shared(&f, &s.cursor);
+        transport::retain(
+            &ns.directory.join("fault.json"),
+            &object([("reason", string("late-source-fault"))]),
+            4096,
+        )
+        .unwrap();
+        release(root, stage);
+        assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+        let rows = registry_result(root);
+        let rows = rows.as_array().unwrap();
+        assert_eq!(text(&rows[0], "status"), "pending-assessment");
+        assert_eq!(text(&rows[1], "status"), "registration-fault");
+        assert_eq!(
+            get(&rows[1], "faults"),
+            &decode(r#"["registration-fault-retained"]"#)
+        );
+        assert_eq!(
+            text(
+                &transport::read(&ns.directory.join("fault.json"), 4096).unwrap(),
+                "reason"
+            ),
+            "late-source-fault"
+        );
+    });
+}
+
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_historical_completed_gate_observation_is_not_reused_for_lookup
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_historical_completed_gate_never_supplies_lookup_inventory() {
+    isolated(
+        "b3_historical_completed_gate_never_supplies_lookup_inventory",
+        |root| {
+            let f = Fixture::new(root);
+            let mut s = segment(&f, true, false);
+            let rows = joined(&f, &s);
+            for row in &rows {
+                acknowledge(&f, row);
+            }
+            let Value::Object(control) = s.cursor.get_mut("control_interval").unwrap() else {
+                unreachable!()
+            };
+            control.retain(|(k, _)| k != "human_entry");
+            transport::replace_cursor(&s.directory.join("cursor.json"), &s.cursor).unwrap();
+            assert!(!transport::source_bound_origin(&s.directory, &s.cursor).unwrap());
+            let stage = "omp.join.after-origin-gate";
+            let child = start_join(root, &f, &s, stage);
+            let completion = shared(&f, &s.cursor)
+                .directory
+                .join(format!("{}.done", text(&rows[0], "observation_id")));
+            write(&completion, b"{\"invalid\":\"completion\"}\n", 0o600);
+            release(root, stage);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let observed = registry_result(root);
+            let mut rows = observed.as_array().unwrap().to_vec();
+            assert_eq!(rows.len(), 2);
+            for row in &rows {
+                assert_eq!(text(row, "status"), "registration-fault");
+                assert!(
+                    get(row, "faults")
+                        .as_array()
+                        .unwrap()
+                        .contains(&string("completion-unverifiable"))
+                );
+            }
+            let Value::Array(faults) = rows[0].get_mut("faults").unwrap() else {
+                unreachable!()
+            };
+            faults.push(string("consumer-local-mutation"));
+            assert!(
+                !get(&rows[1], "faults")
+                    .as_array()
+                    .unwrap()
+                    .contains(&string("consumer-local-mutation"))
+            );
+            assert_eq!(
+                text(&joined(&f, &s)[0], "status"),
+                "legacy-unverified-metadata"
+            );
+            assert_eq!(
+                transport::read(&completion, 4096).unwrap(),
+                decode(r#"{"invalid":"completion"}"#)
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_type_and_key_errors_still_reach_whole_segment_fault_handling
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_invalid_typed_shared_state_reaches_whole_segment_fault_handling() {
+    scenarios(
+        "b3_invalid_typed_shared_state_reaches_whole_segment_fault_handling",
+        &["type", "key"],
+        |root, case| {
+            let f = Fixture::new(root);
+            let s = segment(&f, true, false);
+            let context =
+                agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                    .unwrap();
+            let ns = shared(&f, &s.cursor);
+            let source = source_path(&ns.directory, text(&s.enrollments[0], "source_reference"));
+            let mut value = transport::read(&source, 4096).unwrap();
+            if case == "type" {
+                set(&mut value, "source_sha256", Value::Array(vec![]));
+            } else {
+                let Value::Object(pairs) = &mut value else {
+                    unreachable!()
+                };
+                pairs.retain(|(k, _)| k != "observation_id");
+            }
+            write(&source, turn_sources::encoded(&value).unwrap(), 0o600);
+            let (_, faults) =
+                agent_memory::scope_binding::private_enrollment_reads(&context, |context| {
+                    transport::pending_inventory(&f.site().with(context))
+                })
+                .unwrap();
+            assert_eq!(faults, ["native-enrollment-unverifiable"]);
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_completed_snapshots_require_bound_drain_proof_after_marker_removal
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_completed_snapshots_require_bound_drain_proof() {
+    isolated("b3_completed_snapshots_require_bound_drain_proof", |root| {
+        let f = Fixture::new(root);
+        f.observe(&request(&f, &[human("drain-human")], "seal"));
+        for row in f.pending() {
+            acknowledge(&f, &row);
+        }
+        let result = boundary::drain_source_capabilities(&f.repo, true, false, &f.runtime).unwrap();
+        assert_eq!(get(&result, "marker_cleared"), &Value::Bool(true));
+        assert!(
+            boundary::required_source_capabilities(&f.repo, &f.runtime)
+                .unwrap()
+                .is_empty()
+        );
+        let base = boundary::base(&f.repo).unwrap();
+        let proof_bytes = snapshot(&base.join("omp-drains"));
+        let lock = base.join("omp-transport.lock");
+        for change in ["replace", "remove"] {
+            write(&root.join("case-request.json"), b"{}", 0o600);
+            let stage = "omp.required.after-transport-lock";
+            let child = operation_child(root, Some(stage), "pause", "b3-required");
+            ready(root, stage);
+            std::fs::rename(&lock, lock.with_extension("held")).unwrap();
+            if change == "replace" {
+                write(&lock, b"", 0o600);
+            }
+            release(root, stage);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            assert!(registry_result(root).get("error").is_some());
+            assert_eq!(snapshot(&base.join("omp-drains")), proof_bytes);
+            if lock.exists() {
+                std::fs::remove_file(&lock).unwrap();
+            }
+            std::fs::rename(lock.with_extension("held"), &lock).unwrap();
+            for suffix in ["ready", "release"] {
+                std::fs::remove_file(root.join("rendezvous").join(format!("{stage}.{suffix}")))
+                    .unwrap();
+            }
+        }
+        for path in std::fs::read_dir(base.join("omp-drains")).unwrap() {
+            std::fs::remove_file(path.unwrap().path()).unwrap();
+        }
+        assert!(boundary::required_source_capabilities(&f.repo, &f.runtime).is_err());
+        assert!(base.join("omp-source-v1").exists());
+    });
+}
+
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_capacity_retains_arrival_then_reuses_reference_after_capacity_frees
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
+    isolated(
+        "b3_full_capacity_retains_arrival_then_reuses_exact_reference",
+        |root| {
+            let f = Fixture::new(root);
+            let other = register_source(&f, "other", "other", &"a".repeat(64));
+            let (ns, _) =
+                turn_sources::private_namespace(&f.repo, "omp", "other", LIFE, false, &f.runtime)
+                    .unwrap();
+            let pending = ns.base.join("pending");
+            let original = std::fs::read(pending.join("0.json")).unwrap();
+            for n in 1..turn_sources::MAX_TURNS {
+                write(&pending.join(format!("{n}.json")), &original, 0o600);
+            }
+            f.observe(&request(&f, &[human("queued-human")], "seal"));
+            let queued = f.pending();
+            let references = queued
+                .iter()
+                .map(|r| text(r, "source_reference").to_owned())
+                .collect::<std::collections::BTreeSet<_>>();
+            assert!(queued.iter().all(|r| r.get("observation_id").is_none()));
+            let assessment = object([
+                ("observation_id", get(&other, "observation_id").clone()),
+                ("source_sha256", get(&other, "source_sha256").clone()),
+                ("outcome", string("no-learning")),
+                (
+                    "assessment",
+                    object([
+                        ("source_id", get(&other, "observation_id").clone()),
+                        (
+                            "source_review",
+                            string("Reviewed the actual other ephemeral fixture; nothing durable."),
+                        ),
+                        ("candidates", Value::Array(vec![])),
+                    ]),
+                ),
+            ]);
+            let proof = turn_sources::verify_assessment(
+                &f.repo,
+                &assessment,
+                text(&other, "observation_id"),
+                &f.runtime,
+            )
+            .unwrap();
+            turn_sources::complete(
+                &f.repo,
+                "omp",
+                "other",
+                LIFE,
+                text(&other, "observation_id"),
+                text(&other, "source_sha256"),
+                &proof,
+                &f.runtime,
+            )
+            .unwrap();
+            for n in 1..turn_sources::MAX_TURNS {
+                std::fs::remove_file(pending.join(format!("{n}.json"))).unwrap();
+            }
+            f.observe(&request(&f, &[], "ingest"));
+            let after = f.pending();
+            assert_eq!(
+                after
+                    .iter()
+                    .map(|r| text(r, "source_reference").to_owned())
+                    .collect::<std::collections::BTreeSet<_>>(),
+                references
+            );
+            assert!(after.iter().all(|r| r.get("observation_id").is_some()));
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_full_backlog_and_long_unicode_repo_still_offer_one_bounded_wake
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_full_backlog_unicode_repository_offers_one_bounded_wake() {
+    isolated(
+        "b3_full_backlog_unicode_repository_offers_one_bounded_wake",
+        |root| {
+            let mut f = Fixture::new(root);
+            let long = root
+                .join("界".repeat(68))
+                .join("界".repeat(68))
+                .join("界".repeat(68))
+                .join("xxxxxxxxxxxxxxxx");
+            std::fs::create_dir_all(long.parent().unwrap()).unwrap();
+            std::fs::rename(&f.repo, &long).unwrap();
+            f.repo = long;
+            let mut entries = vec![];
+            let mut result = Value::Null;
+            for n in 0..15 {
+                entries.push(human(&format!("human-{n}")));
+                result = f.observe(&request(&f, &entries, "seal"));
+            }
+            let refs = f
+                .pending()
+                .iter()
+                .map(|r| text(r, "source_reference").to_owned())
+                .collect::<std::collections::BTreeSet<_>>();
+            let wake_request = wake_request(&result);
+            let wake = run_wake_child(root, &wake_request, None, "");
+            assert_eq!(get(&wake, "continue"), &Value::Bool(true));
+            assert_eq!(get(&wake, "inventory_complete"), &Value::Bool(false));
+            assert!(text(&wake, "additionalContext").len() <= 8192);
+            assert_eq!(
+                get(&wake, "canonical_writes_performed"),
+                &Value::Bool(false)
+            );
+            assert_eq!(
+                get(&run_wake_child(root, &wake_request, None, ""), "continue"),
+                &Value::Bool(false)
+            );
+            assert_eq!(
+                f.pending()
+                    .iter()
+                    .map(|r| text(r, "source_reference").to_owned())
+                    .collect::<std::collections::BTreeSet<_>>(),
+                refs
+            );
+        },
+    );
+}
+
+fn b3_hidden_batch(root: &Path, crash: bool) {
+    let f = Fixture::new(root);
+    let first = human("hidden-human");
+    let result = f.observe(&request(&f, std::slice::from_ref(&first), "seal"));
+    let parent = transport::segments(&f.site(), SESSION).unwrap().remove(0);
+    let manifest = std::fs::read(parent.directory.join("segment.json")).unwrap();
+    let wake = run_wake_child(root, &wake_request(&result), None, "");
+    assert_eq!(get(&wake, "continue"), &Value::Bool(true));
+    let control = object([
+        ("type", string("custom_message")),
+        ("id", string("native-control")),
+        ("parentId", string("hidden-human")),
+        ("customType", string("session-stop-continuation")),
+        ("attribution", string("agent")),
+        ("content", get(&wake, "additionalContext").clone()),
+    ]);
+    let ingest = request(&f, &[first.clone(), control.clone()], "ingest");
+    if crash {
+        write(
+            &root.join("case-request.json"),
+            turn_sources::encoded(&ingest).unwrap(),
+            0o600,
+        );
+        let child = operation_child(root, Some("omp.pure.before-cursor"), "exit", "observe");
+        assert_eq!(child.wait().status, agent_memory::process::Status::Code(86));
+    } else {
+        f.observe(&ingest);
+        assert_eq!(transport::segments(&f.site(), SESSION).unwrap().len(), 1);
+    }
+    let mut work = request(&f, &[first, control, answer("late-work")], "ingest");
+    terminal(&mut work);
+    set(
+        work.get_mut("payload").unwrap(),
+        "trigger",
+        string("own-hidden-ambiguous"),
+    );
+    f.observe(&work);
+    let segments = transport::segments(&f.site(), SESSION).unwrap();
+    assert_eq!(segments.len(), 2);
+    assert_eq!(
+        get(
+            get(&segments[0].snapshot().unwrap(), "origin"),
+            "human_root"
+        ),
+        get(
+            get(&segments[1].snapshot().unwrap(), "origin"),
+            "human_root"
+        )
+    );
+    assert_eq!(
+        std::fs::read(parent.directory.join("segment.json")).unwrap(),
+        manifest
+    );
+    assert!(!native_path(&parent.directory, "captures", "native-control").exists());
+    assert!(native_path(&segments[1].directory, "captures", "native-control").exists());
+    if crash {
+        assert!(native_path(&parent.directory, "snapshots", "native-control").exists());
+        assert!(
+            !transport::pending_inventory(&f.site())
+                .unwrap()
+                .1
+                .is_empty()
+        );
+    }
+}
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_exact_own_hidden_batch_does_not_open_a_source_successor
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_exact_hidden_batch_never_opens_successor() {
+    isolated("b3_exact_hidden_batch_never_opens_successor", |root| {
+        b3_hidden_batch(root, false)
+    });
+}
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_crashed_pure_snapshot_never_reopens_sealed_parent
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_crashed_pure_snapshot_never_reopens_parent() {
+    isolated("b3_crashed_pure_snapshot_never_reopens_parent", |root| {
+        b3_hidden_batch(root, true)
+    });
+}
+
+fn b3_hook(root: &Path, f: &Fixture, harness: &str, adapter: &str, event: &Value) -> Value {
+    b3_json(
+        b3_cli(
+            root,
+            &f.repo,
+            &["hook", &format!("{harness}-{adapter}")],
+            Some(event),
+            &[],
+        ),
+        0,
+    )
+}
+fn b3_hook_event(root: &Path, f: &Fixture, harness: &str, session: &str, life: &str) -> Value {
+    let mut value = object([
+        ("hook_event_name", string("UserPromptSubmit")),
+        ("cwd", string(f.repo.to_str().unwrap())),
+        ("session_id", string(session)),
+        (
+            "prompt",
+            string("Synthetic temporary arithmetic request; inspect exact native input."),
+        ),
+        (
+            "transcript_path",
+            string(root.join("actual-native-reference.jsonl").to_str().unwrap()),
+        ),
+    ]);
+    if harness == "codex" {
+        set(&mut value, "turn_id", string(life));
+        set(&mut value, "event_id", string(&uid()));
+    } else {
+        set(&mut value, "prompt_id", string(life));
+    }
+    value
+}
+
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_public_layout_hold_enrolls_real_codex_and_claude_prompt_hooks
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_public_held_prompt_hooks_replay_one_exact_source() {
+    isolated(
+        "b3_public_held_prompt_hooks_replay_one_exact_source",
+        |root| {
+            let h = held_fixture(root);
+            let f = &h.fixture;
+            let before = (
+                snapshot(&f.repo.join("memory-bank")),
+                snapshot(&h.directory),
+            );
+            for harness in ["codex", "claude"] {
+                let session = uid();
+                let life = uid();
+                let event = b3_hook_event(root, f, harness, &session, &life);
+                for _ in 0..2 {
+                    assert!(
+                        b3_hook(root, f, harness, "prompt", &event)
+                            .get("hookSpecificOutput")
+                            .is_some()
+                    );
+                }
+                let state =
+                    turn_sources::inspect(&f.repo, harness, &session, &life, &f.runtime).unwrap();
+                assert_eq!(get(&state, "complete"), &Value::Bool(false));
+                let rows = get(&state, "sources").as_array().unwrap();
+                assert_eq!(rows.len(), 1);
+                assert_eq!(
+                    text(&rows[0], "source_sha256"),
+                    b3_sha(text(&event, "prompt").as_bytes())
+                );
+                if harness == "claude" {
+                    assert_eq!(
+                        get(&rows[0], "source_reference"),
+                        get(&event, "transcript_path")
+                    );
+                }
+            }
+            assert_eq!(
+                (
+                    snapshot(&f.repo.join("memory-bank")),
+                    snapshot(&h.directory)
+                ),
+                before
+            );
+            assert_eq!(
+                std::fs::read(h.directory.join(text(&h.original, "blob"))).unwrap(),
+                h.body
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_real_codex_claude_hooks_keep_task_active_but_boundaries_pending
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_held_hooks_keep_tasks_active_and_boundaries_pending() {
+    isolated(
+        "b3_held_hooks_keep_tasks_active_and_boundaries_pending",
+        |root| {
+            let h = held_fixture(root);
+            let f = &h.fixture;
+            let before = (
+                snapshot(&f.repo.join("memory-bank")),
+                snapshot(&h.directory),
+            );
+            for harness in ["codex", "claude"] {
+                let session = uid();
+                let life = uid();
+                let event = b3_hook_event(root, f, harness, &session, &life);
+                let output = b3_hook(root, f, harness, "prompt", &event);
+                assert!(
+                    text(get(&output, "hookSpecificOutput"), "additionalContext")
+                        .to_lowercase()
+                        .contains("recovery-pending")
+                );
+                b3_hook(root, f, harness, "prompt", &event);
+                if harness == "codex" {
+                    let mut steering = event.clone();
+                    set(&mut steering, "event_id", string(&uid()));
+                    set(
+                        &mut steering,
+                        "prompt",
+                        string("Distinct native steering in the same lifecycle."),
+                    );
+                    b3_hook(root, f, harness, "prompt", &steering);
+                    let state =
+                        turn_sources::inspect(&f.repo, harness, &session, &life, &f.runtime)
+                            .unwrap();
+                    assert_eq!(get(&state, "sources").as_array().unwrap().len(), 2);
+                    let mut generated = event.clone();
+                    set(&mut generated, "event_id", string(&uid()));
+                    set(
+                        &mut generated,
+                        "prompt",
+                        string("Controlled late generated guidance; inspect original source."),
+                    );
+                    assert!(
+                        turn_sources::reserve_wake(
+                            &f.repo,
+                            harness,
+                            &session,
+                            &life,
+                            text(&state, "fingerprint"),
+                            &b3_sha(text(&generated, "prompt").as_bytes()),
+                            &f.runtime
+                        )
+                        .unwrap()
+                    );
+                    let output = b3_hook(root, f, harness, "prompt", &generated);
+                    assert!(
+                        text(get(&output, "hookSpecificOutput"), "additionalContext").len() <= 2048
+                    );
+                    let state =
+                        turn_sources::inspect(&f.repo, harness, &session, &life, &f.runtime)
+                            .unwrap();
+                    let rows = get(&state, "sources").as_array().unwrap();
+                    assert_eq!(rows.len(), 3);
+                    let row = rows
+                        .iter()
+                        .find(|row| get(row, "native_source_id") == get(&generated, "event_id"))
+                        .unwrap();
+                    assert_eq!(get(row, "control_origin_hint"), &Value::Bool(true));
+                    assert_eq!(
+                        text(row, "source_sha256"),
+                        b3_sha(text(&generated, "prompt").as_bytes())
+                    );
+                }
+                let mut stop = event.clone();
+                set(&mut stop, "hook_event_name", string("Stop"));
+                set(&mut stop, "stop_hook_active", Value::Bool(false));
+                let output = b3_hook(root, f, harness, "stop", &stop);
+                assert!(
+                    text(&output, "systemMessage")
+                        .to_lowercase()
+                        .contains("recovery-pending")
+                );
+                assert!(output.get("decision").is_none());
+            }
+            let mut ambiguous = b3_hook_event(root, f, "codex", &uid(), &uid());
+            let Value::Object(fields) = &mut ambiguous else {
+                unreachable!()
+            };
+            fields.retain(|(k, _)| k != "event_id");
+            let refused = b3_hook(root, f, "codex", "prompt", &ambiguous);
+            assert_eq!(text(&refused, "decision"), "block");
+            assert!(text(&refused, "reason").contains("not an observation"));
+            let (ns, _) = turn_sources::private_namespace(
+                &f.repo,
+                "codex",
+                text(&ambiguous, "session_id"),
+                text(&ambiguous, "turn_id"),
+                false,
+                &f.runtime,
+            )
+            .unwrap();
+            let retained =
+                turn_sources::unidentified_inventory(&ns.directory, &ns.identity).unwrap();
+            assert_eq!(retained.len(), 1);
+            let encoded = command(
+                root,
+                &[
+                    "/bin/sh".into(),
+                    "-c".into(),
+                    "printf %s \"$1\" | base64 | tr -d '\\n'".into(),
+                    "b3".into(),
+                    text(&ambiguous, "prompt").into(),
+                ],
+            );
+            assert_eq!(
+                text(&retained[0], "source_base64").as_bytes(),
+                encoded.stdout
+            );
+            assert_eq!(
+                (
+                    snapshot(&f.repo.join("memory-bank")),
+                    snapshot(&h.directory)
+                ),
+                before
+            );
+        },
+    );
+}
+
+fn b3_postresponse_request(root: &Path, f: &Fixture, humans: usize, followup: bool) {
+    let entries = (0..humans)
+        .map(|n| human(&format!("postresponse-human-{n}")))
+        .chain(std::iter::once(answer("postresponse-answer")))
+        .collect::<Vec<_>>();
+    let mut value = request(f, &entries, "seal");
+    set(
+        value.get_mut("payload").unwrap(),
+        "request_wake",
+        Value::Bool(true),
+    );
+    write(
+        &root.join("case-request.json"),
+        turn_sources::encoded(&value).unwrap(),
+        0o600,
+    );
+    if followup {
+        let value = request(f, &entries, "seal");
+        write(
+            &root.join("case-followup.json"),
+            turn_sources::encoded(&value).unwrap(),
+            0o600,
+        );
+    }
+}
+fn b3_assert_enrolled(f: &Fixture, count: usize) {
+    let rows = f.pending();
+    assert_eq!(rows.len(), count);
+    assert!(
+        rows.iter().all(|r| r.get("observation_id").is_some()),
+        "{rows:?}"
+    );
+}
+fn b3_closed_pipe_order(root: &Path) {
+    let f = Fixture::new(root);
+    b3_postresponse_request(root, &f, 1, false);
+    write(&root.join("case-closed-output"), b"", 0o600);
+    let mut first = armed_request(&f);
+    set(
+        first.get_mut("payload").unwrap(),
+        "request_wake",
+        Value::Bool(true),
+    );
+    let mut wire = stream::encode_frame(
+        "REQUEST",
+        1,
+        &envelope(first.clone(), 1),
+        Some("12345678-1234-4567-8901-123456789012"),
+    )
+    .unwrap();
+    set(
+        first.get_mut("payload").unwrap(),
+        "request_wake",
+        Value::Bool(false),
+    );
+    wire.extend(stream::encode_frame("REQUEST", 2, &envelope(first, 2), None).unwrap());
+    wire.extend(stream::encode_frame("FINAL", 3, &decode(r#"{"last_attempt_seq":2,"refused_count":0,"last_event_ordinal":2,"transition":null}"#), None).unwrap());
+    write(&root.join("finite-input.raw"), wire, 0o600);
+    let before = "omp.postresponse.before-drain";
+    let after = "omp.postresponse.after-drain";
+    let child = operation_child(
+        root,
+        Some(&format!("{before},{after}")),
+        "pause,pause",
+        "finite-run",
+    );
+    ready(root, before);
+    let directory = child_directory(root);
+    assert_eq!(
+        text(
+            &transport::read(&directory.join("outcomes/1.json"), stream::MAX_METADATA).unwrap(),
+            "outcome"
+        ),
+        "verified"
+    );
+    assert!(!directory.join("attempts/2.json").exists());
+    assert!(!directory.join("closed.json").exists());
+    let rows = f.pending();
+    assert_eq!(rows.len(), 2);
+    assert!(rows.iter().all(|r| r.get("observation_id").is_none()));
+    let refs = rows
+        .iter()
+        .map(|r| get(r, "source_reference").clone())
+        .collect::<Vec<_>>();
+    let sources = snapshot(&boundary::base(&f.repo).unwrap().join("omp-source-v1"));
+    release(root, before);
+    ready(root, after);
+    b3_assert_enrolled(&f, 2);
+    assert_eq!(
+        f.pending()
+            .iter()
+            .map(|r| get(r, "source_reference").clone())
+            .collect::<Vec<_>>(),
+        refs
+    );
+    for (path, bytes) in sources {
+        if path.components().any(|c| c.as_os_str() == "snapshots") {
+            assert_eq!(
+                std::fs::read(
+                    boundary::base(&f.repo)
+                        .unwrap()
+                        .join("omp-source-v1")
+                        .join(path)
+                )
+                .unwrap(),
+                bytes
+            );
+        }
+    }
+    assert!(!directory.join("attempts/2.json").exists());
+    release(root, after);
+    assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+    assert!(directory.join("closed.json").is_file());
+    for n in 1..=2 {
+        assert_eq!(
+            text(
+                &transport::read(
+                    &directory.join(format!("outcomes/{n}.json")),
+                    stream::MAX_METADATA
+                )
+                .unwrap(),
+                "outcome"
+            ),
+            "verified"
+        );
+    }
+}
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_response_loss_still_drains_once_before_next_fifo_and_final
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_closed_pipe_writer_false_drains_before_next_fifo_and_final_in_full_run
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_real_epipe_drains_before_next_fifo_and_final() {
+    isolated(
+        "b3_real_epipe_drains_before_next_fifo_and_final",
+        b3_closed_pipe_order,
+    );
+}
+
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_busy_is_one_batch_and_leaves_discoverable_enrollments
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_postresponse_busy_is_one_batch_then_next_frame_progresses() {
+    isolated(
+        "b3_postresponse_busy_is_one_batch_then_next_frame_progresses",
+        |root| {
+            let f = Fixture::new(root);
+            b3_postresponse_request(root, &f, 1, true);
+            let before = "omp.postresponse.before-drain";
+            let after = "omp.postresponse.after-drain";
+            let child = operation_child(
+                root,
+                Some(&format!("{before},{after}")),
+                "pause,pause",
+                "finite",
+            );
+            ready(root, before);
+            let base = boundary::base(&f.repo).unwrap();
+            let held =
+                turn_sources::private_lock(&base.join("omp-transport.lock"), false, false).unwrap();
+            release(root, before);
+            ready(root, after);
+            let directory = child_directory(root);
+            assert_eq!(
+                text(
+                    &transport::read(&directory.join("outcomes/1.json"), stream::MAX_METADATA)
+                        .unwrap(),
+                    "outcome"
+                ),
+                "verified"
+            );
+            let rows = f.pending();
+            assert_eq!(rows.len(), 2);
+            assert!(rows.iter().all(|r| r.get("observation_id").is_none()));
+            assert!(!snapshot(&base.join("omp-source-v1")).keys().any(|p| {
+                p.components()
+                    .any(|c| c.as_os_str() == "registration-attempts")
+            }));
+            drop(held);
+            release(root, after);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            b3_assert_enrolled(&f, 2);
+            assert!(directory.join("closed.json").exists());
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_control_flow_is_not_masked_or_closed
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_postresponse_interrupt_preserves_verified_open_source() {
+    isolated(
+        "b3_postresponse_interrupt_preserves_verified_open_source",
+        |root| {
+            let f = Fixture::new(root);
+            b3_postresponse_request(root, &f, 1, false);
+            let stage = "omp.postresponse.before-drain";
+            let child = operation_child(root, Some(stage), "pause", "finite");
+            ready(root, stage);
+            let directory = child_directory(root);
+            signaled_owned_child(root, child);
+            assert_eq!(
+                text(
+                    &transport::read(&directory.join("outcomes/1.json"), stream::MAX_METADATA)
+                        .unwrap(),
+                    "outcome"
+                ),
+                "verified"
+            );
+            assert!(!directory.join("closed.json").exists());
+            assert!(
+                f.pending()
+                    .iter()
+                    .all(|r| r.get("observation_id").is_none())
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_oldest8_after_response_and_cli_collision_leave_canonical_state_unchanged
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state() {
+    isolated(
+        "b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state",
+        |root| {
+            let f = Fixture::new(root);
+            f.observe(&request(
+                &f,
+                &[human("historical-human"), answer("historical-answer")],
+                "seal",
+            ));
+            let historical = f.pending();
+            let row = historical
+                .iter()
+                .find(|r| text(r, "source_reference").starts_with("omp:seal:"))
+                .unwrap();
+            let assessment = completion_request(row);
+            let bank = snapshot(&f.repo.join("memory-bank"));
+            let shared =
+                turn_sources::inspect(&f.repo, "omp", SESSION, text(row, "lifecycle"), &f.runtime)
+                    .unwrap();
+            b3_postresponse_request(root, &f, 6, false);
+            let before = "omp.postresponse.before-drain";
+            let after = "omp.postresponse.after-drain";
+            let child = operation_child(
+                root,
+                Some(&format!("{before},{after}")),
+                "pause,pause",
+                "finite",
+            );
+            ready(root, before);
+            // Retain the actual transport lock while the public commands collide.
+            let lock = turn_sources::private_lock(
+                &boundary::base(&f.repo).unwrap().join("omp-transport.lock"),
+                false,
+                false,
+            )
+            .unwrap();
+            let source_before = snapshot(&boundary::base(&f.repo).unwrap().join("omp-source-v1"));
+            let variants = [
+                vec!["--list-pending"],
+                vec![
+                    "--source",
+                    text(row, "observation_id"),
+                    "--session",
+                    SESSION,
+                    "--lifecycle",
+                    text(row, "lifecycle"),
+                ],
+                vec!["--stdin", "--quiet", "--refresh"],
+            ];
+            for args in &variants {
+                let mut argv = vec!["--json", "omp-boundary", "--repo", f.repo.to_str().unwrap()];
+                argv.extend(args);
+                let output = b3_cli(
+                    root,
+                    &f.repo,
+                    &argv,
+                    args.contains(&"--stdin").then_some(&assessment),
+                    &[],
+                );
+                assert_eq!(output.status, agent_memory::process::Status::Code(1));
+                if args.contains(&"--quiet") {
+                    assert!(output.stdout.is_empty());
+                    assert!(
+                        String::from_utf8_lossy(&output.stderr)
+                            .contains("source assessment pending")
+                    );
+                } else {
+                    let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+                    assert_eq!(get(&value, "verified"), &Value::Bool(false));
+                    assert_eq!(text(&value, "status"), "pending");
+                }
+            }
+            assert_eq!(
+                snapshot(&boundary::base(&f.repo).unwrap().join("omp-source-v1")),
+                source_before
+            );
+            assert_eq!(snapshot(&f.repo.join("memory-bank")), bank);
+            assert_eq!(
+                turn_sources::inspect(&f.repo, "omp", SESSION, text(row, "lifecycle"), &f.runtime)
+                    .unwrap(),
+                shared
+            );
+            drop(lock);
+            release(root, before);
+            ready(root, after);
+            let current = f
+                .pending()
+                .into_iter()
+                .filter(|r| {
+                    !historical
+                        .iter()
+                        .any(|old| get(old, "source_reference") == get(r, "source_reference"))
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(current.len(), 12);
+            assert_eq!(
+                current
+                    .iter()
+                    .filter(|r| r.get("observation_id").is_some())
+                    .count(),
+                8
+            );
+            release(root, after);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            for args in &variants {
+                let mut argv = vec!["--json", "omp-boundary", "--repo", f.repo.to_str().unwrap()];
+                argv.extend(args);
+                let output = b3_cli(
+                    root,
+                    &f.repo,
+                    &argv,
+                    args.contains(&"--stdin").then_some(&assessment),
+                    &[],
+                );
+                assert_eq!(
+                    output.status,
+                    agent_memory::process::Status::Code(0),
+                    "{output:?}"
+                );
+            }
+            assert_eq!(snapshot(&f.repo.join("memory-bank")), bank);
+        },
+    );
+}
+
+fn b3_install_args<'a>(source: &'a Path, agent: &'a Path) -> Vec<&'a str> {
+    vec![
+        "--json",
+        "install",
+        "--development-source",
+        source.to_str().unwrap(),
+        "--presets",
+        "omp",
+        "--omp-agent-dir",
+        agent.to_str().unwrap(),
+        "--omp-peers-upgraded",
+        "--mode",
+        "copy",
+    ]
+}
+fn b3_new_install(root: &Path) -> (PathBuf, PathBuf, PathBuf) {
+    let source = pack(root);
+    agent_memory::cli::use_development_pack(Some(source.join("skills/agent-memory")));
+    let repo = bank_fixture(root);
+    let agent = root.join("omp-agent");
+    std::fs::create_dir(&agent).unwrap();
+    (source, repo, agent)
+}
+
+// obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_receipt_commit_separates_bank_activation_from_rollback
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_receipt_commit_separates_native_bank_activation_from_rollback() {
+    scenarios(
+        "b3_receipt_commit_separates_native_bank_activation_from_rollback",
+        &[
+            "install-before-receipt",
+            "install-after-receipt",
+            "install-before-stored-source-activation",
+        ],
+        |root, stage| {
+            let (source, repo, agent) = b3_new_install(root);
+            let mode = if stage.ends_with("source-activation") {
+                "error"
+            } else {
+                "exit"
+            };
+            let committed = stage != "install-before-receipt";
+            let output = b3_cli(
+                root,
+                &repo,
+                &b3_install_args(&source, &agent),
+                None,
+                &[
+                    ("AGENT_MEMORY_FAULT_STAGE", stage),
+                    ("AGENT_MEMORY_FAULT_MODE", mode),
+                ],
+            );
+            assert_eq!(
+                output.status,
+                agent_memory::process::Status::Code(if mode == "exit" { 86 } else { 1 })
+            );
+            let base = boundary::base(&repo).unwrap();
+            let marker = base.join("turn-sources-compat-v1.json");
+            let binding = base.join("omp-bank-binding-v1.json");
+            assert!(!marker.exists());
+            assert!(!binding.exists());
+            let receipt = root.join("state/agent-memory/install/receipt.json");
+            assert_eq!(receipt.exists(), committed);
+            let bytes = std::fs::read(&receipt).ok();
+            if mode == "error" {
+                let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+                assert_eq!(get(&value, "verified"), &Value::Bool(false));
+                assert_eq!(text(&value, "stored_source_activation"), "pending");
+                assert_eq!(get(&value, "receipt_committed"), &Value::Bool(true));
+            }
+            let recovery = b3_json(b3_cli(root, &repo, &["--json", "recover"], None, &[]), 0);
+            assert_eq!(get(&recovery, "verified"), &Value::Bool(true));
+            if committed {
+                assert_eq!(std::fs::read(&receipt).ok(), bytes);
+                assert!(marker.exists() && binding.exists());
+                let unchanged = b3_json(
+                    b3_cli(root, &repo, &b3_install_args(&source, &agent), None, &[]),
+                    0,
+                );
+                assert_eq!(get(&unchanged, "changed"), &Value::Bool(false));
+                assert_eq!(std::fs::read(&receipt).ok(), bytes);
+            } else {
+                assert_eq!(text(&recovery, "status"), "rolled-back");
+                assert!(!marker.exists() && !binding.exists() && !receipt.exists());
+            }
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_prior_committed_activation_recovers_after_a_later_install_rolls_back
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_prior_committed_activation_survives_later_install_rollback() {
+    isolated(
+        "b3_prior_committed_activation_survives_later_install_rollback",
+        |root| {
+            let (first, repo, agent) = b3_new_install(root);
+            let pending = b3_json(
+                b3_cli(
+                    root,
+                    &repo,
+                    &b3_install_args(&first, &agent),
+                    None,
+                    &[
+                        (
+                            "AGENT_MEMORY_FAULT_STAGE",
+                            "install-before-stored-source-activation",
+                        ),
+                        ("AGENT_MEMORY_FAULT_MODE", "error"),
+                    ],
+                ),
+                1,
+            );
+            assert_eq!(get(&pending, "receipt_committed"), &Value::Bool(true));
+            let receipt = root.join("state/agent-memory/install/receipt.json");
+            let committed = std::fs::read(&receipt).unwrap();
+            let marker = boundary::base(&repo)
+                .unwrap()
+                .join("turn-sources-compat-v1.json");
+            assert!(!marker.exists());
+            let second = root.join("second-development-source");
+            command(
+                root,
+                &[
+                    "cp".into(),
+                    "-R".into(),
+                    first.as_os_str().to_owned(),
+                    second.as_os_str().to_owned(),
+                ],
+            );
+            b3_json(
+                b3_cli(
+                    root,
+                    &repo,
+                    &b3_install_args(&second, &agent),
+                    None,
+                    &[
+                        ("AGENT_MEMORY_FAULT_STAGE", "install-before-receipt"),
+                        ("AGENT_MEMORY_FAULT_MODE", "error"),
+                    ],
+                ),
+                1,
+            );
+            assert_eq!(std::fs::read(&receipt).unwrap(), committed);
+            assert!(!marker.exists());
+            let recovery = b3_json(b3_cli(root, &repo, &["--json", "recover"], None, &[]), 0);
+            assert_eq!(text(&recovery, "status"), "rolled-back");
+            assert_eq!(
+                text(get(&recovery, "stored_source_activation"), "status"),
+                "activated"
+            );
+            assert_eq!(std::fs::read(&receipt).unwrap(), committed);
+            assert!(marker.exists());
+            let unchanged = b3_json(
+                b3_cli(root, &repo, &b3_install_args(&first, &agent), None, &[]),
+                0,
+            );
+            assert_eq!(get(&unchanged, "changed"), &Value::Bool(false));
+            assert_eq!(std::fs::read(&receipt).unwrap(), committed);
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_real_binding_proof_rejects_forgery_and_mid_instance_drift_before_source
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_real_binding_proof_rejects_forgery_and_mid_instance_drift() {
+    isolated(
+        "b3_real_binding_proof_rejects_forgery_and_mid_instance_drift",
+        |root| {
+            let f = Fixture::new(root);
+            let value = request(&f, &[human("proof-human")], "ingest");
+            let base = boundary::base(&f.repo).unwrap();
+            let started = std::cell::Cell::new(0);
+            let forged: stream::FrameProof = Arc::new(true);
+            let observe = |proof: &stream::FrameProof, receipt: &Value| {
+                transport::observe(
+                    &f.repo,
+                    &f.runtime,
+                    &value,
+                    transport::Observation {
+                        receipt: Some(receipt),
+                        on_started: Some(&mut || {
+                            started.set(started.get() + 1);
+                            Ok(())
+                        }),
+                        ..Default::default()
+                    },
+                    &transport::InstalledScope {
+                        receipt: Some(receipt),
+                        proof,
+                        runtime_root: &f.runtime,
+                    },
+                )
+            };
+            assert!(observe(&forged, &f.receipt).is_err());
+            for field in ["installed_at", "artifact_digest"] {
+                let mut different = f.receipt.clone();
+                if field == "installed_at" {
+                    set(&mut different, field, string("2030-01-01T00:00:00+00:00"));
+                } else {
+                    set(
+                        different.get_mut("source").unwrap(),
+                        field,
+                        string(&"f".repeat(64)),
+                    );
+                }
+                assert!(observe(&f.proof, &different).is_err());
+            }
+            assert_eq!(started.get(), 0);
+            for kind in ["receipt", "marker", "bank-binding"] {
+                for frame_kind in ["source", "hint"] {
+                    let (mut coverage, executor, writer) = finite(&f);
+                    let hint_identity = object([
+                        ("kind", string("hint")),
+                        ("session", string(SESSION)),
+                        ("header_id", string(SESSION)),
+                        ("cwd", string(f.repo.to_str().unwrap())),
+                        ("leaf_id", Value::Null),
+                    ]);
+                    let hint = object([
+                        ("schema", string("agent-memory/omp-observer-request-v2")),
+                        ("action", string("hint")),
+                        ("session", string(SESSION)),
+                        ("lifecycle", string(LIFE)),
+                        (
+                            "payload",
+                            object([
+                                ("session", string(SESSION)),
+                                ("header_id", string(SESSION)),
+                                ("cwd", string(f.repo.to_str().unwrap())),
+                                ("leaf_id", Value::Null),
+                            ]),
+                        ),
+                    ]);
+                    let body = object([
+                        ("request", hint),
+                        ("event_ordinal", Value::Int(0u8.into())),
+                        ("identity", hint_identity),
+                    ]);
+                    executor
+                        .execute(
+                            &mut coverage,
+                            "REQUEST",
+                            1,
+                            None,
+                            &turn_sources::encoded(&body).unwrap(),
+                        )
+                        .unwrap();
+                    let count = writer.queued().len();
+                    let path = match kind {
+                        "receipt" => root.join("state/agent-memory/install/receipt.json"),
+                        "marker" => base.join("turn-sources-compat-v1.json"),
+                        _ => base.join("omp-bank-binding-v1.json"),
+                    };
+                    let before = std::fs::read(&path).unwrap();
+                    let mut changed = json::decode_bytes(&before, Default::default()).unwrap();
+                    match kind {
+                        "receipt" => set(
+                            &mut changed,
+                            "installed_at",
+                            string("2030-01-01T00:00:00+00:00"),
+                        ),
+                        "marker" => set(&mut changed, "minimum_reader", string("future-reader")),
+                        _ => set(&mut changed, "project_id", string(&uid())),
+                    }
+                    write(&path, turn_sources::encoded(&changed).unwrap(), 0o600);
+                    let next = if frame_kind == "source" {
+                        envelope(value.clone(), 1)
+                    } else {
+                        body.clone()
+                    };
+                    assert!(
+                        executor
+                            .execute(
+                                &mut coverage,
+                                "REQUEST",
+                                2,
+                                None,
+                                &turn_sources::encoded(&next).unwrap()
+                            )
+                            .is_err()
+                    );
+                    assert_eq!(writer.queued().len(), count);
+                    assert!(!coverage.directory().join("started/2.json").exists());
+                    assert!(!coverage.directory().join("closed.json").exists());
+                    assert!(!base.join("omp-source-v1").exists());
+                    write(&path, before, 0o600);
+                    coverage.close_live();
+                }
+            }
+            let valid = f.observe(&request(&f, &[human("valid-proof-human")], "seal"));
+            assert_eq!(get(&valid, "verified"), &Value::Bool(true));
+            assert!(!f.pending().is_empty());
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_public_uninstall_requires_quiescence_and_actually_drains_completed_sources
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_public_uninstall_requires_quiescence_and_drains_completed_sources() {
+    isolated(
+        "b3_public_uninstall_requires_quiescence_and_drains_completed_sources",
+        |root| {
+            let f = Fixture::new(root);
+            let base = boundary::base(&f.repo).unwrap();
+            let extension = Path::new(text(get(&f.receipt, "omp_binding"), "extension_target"));
+            let before = snapshot(extension.parent().unwrap());
+            b3_json(
+                b3_cli(
+                    root,
+                    &f.repo,
+                    &["--json", "uninstall", "--check", "--omp-writers-quiesced"],
+                    None,
+                    &[],
+                ),
+                0,
+            );
+            assert_eq!(snapshot(extension.parent().unwrap()), before);
+            f.observe(&request(&f, &[human("completed-uninstall-human")], "seal"));
+            for row in f.pending() {
+                acknowledge(&f, &row);
+            }
+            let retained = snapshot(&base.join("omp-source-v1"));
+            let before = (snapshot(extension.parent().unwrap()), snapshot(&base));
+            for args in [
+                vec!["--json", "uninstall", "--check"],
+                vec!["--json", "uninstall", "--check", "--omp-writers-quiesced"],
+            ] {
+                let value = b3_json(b3_cli(root, &f.repo, &args, None, &[]), 1);
+                assert_eq!(get(&value, "verified"), &Value::Bool(false));
+                assert_eq!(
+                    (snapshot(extension.parent().unwrap()), snapshot(&base)),
+                    before
+                );
+            }
+            let result = b3_json(
+                b3_cli(
+                    root,
+                    &f.repo,
+                    &["--json", "uninstall", "--omp-writers-quiesced"],
+                    None,
+                    &[],
+                ),
+                0,
+            );
+            assert_eq!(get(&result, "verified"), &Value::Bool(true));
+            assert!(!extension.exists());
+            assert!(!base.join("turn-sources-compat-v1.json").exists());
+            assert_eq!(snapshot(&base.join("omp-source-v1")), retained);
+            assert!(
+                boundary::required_source_capabilities(&f.repo, &f.runtime)
+                    .unwrap()
+                    .is_empty()
+            );
+        },
+    );
+}
+// obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_public_uninstall_keeps_pending_sources_and_disabled_owned_binding
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_public_uninstall_preserves_pending_sources_and_disables_binding() {
+    isolated(
+        "b3_public_uninstall_preserves_pending_sources_and_disables_binding",
+        |root| {
+            let f = Fixture::new(root);
+            f.observe(&request(&f, &[human("pending-uninstall-human")], "seal"));
+            let rows = f.pending();
+            let sources = rows
+                .iter()
+                .map(|r| {
+                    transport::source(
+                        &f.repo,
+                        &f.runtime,
+                        text(r, "session"),
+                        text(r, "lifecycle"),
+                        text(r, "observation_id"),
+                    )
+                    .unwrap()
+                })
+                .collect::<Vec<_>>();
+            let extension = Path::new(text(get(&f.receipt, "omp_binding"), "extension_target"));
+            let unrelated = get(&f.receipt, "targets")
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|t| Path::new(text(t, "path")) != extension)
+                .map(|t| {
+                    (
+                        PathBuf::from(text(t, "path")),
+                        snapshot(Path::new(text(t, "path"))),
+                    )
+                })
+                .collect::<Vec<_>>();
+            let result = b3_json(
+                b3_cli(
+                    root,
+                    &f.repo,
+                    &["--json", "uninstall", "--omp-writers-quiesced"],
+                    None,
+                    &[],
+                ),
+                1,
+            );
+            assert_eq!(get(&result, "verified"), &Value::Bool(false));
+            assert!(!extension.exists());
+            assert!(
+                std::fs::read_dir(extension.parent().unwrap())
+                    .unwrap()
+                    .any(|e| e
+                        .unwrap()
+                        .file_name()
+                        .to_string_lossy()
+                        .starts_with(".agent-memory-disabled-"))
+            );
+            for (path, before) in unrelated {
+                assert_eq!(snapshot(&path), before);
+            }
+            assert_eq!(f.pending(), rows);
+            assert_eq!(
+                f.pending()
+                    .iter()
+                    .map(|r| transport::source(
+                        &f.repo,
+                        &f.runtime,
+                        text(r, "session"),
+                        text(r, "lifecycle"),
+                        text(r, "observation_id")
+                    )
+                    .unwrap())
+                    .collect::<Vec<_>>(),
+                sources
+            );
+            let capabilities = boundary::required_source_capabilities(&f.repo, &f.runtime).unwrap();
+            assert!(capabilities.contains(boundary::CAPABILITY));
+            assert!(capabilities.contains(boundary::HISTORICAL_CAPABILITY));
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_real_completion_between_result_and_wake_requires_new_inventory
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_completion_between_seal_and_wake_requires_new_inventory() {
+    isolated(
+        "b3_completion_between_seal_and_wake_requires_new_inventory",
+        |root| {
+            let f = Fixture::new(root);
+            let mut value = request(&f, &[human("completed-before-wake")], "seal");
+            set(
+                value.get_mut("payload").unwrap(),
+                "request_wake",
+                Value::Bool(true),
+            );
+            let stage = "omp.wake.before-inventory";
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&value).unwrap(),
+                0o600,
+            );
+            let child = operation_child(root, Some(stage), "pause", "wake-observe");
+            ready(root, stage);
+            let rows = f.pending();
+            assert!(!rows.is_empty());
+            for row in &rows {
+                let value = completion_request(row);
+                let receipt = turn_sources::verify_assessment(
+                    &f.repo,
+                    &value,
+                    text(row, "observation_id"),
+                    &f.runtime,
+                )
+                .unwrap();
+                turn_sources::complete(
+                    &f.repo,
+                    "omp",
+                    text(row, "session"),
+                    text(row, "lifecycle"),
+                    text(row, "observation_id"),
+                    text(row, "source_sha256"),
+                    &receipt,
+                    &f.runtime,
+                )
+                .unwrap();
+            }
+            release(root, stage);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let result = registry_result(root);
+            assert_eq!(get(&result, "verified"), &Value::Bool(true));
+            assert_eq!(get(&result, "continue"), &Value::Bool(false));
+            assert_eq!(text(&result, "status"), "pending-wake-unavailable");
+            assert!(f.pending().is_empty());
+            assert!(root_wakes(&f).is_empty());
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_clock_ack_behind_accepted_16mib_frame_reaches_late_reservation
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_clock_ack_behind_real_16mib_frame_reaches_reservation() {
+    isolated(
+        "b3_clock_ack_behind_real_16mib_frame_reaches_reservation",
+        |root| {
+            let f = Fixture::new(root);
+            let value = armed_request(&f);
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&value).unwrap(),
+                0o600,
+            );
+            let nonce = uid();
+            let mut raw = turn_sources::encoded(&envelope(value, 1)).unwrap();
+            raw.resize(stream::MAX_FRAME, b' ');
+            let mut wire = format!("AM249 REQUEST 1 {} {nonce}\n", raw.len()).into_bytes();
+            wire.extend(raw);
+            let now = agent_memory::clock::monotonic_ns();
+            wire.extend(
+                stream::encode_frame(
+                    "CLOCK",
+                    0,
+                    &object([
+                        ("nonce", string(&nonce)),
+                        ("j0", string(&now.to_string())),
+                        ("j_deadline", string(&(now + 950_000_000).to_string())),
+                    ]),
+                    None,
+                )
+                .unwrap(),
+            );
+            wire.extend(
+                stream::encode_frame(
+                    "CLOCK-ACK",
+                    0,
+                    &object([
+                        ("nonce", string(&nonce)),
+                        ("j0", string(&now.to_string())),
+                        ("j3", string(&(now + 1).to_string())),
+                    ]),
+                    None,
+                )
+                .unwrap(),
+            );
+            wire.extend(stream::encode_frame("FINAL", 2, &decode(r#"{"last_attempt_seq":1,"refused_count":0,"last_event_ordinal":1,"transition":null}"#), None).unwrap());
+            write(&root.join("finite-input.raw"), wire, 0o600);
+            let child = operation_child(root, None, "", "finite-run");
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let frames = response_frames(&root.join("finite-response-wire"));
+            assert!(frames.iter().any(|(kind, _, _)| kind == "CLOCK-REPLY"));
+            let result = frames
+                .iter()
+                .find(|(kind, seq, _)| kind == "OBSERVED" && *seq == 1)
+                .unwrap();
+            assert_eq!(
+                get(get(&result.2, "result"), "continue"),
+                &Value::Bool(true)
+            );
+            assert_eq!(root_wakes(&f).len(), 1);
+            assert_verified_pending_source(&f, &child_directory(root));
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_completion_guard_discovers_fresh_locations_and_restores_live_locator
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_completion_guard_rediscovers_location_then_restores_live_locator() {
+    isolated(
+        "b3_completion_guard_rediscovers_location_then_restores_live_locator",
+        |root| {
+            let f = Fixture::new(root);
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&armed_request(&f)).unwrap(),
+                0o600,
+            );
+            let stage = "omp.outcome.before-guard";
+            let child = operation_child(root, Some(stage), "pause", "finite");
+            ready(root, stage);
+            let config = f.repo.join(".git/config");
+            let original = std::fs::read(&config).unwrap();
+            let mut changed = original.clone();
+            changed.extend_from_slice(b"\n[agent-memory]\n\tbankroot = fresh-location-bank\n");
+            write(&config, changed, 0o600);
+            release(root, stage);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            assert!(registry_result(root).get("error").is_some());
+            assert!(!child_directory(root).join("outcomes/1.json").exists());
+            write(&config, original, 0o600);
+            let context =
+                agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                    .unwrap();
+            agent_memory::scope_binding::private_enrollment_reads(&context, |context| {
+                agent_memory::scope_binding::observe_enrollment_locations(context, || {
+                    agent_memory::scope_binding::enrollment_read_context(&f.repo, context)?;
+                    assert_eq!(context.bank(), f.repo.join("memory-bank"));
+                    Ok(())
+                })
+            })
+            .unwrap();
+            assert_retained_human(&f, "phase-human");
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_reused_header_nonce_decline_and_exit_fault_do_not_claim_own_reservation
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation() {
+    isolated(
+        "b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation",
+        |root| {
+            let f = Fixture::new(root);
+            let first = armed_request(&f);
+            let second = request(
+                &f,
+                &[
+                    human("phase-human"),
+                    answer("phase-answer"),
+                    human("second-human"),
+                    answer("second-answer"),
+                ],
+                "seal",
+            );
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&first).unwrap(),
+                0o600,
+            );
+            write(
+                &root.join("case-followup.json"),
+                turn_sources::encoded(&second).unwrap(),
+                0o600,
+            );
+            write(&root.join("case-reuse-nonce"), b"", 0o600);
+            let stage = "omp.reservation.before-reserve";
+            let child = operation_child(root, Some(stage), "pause", "finite-auto-calibrated");
+            ready(root, stage);
+            wait_path(&root.join("calibrated"));
+            release(root, stage);
+            wait_path(&root.join("first-finished"));
+            assert_eq!(root_wakes(&f).len(), 1);
+            for suffix in ["ready", "release"] {
+                std::fs::remove_file(root.join("rendezvous").join(format!("{stage}.{suffix}")))
+                    .unwrap();
+            }
+            write(&root.join("allow-second"), b"", 0o600);
+            ready(root, stage);
+            let lock = boundary::base(&f.repo).unwrap().join("omp-transport.lock");
+            std::fs::rename(&lock, lock.with_extension("second-held")).unwrap();
+            write(&lock, b"", 0o600);
+            release(root, stage);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let frames =
+                transport::read(&root.join("responses.json"), transport::MAX_PAYLOAD).unwrap();
+            let results = frames
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|v| v.get("result"))
+                .collect::<Vec<_>>();
+            assert_eq!(get(results[0], "continue"), &Value::Bool(true));
+            assert_eq!(get(results[1], "verified"), &Value::Bool(true));
+            assert_eq!(get(results[1], "continue"), &Value::Bool(false));
+            assert_eq!(text(results[1], "status"), "pending-wake-unavailable");
+            assert_eq!(root_wakes(&f).len(), 1);
+            assert_eq!(
+                text(
+                    &transport::read(
+                        &child_directory(root).join("outcomes/2.json"),
+                        stream::MAX_METADATA
+                    )
+                    .unwrap(),
+                    "outcome"
+                ),
+                "verified"
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_legacy_random_root_wake_follows_exact_native_user_without_spending_new_human_budget
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_legacy_root_wake_follows_exact_native_user_not_new_human_budget() {
+    isolated(
+        "b3_legacy_root_wake_follows_exact_native_user_not_new_human_budget",
+        |root| {
+            let f = Fixture::new(root);
+            let legacy = uid();
+            transport::new_segment(&f.site(), SESSION, &legacy, &legacy, "human", 0).unwrap();
+            let wakes = transport::session_dir(&f.site(), SESSION)
+                .unwrap()
+                .join("root-wakes");
+            transport::retain(
+                &wakes.join(format!("{legacy}.json")),
+                &object([
+                    ("schema", string("agent-memory/omp-root-wake-v1")),
+                    ("session", string(SESSION)),
+                    ("human_root", string(&legacy)),
+                    ("native_user_entry", string("same-human")),
+                    ("request_id", string(&uid())),
+                    ("status", string("requested")),
+                ]),
+                4096,
+            )
+            .unwrap();
+            let human = human("same-human");
+            let result = f.observe(&request(&f, std::slice::from_ref(&human), "seal"));
+            let repeated = run_wake_child(root, &wake_request(&result), None, "");
+            assert_eq!(get(&repeated, "continue"), &Value::Bool(false));
+            assert_eq!(
+                text(&repeated, "status"),
+                "pending-already-requested-native-user"
+            );
+            assert_eq!(root_wakes(&f).len(), 1);
+            let result = f.observe(&request(
+                &f,
+                &[human, self::human("different-human")],
+                "seal",
+            ));
+            let next = run_wake_child(root, &wake_request(&result), None, "");
+            assert_eq!(get(&next, "continue"), &Value::Bool(true));
+            assert_eq!(root_wakes(&f).len(), 2);
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_random_legacy_root_with_real_reconciled_human_still_cannot_acknowledge
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_random_legacy_root_cannot_acknowledge_reconciled_real_human() {
+    isolated(
+        "b3_random_legacy_root_cannot_acknowledge_reconciled_real_human",
+        |root| {
+            let f = Fixture::new(root);
+            let legacy = uid();
+            let s =
+                transport::new_segment(&f.site(), SESSION, &legacy, &legacy, "human", 1).unwrap();
+            let mut cursor = s.snapshot().unwrap();
+            let human = human("real-later-human");
+            let capture =
+                transport::capture(&s.directory, &cursor, &human, "verified", None, false)
+                    .unwrap()
+                    .unwrap();
+            set(
+                &mut cursor,
+                "control_interval",
+                object([
+                    ("human_entry", string("real-later-human")),
+                    ("capture_order", decode(r#"["real-later-human"]"#)),
+                    (
+                        "metadata_matches",
+                        object([(&uid(), string("real-later-human"))]),
+                    ),
+                ]),
+            );
+            transport::replace_cursor(&s.directory.join("cursor.json"), &cursor).unwrap();
+            transport::enroll_admission(&s.directory, &cursor, Some(&capture)).unwrap();
+            transport::seal(&s.directory, &cursor).unwrap();
+            let mut registered = vec![];
+            for path in
+                transport::files(&s.directory, "enrollments", transport::Names::Hex64).unwrap()
+            {
+                let e = transport::read(&path, 4096).unwrap();
+                registered.push(
+                    turn_sources::register(
+                        &f.repo,
+                        "omp",
+                        SESSION,
+                        &legacy,
+                        text(&e, "source_sha256"),
+                        Some(text(&e, "native_source_id")),
+                        Some(text(&e, "source_reference")),
+                        None,
+                        &f.runtime,
+                    )
+                    .unwrap(),
+                );
+            }
+            assert_eq!(registered.len(), 2);
+            let child_id = uid();
+            let child = s.directory.parent().unwrap().join(&child_id);
+            let child_cursor = object([
+                ("schema", string("agent-memory/omp-cursor-v1")),
+                ("session", string(SESSION)),
+                ("lifecycle", string(&child_id)),
+                (
+                    "origin",
+                    object([
+                        ("kind", string("foreign-continuation")),
+                        ("human_root", string(&legacy)),
+                        ("native_trigger", string("foreign-hidden")),
+                    ]),
+                ),
+                ("last_native_entry", Value::Null),
+                ("event_ordinal", Value::Int(2u8.into())),
+                ("control_interval", Value::Null),
+                ("tool_lifecycles", object([])),
+            ]);
+            transport::retain(
+                &child.join("cursor.json"),
+                &child_cursor,
+                transport::MAX_CURSOR,
+            )
+            .unwrap();
+            let assistant = answer("legacy-child-answer");
+            transport::capture(&child, &child_cursor, &assistant, "verified", None, false).unwrap();
+            let before = snapshot(&s.directory);
+            let child_before = snapshot(&child);
+            assert!(!transport::source_bound_origin(&s.directory, &cursor).unwrap());
+            assert!(!transport::source_bound_origin(&child, &child_cursor).unwrap());
+            assert!(
+                f.pending()
+                    .iter()
+                    .any(|r| text(r, "status") == "legacy-unverified-metadata")
+            );
+            for observation in registered {
+                let mut row = observation;
+                set(&mut row, "session", string(SESSION));
+                set(&mut row, "lifecycle", string(&legacy));
+                assert!(
+                    transport::complete(&f.repo, &f.runtime, &completion_request(&row))
+                        .unwrap_err()
+                        .to_string()
+                        .contains("independently stored root origin")
+                );
+                assert!(
+                    transport::source(
+                        &f.repo,
+                        &f.runtime,
+                        SESSION,
+                        &legacy,
+                        text(&row, "observation_id")
+                    )
+                    .unwrap_err()
+                    .to_string()
+                    .contains("independently stored root origin")
+                );
+            }
+            assert!(
+                transport::new_segment(&f.site(), SESSION, &uid(), &legacy, "foreign-hidden", 2)
+                    .is_err()
+            );
+            assert!(
+                transport::native_disposition_ids(&f.site(), SESSION)
+                    .unwrap()
+                    .is_empty()
+            );
+            f.observe(&request(&f, &[human, assistant], "seal"));
+            assert_eq!(snapshot(&s.directory), before);
+            assert_eq!(snapshot(&child), child_before);
+            assert!(
+                transport::segments(&f.site(), SESSION)
+                    .unwrap()
+                    .iter()
+                    .any(|s| {
+                        let cursor = s.snapshot().unwrap();
+                        get(get(&cursor, "origin"), "human_root") != &string(&legacy)
+                            && transport::source_bound_origin(&s.directory, &cursor).unwrap()
+                    })
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_existing_root_retains_legacy_bare_pending_without_inferred_cause
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_existing_root_retains_bare_pending_without_inferred_cause() {
+    isolated(
+        "b3_existing_root_retains_bare_pending_without_inferred_cause",
+        |root| {
+            let f = Fixture::new(root);
+            let value = armed_request(&f);
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&value).unwrap(),
+                0o600,
+            );
+            write(
+                &root.join("case-followup.json"),
+                turn_sources::encoded(&value).unwrap(),
+                0o600,
+            );
+            let stage = "omp.postresponse.before-drain";
+            let child = operation_child(root, Some(stage), "pause", "finite-auto-calibrated");
+            ready(root, stage);
+            let roots = root_wakes(&f);
+            assert_eq!(roots.len(), 1);
+            let original = std::fs::read(&roots[0]).unwrap();
+            release(root, stage);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let directory = child_directory(root);
+            let decision = transport::read(
+                &stream::wake_decision_directory(&directory)
+                    .unwrap()
+                    .join("2.json"),
+                4096,
+            )
+            .unwrap();
+            assert_eq!(text(&decision, "status"), "pending");
+            assert_eq!(get(&decision, "human_root"), &Value::Null);
+            assert_eq!(root_wakes(&f).len(), 1);
+            assert_eq!(std::fs::read(&roots[0]).unwrap(), original);
+            assert_eq!(
+                get(get(&wake_summary(&f), "counts"), "pending"),
+                &Value::Int(1u8.into())
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_writer_checks_actual_request_without_cursor_or_root_scan
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_optional_writer_checks_exact_request_without_cursor_or_root_scan() {
+    scenarios(
+        "b3_optional_writer_checks_exact_request_without_cursor_or_root_scan",
+        &["no-scan", "mismatch"],
+        |root, mode| {
+            let f = Fixture::new(root);
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&armed_request(&f)).unwrap(),
+                0o600,
+            );
+            let before = "omp.decision.before-retain";
+            let after = "omp.postresponse.before-drain";
+            let child = operation_child(
+                root,
+                Some(&format!("{before},{after}")),
+                "pause,pause",
+                "finite-auto-calibrated",
+            );
+            ready(root, before);
+            let roots = root_wakes(&f);
+            assert_eq!(roots.len(), 1);
+            let root_before = std::fs::read(&roots[0]).unwrap();
+            let segment = transport::segments(&f.site(), SESSION).unwrap().remove(0);
+            let cursor = segment.directory.join("cursor.json");
+            let cursor_before = std::fs::read(&cursor).unwrap();
+            let foreign = roots[0].parent().unwrap().join(format!("{}.json", uid()));
+            if mode == "no-scan" {
+                write(&cursor, b"not a cursor\n", 0o600);
+                write(&foreign, b"not a root request\n", 0o600);
+            } else {
+                let mut actual = json::decode_bytes(&root_before, Default::default()).unwrap();
+                set(&mut actual, "request_id", string(&uid()));
+                write(&roots[0], turn_sources::encoded(&actual).unwrap(), 0o600);
+            }
+            release(root, before);
+            ready(root, after);
+            let path = stream::wake_decision_directory(&child_directory(root))
+                .unwrap()
+                .join("1.json");
+            if mode == "no-scan" {
+                assert_eq!(
+                    text(&transport::read(&path, 4096).unwrap(), "status"),
+                    "offered"
+                );
+                assert_eq!(std::fs::read(&roots[0]).unwrap(), root_before);
+                std::fs::remove_file(&foreign).unwrap();
+            } else {
+                assert!(!path.exists());
+            }
+            write(&cursor, cursor_before, 0o600);
+            write(&roots[0], root_before, 0o600);
+            release(root, after);
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            if mode == "mismatch" {
+                assert_eq!(
+                    get(get(&wake_summary(&f), "counts"), "unrecorded"),
+                    &Value::Int(1u8.into())
+                );
+            }
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_nonseal_and_failed_source_attempts_do_not_acquire_diagnostic_rows
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_nonseal_and_real_capture_failure_never_acquire_decision_rows() {
+    scenarios(
+        "b3_nonseal_and_real_capture_failure_never_acquire_decision_rows",
+        &["ingest", "failed-seal"],
+        |root, mode| {
+            let f = Fixture::new(root);
+            let value = request(
+                &f,
+                &[human("incomplete-human"), answer("incomplete-answer")],
+                if mode == "ingest" { "ingest" } else { "seal" },
+            );
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&value).unwrap(),
+                0o600,
+            );
+            let child = operation_child(
+                root,
+                (mode == "failed-seal").then_some("omp.capture.after-commit"),
+                "error",
+                "finite",
+            );
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let directory = child_directory(root);
+            assert!(
+                !stream::wake_decision_directory(&directory)
+                    .unwrap()
+                    .join("1.json")
+                    .exists()
+            );
+            if mode == "failed-seal" {
+                assert_eq!(
+                    text(
+                        &transport::read(&directory.join("outcomes/1.json"), stream::MAX_METADATA)
+                            .unwrap(),
+                        "outcome"
+                    ),
+                    "unknown"
+                );
+            }
+            let summary = wake_summary(&f);
+            assert_eq!(get(&summary, "rows"), &Value::Array(vec![]));
+            assert!(
+                get(&summary, "counts")
+                    .as_object()
+                    .unwrap()
+                    .iter()
+                    .all(|(_, count)| count.as_int().unwrap().as_u64() == Some(0))
+            );
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_bounded_summary_orphans_and_unreadable_namespace_do_not_change_doctor_health
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health() {
+    isolated(
+        "b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health",
+        |root| {
+            let f = Fixture::new(root);
+            let (mut coverage, executor, _) = finite(&f);
+            for sequence in 1..=66 {
+                execute_seal(
+                    &f,
+                    &mut coverage,
+                    &executor,
+                    &[human("diagnostic-human"), answer("diagnostic-answer")],
+                    false,
+                    sequence,
+                );
+            }
+            assert!(coverage.close(&decode(r#"{"last_attempt_seq":66,"refused_count":0,"last_event_ordinal":66,"transition":null}"#)).unwrap());
+            let authority = stream::Installed::new(&f.runtime);
+            let inventory = stream::inventory(&authority, &f.repo, None, false).unwrap();
+            let doctor = || {
+                b3_json(
+                    b3_cli(
+                        root,
+                        &f.repo,
+                        &["--json", "doctor", "--repo", f.repo.to_str().unwrap()],
+                        None,
+                        &[],
+                    ),
+                    0,
+                )
+            };
+            let baseline = doctor();
+            assert_eq!(get(&baseline, "ok"), &Value::Bool(true));
+            let summary = get(get(&baseline, "omp"), "wake_decisions");
+            assert_eq!(get(summary, "rows").as_array().unwrap().len(), 64);
+            assert_eq!(get(summary, "truncated"), &Value::Bool(true));
+            assert_eq!(
+                get(get(summary, "counts"), "not-armed"),
+                &Value::Int(66u8.into())
+            );
+            let optional = stream::wake_decision_directory(coverage.directory()).unwrap();
+            let orphan = optional.parent().unwrap().join(uid());
+            turn_sources::private_mkdir(&orphan).unwrap();
+            write(&orphan.join("not-a-diagnostic"), b"do-not-disclose", 0o600);
+            assert_eq!(wake_summary(&f), *summary);
+            std::fs::rename(&optional, optional.with_extension("hidden")).unwrap();
+            write(&optional, b"do-not-disclose", 0o600);
+            let unavailable = doctor();
+            assert_eq!(get(&unavailable, "ok"), &Value::Bool(true));
+            let report = get(get(&unavailable, "omp"), "wake_decisions");
+            assert_eq!(text(report, "availability"), "unavailable-or-unverifiable");
+            assert_eq!(get(report, "rows"), &Value::Array(vec![]));
+            assert!(
+                !turn_sources::encoded(&unavailable)
+                    .unwrap()
+                    .windows(b"do-not-disclose".len())
+                    .any(|w| w == b"do-not-disclose")
+            );
+            assert_eq!(
+                stream::inventory(&authority, &f.repo, None, false).unwrap(),
+                inventory
+            );
+            assert_eq!(
+                get(get(&unavailable, "omp"), "transport_qualification"),
+                get(get(&baseline, "omp"), "transport_qualification")
+            );
+            coverage.close_live();
+        },
+    );
+}
+
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_rolled_back_raw_scope_defers_late_real_held_checkpoint_without_source_loss
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_rolled_back_raw_scope_defers_late_real_checkpoint_without_source_loss() {
+    isolated(
+        "b3_rolled_back_raw_scope_defers_late_real_checkpoint_without_source_loss",
+        |root| {
+            let h = held_fixture(root);
+            let f = &h.fixture;
+            let index_path = agent_memory::layout_recovery_state::paths(&f.repo, None, &f.runtime)
+                .unwrap()
+                .2
+                .join("index.json");
+            let mut index = transport::read(&index_path, transport::MAX_PAYLOAD).unwrap();
+            set(
+                index
+                    .get_mut("operations")
+                    .unwrap()
+                    .get_mut(&h.operation)
+                    .unwrap(),
+                "state",
+                string("rolled-back"),
+            );
+            write(&index_path, turn_sources::encoded(&index).unwrap(), 0o600);
+            let context =
+                agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                    .unwrap();
+            assert!(context.held());
+            let current = agent_memory::checkpoint::inspect(&f.repo).unwrap();
+            let payload = object([
+                (
+                    "focus",
+                    string("Verify task-specific checkpoint under the retained hold."),
+                ),
+                (
+                    "recent_changes",
+                    decode(r#"["Inspected exact source and retained pending conditions."]"#),
+                ),
+                (
+                    "open_questions",
+                    decode(r#"["Which independent evidence resolves the pending source?"]"#),
+                ),
+                (
+                    "next_step",
+                    string("Inspect the original source before admission."),
+                ),
+                ("evidence", decode(r#"["../README.md"]"#)),
+                ("conditions", object([])),
+                ("harness", string("custom")),
+                ("session", string("held-checkpoint")),
+                (
+                    "observed_active_sha256",
+                    get(&current, "observed_active_sha256").clone(),
+                ),
+            ]);
+            let prepared = agent_memory::checkpoint::preview(&f.repo, &payload, false).unwrap();
+            let marker =
+                std::fs::read(f.repo.join("memory-bank/.agent-memory-transaction.md")).unwrap();
+            let ledger = std::fs::read(h.directory.join("ledger-head.json")).unwrap();
+            let checkpoint_stage = "layout-recovery-nested-before-receipt";
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&prepared).unwrap(),
+                0o600,
+            );
+            let writer = operation_child(root, Some(checkpoint_stage), "pause", "b3-checkpoint");
+            ready(root, checkpoint_stage);
+            let error =
+                agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                    .err()
+                    .unwrap();
+            assert!(matches!(
+                error.kind(),
+                agent_memory::error::Kind::SourceTransportBusy {
+                    initializing: false
+                }
+            ));
+            let owner =
+                transport::read(&f.repo.join("memory-bank/.agent-memory.lock"), 4096).unwrap();
+            assert_eq!(text(&owner, "operation"), "bank-checkpoint");
+            assert_eq!(
+                std::fs::read(h.directory.join(text(&h.original, "blob"))).unwrap(),
+                h.body
+            );
+            assert_eq!(
+                std::fs::read(h.directory.join("ledger-head.json")).unwrap(),
+                ledger
+            );
+            release(root, checkpoint_stage);
+            assert_eq!(writer.wait().status, agent_memory::process::Status::Code(0));
+            assert_eq!(get(&registry_result(root), "verified"), &Value::Bool(true));
+            assert_eq!(
+                std::fs::read(f.repo.join("memory-bank/.agent-memory-transaction.md")).unwrap(),
+                marker
+            );
+            assert_eq!(
+                agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
+                    .unwrap()
+                    .scope(),
+                context.scope()
+            );
+            let source = register_source(
+                f,
+                "late-checkpoint-session",
+                "late-checkpoint-source",
+                &"a".repeat(64),
+            );
+            assert_source_retained(f, "late-checkpoint-session", &source);
+            assert_eq!(
+                std::fs::read(h.directory.join("ledger-head.json")).unwrap(),
+                ledger
+            );
+        },
+    );
+}
+
+fn b3_extension(receipt: &Value) -> PathBuf {
+    let path = PathBuf::from(text(get(receipt, "omp_binding"), "extension_target"));
+    let target = get(receipt, "targets")
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|t| text(t, "path") == path.to_str().unwrap())
+        .unwrap();
+    assert_eq!(
+        std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        0o644
+    );
+    assert_eq!(
+        b3_sha(&std::fs::read(&path).unwrap()),
+        text(get(target, "identity"), "hash")
+    );
+    path
+}
+fn b3_signed_operation(root: &Path) {
+    let request = transport::read(&root.join("case-request.json"), 65536).unwrap();
+    let channel = support::distribution::Channel {
+        root: PathBuf::from(text(&request, "channel")),
+        pack: PathBuf::new(),
+    };
+    let env = agent_memory::installation::Environment::process();
+    let mut services = agent_memory::installation::Services::registered().unwrap();
+    services.release = channel.access();
+    services.updating = Some(Arc::new(agent_memory::updating::Runtime::new(
+        env.clone(),
+        services.artifacts.clone(),
+        services.release.clone(),
+    )));
+    let operation = text(&request, "operation");
+    let result = match operation {
+        "install" => {
+            let agent = root.join("omp-agent");
+            std::fs::create_dir(&agent).unwrap();
+            agent_memory::installation::install_command(
+                &env,
+                &services,
+                &agent_memory::installation::InstallRequest {
+                    presets: Some("omp".into()),
+                    mode: Some(if get(&request, "mode").as_str() == Some("link") {
+                        agent_memory::installation::Mode::Link
+                    } else {
+                        agent_memory::installation::Mode::Copy
+                    }),
+                    omp_agent_dir: Some(agent.to_str().unwrap().into()),
+                    omp_peers_upgraded: true,
+                    bootstrap_binary: Some(channel.binary(env!("CARGO_PKG_VERSION"))),
+                    ..Default::default()
+                },
+            )
+        }
+        "update" | "check" => agent_memory::updating::update_command(
+            &env,
+            &services,
+            &agent_memory::updating::UpdateRequest {
+                check: operation == "check",
+                ..Default::default()
+            },
+        ),
+        "recover" => agent_memory::installation::recover_command(&env, &services),
+        "fixture" => {
+            let receipt = transport::read(
+                &root.join("state/agent-memory/install/receipt.json"),
+                transport::MAX_PAYLOAD,
+            )
+            .unwrap();
+            install_activation(&receipt);
+            let runtime = PathBuf::from(text(get(&receipt, "source"), "pack"));
+            let repo = bank_fixture(root);
+            boundary::activate_marker(&repo, false, &runtime).unwrap();
+            boundary::stream_startup(&repo, SESSION, &uid(), LIFE, &receipt, &runtime).unwrap();
+            command(&repo, &["git".into(), "add".into(), ".".into()]);
+            command(
+                &repo,
+                &[
+                    "git".into(),
+                    "commit".into(),
+                    "-m".into(),
+                    "Controlled native project bank".into(),
+                ],
+            );
+            let missing = root.join("deleted-native-session");
+            command(
+                &repo,
+                &[
+                    "git".into(),
+                    "worktree".into(),
+                    "add".into(),
+                    "-b".into(),
+                    "deleted-native-session".into(),
+                    missing.as_os_str().to_owned(),
+                ],
+            );
+            std::fs::remove_dir_all(&missing).unwrap();
+            write(
+                &root.join("operation-result.json"),
+                turn_sources::encoded(&object([
+                    ("code", Value::Int(0u8.into())),
+                    (
+                        "value",
+                        object([
+                            ("repo", string(repo.to_str().unwrap())),
+                            ("missing", string(missing.to_str().unwrap())),
+                        ]),
+                    ),
+                ]))
+                .unwrap(),
+                0o600,
+            );
+            return;
+        }
+        _ => panic!("unknown signed operation"),
+    };
+    write(
+        &root.join("operation-result.json"),
+        turn_sources::encoded(&object([
+            ("code", Value::Int(result.exit_code.into())),
+            ("value", decode(&result.stdout)),
+        ]))
+        .unwrap(),
+        0o600,
+    );
+}
+fn b3_signed(
+    world: &World,
+    channel: &support::distribution::Channel,
+    operation: &str,
+    mode: &str,
+    expected: i32,
+) -> Value {
+    write(
+        &world.root.join("case-request.json"),
+        turn_sources::encoded(&object([
+            ("channel", string(channel.root.to_str().unwrap())),
+            ("operation", string(operation)),
+            ("mode", string(mode)),
+        ]))
+        .unwrap(),
+        0o600,
+    );
+    let extra = [(
+        "AGENT_MEMORY_FAULT_OMP_OPERATION".into(),
+        "b3-signed".into(),
+    )];
+    let output = world
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                "native_operation_child".into(),
+                "--nocapture".into(),
+            ],
+            RunOptions {
+                env: &extra,
+                cwd: Some(&world.root),
+                timeout: Duration::from_secs(120),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        output.status,
+        agent_memory::process::Status::Code(0),
+        "{output:?}"
+    );
+    let result = transport::read(
+        &world.root.join("operation-result.json"),
+        transport::MAX_PAYLOAD,
+    )
+    .unwrap();
+    assert_eq!(
+        get(&result, "code"),
+        &Value::Int(expected.into()),
+        "{result:?}"
+    );
+    get(&result, "value").clone()
+}
+
+// obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_signed_native_updates_preserve_extension_integrity
+#[test]
+fn b3_signed_native_updates_preserve_exact_owned_extension_integrity() {
+    for mode in ["copy", "link"] {
+        let world = World::new().unwrap();
+        let channel = support::distribution::Channel::new(&world);
+        channel.publish(env!("CARGO_PKG_VERSION"), &"a".repeat(40));
+        let installed = b3_signed(&world, &channel, "install", mode, 0);
+        let receipt = get(&installed, "receipt");
+        assert_eq!(text(get(receipt, "source"), "kind"), "release");
+        let extension = b3_extension(receipt);
+        let receipt_path = world.root.join("state/agent-memory/install/receipt.json");
+        let before = (
+            std::fs::read(&extension).unwrap(),
+            std::fs::read(&receipt_path).unwrap(),
+        );
+        assert_eq!(
+            get(
+                &b3_signed(&world, &channel, "check", mode, 0),
+                "check_complete"
+            ),
+            &Value::Bool(true)
+        );
+        assert_eq!(
+            get(&b3_signed(&world, &channel, "update", mode, 0), "changed"),
+            &Value::Bool(false)
+        );
+        assert_eq!(
+            (
+                std::fs::read(&extension).unwrap(),
+                std::fs::read(&receipt_path).unwrap()
+            ),
+            before
+        );
+        channel.publish("0.0.16", &"b".repeat(40));
+        assert_eq!(
+            get(
+                &b3_signed(&world, &channel, "check", mode, 0),
+                "update_available"
+            ),
+            &Value::Bool(true)
+        );
+        assert_eq!(
+            (
+                std::fs::read(&extension).unwrap(),
+                std::fs::read(&receipt_path).unwrap()
+            ),
+            before
+        );
+        let updated = b3_signed(&world, &channel, "update", mode, 0);
+        assert_eq!(get(&updated, "verified"), &Value::Bool(true));
+        assert_eq!(get(&updated, "changed"), &Value::Bool(true));
+        b3_extension(get(&updated, "receipt"));
+        assert_eq!(
+            get(&b3_signed(&world, &channel, "update", mode, 0), "changed"),
+            &Value::Bool(false)
+        );
+        let binary = Path::new(text(get(&updated, "receipt"), "bin_dir")).join("am");
+        let help = world
+            .run([binary.as_os_str(), std::ffi::OsStr::new("--help")])
+            .unwrap();
+        assert_eq!(help.status, agent_memory::process::Status::Code(0));
+        // The production binary must not adopt the fixture's signing key.
+        // Signed lifecycle commands above use the established explicit-signers
+        // Channel fixture, not an installed-runtime key override.
+        let receipt_before = std::fs::read(&receipt_path).unwrap();
+        let version = world
+            .run_with(
+                [binary.into_os_string(), "--json".into(), "version".into()],
+                RunOptions {
+                    check: false,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        let value = b3_json(version, 1);
+        assert_eq!(get(&value, "ok"), &Value::Bool(false));
+        assert_eq!(std::fs::read(&receipt_path).unwrap(), receipt_before);
+    }
+}
+
+// obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_native_update_ignores_missing_historical_worktree_but_preserves_required_enrollment
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_signed_native_update_distinguishes_missing_history_from_required_enrollment() {
+    let world = World::new().unwrap();
+    let channel = support::distribution::Channel::new(&world);
+    channel.publish(env!("CARGO_PKG_VERSION"), &"a".repeat(40));
+    b3_signed(&world, &channel, "install", "copy", 0);
+    let fixture = b3_signed(&world, &channel, "fixture", "copy", 0);
+    let repo = Path::new(text(&fixture, "repo"));
+    let before = snapshot(repo);
+    channel.publish("0.0.16", &"b".repeat(40));
+    let state = snapshot(&world.root.join("state"));
+    let preview = b3_signed(&world, &channel, "check", "copy", 0);
+    assert_eq!(get(&preview, "check_complete"), &Value::Bool(true));
+    assert_eq!(snapshot(&world.root.join("state")), state);
+    assert!(
+        get(get(&preview, "compatibility"), "discovery_gaps")
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| get(row, "location") == get(&fixture, "missing"))
+    );
+    let updated = b3_signed(&world, &channel, "update", "copy", 0);
+    assert_eq!(get(&updated, "verified"), &Value::Bool(true));
+    assert_eq!(
+        text(get(get(&updated, "receipt"), "source"), "revision"),
+        "b".repeat(40)
+    );
+    assert_eq!(snapshot(repo), before);
+    assert_eq!(
+        get(&b3_signed(&world, &channel, "update", "copy", 0), "changed"),
+        &Value::Bool(false)
+    );
+    assert_eq!(
+        get(
+            &b3_signed(&world, &channel, "recover", "copy", 0),
+            "verified"
+        ),
+        &Value::Bool(true)
+    );
+    let retained = world.root.join("retained-unavailable-native-project");
+    std::fs::rename(repo, &retained).unwrap();
+    let receipt =
+        std::fs::read(world.root.join("state/agent-memory/install/receipt.json")).unwrap();
+    let state = snapshot(&world.root.join("state"));
+    let refused = b3_signed(&world, &channel, "check", "copy", 1);
+    assert_eq!(get(&refused, "verified"), &Value::Bool(false));
+    assert_eq!(
+        std::fs::read(world.root.join("state/agent-memory/install/receipt.json")).unwrap(),
+        receipt
+    );
+    assert_eq!(snapshot(&world.root.join("state")), state);
+    assert_eq!(snapshot(&retained), before);
+}
+
+// obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_held_native_preview_consumes_reviewed_envelope_without_publishing
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication() {
+    isolated(
+        "b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication",
+        |root| {
+            let h = held_fixture(root);
+            let f = &h.fixture;
+            f.observe(&request(f, &[human("held-preview-human")], "seal"));
+            let rows = f.pending();
+            assert!(!rows.is_empty());
+            let proposal_path = std::fs::read_dir(h.directory.join("proposals"))
+                .unwrap()
+                .next()
+                .unwrap()
+                .unwrap()
+                .path();
+            let proposal = transport::read(&proposal_path, transport::MAX_PAYLOAD).unwrap();
+            let mut attestation = get(&proposal, "quiescence_attestation").clone();
+            let agent = PathBuf::from(text(get(&f.receipt, "omp_binding"), "agent_dir"));
+            let source = root.join("candidate-source");
+            command(
+                root,
+                &[
+                    "cp".into(),
+                    "-R".into(),
+                    root.join("development-source").into_os_string(),
+                    source.as_os_str().to_owned(),
+                ],
+            );
+            set(
+                &mut attestation,
+                "declared_invocation_routes",
+                Value::Array(vec![
+                    string(agent.join("skills/agent-memory").to_str().unwrap()),
+                    string(agent.join("extensions/agent-memory.ts").to_str().unwrap()),
+                    string(agent.join("AGENTS.md").to_str().unwrap()),
+                    string(root.join("bin/am").to_str().unwrap()),
+                    string(root.join("bin/agent-memory").to_str().unwrap()),
+                ]),
+            );
+            let envelope = |attestation: Value| {
+                object([
+                    (
+                        "review",
+                        object([
+                            ("schema", string("agent-memory/layout-quiescence-review-v1")),
+                            ("review_id", get(&attestation, "review_id").clone()),
+                            ("operation_id", get(&attestation, "operation_id").clone()),
+                            (
+                                "attestation_sha256",
+                                string(&transport::digest(&attestation).unwrap()),
+                            ),
+                            (
+                                "reviewer_developer_id",
+                                get(&attestation, "operator_developer_id").clone(),
+                            ),
+                            (
+                                "reviewer_harness",
+                                string("controlled-native-independent-reviewer"),
+                            ),
+                            (
+                                "reviewer_session",
+                                string(&format!("native-renewal-{}", uid())),
+                            ),
+                            ("review_time", get(&attestation, "issued_at").clone()),
+                            ("decision", string("approve")),
+                            (
+                                "rationale",
+                                string(
+                                    "Independent review of exact bank, artifact and complete invocation routes.",
+                                ),
+                            ),
+                        ]),
+                    ),
+                    ("attestation", attestation),
+                ])
+            };
+            let good = envelope(attestation.clone());
+            let mut variants = vec![];
+            for field in ["runtime_artifact_digest", "bank_path"] {
+                let mut changed = attestation.clone();
+                set(
+                    &mut changed,
+                    field,
+                    string(if field == "bank_path" {
+                        "/foreign/bank"
+                    } else {
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }),
+                );
+                variants.push(envelope(changed));
+            }
+            for omitted in ["extensions/agent-memory.ts", "skills/agent-memory"] {
+                let mut changed = attestation.clone();
+                let Value::Array(routes) = changed.get_mut("declared_invocation_routes").unwrap()
+                else {
+                    unreachable!()
+                };
+                routes.retain(|route| route.as_str() != agent.join(omitted).to_str());
+                variants.push(envelope(changed));
+            }
+            let mut unreviewed = good.clone();
+            set(
+                unreviewed.get_mut("review").unwrap(),
+                "reviewer_harness",
+                string("custom"),
+            );
+            set(
+                unreviewed.get_mut("review").unwrap(),
+                "reviewer_session",
+                string("fixture-proposal"),
+            );
+            variants.push(unreviewed);
+            let proof = root.join("native-quiescence.json");
+            let mut args = b3_install_args(&source, &agent);
+            args.extend([
+                "--check",
+                "--omp-layout-quiescence",
+                proof.to_str().unwrap(),
+            ]);
+            let before = (
+                snapshot(&root.join("state")),
+                snapshot(&f.repo.join("memory-bank")),
+                snapshot(&agent),
+            );
+            for bad in variants {
+                write(&proof, turn_sources::encoded(&bad).unwrap(), 0o600);
+                b3_json(b3_cli(root, &f.repo, &args, None, &[]), 1);
+                assert_eq!(
+                    (
+                        snapshot(&root.join("state")),
+                        snapshot(&f.repo.join("memory-bank")),
+                        snapshot(&agent)
+                    ),
+                    before
+                );
+            }
+            write(&proof, turn_sources::encoded(&good).unwrap(), 0o600);
+            let preview = b3_json(b3_cli(root, &f.repo, &args, None, &[]), 0);
+            assert_eq!(text(&preview, "schema"), "agent-memory/install-plan-v1");
+            assert_eq!(
+                get(&preview, "installation_writes_performed"),
+                &Value::Bool(false)
+            );
+            assert_eq!(
+                (
+                    snapshot(&root.join("state")),
+                    snapshot(&f.repo.join("memory-bank")),
+                    snapshot(&agent)
+                ),
+                before
+            );
+            assert_eq!(f.pending(), rows);
+            assert_eq!(
+                get(
+                    &boundary::drain_source_capabilities(&f.repo, true, true, &f.runtime).unwrap(),
+                    "drainable"
+                ),
+                &Value::Bool(false)
+            );
+            args.retain(|arg| *arg != "--check");
+            let applied = b3_json(b3_cli(root, &f.repo, &args, None, &[]), 0);
+            assert_eq!(get(&applied, "verified"), &Value::Bool(true));
+            b3_extension(get(&applied, "receipt"));
+        },
+    );
+}
+
+fn b3_sha(raw: &[u8]) -> String {
+    use sha2::Digest;
+    sha2::Sha256::digest(raw)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+// obligation: tests/contracts/test_omp_source_phase.py::LateWindowControls.test_nonce_cancel_replacement_eof_output_loss_and_one_shot_lookup
+#[test]
+fn b3_real_clock_controls_revoke_actual_one_shot_delivery() {
+    let world = World::new().unwrap();
+    assert!(world.root.is_dir());
+    // The private late-lookup one-shot cases are additionally exercised by
+    // omp_stream::clock_window::b3_tests against the actual internal mint.
+    for mode in [
+        "late",
+        "cancel",
+        "replacement",
+        "eof",
+        "output-loss",
+        "wrong-nonce",
+    ] {
+        let (owner, writer, nonce) = real_window();
+        let window = owner.window(&nonce).unwrap();
+        match mode {
+            "cancel" => owner
+                .control(
+                    "CANCEL",
+                    &object([("nonce", string(&nonce))]),
+                    writer.as_ref(),
+                )
+                .unwrap(),
+            "replacement" => calibrate_window(&owner, &writer, &uid()),
+            "eof" => owner.end(),
+            "output-loss" => writer.finish(),
+            "wrong-nonce" => assert!(owner.window(&uid()).is_none()),
+            _ => (),
+        }
+        assert_eq!(window.reserve(), mode == "late" || mode == "wrong-nonce");
+        assert!(!window.reserve());
+        owner.end();
+    }
+}
+
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_malformed_real_result_shapes_are_unknown_without_inventing_a_cause
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_malformed_real_results_stay_unknown_without_invented_cause() {
+    scenarios(
+        "b3_malformed_real_results_stay_unknown_without_invented_cause",
+        &[
+            "continue-string",
+            "status-private",
+            "request-null",
+            "status-array",
+        ],
+        |root, shape| {
+            let f = Fixture::new(root);
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&armed_request(&f)).unwrap(),
+                0o600,
+            );
+            let child = operation_child(
+                root,
+                Some(&format!("omp.result.{shape}")),
+                "error",
+                "finite",
+            );
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let directory = child_directory(root);
+            let diagnostic = transport::read(
+                &stream::wake_decision_directory(&directory)
+                    .unwrap()
+                    .join("1.json"),
+                4096,
+            )
+            .unwrap();
+            assert_eq!(text(&diagnostic, "status"), "unknown");
+            assert_eq!(get(&diagnostic, "human_root"), &Value::Null);
+            let result = child_result(root);
+            assert_eq!(get(&result, "verified"), &Value::Bool(true));
+            match shape {
+                "continue-string" => {
+                    assert_eq!(get(&result, "continue"), &string("yes"));
+                    assert_eq!(text(&result, "status"), "pending");
+                }
+                "status-private" => {
+                    assert_eq!(get(&result, "continue"), &Value::Bool(false));
+                    assert_eq!(text(&result, "status"), "do-not-disclose");
+                }
+                "request-null" => {
+                    assert_eq!(get(&result, "continue"), &Value::Bool(true));
+                    assert_eq!(get(&result, "request_id"), &Value::Null);
+                }
+                _ => {
+                    assert_eq!(get(&result, "continue"), &Value::Bool(false));
+                    assert_eq!(get(&result, "status"), &decode(r#"["do-not-disclose"]"#));
+                }
+            }
+            let summary = wake_summary(&f);
+            assert_eq!(
+                get(get(&summary, "counts"), "unknown"),
+                &Value::Int(1u8.into())
+            );
+            assert!(
+                !String::from_utf8(turn_sources::encoded(&summary).unwrap())
+                    .unwrap()
+                    .contains("do-not-disclose")
+            );
+            assert!(root_wakes(&f).is_empty());
+            b3_assert_enrolled(&f, 2);
+        },
+    );
+}
+
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_substituted_oversize_response_never_records_an_offered_continuation
+#[test]
+#[ignore = "needs recovery_frontier registered"]
+fn b3_real_oversize_response_substitution_never_records_offered_continuation() {
+    isolated(
+        "b3_real_oversize_response_substitution_never_records_offered_continuation",
+        |root| {
+            let f = Fixture::new(root);
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&armed_request(&f)).unwrap(),
+                0o600,
+            );
+            let child = operation_child(
+                root,
+                Some("omp.result.oversize"),
+                "error",
+                "finite-auto-calibrated",
+            );
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let responses =
+                transport::read(&root.join("responses.json"), transport::MAX_PAYLOAD).unwrap();
+            let notice = responses
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|v| get(v, "code").as_str() == Some("result-oversized"))
+                .unwrap();
+            assert!(notice.get("result").is_none());
+            assert!(notice.get("continue").is_none());
+            let directory = child_directory(root);
+            assert!(
+                !stream::wake_decision_directory(&directory)
+                    .unwrap()
+                    .join("1.json")
+                    .exists()
+            );
+            assert_eq!(root_wakes(&f).len(), 1);
+            assert_eq!(
+                text(
+                    &transport::read(&directory.join("outcomes/1.json"), stream::MAX_METADATA)
+                        .unwrap(),
+                    "outcome"
+                ),
+                "verified"
+            );
+            b3_assert_enrolled(&f, 2);
+            assert_eq!(
+                get(get(&wake_summary(&f), "counts"), "unrecorded"),
+                &Value::Int(1u8.into())
+            );
+        },
     );
 }
