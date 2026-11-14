@@ -1,5 +1,5 @@
 //! Real private filesystem/process fixture shared by admission and refresh contracts.
-use agent_memory::{clock::Deadline, codec::json::Value, developer_identity, host, process};
+use agent_memory::{clock::Deadline, codec::json::Value, developer_identity, process};
 use std::ffi::OsString;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -148,7 +148,10 @@ pub fn in_world(name: &str, body: impl FnOnce(&World)) {
     const COMPLETED: &str = "admission-consumer-completed";
     if std::env::var("AM_ADMISSION_CASE").ok().as_deref() == Some(name) {
         let root = runtime_support::require_current_world().unwrap();
-        assert_eq!(std::env::var_os("AM_ADMISSION_ROOT").unwrap(), root.as_os_str());
+        assert_eq!(
+            std::env::var_os("AM_ADMISSION_ROOT").unwrap(),
+            root.as_os_str()
+        );
         let world = World { root };
         let runtime = runtime_support::installed_runtime::install(&world.root, |argv| {
             world.command(argv, &[])
@@ -163,9 +166,14 @@ pub fn in_world(name: &str, body: impl FnOnce(&World)) {
             .mode(0o600)
             .open(world.root.join(COMPLETED))
             .unwrap();
-        completed.write_all(format!("{name}\n{token}\n").as_bytes()).unwrap();
+        completed
+            .write_all(format!("{name}\n{token}\n").as_bytes())
+            .unwrap();
         completed.sync_all().unwrap();
-        std::fs::File::open(&world.root).unwrap().sync_all().unwrap();
+        std::fs::File::open(&world.root)
+            .unwrap()
+            .sync_all()
+            .unwrap();
         drop(runtime);
         return;
     }
@@ -181,19 +189,24 @@ pub fn in_world(name: &str, body: impl FnOnce(&World)) {
         world.root.as_os_str().to_owned(),
     );
     let expected = format!("{name}\n{}\n", world.token);
-    world.run_with(
-        [
-            std::env::current_exe().unwrap().into_os_string(),
-            "--exact".into(),
-            name.into(),
-            "--include-ignored".into(),
-            "--nocapture".into(),
-        ],
-        runtime_support::RunOptions {
-            cwd: Some(&world.root),
-            timeout: Duration::from_secs(120),
-            ..Default::default()
-        },
-    ).unwrap();
-    assert_eq!(std::fs::read(world.root.join(COMPLETED)).unwrap(), expected.as_bytes());
+    world
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                name.into(),
+                "--include-ignored".into(),
+                "--nocapture".into(),
+            ],
+            runtime_support::RunOptions {
+                cwd: Some(&world.root),
+                timeout: Duration::from_secs(120),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        std::fs::read(world.root.join(COMPLETED)).unwrap(),
+        expected.as_bytes()
+    );
 }

@@ -154,7 +154,13 @@ impl Sandbox {
         self.root.join("repo").to_str().unwrap().to_owned()
     }
     fn am(&self, args: &[&str], stdin: &[u8]) -> (i32, String, String) {
-        run_am(Path::new(env!("CARGO_BIN_EXE_am")), &self.env, &self.root, args, stdin)
+        run_am(
+            Path::new(env!("CARGO_BIN_EXE_am")),
+            &self.env,
+            &self.root,
+            args,
+            stdin,
+        )
     }
 }
 impl Drop for Sandbox {
@@ -167,7 +173,13 @@ impl Drop for Sandbox {
 /// the private world environment.
 fn world_am(world: &admission::World, args: &[&str], stdin: &[u8]) -> (i32, String, String) {
     let env: Vec<(OsString, OsString)> = std::env::vars_os().collect();
-    run_am(&world.root.join("home/.local/bin/am"), &env, &world.root, args, stdin)
+    run_am(
+        &world.root.join("home/.local/bin/am"),
+        &env,
+        &world.root,
+        args,
+        stdin,
+    )
 }
 
 /// The legacy boundary directory `<state>/writes/<bank>/<name>` of `repo`,
@@ -802,8 +814,8 @@ fn interrupted_prompt_is_discoverable_and_stdin_cannot_claim_publication() {
                 &runtime,
             )
             .unwrap();
-            let later =
-                agent_memory::claude_turns::pending(&repo, None, None, (0, 0, 0), &runtime).unwrap();
+            let later = agent_memory::claude_turns::pending(&repo, None, None, (0, 0, 0), &runtime)
+                .unwrap();
             assert!(
                 get(&later, "turns")
                     .as_array()

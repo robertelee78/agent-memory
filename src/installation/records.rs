@@ -128,10 +128,12 @@ pub fn read_journal(env: &Environment, state: &Path) -> Result<Option<Value>> {
             if key == "runtime_source" {
                 let candidate = get(get(&journal, "receipt"), "source");
                 require(
-                    source.as_object().is_some_and(|fields| fields.iter().all(|(name, value)| {
-                        matches!(name.as_str(), "path" | "pack")
-                            || super::same(value, get(candidate, name))
-                    })),
+                    source.as_object().is_some_and(|fields| {
+                        fields.iter().all(|(name, value)| {
+                            matches!(name.as_str(), "path" | "pack")
+                                || super::same(value, get(candidate, name))
+                        })
+                    }),
                     "Journal acquisition source differs from its candidate identity",
                 )?;
             } else {
@@ -140,8 +142,10 @@ pub fn read_journal(env: &Environment, state: &Path) -> Result<Option<Value>> {
                     ("artifact_digest", "previous_artifact_digest"),
                 ] {
                     if let Some(value) = journal.get(recorded) {
-                        require(super::same(get(source, field), value),
-                            "Journal prior source differs from rollback identity")?;
+                        require(
+                            super::same(get(source, field), value),
+                            "Journal prior source differs from rollback identity",
+                        )?;
                     }
                 }
             }

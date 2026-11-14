@@ -541,12 +541,21 @@ fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregister
     let world = World::new().unwrap();
     let repo = world.repository("repo", false).unwrap();
     let runtime = support::installed_runtime::install(&world.root, |argv| {
-        world.run_with(argv, RunOptions { check: false, ..Default::default() }).unwrap()
+        world
+            .run_with(
+                argv,
+                RunOptions {
+                    check: false,
+                    ..Default::default()
+                },
+            )
+            .unwrap()
     });
     let proposal = json::decode(
         include_str!("../skills/agent-memory/templates/router-proposal.example.json"),
         Default::default(),
-    ).unwrap();
+    )
+    .unwrap();
     let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
     let bank = repo.join("memory-bank");
     for (path, body) in rendered.get("files").unwrap().as_object().unwrap() {
@@ -556,7 +565,8 @@ fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregister
     }
     let command = |args: &[&OsStr]| {
         let argv = [runtime.command.as_os_str(), OsStr::new("--json")]
-            .into_iter().chain(args.iter().copied());
+            .into_iter()
+            .chain(args.iter().copied());
         let output = world.run(argv).unwrap();
         assert!(output.stderr.is_empty());
         json::decode_bytes(&output.stdout, Default::default()).unwrap()
@@ -565,34 +575,54 @@ fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregister
         let path = world.root.join("identity-proposal.json");
         fs::write(&path, json::encode(proposal, json::DEFAULT).unwrap()).unwrap();
         command(&[
-            OsStr::new(helper), OsStr::new("apply"), OsStr::new("--proposal"), path.as_os_str(),
+            OsStr::new(helper),
+            OsStr::new("apply"),
+            OsStr::new("--proposal"),
+            path.as_os_str(),
         ])
     };
     let developer = command(&[
-        OsStr::new("developer"), OsStr::new("preview"), OsStr::new("--create"),
-        OsStr::new("--label"), OsStr::new("Disposable test developer"),
+        OsStr::new("developer"),
+        OsStr::new("preview"),
+        OsStr::new("--create"),
+        OsStr::new("--label"),
+        OsStr::new("Disposable test developer"),
     ]);
     apply("developer", &developer);
     for _ in 0..2 {
         let current = command(&[
-            OsStr::new("identity"), OsStr::new("status"), OsStr::new("--repo"), repo.as_os_str(),
+            OsStr::new("identity"),
+            OsStr::new("status"),
+            OsStr::new("--repo"),
+            repo.as_os_str(),
         ]);
         if current.get("resolved").and_then(Value::as_bool) != Some(true) {
             let proposal = command(&[
-                OsStr::new("identity"), OsStr::new("preview"), OsStr::new("--repo"),
-                repo.as_os_str(), OsStr::new("--action"), OsStr::new("bind"),
-                OsStr::new("--reason"), OsStr::new("Explicit disposable fixture bank adoption"),
+                OsStr::new("identity"),
+                OsStr::new("preview"),
+                OsStr::new("--repo"),
+                repo.as_os_str(),
+                OsStr::new("--action"),
+                OsStr::new("bind"),
+                OsStr::new("--reason"),
+                OsStr::new("Explicit disposable fixture bank adoption"),
             ]);
             let receipt = apply("identity", &proposal);
             assert_eq!(receipt.get("verified").and_then(Value::as_bool), Some(true));
         }
         let result = command(&[
-            OsStr::new("identity"), OsStr::new("status"), OsStr::new("--repo"), repo.as_os_str(),
+            OsStr::new("identity"),
+            OsStr::new("status"),
+            OsStr::new("--repo"),
+            repo.as_os_str(),
         ]);
         assert_eq!(result.get("resolved").and_then(Value::as_bool), Some(true));
     }
     let developer = command(&[
-        OsStr::new("developer"), OsStr::new("status"), OsStr::new("--repo"), repo.as_os_str(),
+        OsStr::new("developer"),
+        OsStr::new("status"),
+        OsStr::new("--repo"),
+        repo.as_os_str(),
     ]);
     assert_eq!(
         developer.get("setup_required").and_then(Value::as_bool),

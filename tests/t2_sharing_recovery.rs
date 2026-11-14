@@ -190,30 +190,38 @@ impl Fixture {
         // The source and executable are the original genuine fixture bytes.
         for name in agent_memory::console::NAMES {
             let command = self.runtime.command.parent().unwrap().join(name);
-            assert!(fs::symlink_metadata(&command).unwrap().file_type().is_symlink());
+            assert!(
+                fs::symlink_metadata(&command)
+                    .unwrap()
+                    .file_type()
+                    .is_symlink()
+            );
             assert_eq!(fs::canonicalize(&command).unwrap(), self.runtime.binary);
             fs::remove_file(command).unwrap();
         }
-        let out = self.w.run_with(
-            [
-                self.runtime.binary.as_os_str(),
-                OsStr::new("--json"),
-                OsStr::new("install"),
-                OsStr::new("--development-source"),
-                self.runtime.source.as_os_str(),
-                OsStr::new("--mode"),
-                OsStr::new("link"),
-                OsStr::new("--presets"),
-                OsStr::new("none"),
-                OsStr::new("--no-guidance"),
-                OsStr::new("--bin-dir"),
-                self.runtime.command.parent().unwrap().as_os_str(),
-            ],
-            RunOptions {
-                check: false,
-                ..Default::default()
-            },
-        ).unwrap();
+        let out = self
+            .w
+            .run_with(
+                [
+                    self.runtime.binary.as_os_str(),
+                    OsStr::new("--json"),
+                    OsStr::new("install"),
+                    OsStr::new("--development-source"),
+                    self.runtime.source.as_os_str(),
+                    OsStr::new("--mode"),
+                    OsStr::new("link"),
+                    OsStr::new("--presets"),
+                    OsStr::new("none"),
+                    OsStr::new("--no-guidance"),
+                    OsStr::new("--bin-dir"),
+                    self.runtime.command.parent().unwrap().as_os_str(),
+                ],
+                RunOptions {
+                    check: false,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
         assert_eq!(out.status, Status::Code(0), "{out:?}");
         let receipt = json::decode_bytes(&out.stdout, Default::default()).unwrap();
         assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
@@ -246,18 +254,20 @@ impl Fixture {
         if receipt.exists() {
             fs::remove_file(&receipt).unwrap();
         }
-        self.w.run_with(
-            [
-                std::env::current_exe().unwrap().into_os_string(),
-                "--exact".into(),
-                "transaction_worker".into(),
-                "--nocapture".into(),
-            ],
-            RunOptions {
-                env: &[("AGENT_MEMORY_FAULT_SHARING_APPLY".into(), "1".into())],
-                ..Default::default()
-            },
-        ).unwrap();
+        self.w
+            .run_with(
+                [
+                    std::env::current_exe().unwrap().into_os_string(),
+                    "--exact".into(),
+                    "transaction_worker".into(),
+                    "--nocapture".into(),
+                ],
+                RunOptions {
+                    env: &[("AGENT_MEMORY_FAULT_SHARING_APPLY".into(), "1".into())],
+                    ..Default::default()
+                },
+            )
+            .unwrap();
         let receipt = json::decode_bytes(&fs::read(receipt).unwrap(), Default::default()).unwrap();
         assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
     }
@@ -302,15 +312,24 @@ fn transaction_worker() {
     let files = json::decode_bytes(
         &fs::read(root.join("files.json")).unwrap(),
         Default::default(),
-    ).unwrap();
+    )
+    .unwrap();
     // Mechanical refresh has no semantic approval/evidence: it uses the landed
     // ordinary transaction path, not the pending memory_refresh producer.
-    let proposal = agent_memory::bank_transactions::preview(&root.join("repo"), &files, "refresh")
-        .unwrap();
-    fs::write(root.join("apply.json"), json::encode(&proposal, json::DEFAULT).unwrap()).unwrap();
+    let proposal =
+        agent_memory::bank_transactions::preview(&root.join("repo"), &files, "refresh").unwrap();
+    fs::write(
+        root.join("apply.json"),
+        json::encode(&proposal, json::DEFAULT).unwrap(),
+    )
+    .unwrap();
     let receipt = agent_memory::bank_transactions::apply(&proposal).unwrap();
     assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
-    fs::write(root.join("apply-receipt.json"), json::encode(&receipt, json::DEFAULT).unwrap()).unwrap();
+    fs::write(
+        root.join("apply-receipt.json"),
+        json::encode(&receipt, json::DEFAULT).unwrap(),
+    )
+    .unwrap();
 }
 fn state(
     w: &World,

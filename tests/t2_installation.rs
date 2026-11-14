@@ -108,7 +108,14 @@ fn make_writable(path: &Path) -> std::io::Result<()> {
 
 struct FixtureUpdating;
 impl Updating for FixtureUpdating {
-    fn banks(&self, repositories: &[String], _: &Value, _: bool, _: (&Path, &Path), _: Option<(&Path, &Path)>) -> install::Result<Value> {
+    fn banks(
+        &self,
+        repositories: &[String],
+        _: &Value,
+        _: bool,
+        _: (&Path, &Path),
+        _: Option<(&Path, &Path)>,
+    ) -> install::Result<Value> {
         Ok(Value::Object(vec![(
             "observed_repositories".into(),
             Value::Array(repositories.iter().cloned().map(Value::String).collect()),
@@ -149,7 +156,13 @@ impl PrivateState for FixturePrivateState {
     fn prepare_lifecycle(&self, _: &Value, _: bool, _: (&Path, &Path)) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn require_compatible(&self, _: &Value, _: &Value, _: &str, _: (&Path, &Path)) -> install::Result<Value> {
+    fn require_compatible(
+        &self,
+        _: &Value,
+        _: &Value,
+        _: &str,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
     fn public_summary(&self, value: &Value) -> install::Result<Value> {
@@ -2119,14 +2132,21 @@ fn lifecycle_commands_refuse_a_journal_changed_between_runtime_selection_and_loc
             &source,
             &[
                 ("AM_T2_PRESETS", "codex".into()),
-                ("AGENT_MEMORY_FAULT_STAGE", "install-after-activate-0".into()),
+                (
+                    "AGENT_MEMORY_FAULT_STAGE",
+                    "install-after-activate-0".into(),
+                ),
                 ("AGENT_MEMORY_FAULT_MODE", "exit".into()),
             ],
         );
         assert_eq!(stopped.code, Some(86), "{command}");
         let journal = world.state().join("journal.json");
         let mut replacement = decode(&journal);
-        set(&mut replacement, "status", Value::String("rollback-conflict".into()));
+        set(
+            &mut replacement,
+            "status",
+            Value::String("rollback-conflict".into()),
+        );
         let replacement = install::encoded(&replacement).unwrap();
         let artifacts = Arc::new(JournalChangingArtifacts {
             journal: journal.clone(),
@@ -2160,7 +2180,10 @@ fn lifecycle_commands_refuse_a_journal_changed_between_runtime_selection_and_loc
         assert_eq!(std::fs::read(&journal).unwrap(), replacement, "{command}");
         let mut after = without_lock(snapshot(&world.root));
         after.remove(journal_key);
-        assert_eq!(after, before, "{command}: changed targets or recovery evidence");
+        assert_eq!(
+            after, before,
+            "{command}: changed targets or recovery evidence"
+        );
     }
 }
 
@@ -2173,7 +2196,11 @@ fn completed_uninstall_recovery_needs_no_removed_runtime_or_backups() {
         } else {
             development_source(&world, "dev")
         };
-        let mut services = if signed { release_services(&source) } else { services() };
+        let mut services = if signed {
+            release_services(&source)
+        } else {
+            services()
+        };
         let agent = world.path("omp agent");
         if native {
             std::fs::create_dir(&agent).unwrap();
@@ -2187,7 +2214,11 @@ fn completed_uninstall_recovery_needs_no_removed_runtime_or_backups() {
                 presets: Some(if native { "codex,omp" } else { "codex" }.into()),
                 omp_agent_dir: native.then(|| agent.to_str().unwrap().to_owned()),
                 omp_peers_upgraded: native,
-                ..if signed { release_request(&source) } else { request(&source) }
+                ..if signed {
+                    release_request(&source)
+                } else {
+                    request(&source)
+                }
             },
         );
         assert_eq!(installed.exit_code, 0, "{}", installed.stdout);
@@ -2199,7 +2230,10 @@ fn completed_uninstall_recovery_needs_no_removed_runtime_or_backups() {
         assert_eq!(removed.exit_code, 0, "{}", removed.stdout);
         let journal = decode(&world.state().join("journal.json"));
         assert_eq!(text(&journal, "status"), "complete");
-        assert_eq!(get(get(&journal, "receipt"), "uninstalled"), &Value::Bool(true));
+        assert_eq!(
+            get(get(&journal, "receipt"), "uninstalled"),
+            &Value::Bool(true)
+        );
         let transition_path = world.state().join("omp-transition.json");
         if native {
             // Capture the pending native-transition schema using the actual
@@ -2208,8 +2242,12 @@ fn completed_uninstall_recovery_needs_no_removed_runtime_or_backups() {
             let receipt = get(&journal, "receipt");
             let extension = get(get(receipt, "omp_binding"), "extension_target");
             let target = PathBuf::from(extension.as_str().unwrap());
-            let action = get(&journal, "actions").as_array().unwrap().iter()
-                .find(|action| get(action, "path") == extension).unwrap();
+            let action = get(&journal, "actions")
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|action| get(action, "path") == extension)
+                .unwrap();
             let disabled = target.parent().unwrap().join(format!(
                 ".agent-memory-disabled-{}-{}.ts.disabled",
                 text(receipt, "installation_id"),
@@ -2217,16 +2255,26 @@ fn completed_uninstall_recovery_needs_no_removed_runtime_or_backups() {
             ));
             std::fs::rename(text(action, "stage"), &disabled).unwrap();
             let transition = Value::Object(vec![
-                ("schema".into(), Value::String("agent-memory/omp-native-transition-v1".into())),
-                ("installation_id".into(), get(receipt, "installation_id").clone()),
+                (
+                    "schema".into(),
+                    Value::String("agent-memory/omp-native-transition-v1".into()),
+                ),
+                (
+                    "installation_id".into(),
+                    get(receipt, "installation_id").clone(),
+                ),
                 ("source".into(), get(receipt, "source").clone()),
                 ("extension".into(), extension.clone()),
                 ("identity".into(), get(action, "before").clone()),
-                ("disabled_path".into(), Value::String(disabled.to_str().unwrap().into())),
+                (
+                    "disabled_path".into(),
+                    Value::String(disabled.to_str().unwrap().into()),
+                ),
                 ("status".into(), Value::String("disabled".into())),
             ]);
             assert!(install::same(
-                &install::fingerprint(&disabled).unwrap(), get(action, "before"),
+                &install::fingerprint(&disabled).unwrap(),
+                get(action, "before"),
             ));
             write(&transition_path, install::encoded(&transition).unwrap());
         }
@@ -2246,27 +2294,36 @@ fn completed_uninstall_recovery_needs_no_removed_runtime_or_backups() {
         }
         assert!(!install::locations(&world.env()).unwrap().runtime.exists());
         let mut before = without_lock(snapshot(&world.root));
-        let transition_key = transition_path.strip_prefix(&world.root).unwrap().to_str().unwrap();
+        let transition_key = transition_path
+            .strip_prefix(&world.root)
+            .unwrap()
+            .to_str()
+            .unwrap();
         before.remove(transition_key);
         let recovered = install::recover_command(&world.env(), &services);
         assert_eq!(recovered.exit_code, 0, "{}", recovered.stdout);
-        assert_eq!(text(recovered.value.as_ref().unwrap(), "status"), "complete");
-        assert_eq!(get(recovered.value.as_ref().unwrap(), "verified"), &Value::Bool(true));
+        assert_eq!(
+            text(recovered.value.as_ref().unwrap(), "status"),
+            "complete"
+        );
+        assert_eq!(
+            get(recovered.value.as_ref().unwrap(), "verified"),
+            &Value::Bool(true)
+        );
         if native {
             assert_eq!(text(&decode(&transition_path), "status"), "completed");
             let mut pending = decode(&transition_path);
             set(&mut pending, "status", Value::String("disabled".into()));
             write(&transition_path, install::encoded(&pending).unwrap());
-            let deferred = install::recover(
-                &world.env(), &services, &world.state(), true, true,
-            ).unwrap();
+            let deferred =
+                install::recover(&world.env(), &services, &world.state(), true, true).unwrap();
             assert_eq!(text(&deferred, "status"), "complete");
             assert_eq!(text(&decode(&transition_path), "status"), "disabled");
         }
         for for_install in [false, true] {
-            let result = install::recover(
-                &world.env(), &services, &world.state(), for_install, true,
-            ).unwrap();
+            let result =
+                install::recover(&world.env(), &services, &world.state(), for_install, true)
+                    .unwrap();
             assert_eq!(text(&result, "status"), "complete");
             assert_eq!(get(&result, "verified"), &Value::Bool(true));
             if native && !for_install {
@@ -3347,10 +3404,20 @@ impl install::OmpBoundary for FixtureOmp {
     fn capability(&self) -> &str {
         agent_memory::omp_installation::READER_CAPABILITY
     }
-    fn native_transition(&self, _: &mut Value, _: bool, _: (&Path, &Path)) -> install::Result<Value> {
+    fn native_transition(
+        &self,
+        _: &mut Value,
+        _: bool,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn native_activation(&self, _: &mut Value, _: bool, _: (&Path, &Path)) -> install::Result<Value> {
+    fn native_activation(
+        &self,
+        _: &mut Value,
+        _: bool,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
     fn finish_native_transition(&self, _: &Value, _: (&Path, &Path)) -> install::Result<()> {
@@ -3362,10 +3429,19 @@ impl install::OmpBoundary for FixtureOmp {
     fn recover_uninstalled_native(&self, state: &Path) -> install::Result<()> {
         agent_memory::omp_boundary::recover_uninstalled_native(state)
     }
-    fn native_recovery_expected(&self, _: &Path, _: &str, _: (&Path, &Path)) -> install::Result<Option<Value>> {
+    fn native_recovery_expected(
+        &self,
+        _: &Path,
+        _: &str,
+        _: (&Path, &Path),
+    ) -> install::Result<Option<Value>> {
         Ok(None)
     }
-    fn complete_stored_source_activation(&self, _: &Path, _: (&Path, &Path)) -> install::Result<Value> {
+    fn complete_stored_source_activation(
+        &self,
+        _: &Path,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::String("verified".into()))
     }
 }

@@ -74,6 +74,7 @@ fn request() -> Value {
 }
 struct Fixture {
     world: World,
+    command: PathBuf,
     repo: PathBuf,
     bank: PathBuf,
     actor: String,
@@ -130,6 +131,7 @@ impl Fixture {
         let actor = get(&inspected, "developer_id").as_str().unwrap().to_owned();
         Self {
             world,
+            command: runtime.command,
             repo,
             bank,
             actor,
@@ -197,8 +199,10 @@ impl Fixture {
         }
         let result = self
             .world
-            .am_with(
-                args,
+            .run_with(
+                std::iter::once(self.command.clone().into_os_string())
+                    .chain(std::iter::once(OsString::from("--json")))
+                    .chain(args),
                 RunOptions {
                     check: false,
                     ..Default::default()

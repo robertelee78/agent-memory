@@ -2,13 +2,14 @@
 use crate::codec::json::Value;
 use crate::error::{ContractError, Result};
 use crate::layout_resolution::{
-    err, field, frontier, has_keys, read_optional, read_value, safe_text, same, set, sha, text, uuid,
+    err, field, frontier, has_keys, read_optional, read_value, safe_text, same, set, sha, text,
+    uuid,
 };
 use crate::lifecycle::{get, object, string};
 use crate::scope_binding::{self, RequireOptions};
 use crate::{
-    artifact, bank_observation, bank_writes as writes, host, layout_recovery_state as state, lifecycle,
-    sharing_limits,
+    artifact, bank_observation, bank_writes as writes, host, layout_recovery_state as state,
+    lifecycle, sharing_limits,
 };
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -333,11 +334,8 @@ pub fn validate(
     if publish {
         if owner.is_none() {
             let id = host::uuid4()?;
-            let mut barrier = crate::turn_sources::canonical_writer_barrier(
-                &root,
-                None,
-                runtime.0,
-            )?;
+            let mut barrier =
+                crate::turn_sources::canonical_writer_barrier(&root, None, runtime.0)?;
             let outcome = crate::local_registry::exclusive(
                 &bank.join(".agent-memory.lock"),
                 &id,

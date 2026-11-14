@@ -9,6 +9,7 @@ use std::path::Path;
 /// repository is the process directory; the runtime pair is independently
 /// verified and retained by lifecycle planning. JSON null represents `None`.
 pub(super) struct LifecyclePrivateState;
+
 fn present(value: &Value) -> Option<&Value> {
     (*value != Value::Null).then_some(value)
 }

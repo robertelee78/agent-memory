@@ -821,54 +821,31 @@ impl SharingFixture {
         path
     }
     fn call(&self, operation: &str, extra: &[OsString]) -> (i32, Value) {
-        let args = vec![
-            OsString::from("semantic"),
+        let args = [
+            self.w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+            "--json".into(),
+            "semantic".into(),
             operation.into(),
             "--repo".into(),
             self.repo.as_os_str().to_owned(),
         ]
         .into_iter()
-        .chain(extra.iter().cloned())
-        .map(|arg| s(arg.into_string().unwrap()))
-        .collect();
-        let result = self.w.inside("child-result.json").unwrap();
-        let environment = [
-            (
-                OsString::from("AM_SHARING_CHILD"),
-                OsString::from(json::encode(&Value::Array(args), json::DEFAULT).unwrap()),
-            ),
-            (
-                OsString::from("AM_SHARING_RESULT"),
-                result.as_os_str().to_owned(),
-            ),
-        ];
-        let executable = std::env::current_exe().unwrap();
-        self.w
+        .chain(extra.iter().cloned());
+        let output = self
+            .w
             .run_with(
-                [
-                    executable.as_os_str(),
-                    std::ffi::OsStr::new("--exact"),
-                    std::ffi::OsStr::new("child_entry"),
-                    std::ffi::OsStr::new("--nocapture"),
-                ],
+                args,
                 RunOptions {
-                    env: &environment,
+                    check: false,
                     ..Default::default()
                 },
             )
             .unwrap();
-        let result = json::decode_bytes(
-            &std::fs::read(result).unwrap(),
-            json::DecodePolicy::default(),
-        )
-        .unwrap();
-        let code = g(&result, "exit_code")
-            .as_int()
-            .unwrap()
-            .to_string()
-            .parse()
-            .unwrap();
-        (code, g(&result, "value").clone())
+        let agent_memory::process::Status::Code(code) = output.status else {
+            panic!("native semantic command terminated: {:?}", output.status);
+        };
+        let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+        (code, value)
     }
     fn good(&self, operation: &str, extra: &[OsString]) -> Value {
         let (code, value) = self.call(operation, extra);
@@ -1321,35 +1298,6 @@ fn test_collisions_and_unsafe_paths_refuse_without_clobbering() {
     }
     assert_eq!(std::fs::read(existing).unwrap(), b"keep");
     assert_eq!(std::fs::read_dir(occupied).unwrap().count(), 0);
-}
-
-#[test]
-fn child_entry() {
-    let Ok(arguments) = std::env::var("AM_SHARING_CHILD") else {
-        return;
-    };
-    support::world::require_current_world().unwrap();
-    registered();
-    support::installed_runtime::register_component_runtime();
-    let arguments = json::decode(&arguments, json::DecodePolicy::default())
-        .unwrap()
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|arg| arg.as_str().unwrap().to_owned())
-        .collect::<Vec<_>>();
-    let result = agent_memory::cli::dispatch(&arguments, "am").result;
-    let value = o([
-        ("exit_code", Value::Int(result.exit_code.into())),
-        (
-            "value",
-            result
-                .value
-                .unwrap_or_else(|| panic!("No command JSON: {}", result.stderr)),
-        ),
-    ]);
-    let output = std::env::var_os("AM_SHARING_RESULT").unwrap();
-    std::fs::write(output, json::encode(&value, json::DEFAULT).unwrap()).unwrap();
 }
 
 // obligation: tests/contracts/test_selector_local_reuse.py::SelectorLocalReuseContract.test_uncached_and_bounded_reuse_preserve_framed_matches_and_edges

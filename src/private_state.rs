@@ -1,11 +1,11 @@
 //! Fail-closed union of bank-local private runtime requirements.
 use crate::bank_writes;
-use crate::scope_binding::{OwnedRuntimeAuthority, RuntimeAuthority};
 use crate::codec::json::Value;
 use crate::developer_identity::{digest, encoded};
 use crate::error::{ContractError, Result};
 use crate::fs::{self, DirectoryChain, Identity};
 use crate::lifecycle::{get, object, string};
+use crate::scope_binding::{OwnedRuntimeAuthority, RuntimeAuthority};
 use crate::{
     artifact, host, identity_git, layout_recovery_state as state, project_identity,
     repository_config,
@@ -449,7 +449,12 @@ impl ObservationBarrier {
         match self {
             Self::Held(guard) if success => guard.finish(),
             Self::Held(_) => Ok(()),
-            Self::Absent { root, base, pin, authority } => {
+            Self::Absent {
+                root,
+                base,
+                pin,
+                authority,
+            } => {
                 if native_absence(root, base, authority.authority())? != *pin {
                     return Err(refusal(
                         "Native registry changed during read-only compatibility observation",
@@ -737,7 +742,10 @@ pub fn required_private_state_capabilities(
                 ));
             }
             let pin = if held.is_none() {
-                guards.push(ObservationBarrier::acquire(&root, RuntimeAuthority::from_pair(runtime))?);
+                guards.push(ObservationBarrier::acquire(
+                    &root,
+                    RuntimeAuthority::from_pair(runtime),
+                )?);
                 guards.last().and_then(ObservationBarrier::pin)
             } else {
                 None
@@ -984,7 +992,11 @@ pub fn public_summary(value: &Value) -> Result<Value> {
     Ok(result)
 }
 
-pub fn prepare_lifecycle(plan: &Value, check: bool, runtime: (&Path, &Path)) -> Result<Option<Value>> {
+pub fn prepare_lifecycle(
+    plan: &Value,
+    check: bool,
+    runtime: (&Path, &Path),
+) -> Result<Option<Value>> {
     let selected = if get(plan, "operation").as_str() == Some("uninstall") {
         plan.get("preserved_private_state_reader")
     } else {

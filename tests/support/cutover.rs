@@ -42,6 +42,28 @@ pub fn save(w: &World, value: &Value, name: &str) -> PathBuf {
     fs::write(&path, json::encode(value, json::DEFAULT).unwrap()).unwrap();
     path
 }
+/// Install real receipt-owned bytes before selecting native consumer dispatch.
+pub fn install_runtime(w: &mut World, root: &Path) {
+    let runtime = super::installed_runtime::install(root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.into_os_string(),
+    );
+}
+pub fn installed_world() -> World {
+    let mut world = World::new().unwrap();
+    let root = world.root.clone();
+    install_runtime(&mut world, &root);
+    world
+}
+/// Uninstalled fixtures deliberately retain the unowned parser/refusal route.
+/// Once installed, a missing or invalid owned command is never substituted.
+pub fn executable(w: &World) -> PathBuf {
+    w.env
+        .get(std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_am")))
+}
 pub fn command(w: &World, helper: &str, args: &[OsString]) -> (Output, Value) {
     command_fault(w, helper, args, &[])
 }
@@ -52,9 +74,11 @@ pub fn command_fault(
     env: &[(OsString, OsString)],
 ) -> (Output, Value) {
     let translated = super::world::helper_arguments(helper, args).unwrap();
-    let argv = std::iter::once(OsString::from("--json")).chain(translated);
+    let argv = [executable(w).into_os_string(), "--json".into()]
+        .into_iter()
+        .chain(translated);
     let output = w
-        .am_with(
+        .run_with(
             argv,
             RunOptions {
                 check: false,
@@ -214,14 +238,7 @@ pub struct Bank {
 }
 impl Bank {
     pub fn new() -> Self {
-        let mut world = World::new().unwrap();
-        let runtime = super::installed_runtime::install(&world.root, |argv| {
-            world.run(argv).unwrap()
-        });
-        world.env.insert(
-            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
-            runtime.command.as_os_str().to_owned(),
-        );
+        let world = installed_world();
         let repo = world.repository("repo", false).unwrap();
         let bank = repo.join("memory-bank");
         fs::create_dir(&bank).unwrap();
@@ -251,7 +268,7 @@ impl Bank {
             "2026-10-22T19:00:00Z",
         );
         write_files(&bank, &before);
-        super::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
+        super::identity_fixtures::bind_with_command(&world, &repo, &executable(&world)).unwrap();
         let mut value = Self {
             world,
             repo,
@@ -370,7 +387,7 @@ impl Bank {
             .world
             .spawn_with(
                 [
-                    self.world.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+                    executable(&self.world).into_os_string(),
                     "--json".into(),
                     "transaction".into(),
                     "apply".into(),
@@ -441,14 +458,7 @@ pub struct Recall {
 }
 impl Recall {
     pub fn new() -> Self {
-        let mut world = World::new().unwrap();
-        let runtime = super::installed_runtime::install(&world.root, |argv| {
-            world.run(argv).unwrap()
-        });
-        world.env.insert(
-            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
-            runtime.command.as_os_str().to_owned(),
-        );
+        let world = installed_world();
         let repo = world.repository("repo", false).unwrap();
         fs::write(repo.join("app.rs"), "const RETRY_LIMIT: u32 = 3;\n").unwrap();
         fs::write(
@@ -492,7 +502,7 @@ impl Recall {
                 "2026-10-22T17:00:00Z",
             ),
         );
-        super::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
+        super::identity_fixtures::bind_with_command(&world, &repo, &executable(&world)).unwrap();
         fs::write(
             repo.join("app.rs"),
             "const RETRY_LIMIT: u32 = 4; // staged unrelated work\n",
@@ -614,7 +624,7 @@ impl Recall {
             .world
             .spawn_with(
                 [
-                    self.world.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+                    executable(&self.world).into_os_string(),
                     "--json".into(),
                     "search".into(),
                     "--repo".into(),

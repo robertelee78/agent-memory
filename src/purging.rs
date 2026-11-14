@@ -136,9 +136,9 @@ fn selection(env: &Environment, services: &Services, request: &PurgeRequest) -> 
         &locations,
         old.as_ref(),
     )?;
-    let receipt = old
-        .as_ref()
-        .ok_or_else(|| contract("Purge requires an active independently verified installation receipt"))?;
+    let receipt = old.as_ref().ok_or_else(|| {
+        contract("Purge requires an active independently verified installation receipt")
+    })?;
     let runtime = install::verified_receipt_runtime(env, services, receipt)?;
     Ok(Selection {
         repo,
@@ -284,11 +284,7 @@ fn count(entries: &[(String, Value)], select: impl Fn(&str, &Value) -> bool) -> 
 }
 
 /// Baseline `preview`: the exact confirmable inventory of the bank.
-fn preview(
-    selection: &Selection,
-    owner: Option<&[u8]>,
-    runtime: (&Path, &Path),
-) -> Result<Value> {
+fn preview(selection: &Selection, owner: Option<&[u8]>, runtime: (&Path, &Path)) -> Result<Value> {
     let repo = &selection.repo;
     let bank = &selection.bank;
     let frontier = crate::bank_writes::recovery_frontier_provider()?;
@@ -1001,7 +997,10 @@ pub fn run(env: &Environment, services: &Services, request: &PurgeRequest) -> Re
             ("verified", Value::Bool(false)),
             ("check_complete", Value::Bool(true)),
             ("writes_performed", Value::Bool(false)),
-            ("preview", preview(&selection, None, selection.runtime.pair())?),
+            (
+                "preview",
+                preview(&selection, None, selection.runtime.pair())?,
+            ),
             (
                 "retained",
                 object([

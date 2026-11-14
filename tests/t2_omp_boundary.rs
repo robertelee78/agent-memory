@@ -771,7 +771,10 @@ fn uninstalled_native_recovery_finishes_without_runtime_bytes_and_refuses_curren
         boundary::recover_uninstalled_native(&state),
         "Native uninstall recovery requires absent current ownership",
     );
-    assert_eq!(installation::fingerprint(&receipt_path).unwrap(), receipt_identity);
+    assert_eq!(
+        installation::fingerprint(&receipt_path).unwrap(),
+        receipt_identity
+    );
 
     let agent = world.root.join("native-agent");
     mkdir(&agent.join("extensions"));

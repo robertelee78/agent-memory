@@ -596,7 +596,12 @@ pub fn private_namespace(
     runtime_root: &Path,
 ) -> Result<(Namespace, PrivateEnrollmentContext)> {
     private_namespace_with_authority(
-        repo, harness, session, lifecycle, create, scope::RuntimeAuthority::Executing(runtime_root),
+        repo,
+        harness,
+        session,
+        lifecycle,
+        create,
+        scope::RuntimeAuthority::Executing(runtime_root),
     )
 }
 pub fn private_namespace_with_authority(
@@ -1723,7 +1728,11 @@ pub fn inspect(
     runtime_root: &Path,
 ) -> Result<Value> {
     inspect_with_authority(
-        repo, harness, session, lifecycle, scope::RuntimeAuthority::Executing(runtime_root),
+        repo,
+        harness,
+        session,
+        lifecycle,
+        scope::RuntimeAuthority::Executing(runtime_root),
     )
 }
 pub fn inspect_with_authority(

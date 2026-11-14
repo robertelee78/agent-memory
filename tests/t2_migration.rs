@@ -260,8 +260,14 @@ impl Fixture {
         let runtime = runtime.unwrap_or(&self.source).to_path_buf();
         for (key, value) in [
             ("AM_MIGRATION_ARGS", OsString::from(encoded)),
-            ("AM_MIGRATION_PACK", runtime.join("skills/agent-memory").into_os_string()),
-            ("AM_MIGRATION_BINARY", runtime.join("bin/am").into_os_string()),
+            (
+                "AM_MIGRATION_PACK",
+                runtime.join("skills/agent-memory").into_os_string(),
+            ),
+            (
+                "AM_MIGRATION_BINARY",
+                runtime.join("bin/am").into_os_string(),
+            ),
             ("AM_MIGRATION_RUNTIME", runtime.into_os_string()),
             ("AM_MIGRATION_OUT", out.into_os_string()),
             ("AM_MIGRATION_CODECS", OsString::from(self.codecs)),
@@ -537,8 +543,10 @@ fn runtime(root: &Path, native: &support::installed_runtime::NativeRuntime) {
     }
     let path = pack.join("schemas/runtime-compatibility.json");
     let mut compatibility = decode(&std::fs::read(&path).unwrap());
-    *compatibility.get_mut("migrator_source_schemas").unwrap() =
-        Value::Array(vec![Value::String(LEGACY.into()), Value::String(MIDDLE.into())]);
+    *compatibility.get_mut("migrator_source_schemas").unwrap() = Value::Array(vec![
+        Value::String(LEGACY.into()),
+        Value::String(MIDDLE.into()),
+    ]);
     write(&path, text(&compatibility));
     write(&pack.join("schemas/migrations.json"), fixture_catalog());
     std::fs::create_dir_all(root.join("bin")).unwrap();
@@ -581,14 +589,24 @@ fn bind(world: &World, repo: &Path, command: &Path) {
     let developer = call(&["developer", "status", "--repo", s(repo)]);
     if truth(&developer, "setup_required") {
         let proposal = call(&[
-            "developer", "preview", "--create", "--label", "Disposable test developer",
+            "developer",
+            "preview",
+            "--create",
+            "--label",
+            "Disposable test developer",
         ]);
         apply("developer", &proposal);
     }
     let current = call(&["identity", "status", "--repo", s(repo)]);
     if !truth(&current, "resolved") {
         let proposal = call(&[
-            "identity", "preview", "--repo", s(repo), "--action", "bind", "--reason",
+            "identity",
+            "preview",
+            "--repo",
+            s(repo),
+            "--action",
+            "bind",
+            "--reason",
             "Explicit disposable fixture bank adoption",
         ]);
         let receipt = apply("identity", &proposal);
@@ -790,7 +808,14 @@ fn interrupted_conversion_recovers_finish_or_original_rollback_and_lost_response
                 let normal = f
                     .world
                     .run_with(
-                        [s(&f.native.command), "--json", "bank", "validate", "--repo", s(&repo)],
+                        [
+                            s(&f.native.command),
+                            "--json",
+                            "bank",
+                            "validate",
+                            "--repo",
+                            s(&repo),
+                        ],
                         RunOptions {
                             check: false,
                             ..RunOptions::default()

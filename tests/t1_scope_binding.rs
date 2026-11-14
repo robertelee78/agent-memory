@@ -404,8 +404,14 @@ impl World {
         if marker.exists() {
             let marker = load(&std::fs::read(marker).unwrap()).unwrap();
             env.extend([
-                ("AGENT_MEMORY_TEST_ROOT".into(), self.root.as_os_str().to_owned()),
-                ("AGENT_MEMORY_TEST_TOKEN".into(), st(&marker, "token").into()),
+                (
+                    "AGENT_MEMORY_TEST_ROOT".into(),
+                    self.root.as_os_str().to_owned(),
+                ),
+                (
+                    "AGENT_MEMORY_TEST_TOKEN".into(),
+                    st(&marker, "token").into(),
+                ),
             ]);
         }
         env
@@ -585,8 +591,9 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
             root: PathBuf::from(std::env::var_os("AM_SCOPE_ROOT").unwrap()),
             runtime: None,
         };
-        world.runtime = installed_consumer_case(name)
-            .then(|| support::installed_runtime::install(&world.root, |argv| world.command(argv, &[])));
+        world.runtime = installed_consumer_case(name).then(|| {
+            support::installed_runtime::install(&world.root, |argv| world.command(argv, &[]))
+        });
         if world.runtime.is_some() {
             support::installed_runtime::register_component_runtime();
         } else {
@@ -623,7 +630,10 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
         disposable.root.clone()
     } else {
         let root = std::env::temp_dir().join(format!("am-scope-{}", host::uuid4().unwrap()));
-        std::fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
+        std::fs::DirBuilder::new()
+            .mode(0o700)
+            .create(&root)
+            .unwrap();
         let root = std::fs::canonicalize(root).unwrap();
         std::fs::create_dir(root.join("home")).unwrap();
         root
@@ -1104,7 +1114,10 @@ fn every_mediated_writer_refuses_unresolved_identity_but_raw_validation_remains_
             assert_eq!(w.canonical(&bank), before);
             assert!(!bank.join(".agent-memory.lock").exists());
             bank::validate(&repo, None, None).unwrap();
-            assert_eq!(agent_memory::installation::fingerprint(&state).unwrap(), state_before);
+            assert_eq!(
+                agent_memory::installation::fingerprint(&state).unwrap(),
+                state_before
+            );
             w.developer("Fixture developer");
             w.bind(&repo);
             assert!(writes::apply(&single).is_err());

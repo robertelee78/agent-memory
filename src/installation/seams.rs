@@ -58,7 +58,12 @@ pub trait PrivateState: Send + Sync {
         transition: &mut dyn FnMut() -> Result<Option<Value>>,
         body: &mut dyn FnMut(&Value) -> Result<Value>,
     ) -> Result<Value>;
-    fn prepare_lifecycle(&self, plan: &Value, check: bool, runtime: (&Path, &Path)) -> Result<Value>;
+    fn prepare_lifecycle(
+        &self,
+        plan: &Value,
+        check: bool,
+        runtime: (&Path, &Path),
+    ) -> Result<Value>;
     fn require_compatible(
         &self,
         installation: &Value,
@@ -75,16 +80,35 @@ pub trait OmpBoundary: Send + Sync {
     /// `omp_boundary.CAPABILITY`.
     fn capability(&self) -> &str;
     /// Baseline mutates `plan` in place: `actions` rewrite and `omp_disabled_backup`.
-    fn native_transition(&self, plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> Result<Value>;
+    fn native_transition(
+        &self,
+        plan: &mut Value,
+        check: bool,
+        runtime: (&Path, &Path),
+    ) -> Result<Value>;
     /// With `check`, baseline records `native_layout_quiescence_overrides` in `plan`.
-    fn native_activation(&self, plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> Result<Value>;
+    fn native_activation(
+        &self,
+        plan: &mut Value,
+        check: bool,
+        runtime: (&Path, &Path),
+    ) -> Result<Value>;
     fn finish_native_transition(&self, plan: &Value, runtime: (&Path, &Path)) -> Result<()>;
     fn recover_native_binding(&self, state: &Path, runtime: (&Path, &Path)) -> Result<()>;
     /// Finish a committed uninstall's retained native transition without
     /// inventing runtime authority for bytes that were already removed.
     fn recover_uninstalled_native(&self, state: &Path) -> Result<()>;
-    fn native_recovery_expected(&self, state: &Path, path: &str, runtime: (&Path, &Path)) -> Result<Option<Value>>;
-    fn complete_stored_source_activation(&self, state: &Path, runtime: (&Path, &Path)) -> Result<Value>;
+    fn native_recovery_expected(
+        &self,
+        state: &Path,
+        path: &str,
+        runtime: (&Path, &Path),
+    ) -> Result<Option<Value>>;
+    fn complete_stored_source_activation(
+        &self,
+        state: &Path,
+        runtime: (&Path, &Path),
+    ) -> Result<Value>;
 }
 
 /// Artifact inspection of an installed pack plus its runtime binary.

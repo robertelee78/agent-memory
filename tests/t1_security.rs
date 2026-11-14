@@ -188,7 +188,12 @@ impl World {
     }
     fn native(&self, args: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
         let mut argv = vec![
-            self.runtime.as_ref().unwrap().command.as_os_str().to_owned(),
+            self.runtime
+                .as_ref()
+                .unwrap()
+                .command
+                .as_os_str()
+                .to_owned(),
             "--json".into(),
         ];
         argv.extend_from_slice(args);
@@ -529,7 +534,10 @@ fn wrong_project_private_evidence_and_claims_refuse() {
         |world| {
             let (repo, _) = world.fixture();
             assert_eq!(
-                get(&security::evaluate(&repo, &request(), None, false).unwrap(), "decision"),
+                get(
+                    &security::evaluate(&repo, &request(), None, false).unwrap(),
+                    "decision"
+                ),
                 &string("eligible")
             );
             for (field, value, error) in [

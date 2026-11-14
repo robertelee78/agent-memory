@@ -218,7 +218,15 @@ impl Fixture {
         let world = World::new().unwrap();
         let runtime = bind.then(|| {
             support::installed_runtime::install(&world.root, |argv| {
-                world.run_with(argv, RunOptions { check: false, ..Default::default() }).unwrap()
+                world
+                    .run_with(
+                        argv,
+                        RunOptions {
+                            check: false,
+                            ..Default::default()
+                        },
+                    )
+                    .unwrap()
             })
         });
         let repo = world.repository("repo", false).unwrap();
@@ -257,7 +265,12 @@ impl Fixture {
         for (path, body) in get(&files, "files").as_object().unwrap() {
             fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
-        let fixture = Self { world, repo, bank, runtime };
+        let fixture = Self {
+            world,
+            repo,
+            bank,
+            runtime,
+        };
         if bind {
             fixture.bind(&fixture.repo);
         }
@@ -271,35 +284,56 @@ impl Fixture {
     }
     fn bind(&self, repo: &Path) {
         let developer = self.good(vec![
-            "developer".into(), "status".into(), "--repo".into(), repo.as_os_str().to_owned(),
+            "developer".into(),
+            "status".into(),
+            "--repo".into(),
+            repo.as_os_str().to_owned(),
         ]);
         if get(&developer, "setup_required") == &Value::Bool(true) {
             let proposal = self.good(vec![
-                "developer".into(), "preview".into(), "--create".into(),
-                "--label".into(), "Disposable test developer".into(),
+                "developer".into(),
+                "preview".into(),
+                "--create".into(),
+                "--label".into(),
+                "Disposable test developer".into(),
             ]);
             self.good(vec![
-                "developer".into(), "apply".into(), "--proposal".into(),
+                "developer".into(),
+                "apply".into(),
+                "--proposal".into(),
                 self.save(&proposal, "developer.json").into_os_string(),
             ]);
         }
         let current = self.good(vec![
-            "identity".into(), "status".into(), "--repo".into(), repo.as_os_str().to_owned(),
+            "identity".into(),
+            "status".into(),
+            "--repo".into(),
+            repo.as_os_str().to_owned(),
         ]);
         if get(&current, "resolved") != &Value::Bool(true) {
             let proposal = self.good(vec![
-                "identity".into(), "preview".into(), "--repo".into(), repo.as_os_str().to_owned(),
-                "--action".into(), "bind".into(), "--reason".into(),
+                "identity".into(),
+                "preview".into(),
+                "--repo".into(),
+                repo.as_os_str().to_owned(),
+                "--action".into(),
+                "bind".into(),
+                "--reason".into(),
                 "Explicit disposable fixture bank adoption".into(),
             ]);
             let receipt = self.good(vec![
-                "identity".into(), "apply".into(), "--proposal".into(),
+                "identity".into(),
+                "apply".into(),
+                "--proposal".into(),
                 self.save(&proposal, "identity.json").into_os_string(),
             ]);
             assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
         }
         let current = self.good(vec![
-            "identity".into(), "status".into(), "--repo".into(), repo.as_os_str().to_owned(),
+            "identity".into(),
+            "status".into(),
+            "--repo".into(),
+            repo.as_os_str().to_owned(),
         ]);
         assert_eq!(get(&current, "resolved"), &Value::Bool(true));
     }
@@ -312,8 +346,17 @@ impl Fixture {
         let output = self
             .world
             .run_with(
-                [self.runtime.as_ref().unwrap().command.as_os_str().to_owned(), "--json".into()]
-                    .into_iter().chain(args),
+                [
+                    self.runtime
+                        .as_ref()
+                        .unwrap()
+                        .command
+                        .as_os_str()
+                        .to_owned(),
+                    "--json".into(),
+                ]
+                .into_iter()
+                .chain(args),
                 RunOptions {
                     check: false,
                     ..Default::default()

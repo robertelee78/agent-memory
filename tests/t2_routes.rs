@@ -58,8 +58,9 @@ fn set(value: &mut Value, key: &str, replacement: Value) {
     *field = replacement;
 }
 fn run(w: &World, args: &[&str]) -> Output {
-    w.am_with(
-        args,
+    w.run_with(
+        std::iter::once(support::cutover::executable(w).into_os_string())
+            .chain(args.iter().map(|arg| OsString::from(*arg))),
         RunOptions {
             check: false,
             ..Default::default()

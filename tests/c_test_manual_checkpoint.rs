@@ -7,22 +7,7 @@ use support::cutover::*;
 use support::{RunOptions, World};
 const BODY: &str = "# Active context\n\n## Current focus\nVerify the component-specific retry lesson; [task](../task.md).\n\n## Recent changes\nThe branch's isolated test passed; [evidence](../test-result.md).\n\n## Open questions\nApplicability outside this component remains unverified.\n\n## Next step\nInspect the first clone's result.\n";
 fn fixture() -> (World, PathBuf, PathBuf) {
-    let mut w = World::new().unwrap();
-    let runtime = support::installed_runtime::install(&w.root, |argv| {
-        w.run_with(
-            argv,
-            RunOptions {
-                check: false,
-                timeout: std::time::Duration::from_secs(120),
-                ..RunOptions::default()
-            },
-        )
-        .unwrap()
-    });
-    w.env.insert(
-        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
-        runtime.command.clone().into_os_string(),
-    );
+    let w = World::new().unwrap();
     let repo = w.repository("repo", false).unwrap();
     let bank = repo.join("memory-bank");
     fs::create_dir(&bank).unwrap();
@@ -31,7 +16,6 @@ fn fixture() -> (World, PathBuf, PathBuf) {
         .replace("| repository | active |", "| component:retry | active |");
     put(&mut files, "MEMORY.md", text(router));
     write_files(&bank, &files);
-    support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
     w.git_with(
         ["add", "."],
         RunOptions {
@@ -48,6 +32,26 @@ fn fixture() -> (World, PathBuf, PathBuf) {
         },
     )
     .unwrap();
+    (w, repo, bank)
+}
+fn native_fixture() -> (World, PathBuf, PathBuf) {
+    let (mut w, repo, bank) = fixture();
+    let runtime = support::installed_runtime::install(&w.root, |argv| {
+        w.run_with(
+            argv,
+            RunOptions {
+                check: false,
+                timeout: std::time::Duration::from_secs(120),
+                ..RunOptions::default()
+            },
+        )
+        .unwrap()
+    });
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.clone().into_os_string(),
+    );
+    support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
     (w, repo, bank)
 }
 fn preview(w: &World, repo: &Path, body: &str) -> (agent_memory::process::Output, Value) {
@@ -185,8 +189,7 @@ fn file_only_checkpoint_resumes_without_generated_state_preserving_other_work() 
 #[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_manual_checkpoint.py::ManualCheckpointContract.test_stale_mediated_proposal_refuses_then_fresh_write_preserves_manual_evidence
 fn stale_mediated_proposal_refuses_and_fresh_write_preserves_manual_evidence() {
-    let (w, repo, bank) = fixture();
-    support::identity_fixtures::bind(&w, &repo).unwrap();
+    let (w, repo, bank) = native_fixture();
     let (output, old) = preview(
         &w,
         &repo,
@@ -232,7 +235,7 @@ fn stale_mediated_proposal_refuses_and_fresh_write_preserves_manual_evidence() {
 #[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_manual_checkpoint.py::ManualCheckpointContract.test_visible_lock_and_interrupted_bank_stop_mediated_resume_without_repair
 fn visible_lock_and_interruption_stop_mediated_resume_without_repair() {
-    let (w, repo, bank) = fixture();
+    let (w, repo, bank) = native_fixture();
     let original = fs::read(bank.join("activeContext.md")).unwrap();
     for name in [".agent-memory.lock", MARKER] {
         let marker = bank.join(name);
@@ -270,7 +273,7 @@ fn visible_lock_and_interruption_stop_mediated_resume_without_repair() {
 #[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_manual_checkpoint.py::ManualCheckpointContract.test_invalid_external_edit_is_reported_instead_of_template_repair
 fn invalid_external_edit_is_reported_instead_of_template_repair() {
-    let (w, repo, bank) = fixture();
+    let (w, repo, bank) = native_fixture();
     let (output, old) = preview(&w, &repo, BODY);
     assert_eq!(output.status, Status::Code(0));
     let target = bank.join("activeContext.md");

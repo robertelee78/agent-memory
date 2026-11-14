@@ -191,7 +191,13 @@ impl PrivateState for FixturePrivateState {
     fn prepare_lifecycle(&self, _: &Value, _: bool, _: (&Path, &Path)) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn require_compatible(&self, _: &Value, _: &Value, _: &str, _: (&Path, &Path)) -> install::Result<Value> {
+    fn require_compatible(
+        &self,
+        _: &Value,
+        _: &Value,
+        _: &str,
+        _: (&Path, &Path),
+    ) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
     fn public_summary(&self, value: &Value) -> install::Result<Value> {

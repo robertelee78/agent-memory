@@ -318,7 +318,9 @@ fn rollback_compatibility(
         "rollback",
         runtime,
     )?;
-    services.updating()?.banks(&listed, &compatibility, true, runtime, Some(runtime))?;
+    services
+        .updating()?
+        .banks(&listed, &compatibility, true, runtime, Some(runtime))?;
     Ok(())
 }
 
@@ -615,10 +617,11 @@ pub(crate) fn verify_rolled_back_targets(
             && *get(action, "before") == Value::Null
             && lexists(&state.join("omp-transition.json"))?
         {
-            if let Some(restored) = services
-                .omp_boundary()?
-                .native_recovery_expected(state, text(action, "path").unwrap_or_default(), runtime)?
-            {
+            if let Some(restored) = services.omp_boundary()?.native_recovery_expected(
+                state,
+                text(action, "path").unwrap_or_default(),
+                runtime,
+            )? {
                 expected = restored;
             }
         }
@@ -679,8 +682,10 @@ fn completed_uninstall(state: &Path, journal: &Value) -> Result<Option<Value>> {
     {
         return Ok(None);
     }
-    require(receipt_committed(state, journal)?,
-        "Completed installation receipt is missing or changed; preserve the journal and reconcile ownership")?;
+    require(
+        receipt_committed(state, journal)?,
+        "Completed installation receipt is missing or changed; preserve the journal and reconcile ownership",
+    )?;
     Ok(Some(recover_result("complete", true)))
 }
 
@@ -689,9 +694,14 @@ fn require_selected_journal(
     state: &Path,
     selected: Option<&[u8]>,
 ) -> Result<()> {
-    let current = read_journal(env, state)?.as_ref().map(encoded).transpose()?;
-    require(current.as_deref() == selected,
-        "Lifecycle journal changed during runtime selection; retry")
+    let current = read_journal(env, state)?
+        .as_ref()
+        .map(encoded)
+        .transpose()?;
+    require(
+        current.as_deref() == selected,
+        "Lifecycle journal changed during runtime selection; retry",
+    )
 }
 
 /// Baseline `recover`: finish a committed transaction or roll back an
@@ -716,8 +726,10 @@ pub fn recover(
         if let Some(journal) = &journal {
             if matches!(text(journal, "status"), Some("complete" | "rolled-back")) {
                 if text(journal, "status") == Some("complete") {
-                    require(receipt_committed(state, journal)?,
-                        "Completed installation receipt differs; preserve the journal")?;
+                    require(
+                        receipt_committed(state, journal)?,
+                        "Completed installation receipt differs; preserve the journal",
+                    )?;
                 }
                 return Ok(recover_result("install-validation-pending", false));
             }
@@ -726,16 +738,31 @@ pub fn recover(
         }
     }
     let runtime = match &journal {
-        Some(journal) => Some(super::recovery_runtime(env, services, &locations(env)?, journal)?),
-        None => read_receipt(env, state)?.as_ref()
+        Some(journal) => Some(super::recovery_runtime(
+            env,
+            services,
+            &locations(env)?,
+            journal,
+        )?),
+        None => read_receipt(env, state)?
+            .as_ref()
             .map(|receipt| super::verified_receipt_runtime(env, services, receipt))
             .transpose()?,
     };
     match runtime {
-        Some(runtime) => recover_with_runtime(env, services, state, for_install, complete_native, runtime.pair()),
+        Some(runtime) => recover_with_runtime(
+            env,
+            services,
+            state,
+            for_install,
+            complete_native,
+            runtime.pair(),
+        ),
         None => {
-            require(!lexists(&state.join("omp-transition.json"))?,
-                "Native recovery has no verified runtime; preserve transition evidence")?;
+            require(
+                !lexists(&state.join("omp-transition.json"))?,
+                "Native recovery has no verified runtime; preserve transition evidence",
+            )?;
             Ok(recover_result("no-pending-transaction", true))
         }
     }
@@ -753,7 +780,9 @@ fn recover_with_runtime(
     let journal = read_journal(env, state)?;
     let restore_native = || -> Result<()> {
         if !for_install && lexists(&state.join("omp-transition.json"))? {
-            services.omp_boundary()?.recover_native_binding(state, runtime)?;
+            services
+                .omp_boundary()?
+                .recover_native_binding(state, runtime)?;
         }
         Ok(())
     };
@@ -898,7 +927,9 @@ pub fn finish_stored_source_activation(
         }
         let operation = text(&result, "operation").unwrap_or_default();
         fault(&format!("{operation}-before-stored-source-activation"))?;
-        Ok(Some(boundary.complete_stored_source_activation(state, runtime)?))
+        Ok(Some(
+            boundary.complete_stored_source_activation(state, runtime)?,
+        ))
     };
     match attempt() {
         Ok(None) => Ok(result),
@@ -952,9 +983,11 @@ pub fn install(
     // Verify before transitions can write. Uninstall's source is then retained
     // independently of the paths its removal actions exchange away.
     let verified = super::runtime::verified_plan_runtime(env, services, plan)?;
-    let runtime_owner = if plan.actions.iter().any(|action| action.changed
-        && (plan.pack_source.starts_with(&action.path)
-            || plan.binary_source.starts_with(&action.path))) {
+    let runtime_owner = if plan.actions.iter().any(|action| {
+        action.changed
+            && (plan.pack_source.starts_with(&action.path)
+                || plan.binary_source.starts_with(&action.path))
+    }) {
         verified.retain(services)?
     } else {
         verified
@@ -1777,10 +1810,15 @@ fn install_value(
     let bootstrap_root = staged.as_ref().map(|(_, root)| root.clone());
     // Prove source authority before any durable lock/owner or fault records.
     // Recovery can change targets, so final planning remains inside the lock.
-    let recovery_journal = if !request.check { read_journal(env, &state)? } else { None };
+    let recovery_journal = if !request.check {
+        read_journal(env, &state)?
+    } else {
+        None
+    };
     let selected_journal = recovery_journal.as_ref().map(encoded).transpose()?;
     let recovery_owner = if !request.check {
-        recovery_journal.as_ref()
+        recovery_journal
+            .as_ref()
             .filter(|journal| !matches!(text(journal, "status"), Some("complete" | "rolled-back")))
             .map(|journal| super::recovery_runtime(env, services, &locations, journal))
             .transpose()?
@@ -1793,7 +1831,9 @@ fn install_value(
         } else if let Some(root) = request.development_source.as_deref() {
             super::source_info(services, &absolute(env, root)?, "development")?;
         } else if recovery_owner.is_none() {
-            let receipt = old.as_ref().ok_or_else(|| ContractError::new(super::RELEASE_GUIDANCE))?;
+            let receipt = old
+                .as_ref()
+                .ok_or_else(|| ContractError::new(super::RELEASE_GUIDANCE))?;
             super::verified_receipt_runtime(env, services, receipt)?;
         }
     }
@@ -1814,26 +1854,34 @@ fn install_value(
         let mut result = public_plan(&plan)?;
         let mut plan_value = plan.value()?;
         if plan.omp_binding.is_some() {
-            let activation = services
-                .omp_boundary()?
-                .native_activation(&mut plan_value, true, plan.runtime())?;
+            let activation = services.omp_boundary()?.native_activation(
+                &mut plan_value,
+                true,
+                plan.runtime(),
+            )?;
             set(&mut result, "omp_layout_activation", activation);
         }
         // Before lifecycle preparation, an existing hold belongs to the
         // current receipt's runtime, not the unpublished candidate.
-        let current_runtime = plan.old.as_ref().filter(|receipt| super::receipt_is_rust_era(receipt))
+        let current_runtime = plan
+            .old
+            .as_ref()
+            .filter(|receipt| super::receipt_is_rust_era(receipt))
             .map(|receipt| super::verified_receipt_runtime(env, services, receipt))
             .transpose()?;
-        let compatibility =
-            services
-                .updating()?
-                .banks(&[], get(&plan.source, "compatibility"), false, plan.runtime(),
-                    current_runtime.as_ref().map(super::LifecycleRuntime::pair))?;
+        let compatibility = services.updating()?.banks(
+            &[],
+            get(&plan.source, "compatibility"),
+            false,
+            plan.runtime(),
+            current_runtime.as_ref().map(super::LifecycleRuntime::pair),
+        )?;
         set(&mut result, "compatibility", compatibility);
         let private = services.private_state()?;
         let target = private.prepare_lifecycle(&plan_value, true, plan.runtime())?;
         let installation = plan.old.clone().unwrap_or(Value::Null);
-        let compatible = private.require_compatible(&installation, &target, "install", plan.runtime())?;
+        let compatible =
+            private.require_compatible(&installation, &target, "install", plan.runtime())?;
         set(
             &mut result,
             "private_compatibility",
@@ -1904,8 +1952,13 @@ fn recover_value(env: &Environment, services: &Services) -> Result<Value> {
             .as_ref()
             .is_some_and(|old| truthy(get(old, "omp_binding")))
         {
-            let runtime = super::verified_receipt_runtime(env, services, old.as_ref().ok_or_else(
-                || ContractError::new("Stored activation has no current receipt"))?)?;
+            let runtime = super::verified_receipt_runtime(
+                env,
+                services,
+                old.as_ref().ok_or_else(|| {
+                    ContractError::new("Stored activation has no current receipt")
+                })?,
+            )?;
             locked(env, &state, || {
                 require_selected_journal(env, &state, None)?;
                 finish_stored_source_activation(
@@ -1920,16 +1973,20 @@ fn recover_value(env: &Environment, services: &Services) -> Result<Value> {
             result
         }
     } else {
-        let journal = read_journal(env, &state)?.ok_or_else(
-            || ContractError::new("Recovery journal disappeared before authority selection"))?;
+        let journal = read_journal(env, &state)?.ok_or_else(|| {
+            ContractError::new("Recovery journal disappeared before authority selection")
+        })?;
         if let Some(result) = completed_uninstall(&state, &journal)? {
             if lexists(&state.join("omp-transition.json"))? {
                 let selected_journal = encoded(&journal)?;
-                let paths = lifecycle_paths(env, Command::Recover, &request, &locations, old.as_ref())?;
+                let paths =
+                    lifecycle_paths(env, Command::Recover, &request, &locations, old.as_ref())?;
                 crate::runtime_faults::operation("recover", &paths, || {
                     locked(env, &state, || {
                         require_selected_journal(env, &state, Some(&selected_journal))?;
-                        services.omp_boundary()?.recover_uninstalled_native(&state)?;
+                        services
+                            .omp_boundary()?
+                            .recover_uninstalled_native(&state)?;
                         Ok(result)
                     })
                 })?

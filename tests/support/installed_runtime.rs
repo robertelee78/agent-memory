@@ -72,7 +72,11 @@ pub fn install(root: &Path, mut run: impl FnMut(&[OsString]) -> Output) -> Nativ
     );
     assert!(output.stderr.is_empty(), "{:?}", output.stderr);
     let result = json::decode_bytes(&output.stdout, Default::default()).unwrap();
-    assert_eq!(result.get("verified"), Some(&Value::Bool(true)), "{result:?}");
+    assert_eq!(
+        result.get("verified"),
+        Some(&Value::Bool(true)),
+        "{result:?}"
+    );
     let receipt = json::decode_bytes(
         &std::fs::read(root.join("state/agent-memory/install/receipt.json")).unwrap(),
         Default::default(),
@@ -86,13 +90,18 @@ pub fn install(root: &Path, mut run: impl FnMut(&[OsString]) -> Output) -> Nativ
     assert_eq!(installation::source_binary(recorded).unwrap(), binary);
     assert_eq!(recorded.get("pack").and_then(Value::as_str), pack.to_str());
     assert_eq!(std::fs::canonicalize(&command).unwrap(), binary);
-    NativeRuntime { source, pack, binary, command }
+    NativeRuntime {
+        source,
+        pack,
+        binary,
+        command,
+    }
 }
 
 fn component_runtime() -> agent_memory::error::Result<(PathBuf, PathBuf)> {
     use agent_memory::error::ContractError;
-    let root = super::require_current_world()
-        .map_err(|error| ContractError::new(error.to_string()))?;
+    let root =
+        super::require_current_world().map_err(|error| ContractError::new(error.to_string()))?;
     installation::executing_runtime(
         &installation::Environment::process(),
         &root.join("home/.local/bin/am"),

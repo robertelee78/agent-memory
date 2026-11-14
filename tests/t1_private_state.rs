@@ -1,8 +1,8 @@
 use agent_memory::clock::Deadline;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::error::{ContractError, Result};
-use agent_memory::{bank_writes, host, private_state as private, process};
 use agent_memory::scope_binding::RuntimeAuthority;
+use agent_memory::{bank_writes, host, private_state as private, process};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
 use std::os::unix::fs::{DirBuilderExt, MetadataExt, PermissionsExt};
@@ -276,7 +276,11 @@ fn present_native_barrier_is_not_mistaken_for_absence_or_rewritten() {
     write(&lock, b"RACED_PRIVATE_EVIDENCE_MUST_SURVIVE\n");
     let before = snapshot(&root.0);
     refusal(
-        private::native_absence(&root.0, &base, RuntimeAuthority::Executing(&root.0.join("runtime"))),
+        private::native_absence(
+            &root.0,
+            &base,
+            RuntimeAuthority::Executing(&root.0.join("runtime")),
+        ),
         "Native source barrier appeared during observation",
     );
     assert_eq!(snapshot(&root.0), before);
@@ -460,8 +464,12 @@ fn routerless_notes_and_receipts_remain_readonly() {
                 cwd: Some(root),
                 search_path: false,
                 stdin: process::Input::Null,
-                stdout: process::Target::Capture { limit: 8 * 1024 * 1024 },
-                stderr: process::Target::Capture { limit: 8 * 1024 * 1024 },
+                stdout: process::Target::Capture {
+                    limit: 8 * 1024 * 1024,
+                },
+                stderr: process::Target::Capture {
+                    limit: 8 * 1024 * 1024,
+                },
                 deadline: Deadline::from_absolute_ns(u64::MAX),
                 new_session: false,
                 file_size_limit: None,
@@ -516,8 +524,10 @@ fn native_absence_rechecks_normal_and_ordinary_failures() {
             let (repo, _, base) = setup_bank(root);
             for fail in [false, true] {
                 let mut saved = None;
-                let error =
-                    private::observation_barrier(&repo, RuntimeAuthority::Executing(&root.join("runtime")), |_| -> Result<()> {
+                let error = private::observation_barrier(
+                    &repo,
+                    RuntimeAuthority::Executing(&root.join("runtime")),
+                    |_| -> Result<()> {
                         agent_memory::fs::private_mkdir(&base).unwrap();
                         write(
                             &base.join("source-barrier.lock"),
@@ -529,8 +539,9 @@ fn native_absence_rechecks_normal_and_ordinary_failures() {
                         } else {
                             Ok(())
                         }
-                    })
-                    .unwrap_err();
+                    },
+                )
+                .unwrap_err();
                 assert_eq!(
                     error.message(),
                     "Native source barrier appeared during observation"
@@ -553,8 +564,10 @@ fn native_absence_preserves_original_unwind_and_raced_evidence() {
             let mut saved = None;
             let original = std::sync::Arc::new("original fatal unwind");
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                let _: Result<()> =
-                    private::observation_barrier(&repo, RuntimeAuthority::Executing(&root.join("runtime")), |_| {
+                let _: Result<()> = private::observation_barrier(
+                    &repo,
+                    RuntimeAuthority::Executing(&root.join("runtime")),
+                    |_| {
                         agent_memory::fs::private_mkdir(&base).unwrap();
                         write(
                             &base.join("source-barrier.lock"),
@@ -562,7 +575,8 @@ fn native_absence_preserves_original_unwind_and_raced_evidence() {
                         );
                         saved = Some(snapshot(root));
                         std::panic::panic_any(original.clone());
-                    });
+                    },
+                );
             }));
             let caught = result
                 .unwrap_err()
@@ -583,15 +597,21 @@ fn unchanged_native_absence_preserves_ordinary_refusal() {
             agent_memory::cli::register_providers().unwrap();
             let (repo, _, base) = setup_bank(root);
             let before = snapshot(root);
-            private::observation_barrier(&repo, RuntimeAuthority::Executing(&root.join("runtime")), |pin| {
-                assert!(pin.is_some());
-                Ok(())
-            })
+            private::observation_barrier(
+                &repo,
+                RuntimeAuthority::Executing(&root.join("runtime")),
+                |pin| {
+                    assert!(pin.is_some());
+                    Ok(())
+                },
+            )
             .unwrap();
             refusal(
-                private::observation_barrier(&repo, RuntimeAuthority::Executing(&root.join("runtime")), |_| -> Result<()> {
-                    Err(ContractError::new("original ordinary refusal"))
-                }),
+                private::observation_barrier(
+                    &repo,
+                    RuntimeAuthority::Executing(&root.join("runtime")),
+                    |_| -> Result<()> { Err(ContractError::new("original ordinary refusal")) },
+                ),
                 "original ordinary refusal",
             );
             assert!(!base.join("source-barrier.lock").exists());
@@ -759,10 +779,14 @@ fn lockless_native_names_and_malformed_shared_sources_refuse_readonly() {
                 let before = snapshot(root);
                 let mut entered = false;
                 assert!(
-                    private::observation_barrier(&repo, RuntimeAuthority::Executing(&root.join("runtime")), |_| {
-                        entered = true;
-                        Ok(())
-                    })
+                    private::observation_barrier(
+                        &repo,
+                        RuntimeAuthority::Executing(&root.join("runtime")),
+                        |_| {
+                            entered = true;
+                            Ok(())
+                        }
+                    )
                     .is_err()
                 );
                 assert!(!entered);

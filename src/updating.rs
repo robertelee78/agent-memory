@@ -433,7 +433,9 @@ fn inspect_bank(
         )?;
         if install::lexists(&bank.join(crate::bank_transactions::MARKER))? {
             let runtime = held_runtime.ok_or_else(|| {
-                contract("Recovery hold requires an independently verified current installation runtime")
+                contract(
+                    "Recovery hold requires an independently verified current installation runtime",
+                )
             })?;
             let held = crate::bank_writes::recovery_frontier_provider()?
                 .verified_hold_for_runtime(root, None, runtime)?;
@@ -926,22 +928,26 @@ fn work(
         &candidate_compatibility,
         false,
         runtime,
-        current_runtime.as_ref().map(install::LifecycleRuntime::pair),
+        current_runtime
+            .as_ref()
+            .map(install::LifecycleRuntime::pair),
     )?;
     set(&mut summary, "compatibility", compatibility.clone());
     plan.rollback_repositories = observed_repositories(&compatibility);
     if request.check {
         let mut plan_value = plan.value()?;
         if omp_transition {
-            let transition = services
-                .omp_boundary()?
-                .native_transition(&mut plan_value, true, runtime)?;
+            let transition =
+                services
+                    .omp_boundary()?
+                    .native_transition(&mut plan_value, true, runtime)?;
             set(&mut summary, "native_transition", transition);
         }
         if plan.omp_binding.is_some() {
-            let activation = services
-                .omp_boundary()?
-                .native_activation(&mut plan_value, true, runtime)?;
+            let activation =
+                services
+                    .omp_boundary()?
+                    .native_activation(&mut plan_value, true, runtime)?;
             set(&mut summary, "native_activation", activation);
         }
         let private = services.private_state()?;

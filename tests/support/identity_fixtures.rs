@@ -5,12 +5,7 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
 
-fn command(
-    world: &World,
-    executable: &Path,
-    helper: &str,
-    args: &[OsString],
-) -> Result<Value> {
+fn command(world: &World, executable: &Path, helper: &str, args: &[OsString]) -> Result<Value> {
     let output = world.run(
         [executable.as_os_str().to_owned(), "--json".into()]
             .into_iter()
@@ -22,12 +17,7 @@ fn command(
     )?)
 }
 
-fn apply(
-    world: &World,
-    executable: &Path,
-    helper: &str,
-    proposal: &Value,
-) -> Result<Value> {
+fn apply(world: &World, executable: &Path, helper: &str, proposal: &Value) -> Result<Value> {
     let path = world.inside("fixture-identity-proposal.json")?;
     fs::write(&path, json::encode(proposal, json::DEFAULT)?)?;
     command(

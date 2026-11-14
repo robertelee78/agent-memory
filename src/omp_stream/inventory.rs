@@ -52,7 +52,6 @@ impl InventoryAuthority<'_> {
             }
         }
     }
-
 }
 
 const OPEN_FIELDS: [&str; 11] = [
@@ -871,7 +870,9 @@ fn join_hints(
                 if installed_transport.is_none() {
                     installed_transport = Some(authority.transport()?);
                 }
-                installed_transport.as_ref().ok_or_else(|| err("Native transport is unavailable"))?
+                installed_transport
+                    .as_ref()
+                    .ok_or_else(|| err("Native transport is unavailable"))?
                     .native_disposition_ids(repo, session)?
             }
             InventoryAuthority::Runtime(runtime) => {
@@ -1082,7 +1083,12 @@ pub fn inventory(
     base: Option<&Path>,
     read_only: bool,
 ) -> Result<Value> {
-    inventory_for(InventoryAuthority::Installed(authority), repo, base, read_only)
+    inventory_for(
+        InventoryAuthority::Installed(authority),
+        repo,
+        base,
+        read_only,
+    )
 }
 
 /// Complete retained inventory using explicit enrollment authority only.

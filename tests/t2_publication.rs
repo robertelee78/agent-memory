@@ -71,8 +71,8 @@ fn save(w: &World, value: &Value, name: &str) -> TestResult<PathBuf> {
     Ok(path)
 }
 fn git(w: &World, cwd: &Path, args: &[&str]) -> TestResult<String> {
-    let output = w.git_with(
-        args,
+    let output = w.run_with(
+        std::iter::once(os("git")).chain(args.iter().map(|arg| os(arg))),
         RunOptions {
             cwd: Some(cwd),
             ..RunOptions::default()
@@ -131,6 +131,51 @@ fn install_runtime(w: &mut World) {
         runtime.command.into_os_string(),
     );
 }
+
+/// Execute the receipt-owned native command, including hooks' bounded stdin.
+fn native_dispatch(w: &World, args: &[OsString], event: Option<&Value>) -> (i32, String, String) {
+    use agent_memory::process::{self, Input, Spec, Status, Target};
+    let cwd = w.root.join("repo");
+    support::require_world(&w.env, &cwd).unwrap();
+    let argv: Vec<_> = std::iter::once(w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone())
+        .chain(args.iter().cloned())
+        .collect();
+    let env: Vec<_> = w
+        .env
+        .iter()
+        .map(|(key, value)| (key.clone(), value.clone()))
+        .collect();
+    let payload = event.map(|value| json::encode(value, json::DEFAULT).unwrap().into_bytes());
+    let timeout = support::world::DEFAULT_TIMEOUT;
+    let spec = Spec {
+        argv: &argv,
+        search_path: false,
+        env: &env,
+        cwd: Some(&cwd),
+        stdin: payload.as_deref().map_or(Input::Null, Input::Bytes),
+        stdout: Target::Capture {
+            limit: support::world::CAPTURE_LIMIT,
+        },
+        stderr: Target::Capture {
+            limit: support::world::CAPTURE_LIMIT,
+        },
+        deadline: agent_memory::clock::Deadline::after(timeout).unwrap(),
+        new_session: false,
+        file_size_limit: None,
+        umask: Some(0o077),
+        pass_fds: &[],
+    };
+    let output = process::run_for(&spec, timeout).unwrap();
+    let code = match output.status {
+        Status::Code(code) => code,
+        Status::Signal(signal) => -signal,
+    };
+    (
+        code,
+        String::from_utf8(output.stdout).unwrap(),
+        String::from_utf8(output.stderr).unwrap(),
+    )
+}
 fn os(value: &str) -> &OsStr {
     OsStr::new(value)
 }
@@ -175,7 +220,12 @@ fn remote_head(w: &World, repo: &Path) -> TestResult<String> {
 
 /// Public identity setup; a refused command reports its JSON, not raw bytes.
 fn bind(w: &World, repo: &Path) -> TestResult {
-    support::identity_fixtures::bind_with_command(w, repo, Path::new(&w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")])).map_err(|error| match error {
+    support::identity_fixtures::bind_with_command(
+        w,
+        repo,
+        Path::new(&w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")]),
+    )
+    .map_err(|error| match error {
         WorldError::Check(output) => WorldError::invalid(format!(
             "identity setup refused: {} {}",
             String::from_utf8_lossy(&output.stdout),
@@ -552,6 +602,17 @@ fn github(
             ],
         )?;
         git(w, peer, &["push", "origin", "HEAD:main"])?;
+        git(
+            w,
+            peer,
+            &[
+                "remote",
+                "set-url",
+                "origin",
+                "https://github.com/fixture/memory.git",
+            ],
+        )?;
+        bind(w, peer)?;
     }
     enforce(&remote)?;
     Ok(policy)
@@ -2734,18 +2795,19 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
     let argv: Vec<OsString> = [
         w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
         OsString::from("--json"),
-    ].into_iter()
-        .chain(helper_arguments(
-            "publish_memory.py",
-            [
-                os("land"),
-                os("--repo"),
-                repo.as_os_str(),
-                os("--input"),
-                path.as_os_str(),
-            ],
-        )?)
-        .collect();
+    ]
+    .into_iter()
+    .chain(helper_arguments(
+        "publish_memory.py",
+        [
+            os("land"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            path.as_os_str(),
+        ],
+    )?)
+    .collect();
     let failed = w.run_with(
         argv,
         RunOptions {
@@ -2806,7 +2868,10 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
         },
     )?;
     assert_eq!(installed.status, agent_memory::process::Status::Code(0));
-    assert_eq!(get(&decode(&installed.stdout)?, "verified"), &Value::Bool(true));
+    assert_eq!(
+        get(&decode(&installed.stdout)?, "verified"),
+        &Value::Bool(true)
+    );
     let first = land(&w, &repo, &request)?;
     assert_eq!(text(get(&first, "sharing_state")), "already-landed");
     assert_eq!(get(&first, "publication_verified"), &Value::Bool(true));
@@ -2960,162 +3025,163 @@ fn linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags(
 
 // obligation: tests/contracts/test_publication_admission.py::PublicationAdmissionContract.test_admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history
 #[test]
-#[ignore = "requires the admission publication scenario fixture"]
+#[ignore = "missing full admission-to-publication scenario body and AdmissionContract request/prepared/apply fixture"]
 fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history() -> TestResult {
     deferred_body("the AdmissionContract request/prepared/apply fixture (admission lane)")
 }
 
 // obligation: tests/contracts/test_publication_hold_recovery.py::PublicationHoldRecoveryContract.test_missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work
 #[test]
-#[ignore = "requires the versioned review hold-recovery scenario fixture"]
+#[ignore = "missing full private-hold-loss publication scenario body and versioned_review fixture"]
 fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work() -> TestResult {
     deferred_body(
         "the QuarantinedSharingVersionTwoContract versioned_review fixture (semantic_sharing lane)",
     )
 }
 
-/// An inherited ignored obligation whose consumer scenario has not been authored;
-/// these gaps remain explicitly unclaimed.
+/// An existing baseline obligation whose complete scenario body and fixture
+/// have not been ported. This is not an executable consumer or adapter proof.
 fn deferred_body(fixture: &str) -> TestResult {
     Err(WorldError::invalid(format!("Scenario body waits for {fixture}")).into())
 }
 
 // ---------------------------------------------------------------- layout publication contracts
 //
-// The direct implementation is present. These inherited placeholders still
-// lack their complete public_repair consumer scenarios.
+// Production calls layout_recovery_publication directly. These obligations
+// still lack their complete public_repair scenario bodies and fixture; they
+// must not be represented as active tests of the landed implementation.
 
 const LAYOUT_FIXTURE: &str = "layout_recovery_fixtures.public_repair (layout_recovery lane)";
 
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_after_push_error
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn layout_publication_after_push_error() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_after_push_exit
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn layout_publication_after_push_exit() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_before_push_error
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn layout_publication_before_push_error() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_before_push_exit
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn layout_publication_before_push_exit() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_identity_closure.py::RecoveryIdentityClosureContract.test_publication_refuses_unicode_and_case_aliased_authority_sources
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn publication_refuses_unicode_and_case_aliased_authority_sources() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_complete_candidate_delta_excludes_original_feature_index
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn complete_candidate_delta_excludes_original_feature_index() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_complete_raw_local_side_includes_opaque_nonmarkdown_occupants
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn complete_raw_local_side_includes_opaque_nonmarkdown_occupants() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_current_committed_admission_addition_and_receipt_source_fence
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn current_committed_admission_addition_and_receipt_source_fence() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_offline_and_changed_sources_preserve_local_result_and_evidence
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn offline_and_changed_sources_preserve_local_result_and_evidence() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_public_raw_authority_publication_and_empty_profile_second_clone
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn public_raw_authority_publication_and_empty_profile_second_clone() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_publication_refuses_pending_frontier_before_network
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn publication_refuses_pending_frontier_before_network() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_publication_review_cannot_admit_fabricated_outputs_or_local_sources
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn publication_review_cannot_admit_fabricated_outputs_or_local_sources() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_raw_source_bound_alias_and_committed_hold_refuse
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn raw_source_bound_alias_and_committed_hold_refuse() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_reported_size_sources_are_raw_not_a_normal_snapshot
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn reported_size_sources_are_raw_not_a_normal_snapshot() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_ordinary_prepared_land_refuses_pending_recovery_frontier
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn ordinary_prepared_land_refuses_pending_recovery_frontier() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_ordinary_publish_refuses_a_previously_reviewed_proof_after_pending_handoff
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn ordinary_publish_refuses_a_previously_reviewed_proof_after_pending_handoff() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_policy_and_required_review_leave_candidate_and_private_evidence_intact
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn policy_and_required_review_leave_candidate_and_private_evidence_intact() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_policy_at_observation_refuses_prepare_or_required_review_land
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn policy_at_observation_refuses_prepare_or_required_review_land() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_recovery_historical_retry_preserves_later_authority_correction
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn recovery_historical_retry_preserves_later_authority_correction() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_recovery_land_refuses_authority_advance_after_prepare
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn recovery_land_refuses_authority_advance_after_prepare() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_resolved_publication.py::ResolvedPublicationJourneyContract.test_eight_resolved_units_land_and_recall_in_an_empty_profile
 #[test]
-#[ignore = "requires the complete layout public_repair consumer scenario"]
+#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn eight_resolved_units_land_and_recall_in_an_empty_profile() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
@@ -3241,11 +3307,6 @@ fn fanout_d_public_land_rechecks_source_authority_index_and_policy() -> TestResu
 }
 
 #[test]
-fn cutover_dispatch_worker() {
-    support::cutover::dispatch_worker();
-}
-
-#[test]
 // obligation: tests/contracts/test_claude_boundary.py::ClaudeBoundaryContract.test_published_ack_requires_real_authority_readback
 fn fanout_d_claude_published_ack_requires_real_authority_readback() -> TestResult {
     let mut w = World::new()?;
@@ -3276,7 +3337,7 @@ fn fanout_d_claude_published_ack_requires_real_authority_readback() -> TestResul
         ("last_assistant_message", s("Synthetic answer")),
     ]);
     let (code, stdout, stderr) =
-        support::cutover::dispatch(&w, &["hook".into(), "claude-stop".into()], Some(&event));
+        native_dispatch(&w, &["hook".into(), "claude-stop".into()], Some(&event));
     assert_eq!(code, 2, "{stdout}\n{stderr}");
     let request = get(&prepared(&w, &repo)?, "request").clone();
     let sha = agent_memory::developer_identity::digest(Some(b"Synthetic decision")).unwrap();
@@ -3301,12 +3362,12 @@ fn fanout_d_claude_published_ack_requires_real_authority_readback() -> TestResul
         "--input".into(),
         input.into_os_string(),
     ];
-    assert_ne!(support::cutover::dispatch(&w, &args, None).0, 0);
+    assert_ne!(native_dispatch(&w, &args, None).0, 0);
     assert_eq!(
         get(&land(&w, &repo, &request)?, "publication_verified"),
         &Value::Bool(true)
     );
-    let (code, stdout, stderr) = support::cutover::dispatch(&w, &args, None);
+    let (code, stdout, stderr) = native_dispatch(&w, &args, None);
     assert_eq!(code, 0, "{stdout}\n{stderr}");
     let after = decode(stdout.as_bytes())?;
     assert_eq!(get(&after, "publication_verified"), &Value::Bool(true));
@@ -3314,7 +3375,7 @@ fn fanout_d_claude_published_ack_requires_real_authority_readback() -> TestResul
         get(&after, "assessment_is_agent_assertion"),
         &Value::Bool(true)
     );
-    let (code, stdout, stderr) = support::cutover::dispatch(&w, &args, None);
+    let (code, stdout, stderr) = native_dispatch(&w, &args, None);
     assert_eq!(code, 0, "{stdout}\n{stderr}");
     let retry = decode(stdout.as_bytes())?;
     assert_eq!(get(&retry, "already_completed"), &Value::Bool(true));
@@ -3338,7 +3399,7 @@ fn fanout_d_opencode_ack_requires_real_witnessed_publication() -> TestResult {
             ("repo", s(repository.to_str().unwrap())),
             ("publication_request", request.clone()),
         ]);
-        let (code, stdout, stderr) = support::cutover::dispatch(
+        let (code, stdout, stderr) = native_dispatch(
             &w,
             &["hook".into(), "boundary-ledger".into()],
             Some(&payload),
@@ -3586,6 +3647,7 @@ fn fanout_d_review_new_index(w: &World, repo: &Path) -> TestResult<(i32, Value)>
 fn fanout_d_new_shared_index_preserves_both_independent_source_routes() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&mut w)?;
+    github(&mut w, &repo, &bank, Some(&peer), false)?;
     let first = fanout_d_new_index(
         &w,
         &bank,
@@ -3633,6 +3695,7 @@ fn fanout_d_new_shared_index_preserves_both_independent_source_routes() -> TestR
 fn fanout_d_absent_prose_baseline_does_not_license_conflicting_introductions() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&mut w)?;
+    github(&mut w, &repo, &bank, Some(&peer), false)?;
     fanout_d_new_index(
         &w,
         &bank,
@@ -3663,6 +3726,7 @@ fn fanout_d_absent_prose_baseline_does_not_license_conflicting_introductions() -
 fn fanout_d_absent_route_baseline_never_chooses_conflicting_captions() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&mut w)?;
+    github(&mut w, &repo, &bank, Some(&peer), false)?;
     let path = fanout_d_new_index(
         &w,
         &bank,

@@ -41,8 +41,8 @@ pub use frame::{
     Budget, Frame, FrameReader, Output, Responder, ResponseWriter, Sent, encode_frame,
 };
 pub use inventory::{
-    RecoveryEvidence, drain_state, inventory, inventory_with_authority, open_value, resolve_recovery,
-    retire_for_recovery, validate_drain,
+    RecoveryEvidence, drain_state, inventory, inventory_with_authority, open_value,
+    resolve_recovery, retire_for_recovery, validate_drain,
 };
 pub use linux_image::{
     ImageProbe, ImageStat, LinuxNativeImage, QUALIFIED_CLOCK, TimeNamespace, process_start,

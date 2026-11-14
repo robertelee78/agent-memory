@@ -596,7 +596,11 @@ pub fn observe_enrollment_locations<T>(
     enrollment_read_context(&context.root, context)?;
     let previous = ENROLLMENT_LOCATIONS.with(|v| v.replace(Some(ReadContext::of(context))));
     let _restore = RestoreLocations(previous);
-    observe_enrollment_location(&context.root, Some(context), context.authority.authority().pack())?;
+    observe_enrollment_location(
+        &context.root,
+        Some(context),
+        context.authority.authority().pack(),
+    )?;
     body()
 }
 pub fn observe_enrollment_location(

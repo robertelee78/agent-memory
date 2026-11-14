@@ -400,7 +400,9 @@ fn in_world(name: &str, body: impl FnOnce(&Case)) {
 
 fn in_runtime_world(name: &str, body: impl FnOnce(&Case)) {
     bank_fixture::in_world(name, |world| {
-        body(&Case { root: world.root.clone() });
+        body(&Case {
+            root: world.root.clone(),
+        });
     });
 }
 

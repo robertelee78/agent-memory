@@ -1099,8 +1099,9 @@ pub fn drain_inventory_with_authority(
             text(&cursor, "session").ok_or_else(|| err("Unverifiable drain source namespace"))?;
         let lifecycle =
             text(&cursor, "lifecycle").ok_or_else(|| err("Unverifiable drain source namespace"))?;
-        let (namespace, _) =
-            turn_sources::private_namespace_with_authority(repo, "omp", session, lifecycle, false, runtime)?;
+        let (namespace, _) = turn_sources::private_namespace_with_authority(
+            repo, "omp", session, lifecycle, false, runtime,
+        )?;
         roots.insert(namespace.directory);
     }
     // Orphan shared namespaces still participate even without a transport receipt.
@@ -1139,7 +1140,11 @@ pub fn shared_native_source_evidence(
     base: &Path,
     runtime_root: &Path,
 ) -> Result<bool> {
-    shared_native_source_evidence_with_authority(repo, base, RuntimeAuthority::Executing(runtime_root))
+    shared_native_source_evidence_with_authority(
+        repo,
+        base,
+        RuntimeAuthority::Executing(runtime_root),
+    )
 }
 
 pub fn shared_native_source_evidence_with_authority(
@@ -1386,7 +1391,12 @@ fn publish_proof(directory: &Path, digest: &str, proof: &Value, conflict: &str) 
     Ok(())
 }
 
-fn drain_body(repo: &Path, base: &Path, check: bool, runtime: RuntimeAuthority<'_>) -> Result<Value> {
+fn drain_body(
+    repo: &Path,
+    base: &Path,
+    check: bool,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<Value> {
     if !check {
         let mut namespaces = BTreeMap::new();
         for (_, reference) in omp_index_with_authority(repo, runtime)? {
@@ -1463,7 +1473,12 @@ pub fn drain_source_capabilities(
     check: bool,
     runtime_root: &Path,
 ) -> Result<Value> {
-    drain_source_capabilities_with_authority(repo, quiesced, check, RuntimeAuthority::Executing(runtime_root))
+    drain_source_capabilities_with_authority(
+        repo,
+        quiesced,
+        check,
+        RuntimeAuthority::Executing(runtime_root),
+    )
 }
 
 pub fn drain_source_capabilities_with_authority(
@@ -1827,9 +1842,7 @@ fn observed_all<T>(
     let Some((first, rest)) = repositories.split_first() else {
         return body();
     };
-    private_state::observation_barrier(first, runtime, |_| {
-        observed_all(rest, runtime, body)
-    })
+    private_state::observation_barrier(first, runtime, |_| observed_all(rest, runtime, body))
 }
 fn exclusive_all(
     repositories: &[PathBuf],
@@ -1846,7 +1859,11 @@ fn finish_all(barriers: Vec<turn_sources::SourceBarrier>) -> Result<()> {
     }
     Ok(())
 }
-fn drains(repositories: &[PathBuf], check: bool, runtime: RuntimeAuthority<'_>) -> Result<Vec<Value>> {
+fn drains(
+    repositories: &[PathBuf],
+    check: bool,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<Vec<Value>> {
     repositories
         .iter()
         .map(|repo| drain_source_capabilities_with_authority(repo, true, check, runtime))
@@ -2288,16 +2305,34 @@ impl installation::OmpBoundary for InstallationBoundary {
     fn capability(&self) -> &str {
         CAPABILITY
     }
-    fn native_transition(&self, plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> installation::Result<Value> {
+    fn native_transition(
+        &self,
+        plan: &mut Value,
+        check: bool,
+        runtime: (&Path, &Path),
+    ) -> installation::Result<Value> {
         native_transition(plan, check, runtime)
     }
-    fn native_activation(&self, plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> installation::Result<Value> {
+    fn native_activation(
+        &self,
+        plan: &mut Value,
+        check: bool,
+        runtime: (&Path, &Path),
+    ) -> installation::Result<Value> {
         Ok(native_activation(plan, check, runtime)?)
     }
-    fn finish_native_transition(&self, plan: &Value, _runtime: (&Path, &Path)) -> installation::Result<()> {
+    fn finish_native_transition(
+        &self,
+        plan: &Value,
+        _runtime: (&Path, &Path),
+    ) -> installation::Result<()> {
         finish_native_transition(plan)
     }
-    fn recover_native_binding(&self, state: &Path, runtime: (&Path, &Path)) -> installation::Result<()> {
+    fn recover_native_binding(
+        &self,
+        state: &Path,
+        runtime: (&Path, &Path),
+    ) -> installation::Result<()> {
         recover_native_binding(state, runtime)
     }
     fn recover_uninstalled_native(&self, state: &Path) -> installation::Result<()> {
@@ -2311,7 +2346,11 @@ impl installation::OmpBoundary for InstallationBoundary {
     ) -> installation::Result<Option<Value>> {
         native_recovery_expected(state, path)
     }
-    fn complete_stored_source_activation(&self, state: &Path, runtime: (&Path, &Path)) -> installation::Result<Value> {
+    fn complete_stored_source_activation(
+        &self,
+        state: &Path,
+        runtime: (&Path, &Path),
+    ) -> installation::Result<Value> {
         complete_stored_source_activation(state, runtime)
     }
 }

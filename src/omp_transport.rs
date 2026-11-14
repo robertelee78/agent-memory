@@ -126,7 +126,9 @@ impl<'a> Site<'a> {
     /// Baseline `_base(repo, enrollment_context=…)`.
     pub fn base(&self) -> Result<PathBuf> {
         match self.context {
-            Some(context) => omp_boundary::enrollment_base(self.repo, context, self.authority.pack()),
+            Some(context) => {
+                omp_boundary::enrollment_base(self.repo, context, self.authority.pack())
+            }
             None => omp_boundary::base(self.repo),
         }
     }
@@ -1647,7 +1649,13 @@ pub(crate) fn shared_inventory(site: &Site<'_>, cursor: &Value) -> Result<Value>
         Some(context) => {
             turn_sources::inspect_enrollment(site.repo, "omp", session, lifecycle, context)
         }
-        None => turn_sources::inspect_with_authority(site.repo, "omp", session, lifecycle, site.authority),
+        None => turn_sources::inspect_with_authority(
+            site.repo,
+            "omp",
+            session,
+            lifecycle,
+            site.authority,
+        ),
     }
 }
 

@@ -1892,7 +1892,11 @@ fn replacement_error_wins_when_the_temporary_was_removed_and_cleanup_leaves_no_f
     for remove_temporary in [false, true] {
         let Some(fixture) = writer_journey(
             "replacement_error_wins_when_the_temporary_was_removed_and_cleanup_leaves_no_files",
-            if remove_temporary { "removed" } else { "retained" },
+            if remove_temporary {
+                "removed"
+            } else {
+                "retained"
+            },
         ) else {
             continue;
         };

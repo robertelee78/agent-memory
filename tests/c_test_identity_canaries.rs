@@ -316,6 +316,7 @@ fn checkpoint_provenance_survives_fresh_machine_and_second_developer() {
         ("XDG_CACHE_HOME", "cache"),
         ("AGENT_MEMORY_CONFIG_HOME", "config/agent-memory"),
         ("AGENT_MEMORY_STATE_HOME", "state/agent-memory"),
+        ("AGENT_MEMORY_BACKUP_HOME", "backups"),
         ("GH_CONFIG_DIR", "credentials"),
     ] {
         let target = machine.join(relative);

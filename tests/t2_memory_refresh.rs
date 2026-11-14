@@ -68,18 +68,19 @@ fn git(w: &World, repo: &Path, args: &[&str]) -> TestResult<String> {
     Ok(String::from_utf8(output.stdout)?)
 }
 fn install_runtime(world: &mut World) {
-    let (runtime, command) = support::installed_runtime::installed_runtime(world);
+    let runtime = support::installed_runtime::install(&world.root, |argv| world.run(argv).unwrap());
     world
         .env
-        .insert("AM_REFRESH_TEST_RUNTIME".into(), runtime.into_os_string());
-    world
-        .env
-        .insert("AM_REFRESH_TEST_COMMAND".into(), command.into_os_string());
+        .insert("AM_REFRESH_TEST_RUNTIME".into(), runtime.pack.into_os_string());
+    world.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.into_os_string(),
+    );
 }
 fn runtime_command(world: &World) -> &OsStr {
     world
         .env
-        .get(OsStr::new("AM_REFRESH_TEST_COMMAND"))
+        .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
         .map(OsString::as_os_str)
         .unwrap_or(OsStr::new(env!("CARGO_BIN_EXE_am")))
 }
