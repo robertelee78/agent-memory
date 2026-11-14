@@ -5,34 +5,51 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::Path;
 
-fn command(world: &World, helper: &str, args: &[OsString]) -> Result<Value> {
-    let output = world.helper(helper, args)?;
+fn command(
+    world: &World,
+    executable: &Path,
+    helper: &str,
+    args: &[OsString],
+) -> Result<Value> {
+    let output = world.run(
+        [executable.as_os_str().to_owned(), "--json".into()]
+            .into_iter()
+            .chain(super::world::helper_arguments(helper, args)?),
+    )?;
     Ok(json::decode_bytes(
         &output.stdout,
         json::DecodePolicy::default(),
     )?)
 }
 
-fn apply(world: &World, helper: &str, proposal: &Value) -> Result<Value> {
+fn apply(
+    world: &World,
+    executable: &Path,
+    helper: &str,
+    proposal: &Value,
+) -> Result<Value> {
     let path = world.inside("fixture-identity-proposal.json")?;
     fs::write(&path, json::encode(proposal, json::DEFAULT)?)?;
     command(
         world,
+        executable,
         helper,
         &["apply".into(), "--proposal".into(), path.into_os_string()],
     )
 }
 
-pub fn bind(world: &World, repo: &Path) -> Result<Value> {
+/// Bind through the genuinely installed command, with its own strict locator.
+pub fn bind_with_command(world: &World, repo: &Path, executable: &Path) -> Result<Value> {
     let status_args = [
         OsString::from("status"),
         "--repo".into(),
         repo.as_os_str().to_owned(),
     ];
-    let developer = command(world, "developer_identity.py", &status_args)?;
+    let developer = command(world, executable, "developer_identity.py", &status_args)?;
     if boolean(&developer, "setup_required")? {
         let proposal = command(
             world,
+            executable,
             "developer_identity.py",
             &[
                 "preview".into(),
@@ -41,12 +58,13 @@ pub fn bind(world: &World, repo: &Path) -> Result<Value> {
                 "Disposable test developer".into(),
             ],
         )?;
-        apply(world, "developer_identity.py", &proposal)?;
+        apply(world, executable, "developer_identity.py", &proposal)?;
     }
-    let current = command(world, "scope_binding.py", &status_args)?;
+    let current = command(world, executable, "scope_binding.py", &status_args)?;
     if !boolean(&current, "resolved")? {
         let proposal = command(
             world,
+            executable,
             "scope_binding.py",
             &[
                 OsString::from("preview"),
@@ -58,7 +76,7 @@ pub fn bind(world: &World, repo: &Path) -> Result<Value> {
                 "Explicit disposable fixture bank adoption".into(),
             ],
         )?;
-        let receipt = apply(world, "scope_binding.py", &proposal)?;
+        let receipt = apply(world, executable, "scope_binding.py", &proposal)?;
         if !boolean(&receipt, "verified")? {
             return Err(WorldError::invalid(format!(
                 "Identity fixture adoption was not verified: {}",
@@ -66,7 +84,7 @@ pub fn bind(world: &World, repo: &Path) -> Result<Value> {
             )));
         }
     }
-    command(world, "scope_binding.py", &status_args)
+    command(world, executable, "scope_binding.py", &status_args)
 }
 
 fn boolean(value: &Value, key: &str) -> Result<bool> {

@@ -44,62 +44,6 @@ fn shell_quote(value: &OsStr) -> String {
     format!("'{}'", value.to_str().unwrap().replace('\'', "'\\''"))
 }
 
-// Deliberately copied from tests/t1_recovery_transactions.rs; Main deduplicates.
-fn installed_runtime(world: &World) -> (PathBuf, PathBuf) {
-    fn copy_assets(source: &Path, target: &Path) {
-        fs::create_dir_all(target).unwrap();
-        for entry in fs::read_dir(source).unwrap() {
-            let entry = entry.unwrap();
-            if entry.file_type().unwrap().is_dir() {
-                copy_assets(&entry.path(), &target.join(entry.file_name()));
-            } else if entry.file_type().unwrap().is_file() {
-                fs::copy(entry.path(), target.join(entry.file_name())).unwrap();
-            }
-        }
-    }
-    let source = world.inside("development-runtime").unwrap();
-    copy_assets(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-        &source.join("skills/agent-memory"),
-    );
-    for relative in ["target/release/am", "bin/am"] {
-        let binary = source.join(relative);
-        fs::create_dir_all(binary.parent().unwrap()).unwrap();
-        fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
-        fs::set_permissions(binary, fs::Permissions::from_mode(0o755)).unwrap();
-    }
-    let output = world
-        .am(vec![
-            OsString::from("--json"),
-            "install".into(),
-            "--development-source".into(),
-            source.into_os_string(),
-            "--mode".into(),
-            "link".into(),
-            "--presets".into(),
-            "none".into(),
-            "--no-guidance".into(),
-            "--bin-dir".into(),
-            world.inside("bin").unwrap().into_os_string(),
-        ])
-        .unwrap();
-    assert_eq!(output.status, Status::Code(0));
-    let receipt = decode(
-        &fs::read(
-            world
-                .inside("state/agent-memory/install/receipt.json")
-                .unwrap(),
-        )
-        .unwrap(),
-    );
-    let source = get(&receipt, "source");
-    let command = agent_memory::installation::source_binary(source).unwrap();
-    let pack = Path::new(t(source, "pack"));
-    (
-        pack.parent().unwrap().parent().unwrap().to_path_buf(),
-        command,
-    )
-}
 
 struct Fixture {
     root: PathBuf,
@@ -111,8 +55,14 @@ struct Fixture {
     env: smoke::Environment,
 }
 impl Fixture {
-    fn prepare(world: &World, with_bank: bool) {
-        let (runtime, _) = installed_runtime(world);
+    fn prepare(world: &mut World, with_bank: bool) {
+        let runtime = support::installed_runtime::install(&world.root, |argv| {
+            world.run(argv).unwrap()
+        });
+        world.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            runtime.command.as_os_str().to_owned(),
+        );
         let agent = world.inside("native smoke root").unwrap();
         fs::create_dir(&agent).unwrap();
         let installed = world
@@ -120,7 +70,7 @@ impl Fixture {
                 OsString::from("--json"),
                 "install".into(),
                 "--development-source".into(),
-                runtime.clone().into_os_string(),
+                runtime.source.as_os_str().to_owned(),
                 "--mode".into(),
                 "link".into(),
                 "--presets".into(),
@@ -130,7 +80,7 @@ impl Fixture {
                 "--omp-peers-upgraded".into(),
                 "--no-guidance".into(),
                 "--bin-dir".into(),
-                world.inside("bin").unwrap().into_os_string(),
+                runtime.command.parent().unwrap().as_os_str().to_owned(),
             ])
             .unwrap();
         assert_eq!(installed.status, Status::Code(0));
@@ -147,18 +97,19 @@ impl Fixture {
             for (path, value) in get(&rendered, "files").as_object().unwrap() {
                 fs::write(repo.join("memory-bank").join(path), value.as_str().unwrap()).unwrap();
             }
-            support::identity_fixtures::bind(world, &repo).unwrap();
+            support::identity_fixtures::bind_with_command(world, &repo, &runtime.command).unwrap();
         }
         private(
             &world.root.join("smoke-fixture.json"),
             &obj([
                 ("repo", s(repo.to_str().unwrap())),
-                ("runtime", s(runtime.to_str().unwrap())),
+                ("runtime", s(runtime.pack.to_str().unwrap())),
             ]),
         );
     }
     fn load(root: &Path) -> Self {
         agent_memory::cli::register_providers().unwrap();
+        support::installed_runtime::register_component_runtime();
         let value = smoke::read_json(&root.join("smoke-fixture.json")).unwrap();
         let receipt_path = root.join("state/agent-memory/install/receipt.json");
         let receipt = smoke::read_json(&receipt_path).unwrap();
@@ -329,8 +280,8 @@ fn isolated(name: &str, with_bank: bool, body: impl FnOnce(Fixture)) {
         body(Fixture::load(&root));
         return;
     }
-    let world = World::new().unwrap();
-    Fixture::prepare(&world, with_bank);
+    let mut world = World::new().unwrap();
+    Fixture::prepare(&mut world, with_bank);
     let output = world
         .run_with(
             [

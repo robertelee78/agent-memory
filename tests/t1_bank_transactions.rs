@@ -491,7 +491,7 @@ fn source_attribution_is_typed_and_preserves_governed_classes() {
     assert!(txn::source_classes(&object([("operation", string("initialize"))])).is_err());
 }
 #[test]
-fn missing_optional_cache_provider_uses_canonical_fallback() {
+fn unavailable_optional_cache_keeps_canonical_fallback_readonly() {
     let w = World::new();
     assert_eq!(
         txn::invalidate_optional_indexes(&w.root, &object([])),

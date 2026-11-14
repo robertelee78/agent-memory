@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use support::{
-    installed_runtime::installed_runtime,
+    installed_runtime::install,
     record_fixtures,
     world::{RunOptions, World},
 };
@@ -229,6 +229,7 @@ struct Fixture {
     repo: PathBuf,
     bank: PathBuf,
     runtime: PathBuf,
+    binary: PathBuf,
     command: PathBuf,
     project: String,
     actor: String,
@@ -320,8 +321,26 @@ impl Fixture {
         review: impl FnOnce(&mut Value),
     ) -> Self {
         agent_memory::cli::register_providers().unwrap();
-        let world = World::new().unwrap();
-        let (runtime, command) = installed_runtime(&world);
+        let mut world = World::new().unwrap();
+        let installed = install(&world.root, |argv| {
+            world
+                .run_with(
+                    argv,
+                    RunOptions {
+                        check: false,
+                        timeout: std::time::Duration::from_secs(120),
+                        ..RunOptions::default()
+                    },
+                )
+                .unwrap()
+        });
+        world.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            installed.command.clone().into_os_string(),
+        );
+        let runtime = installed.pack;
+        let binary = installed.binary;
+        let command = installed.command;
         let repo = world.repository("repo", false).unwrap();
         fs::write(repo.join("synthetic-policy.md"), POLICY).unwrap();
         world.git(["add", "."]).unwrap();
@@ -363,7 +382,7 @@ impl Fixture {
             fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
         let native = g(&rendered, "files").clone();
-        let scope = support::identity_fixtures::bind(&world, &repo).unwrap();
+        let scope = support::identity_fixtures::bind_with_command(&world, &repo, &command).unwrap();
         let actor = t(&scope, "developer_id").to_owned();
         fs::write(bank.join("handoff-prompt.md"), body).unwrap();
         let mut f = Self {
@@ -371,6 +390,7 @@ impl Fixture {
             repo,
             bank,
             runtime,
+            binary,
             command,
             project,
             actor,
@@ -493,7 +513,10 @@ impl Fixture {
             ),
             ("directories", obj([])),
         ]);
-        let runtime = agent_memory::recovery_quiescence::measured_runtime(&self.runtime).unwrap();
+        // This explicitly measures the genuine fixture pair; native consumers
+        // still verify their own installed executable identity.
+        let runtime =
+            agent_memory::artifact::inspect_runtime(&self.runtime, &self.binary).unwrap();
         let review_id = uuid();
         let attestation = obj([
             ("schema", s("agent-memory/layout-quiescence-attestation-v1")),

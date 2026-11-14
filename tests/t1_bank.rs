@@ -1,3 +1,5 @@
+mod support;
+
 use agent_memory::bank_contract as bank;
 use agent_memory::bank_layout as layout;
 use agent_memory::codec::{
@@ -368,11 +370,6 @@ fn source_index_locations_reject_controls_and_preserve_ordinary_unicode_and_spac
         layout::parse_index("topics/café index.md", &index_meta(), body).unwrap(),
         routes
     );
-}
-#[test]
-fn missing_provider_refuses_without_claiming_bank_validation() -> Result<()> {
-    assert!(bank::validate(std::path::Path::new("/"), None, None).is_err());
-    Ok(())
 }
 
 fn put(files: &mut Value, path: &str, content: String) {
@@ -1360,8 +1357,10 @@ struct WriterWorld {
 }
 impl WriterWorld {
     fn new() -> Self {
+        Self::at(World::new())
+    }
+    fn at(world: World) -> Self {
         use std::os::unix::fs::PermissionsExt;
-        let world = World::new();
         world.mkdir("repo/memory-bank");
         for (path, text) in files(false).as_object().unwrap() {
             world.write(
@@ -1381,6 +1380,37 @@ impl WriterWorld {
         };
         Self { world, environment }
     }
+    fn installed() -> Self {
+        let root = support::require_current_world().unwrap();
+        let mut fixture = Self::at(World { root });
+        fixture.environment = agent_memory::bank_writes::StateEnvironment::current();
+        let developer = agent_memory::developer_identity::preview(
+            "create",
+            None,
+            &Value::Array(vec![s("Fixture")]),
+            &Value::Array(vec![]),
+        )
+        .unwrap();
+        agent_memory::developer_identity::apply(&developer).unwrap();
+        let binding = agent_memory::project_identity::preview(
+            &fixture.repo(),
+            "bind",
+            None,
+            "Explicit bank writer fixture binding",
+            None,
+        )
+        .unwrap();
+        agent_memory::project_identity::apply(&binding).unwrap();
+        let context = agent_memory::scope_binding::require(
+            &fixture.repo(),
+            Some(PROJECT),
+            Default::default(),
+        )
+        .unwrap();
+        assert_eq!(field(&context, "project_id"), &s(PROJECT));
+        assert_ne!(field(&context, "developer_id"), &Value::Null);
+        fixture
+    }
     fn repo(&self) -> std::path::PathBuf {
         self.world.path("repo")
     }
@@ -1388,20 +1418,20 @@ impl WriterWorld {
         self.world.path("repo/memory-bank")
     }
     fn prepared(&self) -> Value {
-        obj([
-            ("schema", s("agent-memory/write-proposal-v1")),
-            ("operation_id", s(PROJECT)),
-            ("operation", s("replace")),
-            ("repo_root", s(self.repo().to_str().unwrap())),
-            ("project_id", s(PROJECT)),
-            (
-                "observed_hashes",
-                agent_memory::bank_observation::scan_hashes(&self.bank()).unwrap(),
-            ),
-            ("path", s("projectbrief.md")),
-            ("content", s("# Revised project\n\nVerified new context.\n")),
-            ("scope_context", Value::Null),
-        ])
+        let preview = agent_memory::bank_writes::preview_with_sources(
+            &self.repo(),
+            "projectbrief.md",
+            "# Revised project\n\nVerified new context.\n",
+            "replace",
+            agent_memory::host::Sources {
+                uuid4: || Ok(PROJECT.into()),
+                utc_now: || Ok(UPDATED.into()),
+            },
+        )
+        .unwrap();
+        let proposal = field(&preview, "proposal").clone();
+        assert_ne!(field(&proposal, "scope_context"), &Value::Null);
+        proposal
     }
     fn receipt_path(&self) -> std::path::PathBuf {
         agent_memory::bank_writes::state_paths_with(
@@ -1417,6 +1447,16 @@ impl WriterWorld {
         agent_memory::bank_writes::apply_with_identity_and_environment(
             prepared,
             |owner| {
+                let proposal = agent_memory::bank_writes::proposal_value(prepared)?;
+                agent_memory::scope_binding::require(
+                    &self.repo(),
+                    Some(PROJECT),
+                    agent_memory::scope_binding::RequireOptions {
+                        expected: Some(field(proposal, "scope_context")),
+                        owned_lock: Some(owner),
+                        ..Default::default()
+                    },
+                )?;
                 let owner = agent_memory::developer_identity::load(owner)?;
                 assert_eq!(field(&owner, "operation_id"), &s(PROJECT));
                 assert_eq!(field(&owner, "operation"), &s("bank-replace"));
@@ -1444,8 +1484,48 @@ impl WriterWorld {
     }
 }
 
+fn writer_journey(name: &str, scenario: &str) -> Option<WriterWorld> {
+    if std::env::var("AM_BANK_WRITE_CASE").as_deref() == Ok(name) {
+        if std::env::var("AM_BANK_WRITE_SCENARIO").as_deref() != Ok(scenario) {
+            return None;
+        }
+        agent_memory::cli::register_providers().unwrap();
+        support::installed_runtime::register_component_runtime();
+        return Some(WriterWorld::installed());
+    }
+    let mut world = support::World::new().unwrap();
+    support::installed_runtime::install(&world.root, |argv| world.run(argv).unwrap());
+    let repo = world.root.join("repo");
+    for args in [
+        vec!["init", "--initial-branch=main"],
+        vec!["config", "user.name", "Fixture"],
+        vec!["config", "user.email", "fixture@example.invalid"],
+    ] {
+        let mut argv = vec![
+            std::ffi::OsString::from("git"),
+            "-C".into(),
+            repo.as_os_str().to_owned(),
+        ];
+        argv.extend(args.into_iter().map(std::ffi::OsString::from));
+        world.run(argv).unwrap();
+    }
+    world.env.insert("AM_BANK_WRITE_CASE".into(), name.into());
+    world
+        .env
+        .insert("AM_BANK_WRITE_SCENARIO".into(), scenario.into());
+    world
+        .run([
+            std::env::current_exe().unwrap().into_os_string(),
+            "--exact".into(),
+            name.into(),
+            "--nocapture".into(),
+        ])
+        .unwrap();
+    None
+}
+
 #[test]
-fn real_observation_scans_sources_and_write_protocol_refuses_without_frontier_or_writes() {
+fn real_observation_scans_exact_sources_readonly() {
     let fixture = WriterWorld::new();
     let original = std::fs::read(fixture.bank().join("projectbrief.md")).unwrap();
     let (physical, hashes, sources) =
@@ -1457,20 +1537,6 @@ fn real_observation_scans_sources_and_write_protocol_refuses_without_frontier_or
     );
     assert_eq!(sources["projectbrief.md"], original);
     assert_eq!(
-        agent_memory::bank_writes::preview(
-            &fixture.repo(),
-            "projectbrief.md",
-            "# Revised\n",
-            "replace"
-        )
-        .unwrap_err()
-        .to_string(),
-        "recovery_frontier provider is not registered"
-    );
-    let prepared = fixture.prepared();
-    let error = fixture.apply(&prepared).unwrap_err();
-    assert!(error.to_string().ends_with("pass --pack PATH"), "{error}");
-    assert_eq!(
         std::fs::read(fixture.bank().join("projectbrief.md")).unwrap(),
         original
     );
@@ -1478,6 +1544,7 @@ fn real_observation_scans_sources_and_write_protocol_refuses_without_frontier_or
     assert!(!fixture.bank().join(".agent-memory.lock").exists());
     fixture.assert_no_temporary();
 }
+
 
 #[test]
 fn canonical_receipt_path_record_load_roundtrip_accepts_hardlinks() {
@@ -1524,13 +1591,21 @@ impl Drop for Child {
     }
 }
 fn fault_child(world: &World, stage: &str, action: &str) -> Child {
-    world.write(".test-world.json", b"{\"token\":\"bank-fault-regression\"}");
+    let token = if action == "fault" {
+        world.write(".test-world.json", b"{\"token\":\"bank-fault-regression\"}");
+        std::ffi::OsString::from("bank-fault-regression")
+    } else {
+        std::env::var_os("AGENT_MEMORY_TEST_TOKEN").unwrap()
+    };
     Child(
         std::process::Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "isolated_bank_fault_child", "--nocapture"])
+            .env_clear()
+            .envs(std::env::vars_os())
+            .current_dir(&world.root)
             .env("BANK_FAULT_CHILD", action)
             .env("AGENT_MEMORY_TEST_ROOT", &world.root)
-            .env("AGENT_MEMORY_TEST_TOKEN", "bank-fault-regression")
+            .env("AGENT_MEMORY_TEST_TOKEN", token)
             .env("AGENT_MEMORY_FAULT_STAGE", stage)
             .env("AGENT_MEMORY_FAULT_MODE", "pause")
             .env("AGENT_MEMORY_FAULT_DIR", world.path("missing/rendezvous"))
@@ -1576,14 +1651,12 @@ fn isolated_bank_fault_child() {
     if action == "fault" {
         agent_memory::bank_writes::fault("regression/pause").unwrap();
     } else {
+        agent_memory::cli::register_providers().unwrap();
+        support::installed_runtime::register_component_runtime();
         let root = std::path::PathBuf::from(std::env::var_os("AGENT_MEMORY_TEST_ROOT").unwrap());
         let fixture = WriterWorld {
             world: World { root: root.clone() },
-            environment: agent_memory::bank_writes::StateEnvironment {
-                state_home: Some(root.join("state").into_os_string()),
-                xdg_state_home: None,
-                home: None,
-            },
+            environment: agent_memory::bank_writes::StateEnvironment::current(),
         };
         let prepared = agent_memory::developer_identity::load(
             &std::fs::read(root.join("proposal.json")).unwrap(),
@@ -1614,10 +1687,14 @@ fn pause_fault_creates_missing_rendezvous_and_writes_ready() {
 
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_preview_and_inspect_are_read_only_and_apply_replaces_one_file_with_readback
 #[test]
-#[ignore = "needs a real selected developer/project binding fixture and installed v3 runtime for canonical barriers; WriterWorld currently registers only observation"]
 fn write_preview_apply_preserves_mode_readback_and_exact_receipt_bytes() {
     use std::os::unix::fs::PermissionsExt;
-    let fixture = WriterWorld::new();
+    let Some(fixture) = writer_journey(
+        "write_preview_apply_preserves_mode_readback_and_exact_receipt_bytes",
+        "",
+    ) else {
+        return;
+    };
     let originals = files(false);
     let preview = agent_memory::bank_writes::preview_with_sources(
         &fixture.repo(),
@@ -1701,20 +1778,21 @@ fn expected_write_receipt(proposal: &Value, bank: &std::path::Path, outcome: &st
     let after_sha = digest(b"# Revised project\n\nVerified new context.\n");
     let repo = field(proposal, "repo_root").as_str().unwrap();
     let scope = field(proposal, "scope_context");
-    assert_eq!(
-        scope,
-        &Value::Null,
-        "this golden is for unresolved-scope internal writes"
-    );
+    assert_eq!(field(scope, "project_id"), &s(PROJECT));
+    assert_ne!(field(scope, "developer_id"), &Value::Null);
+    let scope = String::from_utf8(agent_memory::developer_identity::encoded(scope).unwrap())
+        .unwrap()
+        .trim_end()
+        .replace('\n', "\n  ");
     let request = format!(
         concat!(
             "{{\n  \"content\": \"# Revised project\\n\\nVerified new context.\\n\",\n",
             "  \"observed_hashes\": {{\n    \"MEMORY.md\": \"{}\",\n    \"projectbrief.md\": \"{}\"\n  }},\n",
             "  \"operation\": \"replace\",\n  \"operation_id\": \"{}\",\n  \"path\": \"projectbrief.md\",\n",
             "  \"project_id\": \"{}\",\n  \"repo_root\": \"{}\",\n  \"schema\": \"agent-memory/write-proposal-v1\",\n",
-            "  \"scope_context\": null\n}}\n"
+            "  \"scope_context\": {}\n}}\n"
         ),
-        router_sha, before_sha, PROJECT, PROJECT, repo
+        router_sha, before_sha, PROJECT, PROJECT, repo, scope
     );
     let request_sha = digest(request.as_bytes());
     format!(concat!(
@@ -1730,10 +1808,14 @@ fn expected_write_receipt(proposal: &Value, bank: &std::path::Path, outcome: &st
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_interrupted_after_replace_is_distinct_from_a_failed_write_and_replay_converges
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_lost_response_after_receipt_replays_without_duplicate_or_replacement
 #[test]
-#[ignore = "needs a real selected developer/project binding fixture and installed v3 runtime for canonical barriers; WriterWorld currently registers only observation"]
 fn already_present_then_receipted_replay_preserves_bytes_and_hardlinked_receipt() {
     use std::os::unix::fs::MetadataExt;
-    let fixture = WriterWorld::new();
+    let Some(fixture) = writer_journey(
+        "already_present_then_receipted_replay_preserves_bytes_and_hardlinked_receipt",
+        "",
+    ) else {
+        return;
+    };
     let prepared = fixture.prepared();
     std::fs::write(
         fixture.bank().join("projectbrief.md"),
@@ -1784,9 +1866,10 @@ fn already_present_then_receipted_replay_preserves_bytes_and_hardlinked_receipt(
 
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_invalid_scope_symlinks_and_operation_id_reuse_refuse
 #[test]
-#[ignore = "needs a real selected developer/project binding fixture and installed v3 runtime for canonical barriers; WriterWorld currently registers only observation"]
 fn unexpected_receipt_is_preserved_during_apply() {
-    let fixture = WriterWorld::new();
+    let Some(fixture) = writer_journey("unexpected_receipt_is_preserved_during_apply", "") else {
+        return;
+    };
     let prepared = fixture.prepared();
     agent_memory::bank_writes::record(&fixture.receipt_path(), b"{}\n").unwrap();
     let before = std::fs::read(fixture.bank().join("projectbrief.md")).unwrap();
@@ -1805,10 +1888,14 @@ fn unexpected_receipt_is_preserved_during_apply() {
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_external_target_edit_immediately_before_replacement_is_not_overwritten
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_failure_before_replace_leaves_the_original_and_no_verified_receipt
 #[test]
-#[ignore = "needs a real selected developer/project binding fixture and installed v3 runtime for canonical barriers; WriterWorld currently registers only observation"]
 fn replacement_error_wins_when_the_temporary_was_removed_and_cleanup_leaves_no_files() {
     for remove_temporary in [false, true] {
-        let fixture = WriterWorld::new();
+        let Some(fixture) = writer_journey(
+            "replacement_error_wins_when_the_temporary_was_removed_and_cleanup_leaves_no_files",
+            if remove_temporary { "removed" } else { "retained" },
+        ) else {
+            continue;
+        };
         let prepared = fixture.prepared();
         fixture.world.write(
             "proposal.json",

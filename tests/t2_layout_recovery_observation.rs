@@ -1,3 +1,6 @@
+#[allow(unused_imports)]
+mod support;
+
 use agent_memory::codec::json::Value;
 use agent_memory::developer_identity::{digest, encoded};
 use agent_memory::layout_recovery_observation as raw;
@@ -694,22 +697,17 @@ fn isolated(name: &str, body: impl FnOnce(&Path)) {
         return;
     }
     let _guard = CHILD.lock().unwrap();
-    let root = Root::new();
-    fs::create_dir(root.join("home")).unwrap();
+    let world = support::World::new().unwrap();
+    let root = world.root.join("observation");
+    fs::create_dir(&root).unwrap();
     let output = run(
         Command::new(std::env::current_exe().unwrap())
             .args(["--exact", name, "--include-ignored", "--nocapture"])
             .env_clear()
-            .env("PATH", "/usr/bin:/bin:/usr/local/bin")
-            .env("HOME", root.join("home"))
-            .env("XDG_CONFIG_HOME", root.join("config"))
-            .env("XDG_STATE_HOME", root.join("state"))
-            .env("AGENT_MEMORY_CONFIG_HOME", root.join("am-config"))
-            .env("AGENT_MEMORY_STATE_HOME", root.join("am-state"))
-            .env("GIT_CONFIG_NOSYSTEM", "1")
-            .env("LC_ALL", "C")
+            .envs(&world.env)
+            .current_dir(&world.root)
             .env("AM_LAYOUTOBS_CASE", name)
-            .env("AM_LAYOUTOBS_ROOT", &root.0),
+            .env("AM_LAYOUTOBS_ROOT", &root),
         false,
     );
     assert!(
@@ -869,12 +867,16 @@ fn darwin_provenance_is_exact_and_foreign_xattrs_acl_and_flags_refuse() {
 }
 
 #[test]
-
 fn complete_observation_retains_private_evidence_and_rechecks_every_pin() {
     isolated(
         "complete_observation_retains_private_evidence_and_rechecks_every_pin",
         |world| {
             cli::register_providers().unwrap();
+            let root = support::require_current_world().unwrap();
+            let installed = support::installed_runtime::install(&root, |argv| {
+                run(Command::new(&argv[0]).args(&argv[1..]), true)
+            });
+            support::installed_runtime::register_component_runtime();
             let developer = agent_memory::developer_identity::preview(
                 "create",
                 None,
@@ -932,12 +934,12 @@ fn complete_observation_retains_private_evidence_and_rechecks_every_pin() {
             let original_index = fs::read(repo.join(".git/index")).unwrap();
             let original_sources = physical_hashes(&bank);
             let operation = host::uuid4().unwrap();
-            let runtime = Path::new(env!("CARGO_MANIFEST_DIR"));
+            let runtime = &installed.pack;
             let manifest = raw::observe(
                 &repo,
                 &operation,
                 runtime,
-                Path::new(env!("CARGO_BIN_EXE_am")),
+                &installed.binary,
                 raw::ObserveOptions::default(),
             )
             .unwrap();

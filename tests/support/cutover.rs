@@ -214,7 +214,14 @@ pub struct Bank {
 }
 impl Bank {
     pub fn new() -> Self {
-        let world = World::new().unwrap();
+        let mut world = World::new().unwrap();
+        let runtime = super::installed_runtime::install(&world.root, |argv| {
+            world.run(argv).unwrap()
+        });
+        world.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            runtime.command.as_os_str().to_owned(),
+        );
         let repo = world.repository("repo", false).unwrap();
         let bank = repo.join("memory-bank");
         fs::create_dir(&bank).unwrap();
@@ -244,7 +251,7 @@ impl Bank {
             "2026-10-22T19:00:00Z",
         );
         write_files(&bank, &before);
-        super::identity_fixtures::bind(&world, &repo).unwrap();
+        super::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
         let mut value = Self {
             world,
             repo,
@@ -363,7 +370,7 @@ impl Bank {
             .world
             .spawn_with(
                 [
-                    OsString::from(env!("CARGO_BIN_EXE_am")),
+                    self.world.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
                     "--json".into(),
                     "transaction".into(),
                     "apply".into(),
@@ -434,7 +441,14 @@ pub struct Recall {
 }
 impl Recall {
     pub fn new() -> Self {
-        let world = World::new().unwrap();
+        let mut world = World::new().unwrap();
+        let runtime = super::installed_runtime::install(&world.root, |argv| {
+            world.run(argv).unwrap()
+        });
+        world.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            runtime.command.as_os_str().to_owned(),
+        );
         let repo = world.repository("repo", false).unwrap();
         fs::write(repo.join("app.rs"), "const RETRY_LIMIT: u32 = 3;\n").unwrap();
         fs::write(
@@ -478,7 +492,7 @@ impl Recall {
                 "2026-10-22T17:00:00Z",
             ),
         );
-        super::identity_fixtures::bind(&world, &repo).unwrap();
+        super::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
         fs::write(
             repo.join("app.rs"),
             "const RETRY_LIMIT: u32 = 4; // staged unrelated work\n",
@@ -600,7 +614,7 @@ impl Recall {
             .world
             .spawn_with(
                 [
-                    OsString::from(env!("CARGO_BIN_EXE_am")),
+                    self.world.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
                     "--json".into(),
                     "search".into(),
                     "--repo".into(),
@@ -624,16 +638,14 @@ impl Recall {
     }
 }
 
-/// Re-executed `am` library dispatch with the source checkout's pack.
+/// Re-executed component dispatch against the genuinely installed fixture pack.
 /// Tests using this helper define `cutover_dispatch_worker` and delegate to it.
 pub fn dispatch_worker() {
     let Some(input) = std::env::var_os("AGENT_MEMORY_FAULT_DISPATCH_INPUT") else {
         return;
     };
     agent_memory::cli::register_providers().unwrap();
-    agent_memory::cli::use_development_pack(Some(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-    ));
+    super::installed_runtime::register_component_runtime();
     let request = json::decode_bytes(&fs::read(input).unwrap(), Default::default()).unwrap();
     let args: Vec<_> = get(&request, "args")
         .as_array()

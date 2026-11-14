@@ -264,7 +264,7 @@ fn inspect_with_id(
             &root,
             &operation_id,
             runtime_root,
-            &recovery_quiescence::runtime_binary(runtime_root),
+            &recovery_quiescence::runtime_binary(runtime_root)?,
             raw::ObserveOptions {
                 owner: Some(owner),
                 transaction,

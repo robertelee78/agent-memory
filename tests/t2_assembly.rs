@@ -82,6 +82,18 @@ impl Fixture {
     fn new() -> Self {
         agent_memory::cli::register_providers().unwrap();
         let world = World::new().unwrap();
+        let runtime = support::installed_runtime::install(&world.root, |argv| {
+            world
+                .run_with(
+                    argv,
+                    support::RunOptions {
+                        check: false,
+                        timeout: std::time::Duration::from_secs(120),
+                        ..Default::default()
+                    },
+                )
+                .unwrap()
+        });
         let repo = world.repository("repo", false).unwrap();
         fs::write(repo.join("app.rs"), "const VALUE: u8 = 1;\n").unwrap();
         world.git(["add", "."]).unwrap();
@@ -113,7 +125,8 @@ impl Fixture {
         for (path, body) in get(&rendered, "files").as_object().unwrap() {
             fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
-        let inspected = support::identity_fixtures::bind(&world, &repo).unwrap();
+        let inspected =
+            support::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
         let actor = get(&inspected, "developer_id").as_str().unwrap().to_owned();
         Self {
             world,

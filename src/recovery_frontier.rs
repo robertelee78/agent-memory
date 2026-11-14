@@ -15,7 +15,6 @@ use std::ffi::OsStr;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::sync::{Arc, RwLock};
 
 pub const TERMINAL: &[&str] = &[
     "admitted",
@@ -1040,55 +1039,6 @@ pub fn check(
     Ok(current)
 }
 
-/// Durable mutation and resolution operations supplied by layout_resolution.
-pub trait LayoutResolution: Send + Sync {
-    fn advance_ledger(
-        &self,
-        repo: &Path,
-        operation: &str,
-        units: &Value,
-        expected_head: &Value,
-        owner: &[u8],
-        transaction: Option<&[u8]>,
-        unit_map_sha256: Option<&str>,
-        runtime: &Path,
-    ) -> Result<Value>;
-    fn restore_hold(
-        &self,
-        repo: &Path,
-        operation: &str,
-        owner: &[u8],
-        transaction: &[u8],
-        runtime: &Path,
-    ) -> Result<Vec<u8>>;
-    fn retire(
-        &self,
-        repo: &Path,
-        operation: &str,
-        owner: &[u8],
-        transaction: Option<&[u8]>,
-        runtime: &Path,
-    ) -> Result<Value>;
-    fn resolve(
-        &self,
-        repo: &Path,
-        operation: Option<&str>,
-        unit: Option<&str>,
-        terminal: Option<&Value>,
-        proposal: Option<&Value>,
-        runtime: &Path,
-    ) -> Result<Value>;
-}
-static RESOLUTION: RwLock<Option<Arc<dyn LayoutResolution>>> = RwLock::new(None);
-pub fn register_layout_resolution(provider: Option<Arc<dyn LayoutResolution>>) {
-    *RESOLUTION
-        .write()
-        .unwrap_or_else(|error| error.into_inner()) = provider;
-}
-pub(crate) fn layout_resolution_provider() -> Result<Arc<dyn LayoutResolution>> {
-    RESOLUTION.read().unwrap_or_else(|error| error.into_inner()).clone()
-        .ok_or_else(|| ContractError::missing_provider("layout_resolution provider is not registered; recovery frontier resolution wiring pending"))
-}
 
 pub fn verified_hold(
     repo: &Path,
@@ -1146,9 +1096,9 @@ pub fn verified_hold_at_bank(
     let (manifest, proposal) = evidence(&directory, &current, row)?;
     let expected = get(get(&manifest, "identity"), "scope_context");
     let context = if get(row, "state").as_str() == Some("rolled-back") {
-        let router = project_identity::layout_observation_provider()?.read_source(
+        let (router, _) = crate::layout_recovery_observation::read_source(
             bank,
-            Path::new("MEMORY.md"),
+            "MEMORY.md",
             SOURCE_BOUND,
         )?;
         let original = array(get(&manifest, "sources"))?
@@ -1355,7 +1305,7 @@ pub fn require_scope(
     Ok(held.scope().clone())
 }
 fn ensure_safe(body: &str) -> Result<()> {
-    let report = crate::repository_config::security_scan_provider()?.scan(body)?;
+    let report = crate::security::scan(&string(body), crate::security::LIMIT)?;
     let reasons = array(get(&report, "reasons"))?;
     if !reasons.is_empty() {
         let reasons = reasons.iter().map(s).collect::<Result<Vec<_>>>()?;
@@ -1550,16 +1500,9 @@ pub fn public_coverage(token: &Value) -> Result<Value> {
         ),
     ]))
 }
-pub fn invalidate(repo: &Path) -> Result<String> {
-    let provider = crate::bank_state::comparison_view_provider()?;
-    invalidate_with(provider.as_ref(), repo)
-}
-fn invalidate_with(
-    provider: &dyn crate::bank_state::ComparisonView,
-    repo: &Path,
-) -> Result<String> {
-    match provider.invalidate_frontier_transition(repo) {
-        Ok(value) => Ok(value),
+pub fn invalidate(repo: &Path, runtime: &Path) -> Result<String> {
+    match crate::recall_catalog::invalidate_frontier_transition(repo, runtime) {
+        Ok(value) => Ok(value.to_owned()),
         Err(error) if matches!(error.kind(), crate::error::Kind::MissingProvider) => Err(error),
         Err(_) => Ok("deferred-to-live-frontier-check".to_owned()),
     }
@@ -1604,7 +1547,6 @@ pub fn install(
             "Another unresolved recovery operation already protects this bank",
         ));
     }
-    let comparison = crate::bank_state::comparison_view_provider()?;
     state::write_once(&directory.join("ledger/00000000.json"), pending_ledger)?;
     let head = object([
         ("schema", string("agent-memory/layout-ledger-head-v1")),
@@ -1637,7 +1579,7 @@ pub fn install(
         "active",
         runtime,
     )?;
-    invalidate_with(comparison.as_ref(), &root)?;
+    invalidate(&root, runtime)?;
     Ok(object([
         ("schema", string(SENTINEL)),
         ("project_id", get(pending_ledger, "project_id").clone()),
@@ -1855,8 +1797,7 @@ pub fn validate_comparison_review(
             ));
         }
         crate::lifecycle::time_value(get(&review, "review_time"))?;
-        crate::bank_state::comparison_view_provider()?
-            .safe_text(get(&review, "rationale"), 4096)?;
+        crate::comparison::safe_text(get(&review, "rationale"), 4096)?;
         if !get(&review, "reviewer_harness")
             .as_str()
             .is_some_and(|v| !v.is_empty())
@@ -2121,55 +2062,6 @@ fn reservation_rows(
     }
     Ok(maximum)
 }
-pub fn advance_ledger(
-    repo: &Path,
-    operation: &str,
-    units: &Value,
-    expected_head: &Value,
-    owner: &[u8],
-    transaction: Option<&[u8]>,
-    unit_map_sha256: Option<&str>,
-    runtime: &Path,
-) -> Result<Value> {
-    layout_resolution_provider()?.advance_ledger(
-        repo,
-        operation,
-        units,
-        expected_head,
-        owner,
-        transaction,
-        unit_map_sha256,
-        runtime,
-    )
-}
-pub fn restore_hold(
-    repo: &Path,
-    operation: &str,
-    owner: &[u8],
-    transaction: &[u8],
-    runtime: &Path,
-) -> Result<Vec<u8>> {
-    layout_resolution_provider()?.restore_hold(repo, operation, owner, transaction, runtime)
-}
-pub fn retire(
-    repo: &Path,
-    operation: &str,
-    owner: &[u8],
-    transaction: Option<&[u8]>,
-    runtime: &Path,
-) -> Result<Value> {
-    layout_resolution_provider()?.retire(repo, operation, owner, transaction, runtime)
-}
-pub fn resolve(
-    repo: &Path,
-    operation: Option<&str>,
-    unit: Option<&str>,
-    terminal: Option<&Value>,
-    proposal: Option<&Value>,
-    runtime: &Path,
-) -> Result<Value> {
-    layout_resolution_provider()?.resolve(repo, operation, unit, terminal, proposal, runtime)
-}
 pub fn resolve_reference(repo: &Path, reference: &Value, runtime: &Path) -> Result<Value> {
     let mut found = Vec::new();
     let index = state::index(repo, runtime)?;
@@ -2215,8 +2107,7 @@ pub fn recover_nested(
     proposal: Option<&Value>,
     runtime: &Path,
 ) -> Result<Value> {
-    writes::recovery_transactions_provider()?
-        .recover_nested(repo, operation, nested, mode, proposal, runtime)
+    crate::recovery_transactions::recover_nested(repo, operation, nested, mode, proposal, runtime)
 }
 pub fn capture_scope(repo: &Path, runtime: &Path, binary: &Path) -> Result<Value> {
     match require_scope(repo, None, Default::default(), runtime, binary) {
@@ -2276,7 +2167,7 @@ pub fn validate_quiescence(
     routes: &[String],
     publish: bool,
     owner: Option<&[u8]>,
-    runtime: &Path,
+    runtime: (&Path, &Path),
 ) -> Result<Value> {
     crate::private_state::recovery_quiescence_provider()?.validate(
         repo,
@@ -2356,9 +2247,9 @@ pub fn verified_child_transaction(
             "Child recovery identity evidence is missing or changed",
         ));
     }
-    let router = project_identity::layout_observation_provider()?.read_source(
+    let (router, _) = crate::layout_recovery_observation::read_source(
         &bank,
-        Path::new("MEMORY.md"),
+        "MEMORY.md",
         SOURCE_BOUND,
     )?;
     let identity = project_identity::RawIdentityEvidence::observe(
@@ -2579,6 +2470,9 @@ impl FrontierProvider {
     }
 }
 impl writes::RecoveryFrontier for FrontierProvider {
+    fn runtime_pair(&self, runtime_root: &Path) -> Result<(PathBuf, PathBuf)> {
+        self.matching_runtime(runtime_root)
+    }
     fn capture_scope(&self, repo: &Path) -> Result<Value> {
         let (runtime, binary) = (self.executing_runtime)()?;
         capture_scope(repo, &runtime, &binary)
@@ -2595,6 +2489,15 @@ impl writes::RecoveryFrontier for FrontierProvider {
     ) -> Result<Value> {
         let (runtime, _) = (self.executing_runtime)()?;
         observe(repo, owner, transaction, &runtime)
+    }
+    fn require_complete(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+    ) -> Result<Value> {
+        let (runtime, _) = (self.executing_runtime)()?;
+        require_complete(repo, owner, transaction, &runtime)
     }
     fn verified_hold(&self, repo: &Path, owner: Option<&[u8]>) -> Result<Vec<u8>> {
         let (runtime, binary) = (self.executing_runtime)()?;
@@ -2695,7 +2598,7 @@ impl writes::RecoveryFrontier for FrontierProvider {
         runtime_digest: Option<&str>,
         routes: &[String],
         publish: bool,
-        runtime: &Path,
+        runtime: (&Path, &Path),
     ) -> Result<Value> {
         validate_quiescence(repo, value, runtime_digest, routes, publish, None, runtime)
     }
@@ -2703,10 +2606,9 @@ impl writes::RecoveryFrontier for FrontierProvider {
         &self,
         repo: &Path,
         owner: Option<&[u8]>,
-        runtime: &Path,
+        runtime: (&Path, &Path),
     ) -> Result<Vec<u8>> {
-        let (runtime, binary) = self.matching_runtime(runtime)?;
-        verified_hold(repo, owner, None, &runtime, &binary)?
+        verified_hold(repo, owner, None, runtime.0, runtime.1)?
             .map(|held| held.marker().to_vec())
             .ok_or_else(|| err("Recovery hold is absent"))
     }
@@ -2718,6 +2620,14 @@ impl writes::RecoveryFrontier for FrontierProvider {
     ) -> Result<Option<VerifiedHold>> {
         let (runtime, binary) = self.matching_runtime(runtime)?;
         verified_hold_at_bank(root, bank, None, None, &runtime, &binary)
+    }
+    fn verified_enrollment_hold_for_runtime_at_bank(
+        &self,
+        root: &Path,
+        bank: &Path,
+        runtime: (&Path, &Path),
+    ) -> Result<Option<VerifiedHold>> {
+        verified_hold_at_bank(root, bank, None, None, runtime.0, runtime.1)
     }
     fn observe_enrollment_bank(&self, root: &Path, bank: &Path, runtime: &Path) -> Result<Value> {
         observe_bank(root, bank, None, None, true, runtime)
@@ -2737,7 +2647,8 @@ impl writes::RecoveryFrontier for FrontierProvider {
         marker_value(raw)
     }
     fn invalidate(&self, repo: &Path) -> Result<String> {
-        invalidate(repo)
+        let (runtime, _) = (self.executing_runtime)()?;
+        invalidate(repo, &runtime)
     }
     fn range_value(&self, value: &Value) -> Result<()> {
         range_value(value).map(|_| ())
@@ -2802,6 +2713,77 @@ impl writes::RecoveryFrontier for FrontierProvider {
         runtime: &Path,
     ) -> Result<Option<Value>> {
         validate_comparison_review(repo, proof, owner, transaction, runtime)
+    }
+    fn rolled_back_predecessor(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Option<VerifiedHold>> {
+        let (runtime, binary) = self.matching_runtime(runtime_root)?;
+        rolled_back_predecessor(repo, owner, &runtime, &binary)
+    }
+    fn inherited_pending_rows(&self, repo: &Path, runtime_root: &Path) -> Result<Vec<Value>> {
+        match inherited_pending_rows(repo, runtime_root)? {
+            Value::Array(rows) => Ok(rows),
+            _ => Err(err("Recovery pending rows must be an array")),
+        }
+    }
+    fn prospective_token(
+        &self,
+        repo: &Path,
+        manifest: &Value,
+        pending_units: &[Value],
+        predecessor: Option<&VerifiedHold>,
+        owner: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Value> {
+        let (runtime, binary) = self.matching_runtime(runtime_root)?;
+        prospective_token(
+            repo,
+            manifest,
+            &Value::Array(pending_units.to_vec()),
+            predecessor,
+            owner,
+            &runtime,
+            &binary,
+        )
+    }
+    #[allow(clippy::too_many_arguments)]
+    fn install(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        proposal: &Value,
+        pending_ledger: &Value,
+        hold_id: &str,
+        owner: &[u8],
+        predecessor: Option<&VerifiedHold>,
+        runtime_root: &Path,
+    ) -> Result<Value> {
+        let (runtime, binary) = self.matching_runtime(runtime_root)?;
+        install(
+            repo,
+            operation_id,
+            proposal,
+            pending_ledger,
+            hold_id,
+            owner,
+            predecessor,
+            &runtime,
+            &binary,
+        )
+    }
+    fn observe_index(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        indexed: &Value,
+        runtime: &Path,
+    ) -> Result<Value> {
+        let (root, bank, _, _) = state::paths(repo, None, runtime)?;
+        observe_index(&root, owner, transaction, indexed, &bank, true, runtime)
     }
 }
 impl bank_contract::RecoveryCoverage for FrontierProvider {

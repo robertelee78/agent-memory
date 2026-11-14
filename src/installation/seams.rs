@@ -16,11 +16,16 @@ use std::sync::{Arc, RwLock};
 pub trait Updating: Send + Sync {
     /// `updating.banks(extra, compatibility, require_readable=…)`: the checked
     /// bank inventory (`observed_repositories` …) or the baseline refusal.
+    /// `runtime` supplies actual phase bytes for private-state observation;
+    /// `held_runtime` independently measures an existing hold. `None` permits
+    /// only inventories without a held bank, not a skipped private-state proof.
     fn banks(
         &self,
         repositories: &[String],
         compatibility: &Value,
         require_readable: bool,
+        runtime: (&Path, &Path),
+        held_runtime: Option<(&Path, &Path)>,
     ) -> Result<Value>;
     /// `updating.qualified_current(state, code)`: the current-runtime check and
     /// its optional opaque-cache qualification.
@@ -49,15 +54,17 @@ pub trait PrivateState: Send + Sync {
         installation: &Value,
         target: Option<&Value>,
         operation: &str,
+        runtime: (&Path, &Path),
         transition: &mut dyn FnMut() -> Result<Option<Value>>,
         body: &mut dyn FnMut(&Value) -> Result<Value>,
     ) -> Result<Value>;
-    fn prepare_lifecycle(&self, plan: &Value, check: bool) -> Result<Value>;
+    fn prepare_lifecycle(&self, plan: &Value, check: bool, runtime: (&Path, &Path)) -> Result<Value>;
     fn require_compatible(
         &self,
         installation: &Value,
         target: &Value,
         operation: &str,
+        runtime: (&Path, &Path),
     ) -> Result<Value>;
     fn public_summary(&self, value: &Value) -> Result<Value>;
 }
@@ -68,13 +75,16 @@ pub trait OmpBoundary: Send + Sync {
     /// `omp_boundary.CAPABILITY`.
     fn capability(&self) -> &str;
     /// Baseline mutates `plan` in place: `actions` rewrite and `omp_disabled_backup`.
-    fn native_transition(&self, plan: &mut Value, check: bool) -> Result<Value>;
+    fn native_transition(&self, plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> Result<Value>;
     /// With `check`, baseline records `native_layout_quiescence_overrides` in `plan`.
-    fn native_activation(&self, plan: &mut Value, check: bool) -> Result<Value>;
-    fn finish_native_transition(&self, plan: &Value) -> Result<()>;
-    fn recover_native_binding(&self, state: &Path) -> Result<()>;
-    fn native_recovery_expected(&self, state: &Path, path: &str) -> Result<Option<Value>>;
-    fn complete_stored_source_activation(&self, state: &Path) -> Result<Value>;
+    fn native_activation(&self, plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> Result<Value>;
+    fn finish_native_transition(&self, plan: &Value, runtime: (&Path, &Path)) -> Result<()>;
+    fn recover_native_binding(&self, state: &Path, runtime: (&Path, &Path)) -> Result<()>;
+    /// Finish a committed uninstall's retained native transition without
+    /// inventing runtime authority for bytes that were already removed.
+    fn recover_uninstalled_native(&self, state: &Path) -> Result<()>;
+    fn native_recovery_expected(&self, state: &Path, path: &str, runtime: (&Path, &Path)) -> Result<Option<Value>>;
+    fn complete_stored_source_activation(&self, state: &Path, runtime: (&Path, &Path)) -> Result<Value>;
 }
 
 /// Artifact inspection of an installed pack plus its runtime binary.

@@ -12,7 +12,12 @@ fn cutover_dispatch_worker() {
 #[test]
 // obligation: tests/contracts/test_claude_boundary.py::ClaudeBoundaryContract.test_uninitialized_and_nonrepository_are_quiet
 fn uninitialized_and_nonrepository_claude_stop_are_quiet() {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.as_os_str().to_owned(),
+    );
     let repo = w.repository("repo", false).unwrap();
     let outside = w.inside("no-repo").unwrap();
     fs::create_dir(&outside).unwrap();

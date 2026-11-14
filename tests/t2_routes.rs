@@ -727,9 +727,24 @@ fn inspect_suppresses_ambient_git_redirection_and_fsmonitor_trace_writes() {
 #[test]
 #[ignore = "needs recovery_frontier and comparison_view registered"]
 fn inspect_path_is_explicit_historical_orientation_and_refuses_unknown_contexts() {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| {
+        w.run_with(
+            argv,
+            RunOptions {
+                check: false,
+                timeout: std::time::Duration::from_secs(120),
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    });
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.clone().into_os_string(),
+    );
     let (repo, bank) = fixture(&w, false, true);
-    support::identity_fixtures::bind(&w, &repo).unwrap();
+    support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
     let before = snapshot(&bank);
     let value = receipt(
         run(

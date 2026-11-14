@@ -48,14 +48,14 @@ fn path_of(value: &Value, key: &str) -> PathBuf {
     PathBuf::from(text(value, key).unwrap_or_default())
 }
 
-/// Baseline `trusted_receipt`: the running runtime is exactly the recorded
-/// source before any repair.
+/// Baseline `trusted_receipt`: independently verify the recorded source
+/// before any repair, without requiring this process to execute that source.
 pub fn trusted_receipt(
     env: &Environment,
     services: &Services,
     locations: &Locations,
     receipt: Option<Value>,
-) -> Result<Value> {
+) -> Result<(Value, install::LifecycleRuntime)> {
     let old = match receipt {
         Some(receipt) => receipt,
         None => install::read_receipt(env, &locations.state)?
@@ -71,24 +71,8 @@ pub fn trusted_receipt(
             "Recorded managed source differs from its owned location",
         )?;
     }
-    let binary = install::source_binary(source)?;
-    let executing = services
-        .executable
-        .as_deref()
-        .map(|path| fs::canonical_path(path, true))
-        .transpose()?;
-    require(
-        executing.is_some_and(|executing| {
-            fs::canonical_path(&binary, true).is_ok_and(|binary| binary == executing)
-        }),
-        "Executing package differs from the installed receipt",
-    )?;
-    let observed = install::source_info(services, &path_of(source, "path"), &kind)?;
-    require(
-        install::same(&observed.value, source),
-        "Installed source differs from the receipt",
-    )?;
-    Ok(old)
+    let runtime = install::verified_receipt_runtime(env, services, &old)?;
+    Ok((old, runtime))
 }
 
 /// Baseline `reconcile_hooks`: use the existing transactional installer;
@@ -250,15 +234,8 @@ fn repair_runtime(
             acquired.set(true);
             if pending {
                 let journal = install::read_journal(env, state)?;
-                if trusted_receipt(env, services, locations, None).is_err() {
-                    // During activation the source can already be the
-                    // journal's candidate while the receipt records the old one.
-                    let recorded = journal
-                        .as_ref()
-                        .map(|journal| get(journal, "receipt").clone())
-                        .ok_or_else(|| contract("Missing recovery journal"))?;
-                    trusted_receipt(env, services, locations, Some(recorded))?;
-                }
+                // Recovery selects and verifies its runtime deterministically
+                // from journal phase and recorded target fingerprints.
                 let was_pending = journal.as_ref().is_some_and(|journal| {
                     !matches!(text(journal, "status"), Some("complete" | "rolled-back"))
                 });
@@ -270,7 +247,7 @@ fn repair_runtime(
                     "Verified the recorded runtime transaction.",
                 )));
             }
-            let old = trusted_receipt(env, services, locations, None)?;
+            let (old, _runtime) = trusted_receipt(env, services, locations, None)?;
             if hooks {
                 let outcome = reconcile_hooks(env, services, locations, &old)?;
                 require(verified(&outcome), "Hook reconciliation was not verified")?;

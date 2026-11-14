@@ -4,8 +4,8 @@
 //! (private base, marker), `omp_control`, `omp_installation` (observer
 //! binding, owned manual), `omp_projection`, `omp_stream` (stream inventory,
 //! recovery fences, delivery windows, source completion), `scope_binding`,
-//! `turn_sources`. This module implements the `omp_boundary::OmpTransport`
-//! and `omp_stream::OmpTransport` seams and the T2f half of the
+//! `turn_sources`. Boundary inventory calls are direct; this module implements
+//! the installed `omp_stream::OmpTransport` seam and the T2f half of the
 //! `omp_installation::OmpActivation` interface (`providers`).
 use crate::codec::json::Value;
 use crate::developer_identity::sha256_hex;
@@ -15,7 +15,7 @@ use crate::lifecycle::{get, object, string};
 use crate::omp_boundary;
 use crate::omp_installation::{self, OwnedManual};
 use crate::omp_projection::{self, exclusions, has_exact, same};
-use crate::scope_binding::PrivateEnrollmentContext;
+use crate::scope_binding::{PrivateEnrollmentContext, RuntimeAuthority};
 use crate::turn_sources::{self, Namespace};
 use sha2::Digest;
 use std::cell::{Ref, RefCell, RefMut};
@@ -98,19 +98,22 @@ pub(crate) fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
 
-/// Where the transport operates: the repository, the runtime root of its
-/// private state, and (inside an observer operation) the held enrollment context.
+/// Where the transport operates: the repository, its original runtime
+/// authority, and (inside an observer operation) the held enrollment context.
 #[derive(Clone, Copy)]
 pub struct Site<'a> {
     pub repo: &'a Path,
-    pub runtime_root: &'a Path,
+    pub authority: RuntimeAuthority<'a>,
     pub context: Option<&'a PrivateEnrollmentContext>,
 }
 impl<'a> Site<'a> {
     pub fn new(repo: &'a Path, runtime_root: &'a Path) -> Self {
+        Self::with_authority(repo, RuntimeAuthority::Executing(runtime_root))
+    }
+    pub fn with_authority(repo: &'a Path, authority: RuntimeAuthority<'a>) -> Self {
         Self {
             repo,
-            runtime_root,
+            authority,
             context: None,
         }
     }
@@ -123,7 +126,7 @@ impl<'a> Site<'a> {
     /// Baseline `_base(repo, enrollment_context=…)`.
     pub fn base(&self) -> Result<PathBuf> {
         match self.context {
-            Some(context) => omp_boundary::enrollment_base(self.repo, context, self.runtime_root),
+            Some(context) => omp_boundary::enrollment_base(self.repo, context, self.authority.pack()),
             None => omp_boundary::base(self.repo),
         }
     }
@@ -1624,13 +1627,13 @@ pub(crate) fn shared(site: &Site<'_>, cursor: &Value) -> Result<Namespace> {
         Some(context) => {
             turn_sources::enrollment_namespace(site.repo, "omp", session, lifecycle, context)
         }
-        None => Ok(turn_sources::private_namespace(
+        None => Ok(turn_sources::private_namespace_with_authority(
             site.repo,
             "omp",
             session,
             lifecycle,
             false,
-            site.runtime_root,
+            site.authority,
         )?
         .0),
     }
@@ -1644,7 +1647,7 @@ pub(crate) fn shared_inventory(site: &Site<'_>, cursor: &Value) -> Result<Value>
         Some(context) => {
             turn_sources::inspect_enrollment(site.repo, "omp", session, lifecycle, context)
         }
-        None => turn_sources::inspect(site.repo, "omp", session, lifecycle, site.runtime_root),
+        None => turn_sources::inspect_with_authority(site.repo, "omp", session, lifecycle, site.authority),
     }
 }
 
@@ -1819,7 +1822,8 @@ pub fn registration(
     if !exists && occupied >= turn_sources::MAX_TURNS {
         return Ok((None, Vec::new()));
     }
-    omp_boundary::verify_marker(site.repo, site.runtime_root)?;
+    // Lifecycle authority is inventory-only, never source registration authority.
+    omp_boundary::verify_marker(site.repo, site.authority.pack())?;
     // Recover successful lost responses above; never repeat an unknown attempt
     // whose shared failure could not itself be durably written (e.g. disk full).
     retain(&attempt_path, &attempt, MAX_RECORD)?;
@@ -1832,7 +1836,7 @@ pub fn registration(
         Some(field_text(enrollment, "native_source_id")?),
         Some(text(reference)?),
         site.context,
-        site.runtime_root,
+        site.authority.pack(),
     );
     let Ok(observation) = registered else {
         // register's durable fault is intentionally never erased or retried.

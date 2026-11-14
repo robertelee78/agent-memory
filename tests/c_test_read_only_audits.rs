@@ -27,8 +27,13 @@ fn snapshot(root: &std::path::Path) -> BTreeMap<String, (Vec<u8>, u32)> {
 #[test]
 // obligation: tests/contracts/test_read_only_audits.py::ReadOnlyAudits.test_direct_hook_and_boundary_helpers_do_not_create_source_caches
 fn direct_native_hooks_and_boundary_help_preserve_runtime_bytes_and_modes() {
-    let w = World::new().unwrap();
-    let source = development_source(&w, "direct-pack");
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.as_os_str().to_owned(),
+    );
+    let source = &runtime.source;
     let repo = w.repository("repo", false).unwrap();
     let before = snapshot(&source);
     let event = object([
@@ -49,7 +54,7 @@ fn direct_native_hooks_and_boundary_help_preserve_runtime_bytes_and_modes() {
     for route in ["codex-boundary", "claude-boundary", "private"] {
         let output = w
             .run([
-                source.join("target/release/am").into_os_string(),
+                runtime.command.as_os_str().to_owned(),
                 route.into(),
                 "--help".into(),
             ])

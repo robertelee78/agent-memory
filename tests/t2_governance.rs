@@ -1,9 +1,7 @@
 //! Governed invalidation contracts (baseline tests/contracts/test_governance*.py).
 //!
-//! The in-memory desired-state tests run the production governance delta on
-//! exact canonical files without the unported recovery frontier. The complete
-//! public journeys are ported below them and stay ignored until their
-//! providers are registered.
+//! Desired-state contracts retain exact canonical files; public journeys use
+//! a genuinely installed runtime and the ordinary receipt-backed frontier.
 use agent_memory::{
     bank_contract, bank_layout, bank_transactions as tx,
     codec::json::{self, Value},
@@ -1269,6 +1267,9 @@ impl<'a> Journey<'a> {
     /// One baseline `World` per sub-case: a fresh repository and bank, with the
     /// developer identity reused exactly as `identity_fixtures.bind` does.
     fn named(world: &'a support::World, name: &str) -> Self {
+        Self::at_bank(world, name, "memory-bank")
+    }
+    fn at_bank(world: &'a support::World, name: &str, bank_root: &str) -> Self {
         let repo = world.root.join(name);
         std::fs::create_dir(&repo).unwrap();
         world.git(&repo, &["init", "--initial-branch=main"]);
@@ -1283,7 +1284,10 @@ impl<'a> Journey<'a> {
         world.git(&repo, &["add", "."]);
         world.git(&repo, &["commit", "-m", "Source evidence fixture"]);
         let pid = host::uuid4().unwrap();
-        let bank = repo.join("memory-bank");
+        if bank_root != "memory-bank" {
+            world.git(&repo, &["config", "agent-memory.bankroot", bank_root]);
+        }
+        let bank = repo.join(bank_root);
         for (path, body) in router_files(&pid).as_object().unwrap() {
             let path = bank.join(path);
             std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -1795,7 +1799,6 @@ fn journey(name: &str, body: impl FnOnce(&Journey<'_>)) {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_stronger_correction_keeps_stable_identity_old_origin_and_useful_history
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn journey_stronger_correction_keeps_identity_origin_and_history() {
     journey(
         "journey_stronger_correction_keeps_identity_origin_and_history",
@@ -1846,7 +1849,6 @@ fn stronger_correction(j: &Journey<'_>) {
 
 // obligation: tests/contracts/test_unified_cli_operations.py::UnifiedCLIOperations.test_installed_correction_preserves_identity_origin_history_and_repeat
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn journey_correct_alias_preserves_identity_origin_history_and_repeat() {
     support::in_world(
         "journey_correct_alias_preserves_identity_origin_history_and_repeat",
@@ -1860,7 +1862,6 @@ fn journey_correct_alias_preserves_identity_origin_history_and_repeat() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_reactivation_needs_new_evidence_and_an_explicit_current_period
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn journey_reactivation_needs_new_evidence_and_current_period() {
     journey(
         "journey_reactivation_needs_new_evidence_and_current_period",
@@ -1905,7 +1906,6 @@ fn journey_reactivation_needs_new_evidence_and_current_period() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_consumed_capture_identity_still_finds_revoked_learning_after_all_inactive_bodies_are_compacted
 #[test]
-#[ignore = "needs recovery_frontier, comparison, consolidation registered"]
 fn journey_consumed_capture_identity_finds_revoked_learning_after_compaction() {
     journey(
         "journey_consumed_capture_identity_finds_revoked_learning_after_compaction",
@@ -1976,7 +1976,6 @@ fn move_route(bank: &Path, previous: &str, current: &str) {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_legacy_flat_consumed_capture_stays_pending_after_revocation_and_compaction
 #[test]
-#[ignore = "needs recovery_frontier, comparison, consolidation, retrieval registered"]
 fn journey_legacy_flat_consumed_capture_stays_pending() {
     journey("journey_legacy_flat_consumed_capture_stays_pending", |j| {
         let (old, path) = j.add("existing", DEFAULT_BODY, vec![]);
@@ -2076,7 +2075,6 @@ fn journey_legacy_flat_consumed_capture_stays_pending() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_scope_correction_retains_older_branch_guidance_without_applying_it_on_main
 #[test]
-#[ignore = "needs recovery_frontier, comparison, retrieval registered"]
 fn journey_scope_correction_retains_older_branch_guidance() {
     journey(
         "journey_scope_correction_retains_older_branch_guidance",
@@ -2117,7 +2115,6 @@ fn journey_scope_correction_retains_older_branch_guidance() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_narrowing_cannot_replace_the_old_claim_that_still_applies_in_older_contexts
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn journey_narrowing_cannot_replace_old_claim_in_older_contexts() {
     journey(
         "journey_narrowing_cannot_replace_old_claim_in_older_contexts",
@@ -2152,7 +2149,6 @@ fn journey_narrowing_cannot_replace_old_claim_in_older_contexts() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_existing_replacement_is_versioned_and_survives_deletion_of_the_wrong_old_claim
 #[test]
-#[ignore = "needs recovery_frontier, comparison, retrieval registered"]
 fn journey_existing_replacement_is_versioned_and_survives_deletion() {
     journey(
         "journey_existing_replacement_is_versioned_and_survives_deletion",
@@ -2218,7 +2214,6 @@ fn journey_existing_replacement_is_versioned_and_survives_deletion() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_deletion_requires_reviewed_removal_of_copied_ordinary_context
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_deletion_requires_reviewed_removal_of_copied_context() {
     journey(
         "journey_deletion_requires_reviewed_removal_of_copied_context",
@@ -2265,7 +2260,6 @@ fn journey_deletion_requires_reviewed_removal_of_copied_context() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_deletion_refuses_a_copied_router_assertion_until_its_existing_file_workflow_cleans_it
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_deletion_refuses_copied_router_assertion() {
     journey("journey_deletion_refuses_copied_router_assertion", |j| {
         let (old, path) = j.add(
@@ -2302,7 +2296,6 @@ fn journey_deletion_refuses_copied_router_assertion() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_deleted_independent_duplicates_cannot_return_from_cached_consolidation_output
 #[test]
-#[ignore = "needs recovery_frontier, comparison, consolidation, projections registered"]
 fn journey_deleted_duplicates_cannot_return_from_cached_consolidation() {
     journey(
         "journey_deleted_duplicates_cannot_return_from_cached_consolidation",
@@ -2372,7 +2365,6 @@ fn journey_deleted_duplicates_cannot_return_from_cached_consolidation() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_erasure_includes_consolidated_capture_identity_so_a_saved_capture_cannot_be_admitted_again
 #[test]
-#[ignore = "needs recovery_frontier, comparison, consolidation registered"]
 fn journey_erasure_includes_consolidated_capture_identity() {
     journey(
         "journey_erasure_includes_consolidated_capture_identity",
@@ -2483,7 +2475,6 @@ fn journey_erasure_includes_consolidated_capture_identity() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_revocation_removes_current_guidance_and_invalidates_projection_and_cached_payload
 #[test]
-#[ignore = "needs recovery_frontier, projections registered"]
 fn journey_revocation_removes_current_guidance_and_invalidates_projection() {
     journey(
         "journey_revocation_removes_current_guidance_and_invalidates_projection",
@@ -2548,7 +2539,6 @@ fn journey_revocation_removes_current_guidance_and_invalidates_projection() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_expiry_requires_actual_known_boundary_and_policy_retention_is_distinct
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_expiry_requires_known_boundary_and_policy_retention() {
     support::in_world(
         "journey_expiry_requires_known_boundary_and_policy_retention",
@@ -2601,7 +2591,6 @@ fn journey_expiry_requires_known_boundary_and_policy_retention() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_ambiguous_evidence_or_older_contexts_still_applying_stays_pending_without_pruning
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_ambiguous_or_older_contexts_stay_pending() {
     support::in_world(
         "journey_ambiguous_or_older_contexts_stay_pending",
@@ -2633,7 +2622,6 @@ fn journey_ambiguous_or_older_contexts_stay_pending() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_correction_cannot_reuse_unchanged_evidence_or_promote_a_procedural_capture
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn journey_correction_cannot_reuse_evidence_or_promote_procedure() {
     support::in_world(
         "journey_correction_cannot_reuse_evidence_or_promote_procedure",
@@ -2674,7 +2662,6 @@ fn journey_correction_cannot_reuse_evidence_or_promote_procedure() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_unresolved_other_developer_claim_keeps_correction_pending
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn journey_unresolved_other_developer_claim_keeps_correction_pending() {
     journey(
         "journey_unresolved_other_developer_claim_keeps_correction_pending",
@@ -2724,7 +2711,6 @@ fn verified_repository(j: &Journey<'_>, request: &mut Value) {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_changed_actual_repository_evidence_refuses_automatic_pruning
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_changed_repository_evidence_refuses_pruning() {
     journey("journey_changed_repository_evidence_refuses_pruning", |j| {
         let (old, path) = j.add("old", DEFAULT_BODY, vec![]);
@@ -2746,7 +2732,6 @@ fn journey_changed_repository_evidence_refuses_pruning() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_a_hidden_other_type_superseder_cannot_silently_defeat_the_new_replacement_version
 #[test]
-#[ignore = "needs recovery_frontier, comparison, retrieval registered"]
 fn journey_hidden_other_type_superseder_cannot_defeat_replacement() {
     journey(
         "journey_hidden_other_type_superseder_cannot_defeat_replacement",
@@ -2787,7 +2772,6 @@ fn journey_hidden_other_type_superseder_cannot_defeat_replacement() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_current_context_only_deletion_does_not_globally_erase_a_record
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_current_context_only_deletion_is_pending() {
     journey("journey_current_context_only_deletion_is_pending", |j| {
         let (old, path) = j.add("conditional", DEFAULT_BODY, vec![]);
@@ -2808,7 +2792,6 @@ fn journey_current_context_only_deletion_is_pending() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_terminal_deletion_requires_explicit_bounded_derived_scope_and_removes_only_safe_markers
 #[test]
-#[ignore = "needs recovery_frontier, projections registered"]
 fn journey_terminal_deletion_requires_bounded_derived_scope() {
     journey(
         "journey_terminal_deletion_requires_bounded_derived_scope",
@@ -2896,7 +2879,6 @@ fn journey_terminal_deletion_requires_bounded_derived_scope() {
 
 // obligation: tests/contracts/test_governance.py::GovernanceContract.test_stale_target_or_context_review_and_tampered_delta_refuse_without_writes
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_stale_target_context_or_tampered_delta_refuse() {
     support::in_world(
         "journey_stale_target_context_or_tampered_delta_refuse",
@@ -2939,7 +2921,6 @@ fn journey_stale_target_context_or_tampered_delta_refuse() {
 
 // obligation: tests/contracts/test_installed_bank_governance.py::InstalledBankRoundtrip.test_governance_alias_checks_intent_at_preview_and_apply_before_writes
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_governance_alias_checks_intent_then_revokes() {
     journey("journey_governance_alias_checks_intent_then_revokes", |j| {
         let (old, path) = j.add("wrong", DEFAULT_BODY, vec![]);
@@ -2974,7 +2955,7 @@ fn faulted(
     args: &[&str],
     env: &[(&str, OsString)],
 ) -> agent_memory::process::Output {
-    let mut argv = vec![OsString::from(env!("CARGO_BIN_EXE_am"))];
+    let mut argv = vec![j.world.root.join("home/.local/bin/am").into_os_string()];
     argv.extend(args.iter().map(OsString::from));
     j.world.command(&argv, env)
 }
@@ -3005,7 +2986,6 @@ fn unlock(j: &Journey<'_>) {
 
 // obligation: tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_correction_crash_requires_owned_lock_recovery_and_rollback_before_fresh_comparison
 #[test]
-#[ignore = "needs recovery_frontier, recovery_transactions, comparison registered"]
 fn journey_correction_crash_requires_recovery_and_rollback() {
     journey(
         "journey_correction_crash_requires_recovery_and_rollback",
@@ -3066,7 +3046,6 @@ fn journey_correction_crash_requires_recovery_and_rollback() {
 
 // obligation: tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_changed_supporting_source_at_readback_cannot_commit_pruning_and_rollback_preserves_it
 #[test]
-#[ignore = "needs recovery_frontier, recovery_transactions registered"]
 fn journey_changed_source_at_readback_cannot_commit_pruning() {
     journey(
         "journey_changed_source_at_readback_cannot_commit_pruning",
@@ -3122,14 +3101,11 @@ fn journey_changed_source_at_readback_cannot_commit_pruning() {
 
 // obligation: tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_nested_completed_receipt_refuses_corruption_then_cleans_up_without_requiring_new_evidence
 #[test]
-#[ignore = "needs recovery_frontier, recovery_transactions registered; nested sharing-boundary bank fixture"]
 fn journey_nested_completed_receipt_refuses_corruption_then_cleans_up() {
-    journey(
+    support::in_world(
         "journey_nested_completed_receipt_refuses_corruption_then_cleans_up",
-        |j| {
-            // The baseline uses a nested `docs/shared memory` bank from the
-            // sharing-boundary fixture; this journey exercises the same receipt
-            // corruption refusals on the bound fixture bank.
+        |world| {
+            let j = &Journey::at_bank(world, "repo", "docs/shared memory");
             std::fs::write(
                 j.repo.join("evidence.md"),
                 "# Explicit current fixture observation\n",
@@ -3249,7 +3225,6 @@ fn journey_nested_completed_receipt_refuses_corruption_then_cleans_up() {
 
 // obligation: tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_explicit_deletion_erases_corrected_versions_and_their_content_bearing_history
 #[test]
-#[ignore = "needs recovery_frontier, comparison registered"]
 fn journey_explicit_deletion_erases_corrected_versions_and_history() {
     journey(
         "journey_explicit_deletion_erases_corrected_versions_and_history",
@@ -3301,7 +3276,6 @@ fn journey_explicit_deletion_erases_corrected_versions_and_history() {
 
 // obligation: tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_deleting_last_nested_route_preserves_custom_index_context_before_removing_empty_maps
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn journey_deleting_last_nested_route_preserves_custom_index_context() {
     journey(
         "journey_deleting_last_nested_route_preserves_custom_index_context",

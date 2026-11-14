@@ -1,10 +1,12 @@
 //! Source-preserving layout recovery and exact-file retention contracts.
-//! Full public journeys stay ignored until the real recovery_frontier provider
-//! exists; the value, byte-boundary and exact private-file contracts run now.
+//! Public component journeys use real direct APIs and genuine installed runtime
+//! authority, including publication-dependent retention and historical retry.
 // Shared process fixture also serves admission tests with extra entry points.
 #[allow(dead_code)]
 #[path = "support/admission.rs"]
 mod admission_world;
+#[allow(unused_imports)]
+mod support;
 use admission_world::World;
 use agent_memory::codec::json::Value;
 use agent_memory::developer_identity::encoded;
@@ -417,6 +419,7 @@ fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
         }
         agent_memory::cli::register_providers().unwrap();
         if let Ok(operation) = std::env::var("AM_LAYOUT_ACTION") {
+            support::installed_runtime::register_component_runtime();
             let path = |key| std::env::var_os(key).map(PathBuf::from);
             let repo = path("AM_LAYOUT_REPO").unwrap();
             let runtime = path("AM_LAYOUT_RUNTIME").unwrap();
@@ -451,29 +454,29 @@ fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
         });
         return;
     }
-    let root = Root::new();
-    fs::create_dir(root.join("home")).unwrap();
-    private(
-        &root.join(".test-world.json"),
-        b"{\"token\":\"layout-contract\"}",
-    );
-    let world = World {
-        root: root.0.clone(),
-    };
-    let output = world.command(
-        &[
-            std::env::current_exe().unwrap().into_os_string(),
-            "--exact".into(),
-            name.into(),
-            "--include-ignored".into(),
-            "--nocapture".into(),
-        ],
-        &[
-            ("AM_LAYOUT_CASE", name.into()),
-            ("AM_LAYOUT_ROOT", root.0.as_os_str().to_owned()),
-            ("AM_LAYOUT_VARIANT", variant.into()),
-        ],
-    );
+    let guard = support::World::new().unwrap();
+    let root = &guard.root;
+    let output = guard
+        .run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                name.into(),
+                "--include-ignored".into(),
+                "--nocapture".into(),
+            ],
+            support::RunOptions {
+                env: &[
+                    ("AM_LAYOUT_CASE".into(), name.into()),
+                    ("AM_LAYOUT_ROOT".into(), root.as_os_str().to_owned()),
+                    ("AM_LAYOUT_VARIANT".into(), variant.into()),
+                ],
+                check: false,
+                timeout: std::time::Duration::from_secs(120),
+                ..support::RunOptions::default()
+            },
+        )
+        .unwrap();
     assert_eq!(
         output.status,
         agent_memory::process::Status::Code(0),
@@ -482,22 +485,11 @@ fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
         String::from_utf8_lossy(&output.stderr)
     );
 }
-fn copy_tree(source: &Path, target: &Path) {
-    fs::create_dir_all(target).unwrap();
-    for entry in fs::read_dir(source).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_dir() {
-            copy_tree(&path, &target.join(entry.file_name()));
-        } else if path.is_file() {
-            fs::copy(path, target.join(entry.file_name())).unwrap();
-        }
-    }
-}
 struct Fixture {
     repo: PathBuf,
     bank: PathBuf,
     runtime: PathBuf,
+    command: PathBuf,
     native: Value,
     originals: BTreeMap<String, Vec<u8>>,
     dev: String,
@@ -531,6 +523,8 @@ fn snapshot(root: &Path) -> BTreeMap<String, Vec<u8>> {
     rows
 }
 fn fixture(w: &World, pending: bool) -> Fixture {
+    let installed = support::installed_runtime::install(&w.root, |argv| w.command(argv, &[]));
+    support::installed_runtime::register_component_runtime();
     let (repo, bank, dev) = w.fixture();
     let sentence = "Under the synthetic review condition, preserve existing guidance and check the original source before acting.\n";
     let concise = format!("# Active context\n\n{sentence}");
@@ -631,17 +625,12 @@ fn fixture(w: &World, pending: bool) -> Fixture {
         fs::write(bank.join("handoff-prompt.md"), body).unwrap();
     }
     let originals = snapshot(&bank);
-    let runtime = w.root.join("runtime");
-    copy_tree(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-        &runtime.join("skills/agent-memory"),
-    );
-    fs::create_dir_all(runtime.join("bin")).unwrap();
-    fs::copy(env!("CARGO_BIN_EXE_am"), runtime.join("bin/am")).unwrap();
+    let runtime = installed.pack;
     Fixture {
         repo,
         bank,
         runtime,
+        command: installed.command,
         native,
         originals,
         dev,
@@ -828,7 +817,7 @@ fn request(f: &Fixture, observed: &Value) -> Value {
             ("declared_principals", Value::Array(vec![s(&f.dev)])),
             (
                 "declared_invocation_routes",
-                Value::Array(vec![s(f.runtime.join("bin/am").to_str().unwrap())]),
+                Value::Array(vec![s(f.command.to_str().unwrap())]),
             ),
             ("stopped_sessions", Value::Array(vec![])),
             (
@@ -911,7 +900,6 @@ fn prepared(f: &Fixture) -> (Value, Value) {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index() {
     isolated(
         "all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index",
@@ -970,7 +958,6 @@ fn all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index() {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_exact_retry_is_historical_and_never_overwrites_later_context
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn exact_retry_is_historical_and_never_overwrites_later_context() {
     isolated(
         "exact_retry_is_historical_and_never_overwrites_later_context",
@@ -1008,7 +995,6 @@ fn exact_retry_is_historical_and_never_overwrites_later_context() {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_prepare_requires_full_coverage_independent_review_real_identity_and_safe_output
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn prepare_requires_full_coverage_independent_review_real_identity_and_safe_output() {
     isolated(
         "prepare_requires_full_coverage_independent_review_real_identity_and_safe_output",
@@ -1094,7 +1080,6 @@ fn prepare_requires_full_coverage_independent_review_real_identity_and_safe_outp
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement() {
     isolated(
         "changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement",
@@ -1141,7 +1126,6 @@ fn changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_completed_restore_has_distinct_child_and_keeps_parent_historical_receipt
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn completed_restore_has_distinct_child_and_keeps_parent_historical_receipt() {
     isolated(
         "completed_restore_has_distinct_child_and_keeps_parent_historical_receipt",
@@ -1170,7 +1154,6 @@ fn completed_restore_has_distinct_child_and_keeps_parent_historical_receipt() {
 }
 // obligation: tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_pending_units_cannot_be_deleted_by_retention
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn public_pending_units_cannot_be_deleted_by_retention() {
     isolated("public_pending_units_cannot_be_deleted_by_retention", |w| {
         let f = fixture(w, true);
@@ -1212,8 +1195,6 @@ fn fault_action(
                 .join(format!("fault-{}.json", uuid()))
                 .into_os_string(),
         ),
-        ("AGENT_MEMORY_TEST_ROOT", w.root.as_os_str().to_owned()),
-        ("AGENT_MEMORY_TEST_TOKEN", "layout-contract".into()),
         ("AGENT_MEMORY_FAULT_STAGE", stage.into()),
     ];
     if let Some(proposal) = proposal {
@@ -1236,7 +1217,6 @@ fn fault_action(
 
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_initial_quiescence_requires_exact_independent_review
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn initial_quiescence_requires_exact_independent_review() {
     isolated(
         "initial_quiescence_requires_exact_independent_review",
@@ -1284,7 +1264,6 @@ fn initial_quiescence_requires_exact_independent_review() {
 
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it() {
     isolated(
         "partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it",
@@ -1359,7 +1338,6 @@ fn recover_fault(w: &World, pending: bool, stage: &str, mode: &str) {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_first_replacement_before_progress_supports_known_finish_and_rollback
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn first_replacement_before_progress_supports_known_finish_and_rollback() {
     for mode in ["finish", "rollback"] {
         isolated_variant(
@@ -1378,7 +1356,6 @@ fn first_replacement_before_progress_supports_known_finish_and_rollback() {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_known_finish_and_rollback_follow_exact_journal_boundaries
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn known_finish_and_rollback_follow_exact_journal_boundaries() {
     for mode in ["finish", "rollback"] {
         for stage in [
@@ -1402,7 +1379,6 @@ fn known_finish_and_rollback_follow_exact_journal_boundaries() {
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original() {
     isolated(
         "reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original",
@@ -1444,7 +1420,6 @@ fn reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original()
 }
 // obligation: tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_prepare_refuses_demoting_canonical_context_or_typed_prior_guidance
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn prepare_refuses_demoting_canonical_context_or_typed_prior_guidance() {
     isolated(
         "prepare_refuses_demoting_canonical_context_or_typed_prior_guidance",
@@ -1563,7 +1538,6 @@ fn cleanup_review(f: &Fixture, id: &str, author: &Value) -> Value {
 }
 // obligation: tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_terminal_cleanup_crash_resume_and_real_historical_retry
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn public_terminal_cleanup_crash_resume_and_real_historical_retry() {
     isolated(
         "public_terminal_cleanup_crash_resume_and_real_historical_retry",
@@ -1602,7 +1576,6 @@ fn public_terminal_cleanup_crash_resume_and_real_historical_retry() {
 }
 // obligation: tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger() {
     isolated(
         "public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger",
@@ -1744,7 +1717,6 @@ fn journal_accepts_only_an_attainable_ordered_action_prefix() {
 
 // obligation: tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_purge_and_age_cannot_retire_pending_hold
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn public_purge_and_age_cannot_retire_pending_hold() {
     isolated("public_purge_and_age_cannot_retire_pending_hold", |w| {
         let f = fixture(w, true);

@@ -4,10 +4,8 @@
 //! `identity_git`, `installation`, `layout_recovery_state`, `local_registry`,
 //! `omp_installation`, `private_state`, `project_identity`,
 //! `repository_config`, `scope_binding`, `turn_check`, `turn_sources`.
-//! `omp_transport` and `omp_stream` are reached through the registration
-//! traits below; `recovery_frontier` through the existing
-//! `bank_writes::RecoveryFrontier` registration. A missing registration is a
-//! typed refusal, never an empty inventory.
+//! `omp_transport` and `omp_stream` are called directly; `recovery_frontier`
+//! uses the existing `bank_writes::RecoveryFrontier` registration.
 use crate::bank_writes;
 use crate::codec::json::{self, Value};
 use crate::developer_identity::sha256_hex;
@@ -21,7 +19,7 @@ use crate::omp_installation::{self, HeldSource};
 use crate::private_state;
 use crate::project_identity;
 use crate::repository_config;
-use crate::scope_binding::{self as scope, PrivateEnrollmentContext};
+use crate::scope_binding::{self as scope, PrivateEnrollmentContext, RuntimeAuthority};
 use crate::turn_sources::{self, Namespace};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::{OsStr, OsString};
@@ -214,16 +212,6 @@ fn set_field(value: &mut Value, key: &str, replacement: Value) {
 fn runtime_root() -> Result<PathBuf> {
     crate::cli::pack_root()
 }
-/// The runtime a lifecycle source stages or owns: its `pack` (baseline: the
-/// pack of the installer actually running, i.e. the one being installed).
-/// Lifecycle operations never locate it through an installed receipt, which a
-/// fresh installation does not have yet.
-fn staged_runtime(source: &Value) -> Result<PathBuf> {
-    let pack = text(source, "pack")
-        .filter(|pack| pack.starts_with('/'))
-        .ok_or_else(|| err("Lifecycle source does not name the runtime it stages"))?;
-    fs::canonical_path(Path::new(pack), false)
-}
 
 fn marker_value(token: &str) -> Value {
     object([
@@ -288,9 +276,10 @@ fn context_value(context: &PrivateEnrollmentContext) -> Result<Value> {
 fn checked_marker(
     repo: &Path,
     held: Option<&dyn HeldSource>,
-    runtime_root: &Path,
+    runtime: RuntimeAuthority<'_>,
 ) -> Result<(PrivateEnrollmentContext, PathBuf, Value)> {
-    let context = scope::private_enrollment_context(repo, runtime_root)?;
+    let runtime_root = runtime.pack();
+    let context = scope::private_enrollment_context_with_authority(repo, runtime)?;
     let paths =
         layout_recovery_state::_paths_for_bank(context.root(), context.bank(), None, runtime_root)?;
     let base = parent(&paths.2)?.to_path_buf();
@@ -331,7 +320,16 @@ pub fn observe_marker<T>(
     runtime_root: &Path,
     body: impl FnOnce(&PrivateEnrollmentContext) -> Result<T>,
 ) -> Result<T> {
-    let (context, base, expected) = checked_marker(repo, held, runtime_root)?;
+    observe_marker_with_authority(repo, held, RuntimeAuthority::Executing(runtime_root), body)
+}
+
+pub fn observe_marker_with_authority<T>(
+    repo: &Path,
+    held: Option<&dyn HeldSource>,
+    runtime: RuntimeAuthority<'_>,
+    body: impl FnOnce(&PrivateEnrollmentContext) -> Result<T>,
+) -> Result<T> {
+    let (context, base, expected) = checked_marker(repo, held, runtime)?;
     let outcome = scope::private_enrollment_reads(&context, body);
     verify_marker_binding(&base, &expected, context.root())?;
     outcome
@@ -339,7 +337,14 @@ pub fn observe_marker<T>(
 
 /// Baseline `verify_marker(repo)`: observer verification never enrolls or upgrades.
 pub fn verify_marker(repo: &Path, runtime_root: &Path) -> Result<PrivateEnrollmentContext> {
-    let (context, _, _) = checked_marker(repo, None, runtime_root)?;
+    verify_marker_with_authority(repo, RuntimeAuthority::Executing(runtime_root))
+}
+
+pub fn verify_marker_with_authority(
+    repo: &Path,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<PrivateEnrollmentContext> {
+    let (context, _, _) = checked_marker(repo, None, runtime)?;
     scope::private_enrollment_reads(&context, |_| Ok(()))?;
     Ok(context)
 }
@@ -371,8 +376,17 @@ pub fn activate_marker(
     fresh_only: bool,
     runtime_root: &Path,
 ) -> Result<PrivateEnrollmentContext> {
+    activate_marker_with_authority(repo, fresh_only, RuntimeAuthority::Executing(runtime_root))
+}
+
+pub fn activate_marker_with_authority(
+    repo: &Path,
+    fresh_only: bool,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<PrivateEnrollmentContext> {
+    let runtime_root = runtime.pack();
     let barrier = turn_sources::source_barrier(repo, true, false, None, runtime_root)?;
-    let context = scope::private_enrollment_context(repo, runtime_root)?;
+    let context = scope::private_enrollment_context_with_authority(repo, runtime)?;
     let root = context.root().to_path_buf();
     let base = base(&root)?;
     let current = marker(&base)?;
@@ -414,7 +428,7 @@ pub fn activate_marker(
         Some(_) => {}
     }
     scope::recheck_private_enrollment(&context)?;
-    let verified = verify_marker(&root, runtime_root)?;
+    let verified = verify_marker_with_authority(&root, runtime)?;
     barrier.recheck()?;
     Ok(verified)
 }
@@ -895,12 +909,19 @@ pub fn source_capability_repositories(installation: Option<&Value>) -> Result<BT
 
 /// Baseline `_omp_index(repo)`: the validated omp references of the shared index.
 pub fn omp_index(repo: &Path, runtime_root: &Path) -> Result<Vec<(PathBuf, Value)>> {
+    omp_index_with_authority(repo, RuntimeAuthority::Executing(runtime_root))
+}
+
+pub fn omp_index_with_authority(
+    repo: &Path,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<Vec<(PathBuf, Value)>> {
     let directory = base(repo)?.join("turn-sources-v2").join("pending");
     if !lexists(&directory)? {
         return Ok(vec![]);
     }
     fs::trust::state(&directory)?;
-    let context = scope::private_enrollment_context(repo, runtime_root)?;
+    let context = scope::private_enrollment_context_with_authority(repo, runtime)?;
     let refusal = || err("Unverifiable shared source index inventory");
     let names = listing(&directory, turn_sources::MAX_TURNS)?.ok_or_else(refusal)?;
     let mut result = Vec::new();
@@ -1023,8 +1044,15 @@ fn walk_evidence(
 /// Baseline `_drain_inventory(repo)`: the bound complete evidence enumeration,
 /// including orphan shared namespaces, and its digest.
 pub fn drain_inventory(repo: &Path, runtime_root: &Path) -> Result<(Value, String)> {
+    drain_inventory_with_authority(repo, RuntimeAuthority::Executing(runtime_root))
+}
+
+pub fn drain_inventory_with_authority(
+    repo: &Path,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<(Value, String)> {
     let base = base(repo)?;
-    let (mut rows, faults) = crate::omp_transport::boundary_pending_inventory(repo, runtime_root)?;
+    let (mut rows, faults) = crate::omp_transport::boundary_pending_inventory(repo, runtime)?;
     let mut pins = Vec::new();
     let binding_path = base.join(BINDING_FILE);
     if lexists(&binding_path)? {
@@ -1038,7 +1066,7 @@ pub fn drain_inventory(repo: &Path, runtime_root: &Path) -> Result<(Value, Strin
             )?),
         ]));
     }
-    for (path, reference) in omp_index(repo, runtime_root)? {
+    for (path, reference) in omp_index_with_authority(repo, runtime)? {
         pins.push(Value::Array(vec![
             relative(&path, &base)?,
             string(sha_of(
@@ -1049,7 +1077,7 @@ pub fn drain_inventory(repo: &Path, runtime_root: &Path) -> Result<(Value, Strin
         ]));
         let session = text(&reference, "session").unwrap_or_default();
         let lifecycle = text(&reference, "lifecycle").unwrap_or_default();
-        let state = turn_sources::inspect(repo, "omp", session, lifecycle, runtime_root)?;
+        let state = turn_sources::inspect_with_authority(repo, "omp", session, lifecycle, runtime)?;
         if !truthy(get(&state, "complete")) {
             rows.push(object([
                 ("session", string(session)),
@@ -1066,13 +1094,13 @@ pub fn drain_inventory(repo: &Path, runtime_root: &Path) -> Result<(Value, Strin
         }
     }
     let mut roots = BTreeSet::from([base.join("omp-source-v1")]);
-    for (_, cursor) in crate::omp_transport::boundary_all_segments(repo, runtime_root)? {
+    for (_, cursor) in crate::omp_transport::boundary_all_segments(repo, runtime)? {
         let session =
             text(&cursor, "session").ok_or_else(|| err("Unverifiable drain source namespace"))?;
         let lifecycle =
             text(&cursor, "lifecycle").ok_or_else(|| err("Unverifiable drain source namespace"))?;
         let (namespace, _) =
-            turn_sources::private_namespace(repo, "omp", session, lifecycle, false, runtime_root)?;
+            turn_sources::private_namespace_with_authority(repo, "omp", session, lifecycle, false, runtime)?;
         roots.insert(namespace.directory);
     }
     // Orphan shared namespaces still participate even without a transport receipt.
@@ -1111,7 +1139,15 @@ pub fn shared_native_source_evidence(
     base: &Path,
     runtime_root: &Path,
 ) -> Result<bool> {
-    if !omp_index(repo, runtime_root)?.is_empty() {
+    shared_native_source_evidence_with_authority(repo, base, RuntimeAuthority::Executing(runtime_root))
+}
+
+pub fn shared_native_source_evidence_with_authority(
+    repo: &Path,
+    base: &Path,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<bool> {
+    if !omp_index_with_authority(repo, runtime)?.is_empty() {
         return Err(err(
             "Markerless state still contains indexed omp references",
         ));
@@ -1162,6 +1198,13 @@ fn has_streams(base: &Path) -> Result<bool> {
 /// Baseline `required_source_capabilities(repo)`: a missing marker needs a real
 /// bound drain proof, never an empty fallback.
 pub fn required_source_capabilities(repo: &Path, runtime_root: &Path) -> Result<BTreeSet<String>> {
+    required_source_capabilities_with_authority(repo, RuntimeAuthority::Executing(runtime_root))
+}
+
+pub fn required_source_capabilities_with_authority(
+    repo: &Path,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<BTreeSet<String>> {
     let (root, bank) = bank_writes::bank_path(repo)?;
     let base = base(&root)?;
     let registered = registry()?;
@@ -1211,16 +1254,16 @@ pub fn required_source_capabilities(repo: &Path, runtime_root: &Path) -> Result<
         return Ok(tokens(&[HISTORICAL_CAPABILITY, CAPABILITY]));
     }
     let mut has_evidence = has_native_source_state(&base)?;
-    has_evidence |= shared_native_source_evidence(&root, &base, runtime_root)?;
+    has_evidence |= shared_native_source_evidence_with_authority(&root, &base, runtime)?;
     if !has_evidence {
         return Ok(BTreeSet::new());
     }
     // A valid drain was written under this persistent lock. Inspection may
     // never recreate a missing lock or interpret its loss as empty evidence.
     turn_sources::read_only_locks(|| {
-        private_state::observation_barrier(repo, runtime_root, |_| {
+        private_state::observation_barrier(repo, runtime, |_| {
             let lock = turn_sources::private_lock(&base.join(TRANSPORT_LOCK), false, true)?;
-            let (binding, digest) = drain_inventory(repo, runtime_root)?;
+            let (binding, digest) = drain_inventory_with_authority(repo, runtime)?;
             let proof = turn_sources::read(
                 &base.join("omp-drains").join(format!("{digest}.json")),
                 MAX_RECORD,
@@ -1235,7 +1278,7 @@ pub fn required_source_capabilities(repo: &Path, runtime_root: &Path) -> Result<
                 ));
             }
             if streams {
-                verify_stream_drain(repo, &base, runtime_root)?;
+                verify_stream_drain(repo, &base, runtime)?;
             }
             lock.finish()
         })
@@ -1260,8 +1303,8 @@ fn stream_proof(repo: &Path, base: &Path, inventory: &Value) -> Result<Value> {
 }
 
 /// Baseline `_verify_stream_drain(repo, base)`.
-fn verify_stream_drain(repo: &Path, base: &Path, runtime_root: &Path) -> Result<Value> {
-    let inventory = stream_state(repo, base, true, runtime_root)?;
+fn verify_stream_drain(repo: &Path, base: &Path, runtime: RuntimeAuthority<'_>) -> Result<Value> {
+    let inventory = stream_state(repo, base, true, runtime)?;
     let expected = stream_proof(repo, base, &inventory)?;
     let target = base
         .join("omp-stream-drains")
@@ -1343,25 +1386,25 @@ fn publish_proof(directory: &Path, digest: &str, proof: &Value, conflict: &str) 
     Ok(())
 }
 
-fn drain_body(repo: &Path, base: &Path, check: bool, runtime_root: &Path) -> Result<Value> {
+fn drain_body(repo: &Path, base: &Path, check: bool, runtime: RuntimeAuthority<'_>) -> Result<Value> {
     if !check {
         let mut namespaces = BTreeMap::new();
-        for (_, reference) in omp_index(repo, runtime_root)? {
-            let (namespace, _) = turn_sources::private_namespace(
+        for (_, reference) in omp_index_with_authority(repo, runtime)? {
+            let (namespace, _) = turn_sources::private_namespace_with_authority(
                 repo,
                 "omp",
                 text(&reference, "session").unwrap_or_default(),
                 text(&reference, "lifecycle").unwrap_or_default(),
                 false,
-                runtime_root,
+                runtime,
             )?;
             namespaces.insert(path_text(&namespace.directory)?.to_owned(), namespace);
         }
         let namespaces: Vec<Namespace> = namespaces.into_values().collect();
         cleanup_completed(&namespaces)?;
     }
-    let (binding, digest) = drain_inventory(repo, runtime_root)?;
-    let streams = stream_state(repo, base, check, runtime_root)?;
+    let (binding, digest) = drain_inventory_with_authority(repo, runtime)?;
+    let streams = stream_state(repo, base, check, runtime)?;
     let drainable = !truthy(get(&binding, "pending"))
         && !truthy(get(&binding, "faults"))
         && !truthy(get(&streams, "pending"));
@@ -1395,7 +1438,7 @@ fn drain_body(repo: &Path, base: &Path, check: bool, runtime_root: &Path) -> Res
             &stream_proof(repo, base, &streams)?,
             "Conflicting retained native stream drain proof",
         )?;
-        verify_stream_drain(repo, base, runtime_root)?;
+        verify_stream_drain(repo, base, runtime)?;
     }
     if marker(base)?.is_some() {
         let chain = DirectoryChain::open(base).map_err(io_error)?;
@@ -1420,6 +1463,15 @@ pub fn drain_source_capabilities(
     check: bool,
     runtime_root: &Path,
 ) -> Result<Value> {
+    drain_source_capabilities_with_authority(repo, quiesced, check, RuntimeAuthority::Executing(runtime_root))
+}
+
+pub fn drain_source_capabilities_with_authority(
+    repo: &Path,
+    quiesced: bool,
+    check: bool,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<Value> {
     if !quiesced {
         return Err(err(
             "Source drain requires disabled bindings and writer quiescence",
@@ -1428,14 +1480,14 @@ pub fn drain_source_capabilities(
     let base = base(repo)?;
     if check {
         return turn_sources::read_only_locks(|| {
-            private_state::observation_barrier(repo, runtime_root, |_| {
-                read_only_transport_lock(&base, || drain_body(repo, &base, true, runtime_root))
+            private_state::observation_barrier(repo, runtime, |_| {
+                read_only_transport_lock(&base, || drain_body(repo, &base, true, runtime))
             })
         });
     }
-    let barrier = turn_sources::source_barrier(repo, true, false, None, runtime_root)?;
+    let barrier = turn_sources::source_barrier(repo, true, false, None, runtime.pack())?;
     let lock = turn_sources::private_lock(&base.join(TRANSPORT_LOCK), false, false)?;
-    let result = drain_body(repo, &base, false, runtime_root)?;
+    let result = drain_body(repo, &base, false, runtime)?;
     lock.finish()?;
     barrier.recheck()?;
     Ok(result)
@@ -1517,7 +1569,9 @@ fn quiescence_paths(plan: &Value) -> Result<Vec<PathBuf>> {
 /// Baseline `native_activation(plan, check)`: refresh reviewed layout quiescence
 /// for the newly enabled native route. With `check`, record the renewals in
 /// `plan['native_layout_quiescence_overrides']`.
-pub fn native_activation(plan: &mut Value, check: bool, runtime_root: &Path) -> Result<Value> {
+pub fn native_activation(plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> Result<Value> {
+    let authority = RuntimeAuthority::from_pair(runtime);
+    let runtime_root = authority.pack();
     let binding = get(plan, "omp_binding").clone();
     if !truthy(&binding) {
         return Ok(Value::Array(vec![]));
@@ -1581,7 +1635,7 @@ pub fn native_activation(plan: &mut Value, check: bool, runtime_root: &Path) -> 
                 runtime_root,
             )?)
         };
-        let context = scope::private_enrollment_context(repo, runtime_root)?;
+        let context = scope::private_enrollment_context_with_authority(repo, authority)?;
         if context.held() {
             let repo_text = path_text(repo)?;
             let matching: Vec<&Value> = values
@@ -1604,7 +1658,7 @@ pub fn native_activation(plan: &mut Value, check: bool, runtime_root: &Path) -> 
                     digest.as_str(),
                     std::slice::from_ref(&route),
                     !check,
-                    runtime_root,
+                    runtime,
                 )?,
             );
             renewals.push((*selected).clone());
@@ -1648,7 +1702,10 @@ fn target_refs<'a>(receipt: &'a Value, path: Option<&str>) -> Vec<&'a Value> {
 /// Baseline `complete_stored_source_activation(state)`: the committed ownership
 /// receipt authorizes an idempotent marker upgrade, under the runtime that
 /// receipt's source staged.
-pub fn complete_stored_source_activation(state: &Path) -> installation::Result<Value> {
+pub fn complete_stored_source_activation(
+    state: &Path,
+    runtime: (&Path, &Path),
+) -> installation::Result<Value> {
     let env = Environment::process();
     let services = Services::registered()?;
     let receipt = installation::read_receipt(&env, state)?;
@@ -1688,7 +1745,7 @@ pub fn complete_stored_source_activation(state: &Path) -> installation::Result<V
                     )
                     .into());
                 }
-                installation::verify_rolled_back_targets(&services, state, journal)?;
+                installation::verify_rolled_back_targets(&services, state, journal, runtime)?;
             }
             _ => {
                 return Err(err(
@@ -1706,11 +1763,11 @@ pub fn complete_stored_source_activation(state: &Path) -> installation::Result<V
         false,
     )?;
     let roots = activation_roots(&receipt)?;
-    let runtime_root = &staged_runtime(get(&receipt, "source"))?;
+    let authority = RuntimeAuthority::from_pair(runtime);
     // The stored-source upgrade never replaces the guarded target.
     let mut upgrade = || -> Result<Option<Value>> {
         for repo in &roots {
-            activate_marker(repo, false, runtime_root)?;
+            activate_marker_with_authority(repo, false, authority)?;
         }
         Ok(None)
     };
@@ -1719,7 +1776,7 @@ pub fn complete_stored_source_activation(state: &Path) -> installation::Result<V
         Some(get(&receipt, "source")),
         "omp-stored-source-activation",
         Path::new("."),
-        runtime_root,
+        runtime,
         Some(&mut upgrade),
         |_| {
             let current = installation::read_receipt(&env, state).map_err(contract)?;
@@ -1727,7 +1784,7 @@ pub fn complete_stored_source_activation(state: &Path) -> installation::Result<V
                 return Err(err("Native source activation receipt changed"));
             }
             for repo in &roots {
-                verify_marker(repo, runtime_root)?;
+                verify_marker_with_authority(repo, authority)?;
             }
             if activation_roots(&receipt)? != roots {
                 return Err(err("Native source activation bank inventory changed"));
@@ -1764,14 +1821,14 @@ fn disabled_name(name: Option<&OsStr>, installation_id: &str) -> bool {
 /// Nested read-only observation barriers over every repository, then `body`.
 fn observed_all<T>(
     repositories: &[PathBuf],
-    runtime_root: &Path,
+    runtime: RuntimeAuthority<'_>,
     body: impl FnOnce() -> Result<T>,
 ) -> Result<T> {
     let Some((first, rest)) = repositories.split_first() else {
         return body();
     };
-    private_state::observation_barrier(first, runtime_root, |_| {
-        observed_all(rest, runtime_root, body)
+    private_state::observation_barrier(first, runtime, |_| {
+        observed_all(rest, runtime, body)
     })
 }
 fn exclusive_all(
@@ -1789,10 +1846,10 @@ fn finish_all(barriers: Vec<turn_sources::SourceBarrier>) -> Result<()> {
     }
     Ok(())
 }
-fn drains(repositories: &[PathBuf], check: bool, runtime_root: &Path) -> Result<Vec<Value>> {
+fn drains(repositories: &[PathBuf], check: bool, runtime: RuntimeAuthority<'_>) -> Result<Vec<Value>> {
     repositories
         .iter()
-        .map(|repo| drain_source_capabilities(repo, true, check, runtime_root))
+        .map(|repo| drain_source_capabilities_with_authority(repo, true, check, runtime))
         .collect()
 }
 fn path_from(value: &Value, key: &str) -> PathBuf {
@@ -1805,8 +1862,10 @@ fn path_from(value: &Value, key: &str) -> PathBuf {
 pub fn native_transition(
     plan: &mut Value,
     check: bool,
-    runtime_root: &Path,
+    runtime: (&Path, &Path),
 ) -> installation::Result<Value> {
+    let authority = RuntimeAuthority::from_pair(runtime);
+    let runtime_root = authority.pack();
     let old = get(plan, "old").clone();
     let selected = get(plan, "omp_transition");
     if !truthy(&old)
@@ -1824,12 +1883,12 @@ pub fn native_transition(
         // A previously removed binding can leave safely retained snapshots and a
         // separately owned capable reader, without any executable path to guess.
         let results = if check {
-            observed_all(&repositories, runtime_root, || {
-                drains(&repositories, true, runtime_root)
+            observed_all(&repositories, authority, || {
+                drains(&repositories, true, authority)
             })?
         } else {
             let barriers = exclusive_all(&repositories, runtime_root)?;
-            let results = drains(&repositories, false, runtime_root)?;
+            let results = drains(&repositories, false, authority)?;
             finish_all(barriers)?;
             results
         };
@@ -1913,8 +1972,8 @@ pub fn native_transition(
         }
     }
     if check {
-        let results = observed_all(&repositories, runtime_root, || {
-            drains(&repositories, true, runtime_root)
+        let results = observed_all(&repositories, authority, || {
+            drains(&repositories, true, authority)
         })?;
         return Ok(object([
             ("binding_disable_planned", Value::Bool(true)),
@@ -1939,7 +1998,7 @@ pub fn native_transition(
     }
     set_field(&mut journal, "status", string("disabled"));
     installation::replace_record(&journal_path, &journal)?;
-    let results = drains(&repositories, false, runtime_root)?;
+    let results = drains(&repositories, false, authority)?;
     if results
         .iter()
         .any(|result| !truthy(get(result, "drainable")))
@@ -2070,9 +2129,26 @@ fn recover_uninstalled(state: &Path, path: &Path, mut journal: Value) -> install
     installation::replace_record(path, &journal)
 }
 
+/// Complete retained uninstall metadata without selecting a removed runtime.
+/// Active ownership is a distinct authority case and must use paired recovery.
+pub fn recover_uninstalled_native(state: &Path) -> installation::Result<()> {
+    if installation::read_receipt(&Environment::process(), state)?.is_some() {
+        return Err(err("Native uninstall recovery requires absent current ownership").into());
+    }
+    let path = state.join(TRANSITION_FILE);
+    if !lexists(&path)? {
+        return Ok(());
+    }
+    let journal = transition_journal(&path)?;
+    if text(&journal, "status") == Some("completed") {
+        return Ok(());
+    }
+    recover_uninstalled(state, &path, journal)
+}
+
 /// Baseline `recover_native_binding(state)`: restore a disabled extension only
 /// with its actual aware runtime (the saved receipt's source) selected.
-pub fn recover_native_binding(state: &Path) -> installation::Result<()> {
+pub fn recover_native_binding(state: &Path, runtime: (&Path, &Path)) -> installation::Result<()> {
     let path = state.join(TRANSITION_FILE);
     if !lexists(&path)? {
         return Ok(());
@@ -2125,13 +2201,12 @@ pub fn recover_native_binding(state: &Path) -> installation::Result<()> {
             return Err(err("Native recovery selected an omp-unaware runtime").into());
         }
         let identity = get(&journal, "identity").clone();
-        let runtime_root = &staged_runtime(get(&old, "source"))?;
         private_state::activation_guard(
             Some(&old),
             Some(get(&old, "source")),
             "recover",
             Path::new("."),
-            runtime_root,
+            runtime,
             None,
             |_| {
                 if installation::fingerprint(&target).map_err(contract)? == Value::Null {
@@ -2213,29 +2288,31 @@ impl installation::OmpBoundary for InstallationBoundary {
     fn capability(&self) -> &str {
         CAPABILITY
     }
-    fn native_transition(&self, plan: &mut Value, check: bool) -> installation::Result<Value> {
-        let runtime_root = staged_runtime(get(plan, "source"))?;
-        native_transition(plan, check, &runtime_root)
+    fn native_transition(&self, plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> installation::Result<Value> {
+        native_transition(plan, check, runtime)
     }
-    fn native_activation(&self, plan: &mut Value, check: bool) -> installation::Result<Value> {
-        let runtime_root = staged_runtime(get(plan, "source"))?;
-        Ok(native_activation(plan, check, &runtime_root)?)
+    fn native_activation(&self, plan: &mut Value, check: bool, runtime: (&Path, &Path)) -> installation::Result<Value> {
+        Ok(native_activation(plan, check, runtime)?)
     }
-    fn finish_native_transition(&self, plan: &Value) -> installation::Result<()> {
+    fn finish_native_transition(&self, plan: &Value, _runtime: (&Path, &Path)) -> installation::Result<()> {
         finish_native_transition(plan)
     }
-    fn recover_native_binding(&self, state: &Path) -> installation::Result<()> {
-        recover_native_binding(state)
+    fn recover_native_binding(&self, state: &Path, runtime: (&Path, &Path)) -> installation::Result<()> {
+        recover_native_binding(state, runtime)
+    }
+    fn recover_uninstalled_native(&self, state: &Path) -> installation::Result<()> {
+        recover_uninstalled_native(state)
     }
     fn native_recovery_expected(
         &self,
         state: &Path,
         path: &str,
+        _runtime: (&Path, &Path),
     ) -> installation::Result<Option<Value>> {
         native_recovery_expected(state, path)
     }
-    fn complete_stored_source_activation(&self, state: &Path) -> installation::Result<Value> {
-        complete_stored_source_activation(state)
+    fn complete_stored_source_activation(&self, state: &Path, runtime: (&Path, &Path)) -> installation::Result<Value> {
+        complete_stored_source_activation(state, runtime)
     }
 }
 
@@ -2256,16 +2333,15 @@ impl crate::omp_stream::StreamStartup for BoundaryStartup {
     }
 }
 
-/// The installed stream authority of the executing runtime: `drain_state(repo,
-/// base=base, read_only=…)`, the finite inventory with `pending` and
-/// `inventory_sha256`.
-fn stream_state(repo: &Path, base: &Path, read_only: bool, runtime_root: &Path) -> Result<Value> {
-    crate::omp_stream::drain_state(
-        &crate::omp_stream::Installed::new(runtime_root),
-        repo,
-        Some(base),
-        read_only,
-    )
+/// Retained stream inventory preserves enrollment mode without granting
+/// lifecycle callers the installed per-frame attestation or execution APIs.
+fn stream_state(
+    repo: &Path,
+    base: &Path,
+    read_only: bool,
+    runtime: RuntimeAuthority<'_>,
+) -> Result<Value> {
+    crate::omp_stream::inventory_with_authority(runtime, repo, Some(base), read_only)
 }
 
 /// One `am omp-boundary` invocation (baseline argparse namespace).

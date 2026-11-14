@@ -1,7 +1,9 @@
 //! Initialization lane: `am init inspect|read|preview|apply` (baseline
 //! `initialization.py`) in isolated Worlds. Commands run through the real
-//! CLI dispatch in a child copy of this test binary whose whole environment
-//! is the World's, so identity locations never reach the user's HOME.
+//! CLI dispatch in a child test binary or the World's installed native command.
+//! The whole environment is owned, so identity locations never reach user HOME.
+#[allow(unused_imports)]
+mod support;
 use agent_memory::codec::json::{self, Value};
 use std::collections::{BTreeMap, BTreeSet};
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
@@ -11,6 +13,7 @@ use std::process::Command;
 struct World {
     root: PathBuf,
     token: String,
+    runtime: Option<support::installed_runtime::NativeRuntime>,
 }
 impl World {
     fn new() -> Self {
@@ -22,7 +25,14 @@ impl World {
         for name in ["home", "config", "data", "state", "tmp"] {
             std::fs::create_dir(root.join(name)).unwrap();
         }
-        Self { root, token }
+        Self { root, token, runtime: None }
+    }
+    fn native() -> Self {
+        let mut world = Self::new();
+        world.runtime = Some(support::installed_runtime::install(&world.root, |argv| {
+            native_process(&world, argv)
+        }));
+        world
     }
     fn path(&self, name: &str) -> PathBuf {
         self.root.join(name)
@@ -107,7 +117,39 @@ fn child_entry() {
     );
 }
 
+fn native_process(world: &World, argv: &[std::ffi::OsString]) -> agent_memory::process::Output {
+    use agent_memory::{clock::Deadline, process};
+    let mut env: Vec<(std::ffi::OsString, std::ffi::OsString)> = world.pairs()
+        .into_iter().map(|(key, value)| (key.into(), value.into())).collect();
+    for (key, relative) in [
+        ("XDG_CACHE_HOME", "cache"), ("GH_CONFIG_DIR", "credentials"),
+        ("AGENT_MEMORY_CONFIG_HOME", "config/agent-memory"),
+        ("AGENT_MEMORY_STATE_HOME", "state/agent-memory"),
+        ("AGENT_MEMORY_BACKUP_HOME", "backups"),
+    ] {
+        env.push((key.into(), world.path(relative).into_os_string()));
+    }
+    process::run(&process::Spec {
+        argv, env: &env, search_path: false, cwd: Some(&world.root),
+        stdin: process::Input::Null,
+        stdout: process::Target::Capture { limit: 4 * 1024 * 1024 },
+        stderr: process::Target::Capture { limit: 4 * 1024 * 1024 },
+        deadline: Deadline::from_seconds(120.0).unwrap(), new_session: false,
+        file_size_limit: None, umask: Some(0o077), pass_fds: &[],
+    }).unwrap()
+}
+
 fn command(world: &World, args: &[&str]) -> (i32, Value) {
+    if let Some(runtime) = &world.runtime {
+        let argv: Vec<_> = [runtime.command.as_os_str().to_owned(), "--json".into()]
+            .into_iter().chain(args.iter().map(|arg| std::ffi::OsString::from(*arg))).collect();
+        let output = native_process(world, &argv);
+        assert!(output.stderr.is_empty(), "{}", String::from_utf8_lossy(&output.stderr));
+        let agent_memory::process::Status::Code(code) = output.status else {
+            panic!("native initialization command: {:?}", output.status);
+        };
+        return (code, json::decode_bytes(&output.stdout, Default::default()).unwrap());
+    }
     let arguments = Value::Array(args.iter().map(|arg| text_value(arg)).collect());
     let output = Command::new(std::env::current_exe().unwrap())
         .args([
@@ -923,9 +965,8 @@ fn source_kinds_follow_the_baseline_classification() {
 // obligation: tests/contracts/test_initialization_routes.py::InitializationRoutes.test_adding_missing_context_preserves_custom_rows_prose_and_existing_files
 // obligation: tests/contracts/test_initialization_routes.py::InitializationRoutes.test_checkpoint_preparation_uses_matching_task_profile_and_ordinary_save_keeps_router
 #[test]
-#[ignore = "needs recovery_frontier registered (bank transaction apply)"]
 fn preview_and_apply_create_a_reviewed_source_linked_bank() {
-    let world = World::new();
+    let world = World::native();
     let (repo, _, _) = setup(&world);
     let observed = inventory(&world, &repo, None);
     let path = world.save(&review(&observed), "review.json");

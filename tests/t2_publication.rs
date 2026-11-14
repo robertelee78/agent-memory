@@ -81,10 +81,14 @@ fn git(w: &World, cwd: &Path, args: &[&str]) -> TestResult<String> {
     Ok(String::from_utf8(output.stdout)?)
 }
 fn call(w: &World, script: &str, args: &[&OsStr]) -> TestResult<(i32, Value)> {
-    let argv: Vec<OsString> = std::iter::once(OsString::from("--json"))
-        .chain(helper_arguments(script, args)?)
-        .collect();
-    let output = w.am_with(
+    let argv: Vec<OsString> = [
+        w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+        OsString::from("--json"),
+    ]
+    .into_iter()
+    .chain(helper_arguments(script, args)?)
+    .collect();
+    let output = w.run_with(
         argv,
         RunOptions {
             check: false,
@@ -109,6 +113,23 @@ fn good(w: &World, script: &str, args: &[&OsStr]) -> TestResult<Value> {
     let (code, value) = call(w, script, args)?;
     assert_eq!(code, 0, "{script}: {}", encode(&value)?);
     Ok(value)
+}
+fn install_runtime(w: &mut World) {
+    let runtime = support::installed_runtime::install(&w.root, |argv| {
+        w.run_with(
+            argv,
+            RunOptions {
+                check: false,
+                timeout: Duration::from_secs(120),
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    });
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.into_os_string(),
+    );
 }
 fn os(value: &str) -> &OsStr {
     OsStr::new(value)
@@ -154,7 +175,7 @@ fn remote_head(w: &World, repo: &Path) -> TestResult<String> {
 
 /// Public identity setup; a refused command reports its JSON, not raw bytes.
 fn bind(w: &World, repo: &Path) -> TestResult {
-    support::identity_fixtures::bind(w, repo).map_err(|error| match error {
+    support::identity_fixtures::bind_with_command(w, repo, Path::new(&w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")])).map_err(|error| match error {
         WorldError::Check(output) => WorldError::invalid(format!(
             "identity setup refused: {} {}",
             String::from_utf8_lossy(&output.stdout),
@@ -190,7 +211,8 @@ fn render_bank(w: &World, bank: &Path) -> TestResult {
 }
 
 /// Baseline `SharingBoundaryContract.fixture`.
-fn boundary_fixture(w: &World, bank_root: &str) -> TestResult<(PathBuf, PathBuf)> {
+fn boundary_fixture(w: &mut World, bank_root: &str) -> TestResult<(PathBuf, PathBuf)> {
+    install_runtime(w);
     let repo = w.repository("repo", false)?;
     let remote = w.repository("remote.git", true)?;
     let remote_text = remote.to_string_lossy().into_owned();
@@ -219,7 +241,7 @@ fn boundary_fixture(w: &World, bank_root: &str) -> TestResult<(PathBuf, PathBuf)
 }
 
 /// Baseline `SharingRecoveryContract.fixture`: `(repo, bank, peer, base)`.
-fn fixture(w: &World) -> TestResult<(PathBuf, PathBuf, PathBuf, String)> {
+fn fixture(w: &mut World) -> TestResult<(PathBuf, PathBuf, PathBuf, String)> {
     let (repo, bank) = boundary_fixture(w, "memory-bank")?;
     git(w, &repo, &["reset", "--", "code.py"])?;
     fs::write(
@@ -248,7 +270,8 @@ fn fixture(w: &World) -> TestResult<(PathBuf, PathBuf, PathBuf, String)> {
 }
 
 /// Baseline `PublicationFixture.bootstrap`: first bank, unfinished feature ancestry.
-fn bootstrap(w: &World) -> TestResult<(PathBuf, PathBuf, String)> {
+fn bootstrap(w: &mut World) -> TestResult<(PathBuf, PathBuf, String)> {
+    install_runtime(w);
     let repo = w.repository("repo", false)?;
     let remote = w.repository("remote.git", true)?;
     git(
@@ -1164,7 +1187,8 @@ fn run_case(w: &World, repo: &Path, inputs: &[(&str, &Value)]) -> TestResult<Val
 
 /// A repository with a rendered bank and pushed authority, not yet bound
 /// (identity binding needs recovery_frontier): `(repo, bank, remote)`.
-fn plain_repository(w: &World) -> TestResult<(PathBuf, PathBuf, PathBuf)> {
+fn plain_repository(w: &mut World) -> TestResult<(PathBuf, PathBuf, PathBuf)> {
+    install_runtime(w);
     let repo = w.repository("repo", false)?;
     let remote = w.repository("remote.git", true)?;
     git(
@@ -1191,7 +1215,7 @@ fn plain_repository(w: &World) -> TestResult<(PathBuf, PathBuf, PathBuf)> {
 /// The GitHub protocol fixture as the repository's observable authority.
 fn policy_world(protected: bool) -> TestResult<(World, PathBuf, PathBuf)> {
     let mut w = World::new()?;
-    let (repo, _, remote) = plain_repository(&w)?;
+    let (repo, _, remote) = plain_repository(&mut w)?;
     let policy = install(&mut w, &repo, &remote, protected)?;
     git(
         &w,
@@ -1226,9 +1250,9 @@ fn only_reads(policy: &Path) -> TestResult<bool> {
 // ---------------------------------------------------------------- active tests
 
 #[test]
-fn publish_refuses_without_semantic_provider_and_keeps_local_state() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, _) = plain_repository(&w)?;
+fn publication_prepare_refuses_incomplete_input_and_keeps_local_state() -> TestResult {
+    let mut w = World::new()?;
+    let (repo, bank, _) = plain_repository(&mut w)?;
     let before = state(&w, &repo, &bank)?;
     let (code, value) = publish(&w, &repo, "prepare", &obj([]))?;
     assert_eq!(code, 1);
@@ -1778,8 +1802,8 @@ fn protected_landing_waits_for_review_then_exact_checks_then_uses_the_generated_
 
 #[test]
 fn publication_request_and_replay_refuse_inexact_inputs() -> TestResult {
-    let w = World::new()?;
-    let (repo, _, _) = plain_repository(&w)?;
+    let mut w = World::new()?;
+    let (repo, _, _) = plain_repository(&mut w)?;
     agent_memory::cli::register_providers()?;
     let error = publication::request_value(&repo, &obj([])).unwrap_err();
     assert_eq!(
@@ -1803,8 +1827,8 @@ fn observe_tree_case(w: &World, repo: &Path) -> TestResult<Value> {
 
 #[test]
 fn raw_tree_inventory_verifies_every_object_and_retains_exact_bytes() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, _) = plain_repository(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, _) = plain_repository(&mut w)?;
     let opaque = "opaque\u{0}unsupported source\n";
     fs::write(bank.join("notes.txt"), opaque)?;
     git(&w, &repo, &["add", "memory-bank/notes.txt"])?;
@@ -1876,8 +1900,8 @@ fn raw_tree_inventory_verifies_every_object_and_retains_exact_bytes() -> TestRes
 
 #[test]
 fn raw_tree_inventory_refuses_nonordinary_objects_and_runtime_markers() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, _) = plain_repository(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, _) = plain_repository(&mut w)?;
     fs::write(bank.join("tool.sh"), "#!/bin/sh\n")?;
     fs::set_permissions(bank.join("tool.sh"), fs::Permissions::from_mode(0o755))?;
     git(&w, &repo, &["add", "memory-bank/tool.sh"])?;
@@ -1914,10 +1938,9 @@ fn rev_parents(w: &World, repo: &Path, commit: &str) -> TestResult<Vec<String>> 
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_first_publication_excludes_feature_ancestry_and_preserves_original_files_index
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn first_publication_excludes_feature_ancestry_and_preserves_original_files_index() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, base) = bootstrap(&w)?;
+    let (repo, bank, base) = bootstrap(&mut w)?;
     github(&mut w, &repo, &bank, None, false)?;
     let before = state(&w, &repo, &bank)?;
     let unrelated = fs::read(repo.join("unrelated.txt"))?;
@@ -1950,10 +1973,9 @@ fn first_publication_excludes_feature_ancestry_and_preserves_original_files_inde
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_required_human_review_and_checks_remain_pending_even_for_an_admin
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn required_human_review_and_checks_remain_pending_even_for_an_admin() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     let policy = github(&mut w, &repo, &bank, Some(&peer), true)?;
     fs::write(
         bank.join("activeContext.md"),
@@ -2009,10 +2031,9 @@ fn required_human_review_and_checks_remain_pending_even_for_an_admin() -> TestRe
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_first_bank_compares_real_absence_without_a_second_starter
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn first_bank_compares_real_absence_without_a_second_starter() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, base) = bootstrap(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, base) = bootstrap(&mut w)?;
     let before = state(&w, &repo, &bank)?;
     let proof = proof(&w, &repo)?;
     let binding = get(get(&proof, "judgment"), "binding");
@@ -2057,10 +2078,9 @@ fn first_bank_compares_real_absence_without_a_second_starter() -> TestResult {
 
 // obligation: tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, _, _) = fixture(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, _, _) = fixture(&mut w)?;
     fs::remove_file(bank.join("activeContext.md"))?;
     let router = bank.join("MEMORY.md");
     let kept: String = fs::read_to_string(&router)?
@@ -2098,10 +2118,9 @@ fn unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit() ->
 
 // obligation: tests/contracts/test_publication_policy.py::PublicationPolicyContract.test_rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     let policy = github(&mut w, &repo, &bank, Some(&peer), false)?;
     fs::write(
         bank.join("activeContext.md"),
@@ -2135,10 +2154,9 @@ fn rule_inventory_reads_the_next_page_before_deciding_automation_is_allowed() ->
 
 // obligation: tests/contracts/test_publication_policy.py::PublicationPolicyContract.test_clean_rollup_cannot_substitute_for_missing_or_wrong_app_required_checks
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn clean_rollup_cannot_substitute_for_missing_or_wrong_app_required_checks() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     let policy = github(&mut w, &repo, &bank, Some(&peer), true)?;
     fs::write(
         bank.join("activeContext.md"),
@@ -2220,7 +2238,6 @@ fn restricted_publication(w: &mut World) -> TestResult<(PathBuf, PathBuf, PathBu
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_allowed_user_still_waits_for_reviews_and_checks_then_lands
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn allowed_user_still_waits_for_reviews_and_checks_then_lands() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2258,7 +2275,6 @@ fn allowed_user_still_waits_for_reviews_and_checks_then_lands() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_all_negative_identity_and_inventory_cases_refuse_prepare
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn all_negative_identity_and_inventory_cases_refuse_prepare() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2341,7 +2357,6 @@ fn all_negative_identity_and_inventory_cases_refuse_prepare() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_complete_later_page_succeeds_but_incomplete_chains_refuse
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn complete_later_page_succeeds_but_incomplete_chains_refuse() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2380,7 +2395,6 @@ fn complete_later_page_succeeds_but_incomplete_chains_refuse() -> TestResult {
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_actor_revoked_after_prepare_and_transport_rejection_stay_unpublished
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn actor_revoked_after_prepare_and_transport_rejection_stay_unpublished() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, policy) = restricted_publication(&mut w)?;
@@ -2413,7 +2427,6 @@ fn actor_revoked_after_prepare_and_transport_rejection_stay_unpublished() -> Tes
 
 // obligation: tests/contracts/test_publication_restricted_actor.py::RestrictedActorContract.test_immediate_final_recheck_refuses_actor_allowlist_or_restriction_change
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn immediate_final_recheck_refuses_actor_allowlist_or_restriction_change() -> TestResult {
     for field in [
         "change_actor_at",
@@ -2450,10 +2463,9 @@ fn immediate_final_recheck_refuses_actor_allowlist_or_restriction_change() -> Te
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_bank
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_bank() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, _) = bootstrap(&w)?;
+    let (repo, bank, _) = bootstrap(&mut w)?;
     let policy = github(&mut w, &repo, &bank, None, false)?;
     let proof = proof(&w, &repo)?;
     let before = state(&w, &repo, &bank)?;
@@ -2522,10 +2534,9 @@ fn peer_bank_at_another_root_and_its_later_removal_do_not_authorize_a_second_ban
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_discarded_side_bank_is_not_invented_as_historical_authority_ownership
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn discarded_side_bank_is_not_invented_as_historical_authority_ownership() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, _) = bootstrap(&w)?;
+    let (repo, bank, _) = bootstrap(&mut w)?;
     let policy = github(&mut w, &repo, &bank, None, false)?;
     let remote = text(get(&read_policy(&policy)?, "remote")).to_owned();
     let peer = w.clone(&remote, "discarded-bank-peer")?;
@@ -2569,11 +2580,10 @@ fn discarded_side_bank_is_not_invented_as_historical_authority_ownership() -> Te
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_offline_permission_source_and_unsupported_policy_failures_keep_local_memory_pending
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn offline_permission_source_and_unsupported_policy_failures_keep_local_memory_pending()
 -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     let policy = github(&mut w, &repo, &bank, Some(&peer), false)?;
     fs::write(
         bank.join("activeContext.md"),
@@ -2631,10 +2641,9 @@ fn offline_permission_source_and_unsupported_policy_failures_keep_local_memory_p
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_removed_authority_bank_is_not_treated_as_first_initialization
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn removed_authority_bank_is_not_treated_as_first_initialization() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     github(&mut w, &repo, &bank, Some(&peer), false)?;
     let before = state(&w, &repo, &bank)?;
     git(&w, &peer, &["rm", "-r", "memory-bank"])?;
@@ -2657,10 +2666,9 @@ fn removed_authority_bank_is_not_treated_as_first_initialization() -> TestResult
 
 // obligation: tests/contracts/test_publication_pending.py::PublicationPendingContract.test_tampered_candidate_with_identical_memory_but_feature_code_is_refused
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn tampered_candidate_with_identical_memory_but_feature_code_is_refused() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     github(&mut w, &repo, &bank, Some(&peer), false)?;
     fs::write(
         bank.join("activeContext.md"),
@@ -2712,10 +2720,9 @@ fn tampered_candidate_with_identical_memory_but_feature_code_is_refused() -> Tes
 
 // obligation: tests/contracts/test_publication_recovery.py::PublicationRecoveryContract.test_lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     github(&mut w, &repo, &bank, Some(&peer), false)?;
     fs::write(
         bank.join("activeContext.md"),
@@ -2724,7 +2731,10 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
     let before = state(&w, &repo, &bank)?;
     let request = get(&prepared(&w, &repo)?, "request").clone();
     let path = save(&w, &request, "lost-response-request.json")?;
-    let argv: Vec<OsString> = std::iter::once(OsString::from("--json"))
+    let argv: Vec<OsString> = [
+        w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+        OsString::from("--json"),
+    ].into_iter()
         .chain(helper_arguments(
             "publish_memory.py",
             [
@@ -2736,7 +2746,7 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
             ],
         )?)
         .collect();
-    let failed = w.am_with(
+    let failed = w.run_with(
         argv,
         RunOptions {
             env: &[
@@ -2763,6 +2773,40 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
             .unwrap_or_default(),
     );
     fs::remove_dir_all(state_home)?;
+    // Whole-state loss also removes installation metadata. Reinstall the real
+    // retained source before ordinary readback; never restore a copied receipt.
+    let source = w.root.join("dev-source");
+    let bin_dir = w.root.join("home/.local/bin");
+    let binary = source.join("target/release/am");
+    for name in agent_memory::console::NAMES {
+        let command = bin_dir.join(name);
+        assert!(fs::symlink_metadata(&command)?.file_type().is_symlink());
+        assert_eq!(fs::canonicalize(&command)?, binary);
+        fs::remove_file(command)?;
+    }
+    let installed = w.run_with(
+        [
+            binary.as_os_str(),
+            os("--json"),
+            os("install"),
+            os("--development-source"),
+            source.as_os_str(),
+            os("--mode"),
+            os("link"),
+            os("--presets"),
+            os("none"),
+            os("--no-guidance"),
+            os("--bin-dir"),
+            bin_dir.as_os_str(),
+        ],
+        RunOptions {
+            check: false,
+            timeout: Duration::from_secs(120),
+            ..RunOptions::default()
+        },
+    )?;
+    assert_eq!(installed.status, agent_memory::process::Status::Code(0));
+    assert_eq!(get(&decode(&installed.stdout)?, "verified"), &Value::Bool(true));
     let first = land(&w, &repo, &request)?;
     assert_eq!(text(get(&first, "sharing_state")), "already-landed");
     assert_eq!(get(&first, "publication_verified"), &Value::Bool(true));
@@ -2786,11 +2830,10 @@ fn lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction() ->
 
 // obligation: tests/contracts/test_publication_recovery.py::PublicationRecoveryContract.test_competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_authority_code
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_authority_code()
 -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     let policy = github(&mut w, &repo, &bank, Some(&peer), false)?;
     fs::write(
         bank.join("activeContext.md"),
@@ -2850,10 +2893,9 @@ fn competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_au
 
 // obligation: tests/contracts/test_publication_worktree.py::PublicationWorktreeContract.test_linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, base) = bootstrap(&w)?;
+    let (repo, bank, base) = bootstrap(&mut w)?;
     github(&mut w, &repo, &bank, None, false)?;
     let sibling = w.root.join("separate worktree");
     git(
@@ -2918,174 +2960,172 @@ fn linked_worktree_uses_a_private_authority_index_and_does_not_push_follow_tags(
 
 // obligation: tests/contracts/test_publication_admission.py::PublicationAdmissionContract.test_admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "requires the admission publication scenario fixture"]
 fn admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history() -> TestResult {
     deferred_body("the AdmissionContract request/prepared/apply fixture (admission lane)")
 }
 
 // obligation: tests/contracts/test_publication_hold_recovery.py::PublicationHoldRecoveryContract.test_missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
+#[ignore = "requires the versioned review hold-recovery scenario fixture"]
 fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work() -> TestResult {
     deferred_body(
         "the QuarantinedSharingVersionTwoContract versioned_review fixture (semantic_sharing lane)",
     )
 }
 
-/// The body of an annotated, ignored obligation whose scenario fixture is
-/// owned by an unported module's contract port; listed in the lane report.
+/// An inherited ignored obligation whose consumer scenario has not been authored;
+/// these gaps remain explicitly unclaimed.
 fn deferred_body(fixture: &str) -> TestResult {
     Err(WorldError::invalid(format!("Scenario body waits for {fixture}")).into())
 }
 
 // ---------------------------------------------------------------- layout publication contracts
 //
-// These journeys drive `am bank recover-layout publish ...` (layout_recovery)
-// over the layout_recovery_fixtures repair; both are unported. Their bodies
-// are ported with layout_recovery_fixtures by the layout_recovery lane.
+// The direct implementation is present. These inherited placeholders still
+// lack their complete public_repair consumer scenarios.
 
 const LAYOUT_FIXTURE: &str = "layout_recovery_fixtures.public_repair (layout_recovery lane)";
 
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_after_push_error
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn layout_publication_after_push_error() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_after_push_exit
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn layout_publication_after_push_exit() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_before_push_error
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn layout_publication_before_push_error() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_before_push_exit
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn layout_publication_before_push_exit() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_identity_closure.py::RecoveryIdentityClosureContract.test_publication_refuses_unicode_and_case_aliased_authority_sources
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn publication_refuses_unicode_and_case_aliased_authority_sources() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_complete_candidate_delta_excludes_original_feature_index
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn complete_candidate_delta_excludes_original_feature_index() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_complete_raw_local_side_includes_opaque_nonmarkdown_occupants
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn complete_raw_local_side_includes_opaque_nonmarkdown_occupants() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_current_committed_admission_addition_and_receipt_source_fence
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn current_committed_admission_addition_and_receipt_source_fence() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_offline_and_changed_sources_preserve_local_result_and_evidence
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn offline_and_changed_sources_preserve_local_result_and_evidence() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_public_raw_authority_publication_and_empty_profile_second_clone
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn public_raw_authority_publication_and_empty_profile_second_clone() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_publication_refuses_pending_frontier_before_network
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn publication_refuses_pending_frontier_before_network() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_publication_review_cannot_admit_fabricated_outputs_or_local_sources
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn publication_review_cannot_admit_fabricated_outputs_or_local_sources() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_raw_source_bound_alias_and_committed_hold_refuse
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn raw_source_bound_alias_and_committed_hold_refuse() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_reported_size_sources_are_raw_not_a_normal_snapshot
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn reported_size_sources_are_raw_not_a_normal_snapshot() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_ordinary_prepared_land_refuses_pending_recovery_frontier
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn ordinary_prepared_land_refuses_pending_recovery_frontier() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_ordinary_publish_refuses_a_previously_reviewed_proof_after_pending_handoff
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn ordinary_publish_refuses_a_previously_reviewed_proof_after_pending_handoff() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_policy_and_required_review_leave_candidate_and_private_evidence_intact
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn policy_and_required_review_leave_candidate_and_private_evidence_intact() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_policy_at_observation_refuses_prepare_or_required_review_land
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn policy_at_observation_refuses_prepare_or_required_review_land() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_recovery_historical_retry_preserves_later_authority_correction
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn recovery_historical_retry_preserves_later_authority_correction() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_recovery_land_refuses_authority_advance_after_prepare
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn recovery_land_refuses_authority_advance_after_prepare() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 // obligation: tests/contracts/test_layout_recovery_resolved_publication.py::ResolvedPublicationJourneyContract.test_eight_resolved_units_land_and_recall_in_an_empty_profile
 #[test]
-#[ignore = "needs layout_recovery, recovery_frontier, sharing_recovery registered"]
+#[ignore = "requires the complete layout public_repair consumer scenario"]
 fn eight_resolved_units_land_and_recall_in_an_empty_profile() -> TestResult {
     deferred_body(LAYOUT_FIXTURE)
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_validation_memo.py::ValidationMemoContract.test_public_land_rechecks_source_authority_index_and_policy_after_first_check
 fn fanout_d_public_land_rechecks_source_authority_index_and_policy() -> TestResult {
     for action in ["source", "authority", "index", "policy"] {
         let mut w = World::new()?;
-        let (repo, bank, peer, _) = fixture(&w)?;
+        let (repo, bank, peer, _) = fixture(&mut w)?;
         let policy = github(&mut w, &repo, &bank, Some(&peer), false)?;
         fs::write(
             bank.join("activeContext.md"),
@@ -3107,7 +3147,7 @@ fn fanout_d_public_land_rechecks_source_authority_index_and_policy() -> TestResu
         ];
         let child = w.spawn_with(
             [
-                OsString::from(env!("CARGO_BIN_EXE_am")),
+                w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
                 "--json".into(),
                 "publish".into(),
                 "land".into(),
@@ -3206,11 +3246,10 @@ fn cutover_dispatch_worker() {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_claude_boundary.py::ClaudeBoundaryContract.test_published_ack_requires_real_authority_readback
 fn fanout_d_claude_published_ack_requires_real_authority_readback() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, _) = bootstrap(&w)?;
+    let (repo, bank, _) = bootstrap(&mut w)?;
     github(&mut w, &repo, &bank, None, false)?;
     let session = agent_memory::host::uuid4()?;
     let prompt = agent_memory::host::uuid4()?;
@@ -3284,11 +3323,10 @@ fn fanout_d_claude_published_ack_requires_real_authority_readback() -> TestResul
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_opencode_boundary_ledger.py::PublishedAcknowledgmentContract.test_requires_real_witnessed_publication
 fn fanout_d_opencode_ack_requires_real_witnessed_publication() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, _) = bootstrap(&w)?;
+    let (repo, bank, _) = bootstrap(&mut w)?;
     github(&mut w, &repo, &bank, None, false)?;
     let request = get(&prepared(&w, &repo)?, "request").clone();
     let invoke = |action: &str, repository: &Path| {
@@ -3339,11 +3377,10 @@ fn fanout_d_opencode_ack_requires_real_witnessed_publication() -> TestResult {
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_concurrent_bank_writers.py::ConcurrentBankWriters.test_publication_refuses_a_live_bank_lock_then_lands_without_runtime_state
 fn fanout_d_publication_refuses_live_bank_lock_then_lands_only_canonical_paths() -> TestResult {
     let mut w = World::new()?;
-    let (repo, bank, _) = bootstrap(&w)?;
+    let (repo, bank, _) = bootstrap(&mut w)?;
     github(&mut w, &repo, &bank, None, false)?;
     let initial = get(&prepared(&w, &repo)?, "request").clone();
     let content = w.inside("defensive-race.md")?;
@@ -3378,7 +3415,7 @@ fn fanout_d_publication_refuses_live_bank_lock_then_lands_only_canonical_paths()
     ];
     let child = w.spawn_with(
         [
-            OsString::from(env!("CARGO_BIN_EXE_am")),
+            w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
             "--json".into(),
             "writes".into(),
             "apply".into(),
@@ -3545,11 +3582,10 @@ fn fanout_d_review_new_index(w: &World, repo: &Path) -> TestResult<(i32, Value)>
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_new_topic_merge.py::NewTopicMergeContract.test_new_index_with_identical_introduction_and_distinct_routes_preserves_both_sources
 fn fanout_d_new_shared_index_preserves_both_independent_source_routes() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     let first = fanout_d_new_index(
         &w,
         &bank,
@@ -3593,11 +3629,10 @@ fn fanout_d_new_shared_index_preserves_both_independent_source_routes() -> TestR
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_new_topic_merge.py::NewTopicMergeContract.test_absent_prose_baseline_does_not_license_different_new_introductions
 fn fanout_d_absent_prose_baseline_does_not_license_conflicting_introductions() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     fanout_d_new_index(
         &w,
         &bank,
@@ -3624,11 +3659,10 @@ fn fanout_d_absent_prose_baseline_does_not_license_conflicting_introductions() -
 }
 
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 // obligation: tests/contracts/test_new_topic_merge.py::NewTopicMergeContract.test_absent_route_baseline_does_not_choose_between_different_captions_for_one_target
 fn fanout_d_absent_route_baseline_never_chooses_conflicting_captions() -> TestResult {
-    let w = World::new()?;
-    let (repo, bank, peer, _) = fixture(&w)?;
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
     let path = fanout_d_new_index(
         &w,
         &bank,

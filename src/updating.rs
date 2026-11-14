@@ -403,6 +403,7 @@ fn inspect_bank(
     root: &Path,
     compatibility: &Value,
     require_readable: bool,
+    held_runtime: Option<(&Path, &Path)>,
 ) -> Result<(Option<Value>, Option<Value>)> {
     let root_text = install::path_text(root)?;
     if !install::is_directory(root)? {
@@ -431,8 +432,11 @@ fn inspect_bank(
             "Compatibility requires an idle bank; preserve its live writer",
         )?;
         if install::lexists(&bank.join(crate::bank_transactions::MARKER))? {
-            let held =
-                crate::bank_writes::recovery_frontier_provider()?.verified_hold(root, None)?;
+            let runtime = held_runtime.ok_or_else(|| {
+                contract("Recovery hold requires an independently verified current installation runtime")
+            })?;
+            let held = crate::bank_writes::recovery_frontier_provider()?
+                .verified_hold_for_runtime(root, None, runtime)?;
             let capable = crate::private_state::compatibility(Some(compatibility))?
                 .contains("layout-frontier-v1");
             require(
@@ -485,11 +489,15 @@ fn inspect_bank(
 /// another bank path. Repositories are inspected sequentially in sorted order.
 pub fn banks(
     env: &Environment,
-    runtime_root: &Path,
+    runtime: (&Path, &Path),
+    held_runtime: Option<(&Path, &Path)>,
     extra: &[String],
     compatibility: &Value,
     require_readable: bool,
 ) -> Result<Value> {
+    // Before publication, observe existing private state under its active
+    // runtime. Fresh/adoption scans have only the actual planned runtime.
+    let observation_runtime = held_runtime.unwrap_or(runtime);
     let mut roots: BTreeSet<PathBuf> = BTreeSet::new();
     let mut gaps = Vec::new();
     let cwd = fs::canonical_path(
@@ -497,7 +505,8 @@ pub fn banks(
         false,
     )?;
     let saved = object([("rollback_repositories", strings(extra.iter().cloned()))]);
-    let inventory = crate::private_state::repository_inventory(Some(&saved), &cwd, runtime_root)?;
+    let inventory =
+        crate::private_state::repository_inventory(Some(&saved), &cwd, observation_runtime.0)?;
     require(
         inventory.unknown.is_empty(),
         "Private-state bank inventory is unknown; preserve the active capable runtime",
@@ -555,7 +564,7 @@ pub fn banks(
     let mut seen: BTreeSet<PathBuf> = BTreeSet::new();
     let mut observed = Vec::new();
     for root in &roots {
-        let (record, missing) = inspect_bank(root, compatibility, require_readable)?;
+        let (record, missing) = inspect_bank(root, compatibility, require_readable, held_runtime)?;
         if let Some(missing) = missing {
             gaps.push(missing);
             continue;
@@ -583,7 +592,7 @@ pub fn banks(
         operation,
         None,
         &cwd,
-        runtime_root,
+        observation_runtime,
     )?;
     Ok(object([
         ("banks", Value::Array(result)),
@@ -854,6 +863,7 @@ fn work(
     plan.layout_quiescence = request.layout_quiescence.clone();
     plan.omp_transition = request.omp_writers_quiesced;
     let omp_transition = plan.omp_transition;
+    let runtime = (plan.pack_source.as_path(), plan.binary_source.as_path());
     let recorded = targets(&old);
     // With no candidate or target changes there are no bank writes to
     // qualify. Still verify ownership and public command dispatch.
@@ -901,13 +911,23 @@ fn work(
                 ),
             ]),
         );
-        return install::finish_stored_source_activation(env, services, state, result);
+        return install::finish_stored_source_activation(env, services, state, result, runtime);
     }
     let candidate_compatibility = get(&candidate.value, "compatibility").clone();
-    let compatibility =
-        services
-            .updating()?
-            .banks(&request.repo, &candidate_compatibility, false)?;
+    // The hold still belongs to the active installation: candidate
+    // quiescence is reviewed separately before it becomes active.
+    let current_runtime = if install::receipt_is_rust_era(&old) {
+        Some(install::verified_receipt_runtime(env, services, &old)?)
+    } else {
+        None
+    };
+    let compatibility = services.updating()?.banks(
+        &request.repo,
+        &candidate_compatibility,
+        false,
+        runtime,
+        current_runtime.as_ref().map(install::LifecycleRuntime::pair),
+    )?;
     set(&mut summary, "compatibility", compatibility.clone());
     plan.rollback_repositories = observed_repositories(&compatibility);
     if request.check {
@@ -915,18 +935,18 @@ fn work(
         if omp_transition {
             let transition = services
                 .omp_boundary()?
-                .native_transition(&mut plan_value, true)?;
+                .native_transition(&mut plan_value, true, runtime)?;
             set(&mut summary, "native_transition", transition);
         }
         if plan.omp_binding.is_some() {
             let activation = services
                 .omp_boundary()?
-                .native_activation(&mut plan_value, true)?;
+                .native_activation(&mut plan_value, true, runtime)?;
             set(&mut summary, "native_activation", activation);
         }
         let private = services.private_state()?;
-        let target = private.prepare_lifecycle(&plan_value, true)?;
-        let compatible = private.require_compatible(&old, &target, "update")?;
+        let target = private.prepare_lifecycle(&plan_value, true, runtime)?;
+        let compatible = private.require_compatible(&old, &target, "update", runtime)?;
         set(
             &mut summary,
             "private_compatibility",
@@ -956,16 +976,27 @@ fn work(
         .iter()
         .map(|action| (action.kind.clone(), action.path.clone()))
         .collect();
+    let runtime_pack = plan.pack_source.clone();
+    let runtime_binary = plan.binary_source.clone();
+    let runtime = (runtime_pack.as_path(), runtime_binary.as_path());
     let mut compatible_now = || -> Result<()> {
-        services
-            .updating()?
-            .banks(&request.repo, &candidate_compatibility, false)?;
+        services.updating()?.banks(
+            &request.repo,
+            &candidate_compatibility,
+            false,
+            runtime,
+            Some(runtime),
+        )?;
         Ok(())
     };
     let mut readback = || -> Result<()> {
-        services
-            .updating()?
-            .banks(&request.repo, &candidate_compatibility, false)?;
+        services.updating()?.banks(
+            &request.repo,
+            &candidate_compatibility,
+            false,
+            runtime,
+            Some(runtime),
+        )?;
         wrapper_readback(&old, Some(&planned))
     };
     let result = install::install(
@@ -1142,11 +1173,13 @@ impl install::Updating for Runtime {
         repositories: &[String],
         compatibility: &Value,
         require_readable: bool,
+        runtime: (&Path, &Path),
+        held_runtime: Option<(&Path, &Path)>,
     ) -> Result<Value> {
-        let runtime_root = install::locations(&self.env)?.runtime_pack();
         banks(
             &self.env,
-            &runtime_root,
+            runtime,
+            held_runtime,
             repositories,
             compatibility,
             require_readable,

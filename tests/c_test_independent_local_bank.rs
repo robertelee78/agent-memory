@@ -87,7 +87,12 @@ fn claim(fact: &str, value: i64, reference: &str, context: &str) -> Value {
     ])
 }
 fn initialized() -> (World, PathBuf, PathBuf, String) {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.as_os_str().to_owned(),
+    );
     let repo = w.repository("repo", false).unwrap();
     fs::create_dir_all(repo.join("docs/adr")).unwrap();
     fs::create_dir(repo.join("src")).unwrap();

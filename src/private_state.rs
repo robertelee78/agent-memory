@@ -1,5 +1,6 @@
 //! Fail-closed union of bank-local private runtime requirements.
 use crate::bank_writes;
+use crate::scope_binding::{OwnedRuntimeAuthority, RuntimeAuthority};
 use crate::codec::json::Value;
 use crate::developer_identity::{digest, encoded};
 use crate::error::{ContractError, Result};
@@ -43,7 +44,7 @@ pub trait RecoveryQuiescence: Send + Sync {
         required_routes: &[String],
         publish: bool,
         owner: Option<&[u8]>,
-        runtime_root: &Path,
+        runtime: (&Path, &Path),
     ) -> Result<Value>;
 }
 static QUIESCENCE: RwLock<Option<Arc<dyn RecoveryQuiescence>>> = RwLock::new(None);
@@ -374,7 +375,7 @@ pub fn repository_inventory(
 }
 
 /// Advisory absence only: never a held-source token or activation authority.
-pub fn native_absence(root: &Path, base: &Path, runtime_root: &Path) -> Result<String> {
+pub fn native_absence(root: &Path, base: &Path, authority: RuntimeAuthority<'_>) -> Result<String> {
     let lock = base.join("source-barrier.lock");
     if named(&lock)?.is_some() {
         return Err(refusal("Native source barrier appeared during observation"));
@@ -389,7 +390,7 @@ pub fn native_absence(root: &Path, base: &Path, runtime_root: &Path) -> Result<S
         || private_bases.iter().any(|(repo, _)| repo == root_text)
         || crate::omp_boundary::has_native_source_state(base)?
         || (named(&base.join("turn-sources-v2"))?.is_some()
-            && crate::omp_boundary::shared_native_source_evidence(root, base, runtime_root)?)
+            && crate::omp_boundary::shared_native_source_evidence_with_authority(root, base, authority)?)
     {
         return Err(refusal(
             "Retained source state lacks its required source barrier",
@@ -407,10 +408,12 @@ enum ObservationBarrier {
         root: PathBuf,
         base: PathBuf,
         pin: String,
+        authority: OwnedRuntimeAuthority,
     },
 }
 impl ObservationBarrier {
-    fn acquire(root: &Path, runtime_root: &Path) -> Result<Self> {
+    fn acquire(root: &Path, authority: RuntimeAuthority<'_>) -> Result<Self> {
+        let runtime_root = authority.pack();
         let location = crate::scope_binding::observe_enrollment_location(root, None, runtime_root)?;
         let (_, _, recovery_base, _) = match location {
             Some(location) => location,
@@ -431,7 +434,8 @@ impl ObservationBarrier {
             Ok(Self::Absent {
                 root: root.to_path_buf(),
                 base: base.to_path_buf(),
-                pin: native_absence(root, base, runtime_root)?,
+                pin: native_absence(root, base, authority)?,
+                authority: authority.to_owned(),
             })
         }
     }
@@ -441,12 +445,12 @@ impl ObservationBarrier {
             Self::Held(_) => None,
         }
     }
-    fn finish(&mut self, success: bool, runtime_root: &Path) -> Result<()> {
+    fn finish(&mut self, success: bool) -> Result<()> {
         match self {
             Self::Held(guard) if success => guard.finish(),
             Self::Held(_) => Ok(()),
-            Self::Absent { root, base, pin } => {
-                if native_absence(root, base, runtime_root)? != *pin {
+            Self::Absent { root, base, pin, authority } => {
+                if native_absence(root, base, authority.authority())? != *pin {
                     return Err(refusal(
                         "Native registry changed during read-only compatibility observation",
                     ));
@@ -478,12 +482,12 @@ fn verify_installed_targets(targets: &Value, source: &Value) -> Result<()> {
 /// recheck absence; Rust unwinding bypasses rechecks and releases owned guards.
 pub fn observation_barrier<T>(
     root: &Path,
-    runtime_root: &Path,
+    authority: RuntimeAuthority<'_>,
     body: impl FnOnce(Option<&str>) -> Result<T>,
 ) -> Result<T> {
-    let mut guard = ObservationBarrier::acquire(root, runtime_root)?;
+    let mut guard = ObservationBarrier::acquire(root, authority)?;
     let result = body(guard.pin());
-    guard.finish(result.is_ok(), runtime_root)?;
+    guard.finish(result.is_ok())?;
     result
 }
 
@@ -516,8 +520,10 @@ fn observe_bank(
     supplied_root: &Path,
     target: Option<&Value>,
     native_pin: Option<&str>,
-    runtime_root: &Path,
+    runtime: (&Path, &Path),
 ) -> Result<BankRequirement> {
+    let runtime_root = runtime.0;
+    let authority = RuntimeAuthority::from_pair(runtime);
     let (root, bank, _, _) = state::paths(supplied_root, None, runtime_root)?;
     let (operations, _) = bank_writes::state_paths(&root, &bank, LOCATOR_OPERATION)?;
     let base = operations
@@ -525,9 +531,9 @@ fn observe_bank(
         .ok_or_else(|| refusal("Private operations have no parent"))?;
     let mut capabilities = BTreeSet::new();
     if native_pin.is_none() {
-        capabilities.extend(crate::omp_boundary::required_source_capabilities(
+        capabilities.extend(crate::omp_boundary::required_source_capabilities_with_authority(
             &root,
-            runtime_root,
+            authority,
         )?);
     }
     let frontier = bank_writes::recovery_frontier_provider()?;
@@ -587,10 +593,10 @@ fn observe_bank(
                     target_digest,
                     &routes,
                     false,
-                    runtime_root,
+                    runtime,
                 )?;
             } else if matches!(get(row, "state").as_str(), Some("active" | "interrupted")) {
-                frontier.verified_hold_for_runtime(&root, None, runtime_root)?;
+                frontier.verified_hold_for_runtime(&root, None, runtime)?;
             }
             if let Some(target_digest) = target_digest {
                 let (directory, _, ledger) =
@@ -643,7 +649,7 @@ fn observe_bank(
         ));
     }
     if let Some(pin) = native_pin {
-        if native_absence(&root, base, runtime_root)? != pin {
+        if native_absence(&root, base, authority)? != pin {
             return Err(refusal(
                 "Native registry changed during compatibility observation",
             ));
@@ -662,8 +668,9 @@ pub fn required_private_state_capabilities(
     target_artifact: Option<&Value>,
     operation: &str,
     current_repo: &Path,
-    runtime_root: &Path,
+    runtime: (&Path, &Path),
 ) -> Result<Value> {
+    let runtime_root = runtime.0;
     let supported = compatibility(target_artifact)?;
     let RepositoryInventory {
         roots,
@@ -730,12 +737,12 @@ pub fn required_private_state_capabilities(
                 ));
             }
             let pin = if held.is_none() {
-                guards.push(ObservationBarrier::acquire(&root, runtime_root)?);
+                guards.push(ObservationBarrier::acquire(&root, RuntimeAuthority::from_pair(runtime))?);
                 guards.last().and_then(ObservationBarrier::pin)
             } else {
                 None
             };
-            observe_bank(&root, target_artifact, pin, runtime_root).map(Some)
+            observe_bank(&root, target_artifact, pin, runtime).map(Some)
         })();
         match observed {
             Ok(Some(observed)) => {
@@ -768,7 +775,7 @@ pub fn required_private_state_capabilities(
     // ExitStack checks every successfully entered barrier in reverse order;
     // any exit refusal is an outer synchronization unknown, not a bank result.
     for guard in guards.iter_mut().rev() {
-        if guard.finish(!barrier_failed, runtime_root).is_err() {
+        if guard.finish(!barrier_failed).is_err() {
             barrier_failed = true;
         }
     }
@@ -842,14 +849,14 @@ pub fn require_compatible(
     operation: &str,
     expected: Option<&Value>,
     current_repo: &Path,
-    runtime_root: &Path,
+    runtime: (&Path, &Path),
 ) -> Result<Value> {
     let current = required_private_state_capabilities(
         installation,
         target_artifact,
         operation,
         current_repo,
-        runtime_root,
+        runtime,
     )?;
     if get(&current, "decision").as_str() != Some("compatible") {
         return Err(refusal(
@@ -876,10 +883,11 @@ pub fn activation_guard<T, E: From<ContractError>>(
     target_artifact: Option<&Value>,
     operation: &str,
     current_repo: &Path,
-    runtime_root: &Path,
+    runtime: (&Path, &Path),
     transition: Option<&mut dyn FnMut() -> std::result::Result<Option<Value>, E>>,
     body: impl FnOnce(&Value) -> std::result::Result<T, E>,
 ) -> std::result::Result<T, E> {
+    let runtime_root = runtime.0;
     let nested = BARRIERS.with(|held| held.borrow().is_some());
     let mut guards = vec![];
     let _restore;
@@ -925,7 +933,7 @@ pub fn activation_guard<T, E: From<ContractError>>(
         operation,
         None,
         current_repo,
-        runtime_root,
+        runtime,
     )?;
     let result = body(&proof)?;
     require_compatible(
@@ -934,7 +942,7 @@ pub fn activation_guard<T, E: From<ContractError>>(
         operation,
         Some(&proof),
         current_repo,
-        runtime_root,
+        runtime,
     )?;
     for guard in guards.iter_mut().rev() {
         guard.finish()?;
@@ -976,7 +984,7 @@ pub fn public_summary(value: &Value) -> Result<Value> {
     Ok(result)
 }
 
-pub fn prepare_lifecycle(plan: &Value, check: bool, runtime_root: &Path) -> Result<Option<Value>> {
+pub fn prepare_lifecycle(plan: &Value, check: bool, runtime: (&Path, &Path)) -> Result<Option<Value>> {
     let selected = if get(plan, "operation").as_str() == Some("uninstall") {
         plan.get("preserved_private_state_reader")
     } else {
@@ -1096,7 +1104,7 @@ pub fn prepare_lifecycle(plan: &Value, check: bool, runtime_root: &Path) -> Resu
             Some(target_digest),
             &routes,
             !check,
-            runtime_root,
+            runtime,
         )?;
         put(&mut overrides, operation, value.clone())?;
     }
@@ -1169,7 +1177,7 @@ mod activation_rebinding_tests {
             Some(target),
             "install",
             repo,
-            repo,
+            (repo, &std::env::current_exe().unwrap()),
             transition,
             |_| {
                 entered = true;

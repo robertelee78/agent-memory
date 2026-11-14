@@ -8,7 +8,22 @@ use support::cutover::*;
 use support::{RunOptions, World};
 
 fn fixture() -> (World, PathBuf, PathBuf) {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| {
+        w.run_with(
+            argv,
+            RunOptions {
+                check: false,
+                timeout: std::time::Duration::from_secs(120),
+                ..RunOptions::default()
+            },
+        )
+        .unwrap()
+    });
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.clone().into_os_string(),
+    );
     let repo = w.repository("repo", false).unwrap();
     let bank = repo.join("memory-bank");
     fs::create_dir(&bank).unwrap();
@@ -28,7 +43,7 @@ fn fixture() -> (World, PathBuf, PathBuf) {
             "2026-10-22T18:00:00Z",
         ),
     );
-    support::identity_fixtures::bind(&w, &repo).unwrap();
+    support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
     (w, repo, bank)
 }
 fn preview(w: &World, repo: &Path, body: &str) -> Value {
@@ -72,7 +87,7 @@ fn pause(w: &World, p: &Value, stage: &str) -> (support::Child, PathBuf) {
     let child = w
         .spawn_with(
             [
-                OsString::from(env!("CARGO_BIN_EXE_am")),
+                w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
                 "--json".into(),
                 "writes".into(),
                 "apply".into(),
@@ -389,7 +404,7 @@ fn worktrees_have_separate_locks_and_receipts() {
         .enumerate()
         .map(|(n, p)| {
             w.spawn([
-                OsString::from(env!("CARGO_BIN_EXE_am")),
+                w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
                 "--json".into(),
                 "writes".into(),
                 "apply".into(),

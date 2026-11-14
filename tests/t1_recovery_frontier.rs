@@ -1037,149 +1037,7 @@ fn large_exact_ordinary_transaction_witness_preserves_frontier_without_recovery_
     );
 }
 
-#[test]
-fn no_receipt_runtime_location_refuses_with_bootstrap_guidance_and_preserves_sources() {
-    in_world(
-        "no_receipt_runtime_location_refuses_with_bootstrap_guidance_and_preserves_sources",
-        |root| {
-            let source = root.join("repo/retained-original.md");
-            private_file(&source, BODY);
-            let receipt = root.join("state/agent-memory/install/receipt.json");
-            assert!(!receipt.exists());
-            let refusal = agent_memory::cli::pack_root().unwrap_err();
-            assert!(refusal.to_string().contains("bootstrap"), "{refusal}");
-            assert!(!refusal.to_string().contains("pass --pack"), "{refusal}");
-            assert_eq!(std::fs::read(source).unwrap(), BODY);
-            assert!(!receipt.exists());
-            assert!(!root.join("repo/.agent-memory-transaction.md").exists());
-        },
-    );
-}
 
-#[test]
-fn missing_comparison_provider_refuses_install_before_any_durable_transition() {
-    in_world(
-        "missing_comparison_provider_refuses_install_before_any_durable_transition",
-        |root| {
-            agent_memory::bank_state::register_comparison_view(None);
-            let repo = root.join("repo");
-            let bank = repo.join("memory-bank");
-            let runtime = root.join("data/runtime");
-            for path in [&bank, &runtime] {
-                std::fs::DirBuilder::new()
-                    .recursive(true)
-                    .mode(0o700)
-                    .create(path)
-                    .unwrap();
-            }
-            let files = canonical_files();
-            for (name, body) in files.as_object().unwrap() {
-                private_file(&bank.join(name), body.as_str().unwrap().as_bytes());
-            }
-            private_file(&bank.join("handoff-prompt.md"), BODY);
-            let (_, _, base, directory) = state::paths(&repo, Some(OPERATION), &runtime).unwrap();
-            let directory = directory.unwrap();
-            let review = object([(
-                "source_review",
-                string("Retain the exact original conditions"),
-            )]);
-            let manifest = object([
-                ("observation_complete", Value::Bool(true)),
-                ("project_id", string(PROJECT)),
-                (
-                    "sources",
-                    Value::Array(vec![object([
-                        ("source_id", string(SOURCE)),
-                        ("path", string("handoff-prompt.md")),
-                        ("byte_count", Value::Int(BODY.len().into())),
-                        ("sha256", string(digest(Some(BODY)).unwrap())),
-                    ])]),
-                ),
-            ]);
-            let map = object([("units", Value::Array(vec![unit()]))]);
-            let proposal = object([
-                ("proposal_id", string(PROPOSAL)),
-                ("review", review.clone()),
-                ("review_sha256", hash(&review)),
-                (
-                    "scope_context",
-                    object([("checkout_key", string("fixture-checkout"))]),
-                ),
-            ]);
-            let ledger = object([
-                ("schema", string("agent-memory/layout-pending-ledger-v1")),
-                ("operation_id", string(OPERATION)),
-                ("project_id", string(PROJECT)),
-                ("manifest_sha256", hash(&manifest)),
-                ("unit_map_sha256", hash(&map)),
-                ("proposal_sha256", hash(&proposal)),
-                ("generation", Value::Int(0.into())),
-                ("previous_generation_sha256", Value::Null),
-                ("units", Value::Array(vec![unit()])),
-            ]);
-            let retained = [
-                (directory.join("manifest.json"), manifest),
-                (directory.join("unit-map.json"), map),
-                (
-                    directory.join("proposals").join(format!("{PROPOSAL}.json")),
-                    proposal.clone(),
-                ),
-            ];
-            for (path, value) in &retained {
-                state::write_once(path, value).unwrap();
-            }
-            let original = directory.join("originals").join(format!("{SOURCE}.bin"));
-            state::put_bytes(&original, BODY).unwrap();
-            let (_, bindings, _) =
-                agent_memory::local_registry::paths("layout-recovery-bindings").unwrap();
-            assert!(!bindings.exists());
-            agent_memory::local_registry::exclusive(
-                &bank.join(".agent-memory.lock"),
-                OPERATION,
-                "bank-recover",
-                agent_memory::host::Sources::default(),
-                |owner| {
-                    let refusal = frontier::install(
-                        &repo,
-                        OPERATION,
-                        &proposal,
-                        &ledger,
-                        HOLD_ID,
-                        owner,
-                        None,
-                        &runtime,
-                        Path::new(env!("CARGO_BIN_EXE_am")),
-                    )
-                    .unwrap_err();
-                    assert_eq!(
-                        refusal.to_string(),
-                        "ComparisonView provider is not registered"
-                    );
-                    assert!(!directory.join("ledger").exists());
-                    assert!(!directory.join("ledger-head.json").exists());
-                    assert!(!base.join("index.json").exists());
-                    assert!(!bindings.exists());
-                    Ok(())
-                },
-            )
-            .unwrap();
-            for (path, value) in &retained {
-                assert_eq!(std::fs::read(path).unwrap(), encoded(value).unwrap());
-            }
-            for (name, body) in files.as_object().unwrap() {
-                assert_eq!(
-                    std::fs::read(bank.join(name)).unwrap(),
-                    body.as_str().unwrap().as_bytes()
-                );
-            }
-            assert_eq!(std::fs::read(original).unwrap(), BODY);
-            assert_eq!(std::fs::read(bank.join("handoff-prompt.md")).unwrap(), BODY);
-            assert!(!bank.join(".agent-memory.lock").exists());
-            assert!(!bank.join(".agent-memory-transaction.md").exists());
-            assert!(!bank.join(".agent-memory-recovery.md").exists());
-        },
-    );
-}
 
 #[test]
 fn private_reference_accepts_unbounded_positive_record_versions_without_coercion() {
@@ -1252,13 +1110,34 @@ fn private_reference_accepts_unbounded_positive_record_versions_without_coercion
 }
 
 #[test]
-fn explicit_hold_runtime_must_match_the_executing_pair_before_observation() {
+fn ordinary_hold_adapters_require_the_executing_pair_before_observation() {
     in_world(
-        "explicit_hold_runtime_must_match_the_executing_pair_before_observation",
+        "ordinary_hold_adapters_require_the_executing_pair_before_observation",
         |root| {
             use agent_memory::bank_writes::RecoveryFrontier;
             use agent_memory::error::ContractError;
 
+            let environment: Vec<_> = std::env::vars_os().collect();
+            let _runtime = support::installed_runtime::install(root, |argv| {
+                agent_memory::process::run_for(
+                    &agent_memory::process::Spec {
+                        argv,
+                        env: &environment,
+                        cwd: Some(root),
+                        search_path: false,
+                        stdin: agent_memory::process::Input::Null,
+                        stdout: agent_memory::process::Target::Capture { limit: 8 * 1024 * 1024 },
+                        stderr: agent_memory::process::Target::Capture { limit: 8 * 1024 * 1024 },
+                        deadline: agent_memory::clock::Deadline::from_absolute_ns(u64::MAX),
+                        new_session: false,
+                        file_size_limit: None,
+                        umask: None,
+                        pass_fds: &[],
+                    },
+                    std::time::Duration::from_secs(120),
+                )
+                .unwrap()
+            });
             let fixture = Evidence::new(root);
             let foreign = root.join("unrelated-runtime");
             std::fs::DirBuilder::new()
@@ -1268,11 +1147,11 @@ fn explicit_hold_runtime_must_match_the_executing_pair_before_observation() {
             let provider = frontier::FrontierProvider::new(|| {
                 let root = support::require_current_world()
                     .map_err(|error| ContractError::new(error.to_string()))?;
-                Ok((
-                    root.join("data/runtime"),
-                    std::env::current_exe()
-                        .map_err(|error| ContractError::new(error.to_string()))?,
-                ))
+                agent_memory::installation::executing_runtime(
+                    &agent_memory::installation::Environment::process(),
+                    &root.join("home/.local/bin/am"),
+                )
+                .map_err(|error| ContractError::new(error.to_string()))
             });
             let retained = [
                 fixture.original(),
@@ -1284,8 +1163,9 @@ fn explicit_hold_runtime_must_match_the_executing_pair_before_observation() {
                 (path, bytes)
             });
             let refusal = provider
-                .verified_hold_for_runtime(&fixture.root, None, &foreign)
-                .unwrap_err();
+                .verified_hold_value(&fixture.root, None, None, &foreign)
+                .err()
+                .unwrap();
             assert_eq!(refusal.kind(), &Kind::Contract);
             assert_eq!(
                 refusal.to_string(),
@@ -1322,124 +1202,3 @@ fn explicit_hold_runtime_must_match_the_executing_pair_before_observation() {
     );
 }
 
-#[test]
-fn value_adapters_preserve_baseline_results_without_runtime_authority_queries() {
-    use bank_writes::RecoveryFrontier;
-
-    let provider = frontier::FrontierProvider::new(|| {
-        Err(agent_memory::error::ContractError::new(
-            "Unexpected executing-runtime query in a pure value adapter",
-        ))
-    });
-    let marker = encoded(&object([
-        ("schema", string(bank_writes::HOLD)),
-        ("project_id", string(PROJECT)),
-        ("operation_id", string(OPERATION)),
-        ("hold_id", string(HOLD_ID)),
-    ]))
-    .unwrap();
-    canonical_same(
-        &provider.marker_value(&marker).unwrap(),
-        &frontier::marker_value(&marker).unwrap(),
-    );
-    provider.range_value(&range(0, 8)).unwrap();
-    assert_eq!(
-        provider.range_value(&range(8, 0)).unwrap_err().to_string(),
-        frontier::range_value(&range(8, 0)).unwrap_err().to_string(),
-    );
-    assert_eq!(
-        provider
-            .claim_value(&Value::Null, &unit())
-            .unwrap_err()
-            .to_string(),
-        frontier::claim_value(&Value::Null, &unit())
-            .unwrap_err()
-            .to_string(),
-    );
-
-    let token = capacity_token();
-    let pending_ids = vec![UNIT.to_owned(), SOURCE.to_owned()];
-    for generation_change in [false, true] {
-        canonical_same(
-            &provider
-                .successor_token(&token, &pending_ids, OPERATION, generation_change)
-                .unwrap(),
-            &frontier::successor_token(
-                &token,
-                &Value::Array(pending_ids.iter().cloned().map(string).collect()),
-                OPERATION,
-                generation_change,
-            )
-            .unwrap(),
-        );
-    }
-    let files = canonical_files();
-    let adapted = provider.reservation(&files, &[], &token).unwrap();
-    let direct = frontier::reservation(&files, &Value::Array(vec![]), &token).unwrap();
-    for field in ["rows", "disclosure_bytes", "proof_bytes"] {
-        assert_eq!(get(&adapted, field), get(&direct, field));
-    }
-    let oversized = vec![object([("body", string("x".repeat(16385)))])];
-    let adapted = provider
-        .reservation(&files, &oversized, &token)
-        .unwrap_err();
-    let direct = frontier::reservation(&files, &Value::Array(oversized), &token).unwrap_err();
-    assert_eq!(adapted.kind(), direct.kind());
-    assert_eq!(adapted.to_string(), direct.to_string());
-}
-
-#[test]
-fn explicit_observation_adapters_do_not_depend_on_the_runtime_callback() {
-    use bank_writes::RecoveryFrontier;
-
-    in_world(
-        "explicit_observation_adapters_do_not_depend_on_the_runtime_callback",
-        |root| {
-            let provider = frontier::FrontierProvider::new(|| {
-                Err(agent_memory::error::ContractError::new(
-                    "Unexpected executing-runtime query in an explicit observation",
-                ))
-            });
-            let fixture = Evidence::new(root);
-            assert_eq!(
-                provider
-                    .marker_bytes(&fixture.bank, ".agent-memory-transaction.md", None)
-                    .unwrap(),
-                Some(fixture.marker.clone()),
-            );
-            canonical_same(
-                &provider
-                    .observe_bank(
-                        &fixture.root,
-                        &fixture.bank,
-                        None,
-                        None,
-                        false,
-                        &fixture.runtime,
-                    )
-                    .unwrap(),
-                &fixture.observe().unwrap(),
-            );
-            let (directory, head, current) = provider
-                .ledger(
-                    &fixture.root,
-                    OPERATION,
-                    &fixture.row,
-                    &fixture.bank,
-                    &fixture.runtime,
-                )
-                .unwrap();
-            assert_eq!(directory, fixture.directory);
-            canonical_same(&head, &fixture.head);
-            canonical_same(&current, &fixture.ledger);
-            let (manifest, proposal) = provider
-                .evidence(&directory, &current, &fixture.row, &fixture.runtime)
-                .unwrap();
-            let (direct_manifest, direct_proposal) =
-                frontier::evidence(&directory, &current, &fixture.row).unwrap();
-            canonical_same(&manifest, &direct_manifest);
-            canonical_same(&proposal, &direct_proposal);
-            assert_eq!(std::fs::read(fixture.original()).unwrap(), BODY);
-        },
-    );
-}

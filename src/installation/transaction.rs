@@ -243,6 +243,7 @@ fn rollback_compatibility(
     services: &Services,
     state: &Path,
     journal: &Value,
+    runtime: (&Path, &Path),
 ) -> Result<()> {
     let mut restoring = Vec::new();
     for action in get(journal, "actions").as_array().unwrap_or(&[]) {
@@ -315,8 +316,9 @@ fn rollback_compatibility(
         &object([("rollback_repositories", repositories.clone())]),
         &compatibility,
         "rollback",
+        runtime,
     )?;
-    services.updating()?.banks(&listed, &compatibility, true)?;
+    services.updating()?.banks(&listed, &compatibility, true, runtime, Some(runtime))?;
     Ok(())
 }
 
@@ -433,6 +435,17 @@ pub fn rollback(
     state: &Path,
     journal: &mut Value,
 ) -> Result<Value> {
+    let runtime = super::recovery_runtime(env, services, &locations(env)?, journal)?;
+    rollback_with_runtime(env, services, state, journal, runtime.pair())
+}
+
+fn rollback_with_runtime(
+    env: &Environment,
+    services: &Services,
+    state: &Path,
+    journal: &mut Value,
+    runtime: (&Path, &Path),
+) -> Result<Value> {
     let mut installation = read_receipt(env, state)?.unwrap_or(Value::Object(Vec::new()));
     set(
         &mut installation,
@@ -454,11 +467,12 @@ pub fn rollback(
         ),
     ]);
     let guard = services.private_state()?;
-    let mut body = |_: &Value| rollback_now(env, services, state, journal);
+    let mut body = |_: &Value| rollback_now(env, services, state, journal, runtime);
     guard.activation_guard(
         &installation,
         Some(&target),
         "rollback",
+        runtime,
         &mut || Ok(None),
         &mut body,
     )
@@ -469,9 +483,10 @@ fn rollback_now(
     services: &Services,
     state: &Path,
     journal: &mut Value,
+    runtime: (&Path, &Path),
 ) -> Result<Value> {
     fs::trust::state(state)?;
-    rollback_compatibility(env, services, state, journal)?;
+    rollback_compatibility(env, services, state, journal, runtime)?;
     preserve_preexchange_cache_writer(env, state, journal)?;
     let mut conflicts = Vec::new();
     let actions = get(journal, "actions").as_array().unwrap_or(&[]).to_vec();
@@ -503,7 +518,7 @@ fn rollback_now(
             Some("source" | "copy" | "link" | "wrapper" | "command-link")
         ) && *before != Value::Null
         {
-            rollback_compatibility(env, services, state, journal)?;
+            rollback_compatibility(env, services, state, journal, runtime)?;
         }
         if *get(action, "after") == Value::Null {
             native_rename(&stage, &path, false)?;
@@ -581,6 +596,7 @@ pub(crate) fn verify_rolled_back_targets(
     services: &Services,
     state: &Path,
     journal: &Value,
+    runtime: (&Path, &Path),
 ) -> Result<()> {
     require(
         text(journal, "status") == Some("rolled-back"),
@@ -601,7 +617,7 @@ pub(crate) fn verify_rolled_back_targets(
         {
             if let Some(restored) = services
                 .omp_boundary()?
-                .native_recovery_expected(state, text(action, "path").unwrap_or_default())?
+                .native_recovery_expected(state, text(action, "path").unwrap_or_default(), runtime)?
             {
                 expected = restored;
             }
@@ -657,6 +673,27 @@ fn recover_result(status: &str, verified: bool) -> Value {
     ])
 }
 
+fn completed_uninstall(state: &Path, journal: &Value) -> Result<Option<Value>> {
+    if text(journal, "status") != Some("complete")
+        || get(get(journal, "receipt"), "uninstalled") != &Value::Bool(true)
+    {
+        return Ok(None);
+    }
+    require(receipt_committed(state, journal)?,
+        "Completed installation receipt is missing or changed; preserve the journal and reconcile ownership")?;
+    Ok(Some(recover_result("complete", true)))
+}
+
+fn require_selected_journal(
+    env: &Environment,
+    state: &Path,
+    selected: Option<&[u8]>,
+) -> Result<()> {
+    let current = read_journal(env, state)?.as_ref().map(encoded).transpose()?;
+    require(current.as_deref() == selected,
+        "Lifecycle journal changed during runtime selection; retry")
+}
+
 /// Baseline `recover`: finish a committed transaction or roll back an
 /// uncommitted one using its recorded steps.
 pub fn recover(
@@ -666,11 +703,57 @@ pub fn recover(
     for_install: bool,
     complete_native: bool,
 ) -> Result<Value> {
+    let journal = read_journal(env, state)?;
+    if let Some(journal) = &journal {
+        if let Some(result) = completed_uninstall(state, journal)? {
+            if !for_install && lexists(&state.join("omp-transition.json"))? {
+                services.omp_boundary()?.recover_uninstalled_native(state)?;
+            }
+            return Ok(result);
+        }
+    }
+    if for_install {
+        if let Some(journal) = &journal {
+            if matches!(text(journal, "status"), Some("complete" | "rolled-back")) {
+                if text(journal, "status") == Some("complete") {
+                    require(receipt_committed(state, journal)?,
+                        "Completed installation receipt differs; preserve the journal")?;
+                }
+                return Ok(recover_result("install-validation-pending", false));
+            }
+        } else {
+            return Ok(recover_result("no-pending-transaction", true));
+        }
+    }
+    let runtime = match &journal {
+        Some(journal) => Some(super::recovery_runtime(env, services, &locations(env)?, journal)?),
+        None => read_receipt(env, state)?.as_ref()
+            .map(|receipt| super::verified_receipt_runtime(env, services, receipt))
+            .transpose()?,
+    };
+    match runtime {
+        Some(runtime) => recover_with_runtime(env, services, state, for_install, complete_native, runtime.pair()),
+        None => {
+            require(!lexists(&state.join("omp-transition.json"))?,
+                "Native recovery has no verified runtime; preserve transition evidence")?;
+            Ok(recover_result("no-pending-transaction", true))
+        }
+    }
+}
+
+fn recover_with_runtime(
+    env: &Environment,
+    services: &Services,
+    state: &Path,
+    for_install: bool,
+    complete_native: bool,
+    runtime: (&Path, &Path),
+) -> Result<Value> {
     let path = state.join("journal.json");
     let journal = read_journal(env, state)?;
     let restore_native = || -> Result<()> {
         if !for_install && lexists(&state.join("omp-transition.json"))? {
-            services.omp_boundary()?.recover_native_binding(state)?;
+            services.omp_boundary()?.recover_native_binding(state, runtime)?;
         }
         Ok(())
     };
@@ -684,7 +767,7 @@ pub fn recover(
     let Some(mut journal) = journal else {
         let result = recover_result("no-pending-transaction", true);
         return if complete_native && !for_install {
-            finish_stored_source_activation(env, services, state, result)
+            finish_stored_source_activation(env, services, state, result, runtime)
         } else {
             Ok(result)
         };
@@ -709,7 +792,7 @@ pub fn recover(
             }
             let result = recover_result("complete", true);
             return if complete_native {
-                finish_stored_source_activation(env, services, state, result)
+                finish_stored_source_activation(env, services, state, result, runtime)
             } else {
                 Ok(result)
             };
@@ -718,7 +801,7 @@ pub fn recover(
             if for_install {
                 return Ok(recover_result("install-validation-pending", false));
             }
-            verify_rolled_back_targets(services, state, &journal)?;
+            verify_rolled_back_targets(services, state, &journal, runtime)?;
             let opaque = truthy(get(&journal, "opaque_cache_recovery"));
             let mut result = recover_result(
                 if opaque {
@@ -738,7 +821,7 @@ pub fn recover(
                 );
             }
             return if complete_native && !opaque {
-                finish_stored_source_activation(env, services, state, result)
+                finish_stored_source_activation(env, services, state, result, runtime)
             } else {
                 Ok(result)
             };
@@ -781,12 +864,12 @@ pub fn recover(
         replace_record(&path, &journal)?;
         let result = recover_result("complete", true);
         return if complete_native {
-            finish_stored_source_activation(env, services, state, result)
+            finish_stored_source_activation(env, services, state, result, runtime)
         } else {
             Ok(result)
         };
     }
-    let result = rollback(env, services, state, &mut journal)?;
+    let result = rollback_with_runtime(env, services, state, &mut journal, runtime)?;
     restore_native()?;
     Ok(result)
 }
@@ -798,6 +881,7 @@ pub fn finish_stored_source_activation(
     services: &Services,
     state: &Path,
     result: Value,
+    runtime: (&Path, &Path),
 ) -> Result<Value> {
     let attempt = || -> Result<Option<Value>> {
         let receipt = read_receipt(env, state)?;
@@ -814,7 +898,7 @@ pub fn finish_stored_source_activation(
         }
         let operation = text(&result, "operation").unwrap_or_default();
         fault(&format!("{operation}-before-stored-source-activation"))?;
-        Ok(Some(boundary.complete_stored_source_activation(state)?))
+        Ok(Some(boundary.complete_stored_source_activation(state, runtime)?))
     };
     match attempt() {
         Ok(None) => Ok(result),
@@ -865,6 +949,17 @@ pub fn install(
     plan: &mut Plan,
     hooks: ActivationHooks<'_>,
 ) -> Result<Value> {
+    // Verify before transitions can write. Uninstall's source is then retained
+    // independently of the paths its removal actions exchange away.
+    let verified = super::runtime::verified_plan_runtime(env, services, plan)?;
+    let runtime_owner = if plan.actions.iter().any(|action| action.changed
+        && (plan.pack_source.starts_with(&action.path)
+            || plan.binary_source.starts_with(&action.path))) {
+        verified.retain(services)?
+    } else {
+        verified
+    };
+    let runtime = runtime_owner.pair();
     let mut installation = plan.old.clone().unwrap_or(Value::Object(Vec::new()));
     set(
         &mut installation,
@@ -887,16 +982,16 @@ pub fn install(
         if omp_transition {
             services
                 .omp_boundary()?
-                .native_transition(&mut plan_value, false)?;
+                .native_transition(&mut plan_value, false, runtime)?;
             *transitioned.borrow_mut() = Some(plan_value.clone());
         }
         let prepared = services
             .private_state()?
-            .prepare_lifecycle(&plan_value, false)?;
+            .prepare_lifecycle(&plan_value, false, runtime)?;
         if binding {
             services
                 .omp_boundary()?
-                .native_activation(&mut plan_value, false)?;
+                .native_activation(&mut plan_value, false, runtime)?;
         }
         Ok(selected.is_some().then_some(prepared))
     };
@@ -907,16 +1002,17 @@ pub fn install(
             apply_native_transition(plan, &mutated)?;
         }
         plan.private_state_evidence = Some(proof.clone());
-        install_now(env, services, plan, &mut hooks)
+        install_now(env, services, plan, &mut hooks, runtime)
     };
     let result = services.private_state()?.activation_guard(
         &installation,
         selected.as_ref(),
         &operation,
+        runtime,
         &mut transition,
         &mut body,
     )?;
-    finish_stored_source_activation(env, services, &state, result)
+    finish_stored_source_activation(env, services, &state, result, runtime)
 }
 
 /// Baseline `omp_boundary.native_transition` plan mutation, applied to the typed
@@ -1024,6 +1120,7 @@ fn install_now(
     services: &Services,
     plan: &mut Plan,
     hooks: &mut ActivationHooks<'_>,
+    runtime: (&Path, &Path),
 ) -> Result<Value> {
     let operation = plan.operation.clone();
     let state = plan.state.clone();
@@ -1044,6 +1141,8 @@ fn install_now(
             &plan.rollback_repositories,
             get(&plan.source, "compatibility"),
             false,
+            runtime,
+            Some(runtime),
         )?;
         plan.rollback_repositories = observed_repositories(&checked);
     }
@@ -1178,6 +1277,8 @@ fn install_now(
         ("receipt", receipt.clone()),
         ("receipt_identity", Value::Null),
         ("created_directories", Value::Array(Vec::new())),
+        ("previous_source", old_source.clone().unwrap_or(Value::Null)),
+        ("runtime_source", super::runtime::plan_source(plan)?),
         (
             "previous_compatibility",
             old_source
@@ -1225,12 +1326,13 @@ fn install_now(
         &mut journal,
         &mut receipt,
         &targets,
+        runtime,
     );
     match activated {
         Ok(result) => Ok(result),
         Err(error) => {
             // If the commit point landed, recovery verifies it; otherwise it restores old targets.
-            recover(env, services, &state, false, false)?;
+            recover_with_runtime(env, services, &state, false, false, runtime)?;
             Err(error)
         }
     }
@@ -1247,6 +1349,7 @@ fn activate(
     journal: &mut Value,
     receipt: &mut Value,
     targets: &[Value],
+    runtime: (&Path, &Path),
 ) -> Result<Value> {
     let operation = plan.operation.clone();
     let state = plan.state.clone();
@@ -1385,6 +1488,8 @@ fn activate(
             &plan.rollback_repositories,
             get(&plan.source, "compatibility"),
             false,
+            runtime,
+            Some(runtime),
         )?;
     }
     set(journal, "status", string("activating"));
@@ -1438,6 +1543,8 @@ fn activate(
             &plan.rollback_repositories,
             get(&plan.source, "compatibility"),
             false,
+            runtime,
+            Some(runtime),
         )?;
     }
     let mut created = plan
@@ -1500,7 +1607,7 @@ fn activate(
     if plan.omp_transition || plan.omp_binding.is_some() {
         services
             .omp_boundary()?
-            .finish_native_transition(&plan_value)?;
+            .finish_native_transition(&plan_value, runtime)?;
     }
     let mut result = vec![
         ("operation".to_owned(), string(&operation)),
@@ -1668,6 +1775,28 @@ fn install_value(
         _ => None,
     };
     let bootstrap_root = staged.as_ref().map(|(_, root)| root.clone());
+    // Prove source authority before any durable lock/owner or fault records.
+    // Recovery can change targets, so final planning remains inside the lock.
+    let recovery_journal = if !request.check { read_journal(env, &state)? } else { None };
+    let selected_journal = recovery_journal.as_ref().map(encoded).transpose()?;
+    let recovery_owner = if !request.check {
+        recovery_journal.as_ref()
+            .filter(|journal| !matches!(text(journal, "status"), Some("complete" | "rolled-back")))
+            .map(|journal| super::recovery_runtime(env, services, &locations, journal))
+            .transpose()?
+    } else {
+        None
+    };
+    if !request.check {
+        if let Some(root) = bootstrap_root.as_deref() {
+            super::source_info(services, root, "release")?;
+        } else if let Some(root) = request.development_source.as_deref() {
+            super::source_info(services, &absolute(env, root)?, "development")?;
+        } else if recovery_owner.is_none() {
+            let receipt = old.as_ref().ok_or_else(|| ContractError::new(super::RELEASE_GUIDANCE))?;
+            super::verified_receipt_runtime(env, services, receipt)?;
+        }
+    }
     let result = if request.check {
         require_replannable_journal(env, &state)?;
         let current = read_receipt(env, &state)?;
@@ -1687,18 +1816,24 @@ fn install_value(
         if plan.omp_binding.is_some() {
             let activation = services
                 .omp_boundary()?
-                .native_activation(&mut plan_value, true)?;
+                .native_activation(&mut plan_value, true, plan.runtime())?;
             set(&mut result, "omp_layout_activation", activation);
         }
+        // Before lifecycle preparation, an existing hold belongs to the
+        // current receipt's runtime, not the unpublished candidate.
+        let current_runtime = plan.old.as_ref().filter(|receipt| super::receipt_is_rust_era(receipt))
+            .map(|receipt| super::verified_receipt_runtime(env, services, receipt))
+            .transpose()?;
         let compatibility =
             services
                 .updating()?
-                .banks(&[], get(&plan.source, "compatibility"), false)?;
+                .banks(&[], get(&plan.source, "compatibility"), false, plan.runtime(),
+                    current_runtime.as_ref().map(super::LifecycleRuntime::pair))?;
         set(&mut result, "compatibility", compatibility);
         let private = services.private_state()?;
-        let target = private.prepare_lifecycle(&plan_value, true)?;
+        let target = private.prepare_lifecycle(&plan_value, true, plan.runtime())?;
         let installation = plan.old.clone().unwrap_or(Value::Null);
-        let compatible = private.require_compatible(&installation, &target, "install")?;
+        let compatible = private.require_compatible(&installation, &target, "install", plan.runtime())?;
         set(
             &mut result,
             "private_compatibility",
@@ -1709,7 +1844,12 @@ fn install_value(
         let paths = lifecycle_paths(env, Command::Install, request, &locations, old.as_ref())?;
         crate::runtime_faults::operation("install", &paths, || {
             locked(env, &state, || {
-                recover(env, services, &state, true, true)?;
+                require_selected_journal(env, &state, selected_journal.as_deref())?;
+                if let Some(runtime) = &recovery_owner {
+                    recover_with_runtime(env, services, &state, true, true, runtime.pair())?;
+                } else {
+                    recover(env, services, &state, true, true)?;
+                }
                 let current = read_receipt(env, &state)?;
                 let mut plan = prepare(
                     env,
@@ -1764,22 +1904,49 @@ fn recover_value(env: &Environment, services: &Services) -> Result<Value> {
             .as_ref()
             .is_some_and(|old| truthy(get(old, "omp_binding")))
         {
+            let runtime = super::verified_receipt_runtime(env, services, old.as_ref().ok_or_else(
+                || ContractError::new("Stored activation has no current receipt"))?)?;
             locked(env, &state, || {
+                require_selected_journal(env, &state, None)?;
                 finish_stored_source_activation(
                     env,
                     services,
                     &state,
                     without(&result, "writes_performed"),
+                    runtime.pair(),
                 )
             })?
         } else {
             result
         }
     } else {
-        let paths = lifecycle_paths(env, Command::Recover, &request, &locations, old.as_ref())?;
-        crate::runtime_faults::operation("recover", &paths, || {
-            locked(env, &state, || recover(env, services, &state, false, true))
-        })?
+        let journal = read_journal(env, &state)?.ok_or_else(
+            || ContractError::new("Recovery journal disappeared before authority selection"))?;
+        if let Some(result) = completed_uninstall(&state, &journal)? {
+            if lexists(&state.join("omp-transition.json"))? {
+                let selected_journal = encoded(&journal)?;
+                let paths = lifecycle_paths(env, Command::Recover, &request, &locations, old.as_ref())?;
+                crate::runtime_faults::operation("recover", &paths, || {
+                    locked(env, &state, || {
+                        require_selected_journal(env, &state, Some(&selected_journal))?;
+                        services.omp_boundary()?.recover_uninstalled_native(&state)?;
+                        Ok(result)
+                    })
+                })?
+            } else {
+                result
+            }
+        } else {
+            let selected_journal = encoded(&journal)?;
+            let runtime = super::recovery_runtime(env, services, &locations, &journal)?;
+            let paths = lifecycle_paths(env, Command::Recover, &request, &locations, old.as_ref())?;
+            crate::runtime_faults::operation("recover", &paths, || {
+                locked(env, &state, || {
+                    require_selected_journal(env, &state, Some(&selected_journal))?;
+                    recover_with_runtime(env, services, &state, false, true, runtime.pair())
+                })
+            })?
+        }
     };
     crate::runtime_faults::response("recover", &result)?;
     Ok(result)

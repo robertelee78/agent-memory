@@ -13,6 +13,7 @@ mod lock;
 mod plan;
 mod providers;
 mod records;
+mod runtime;
 pub(crate) mod seams;
 mod transaction;
 
@@ -35,6 +36,7 @@ pub(crate) use providers::{
     installed_receipt, into_contract, managed_source_info, runtime_pack_root,
 };
 pub use records::{encoded, load, read_journal, read_receipt, receipt_is_rust_era};
+pub use runtime::{LifecycleRuntime, recovery_runtime, verified_receipt_runtime};
 pub use seams::{
     ArtifactInspection, OmpBoundary, PrivateState, RegisteredArtifacts, ReleaseAccess, Services,
     Updating, register_omp_boundary, register_private_state, register_updating,

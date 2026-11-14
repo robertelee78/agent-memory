@@ -10,9 +10,50 @@ use crate::codec::json::Value;
 use crate::error::Result;
 use crate::fs::{self, DirectoryChain};
 use crate::lifecycle::get;
+use crate::scope_binding::RuntimeAuthority;
 use crate::turn_sources;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
+
+/// Lifecycle inventory can inspect retained evidence, never attest or execute
+/// source frames. Only the ordinary installed stream exposes those operations.
+#[derive(Clone, Copy)]
+enum InventoryAuthority<'a> {
+    Installed(&'a dyn StreamAuthority),
+    Runtime(RuntimeAuthority<'a>),
+}
+
+impl InventoryAuthority<'_> {
+    fn base(self, repo: &Path) -> Result<std::path::PathBuf> {
+        match self {
+            Self::Installed(authority) => authority.base(repo),
+            Self::Runtime(_) => crate::omp_boundary::base(repo),
+        }
+    }
+
+    fn source_barrier(self, repo: &Path) -> Result<turn_sources::SourceBarrier> {
+        match self {
+            Self::Installed(authority) => authority.source_barrier(repo),
+            Self::Runtime(runtime) => {
+                turn_sources::source_barrier(repo, false, false, None, runtime.pack())
+            }
+        }
+    }
+
+    fn observation_barrier(
+        self,
+        repo: &Path,
+        body: &mut dyn FnMut() -> Result<Value>,
+    ) -> Result<Value> {
+        match self {
+            Self::Installed(authority) => authority.observation_barrier(repo, body),
+            Self::Runtime(runtime) => {
+                crate::private_state::observation_barrier(repo, runtime, |_| body())
+            }
+        }
+    }
+
+}
 
 const OPEN_FIELDS: [&str; 11] = [
     "schema",
@@ -793,7 +834,7 @@ fn check_transition_resolution(
 
 /// One fresh linear per-session join; notifications never create source origin.
 fn join_hints(
-    authority: &dyn StreamAuthority,
+    authority: InventoryAuthority<'_>,
     repo: &Path,
     rows: &mut [Row],
     pins: &mut Vec<Value>,
@@ -816,7 +857,7 @@ fn join_hints(
             }
         }
     }
-    let mut transport = None;
+    let mut installed_transport = None;
     let mut dispositions = Vec::new();
     for (session, leaves) in &needed {
         let empty = BTreeSet::new();
@@ -825,13 +866,21 @@ fn join_hints(
         if missing.is_empty() {
             continue;
         }
-        if transport.is_none() {
-            transport = Some(authority.transport()?);
-        }
-        let Some(provider) = transport.as_ref() else {
-            continue;
+        let actual = match authority {
+            InventoryAuthority::Installed(authority) => {
+                if installed_transport.is_none() {
+                    installed_transport = Some(authority.transport()?);
+                }
+                installed_transport.as_ref().ok_or_else(|| err("Native transport is unavailable"))?
+                    .native_disposition_ids(repo, session)?
+            }
+            InventoryAuthority::Runtime(runtime) => {
+                crate::omp_transport::native_disposition_ids(
+                    &crate::omp_transport::Site::with_authority(repo, runtime),
+                    session,
+                )?
+            }
         };
-        let actual = provider.native_disposition_ids(repo, session)?;
         for native in &actual {
             turn_sources::bounded(&string(native), 512)?;
         }
@@ -918,7 +967,7 @@ fn resolved_repo(repo: &Path) -> Result<String> {
 }
 
 fn collect(
-    authority: &dyn StreamAuthority,
+    authority: InventoryAuthority<'_>,
     repo: &Path,
     base: &Path,
     read_only: bool,
@@ -1033,6 +1082,25 @@ pub fn inventory(
     base: Option<&Path>,
     read_only: bool,
 ) -> Result<Value> {
+    inventory_for(InventoryAuthority::Installed(authority), repo, base, read_only)
+}
+
+/// Complete retained inventory using explicit enrollment authority only.
+pub fn inventory_with_authority(
+    runtime: RuntimeAuthority<'_>,
+    repo: &Path,
+    base: Option<&Path>,
+    read_only: bool,
+) -> Result<Value> {
+    inventory_for(InventoryAuthority::Runtime(runtime), repo, base, read_only)
+}
+
+fn inventory_for(
+    authority: InventoryAuthority<'_>,
+    repo: &Path,
+    base: Option<&Path>,
+    read_only: bool,
+) -> Result<Value> {
     let run = || -> Result<Value> {
         let base = match base {
             Some(base) => base.to_path_buf(),
@@ -1047,7 +1115,10 @@ pub fn inventory(
                 .ok_or_else(|| err("Finite stream inventory ran twice"))?()
         })
     } else {
-        barrier(authority, repo, |_| run())
+        let held = authority.source_barrier(repo)?;
+        let value = run()?;
+        held.recheck()?;
+        Ok(value)
     }
 }
 

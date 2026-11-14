@@ -51,8 +51,10 @@ fn call(w: &World, route: &str, operation: &str, repo: &Path, extra: &[OsString]
     .into_iter()
     .chain(extra.iter().cloned());
     let out = w
-        .am_with(
-            args,
+        .run_with(
+            [w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(), "--json".into()]
+                .into_iter()
+                .chain(args),
             RunOptions {
                 check: false,
                 ..RunOptions::default()
@@ -73,6 +75,7 @@ fn good(w: &World, operation: &str, repo: &Path, extra: &[OsString]) -> Value {
 }
 struct Fixture {
     w: World,
+    runtime: support::installed_runtime::NativeRuntime,
     repo: PathBuf,
     bank: PathBuf,
     remote: PathBuf,
@@ -82,7 +85,21 @@ struct Fixture {
 }
 impl Fixture {
     fn new(prefix: &str) -> Self {
-        let w = World::new().unwrap();
+        let mut w = World::new().unwrap();
+        let runtime = support::installed_runtime::install(&w.root, |argv| {
+            w.run_with(
+                argv,
+                RunOptions {
+                    check: false,
+                    ..Default::default()
+                },
+            )
+            .unwrap()
+        });
+        w.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            runtime.command.clone().into_os_string(),
+        );
         let repo = w.repository("repo", false).unwrap();
         let remote = w.repository("remote.git", true).unwrap();
         git(
@@ -115,7 +132,7 @@ impl Fixture {
             fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
         fs::write(repo.join("code.rs"), "const VALUE: u8 = 1;\n").unwrap();
-        support::identity_fixtures::bind(&w, &repo).unwrap();
+        support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
         fs::write(
             bank.join("activeContext.md"),
             "# Current focus\n\nA useful isolated session focus.\n",
@@ -141,6 +158,7 @@ impl Fixture {
         let base = git(&w, &repo, &["rev-parse", "HEAD"]);
         Self {
             w,
+            runtime,
             repo,
             bank,
             remote,
@@ -167,6 +185,39 @@ impl Fixture {
         git(&self.w, &self.peer, &["push", "origin", "HEAD:main"]);
         commit
     }
+    fn reinstall_runtime(&self) {
+        // Restore only installation authority after complete private-state loss.
+        // The source and executable are the original genuine fixture bytes.
+        for name in agent_memory::console::NAMES {
+            let command = self.runtime.command.parent().unwrap().join(name);
+            assert!(fs::symlink_metadata(&command).unwrap().file_type().is_symlink());
+            assert_eq!(fs::canonicalize(&command).unwrap(), self.runtime.binary);
+            fs::remove_file(command).unwrap();
+        }
+        let out = self.w.run_with(
+            [
+                self.runtime.binary.as_os_str(),
+                OsStr::new("--json"),
+                OsStr::new("install"),
+                OsStr::new("--development-source"),
+                self.runtime.source.as_os_str(),
+                OsStr::new("--mode"),
+                OsStr::new("link"),
+                OsStr::new("--presets"),
+                OsStr::new("none"),
+                OsStr::new("--no-guidance"),
+                OsStr::new("--bin-dir"),
+                self.runtime.command.parent().unwrap().as_os_str(),
+            ],
+            RunOptions {
+                check: false,
+                ..Default::default()
+            },
+        ).unwrap();
+        assert_eq!(out.status, Status::Code(0), "{out:?}");
+        let receipt = json::decode_bytes(&out.stdout, Default::default()).unwrap();
+        assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
+    }
     fn replay(&self, base: &str, candidate: &str) -> Value {
         let request = save(
             &self.w,
@@ -190,30 +241,25 @@ impl Fixture {
         state(&self.w, &self.repo, &self.prefix)
     }
     fn apply(&self, value: &Value) {
-        let files = save(&self.w, get(value, "candidate_files"), "files.json");
-        let (_, proposal) = call(
-            &self.w,
-            "transaction",
-            "preview",
-            &self.repo,
-            &[
-                "--files".into(),
-                files.into_os_string(),
-                "--operation".into(),
-                "refresh".into(),
+        save(&self.w, get(value, "candidate_files"), "files.json");
+        let receipt = self.w.root.join("apply-receipt.json");
+        if receipt.exists() {
+            fs::remove_file(&receipt).unwrap();
+        }
+        self.w.run_with(
+            [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                "transaction_worker".into(),
+                "--nocapture".into(),
             ],
-        );
-        let proposal = save(&self.w, &proposal, "apply.json");
-        self.w
-            .helper(
-                "bank_transactions.py",
-                [
-                    OsStr::new("apply"),
-                    OsStr::new("--proposal"),
-                    proposal.as_os_str(),
-                ],
-            )
-            .unwrap();
+            RunOptions {
+                env: &[("AGENT_MEMORY_FAULT_SHARING_APPLY".into(), "1".into())],
+                ..Default::default()
+            },
+        ).unwrap();
+        let receipt = json::decode_bytes(&fs::read(receipt).unwrap(), Default::default()).unwrap();
+        assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
     }
     fn add_record(&self) -> (String, String) {
         let project = support::record_fixtures::project_id(
@@ -243,6 +289,28 @@ impl Fixture {
         git(&self.w, &self.peer, &["pull", "--ff-only"]);
         (id, body)
     }
+}
+
+#[test]
+fn transaction_worker() {
+    if std::env::var_os("AGENT_MEMORY_FAULT_SHARING_APPLY").is_none() {
+        return;
+    }
+    let root = support::require_current_world().unwrap();
+    agent_memory::cli::register_providers().unwrap();
+    support::installed_runtime::register_component_runtime();
+    let files = json::decode_bytes(
+        &fs::read(root.join("files.json")).unwrap(),
+        Default::default(),
+    ).unwrap();
+    // Mechanical refresh has no semantic approval/evidence: it uses the landed
+    // ordinary transaction path, not the pending memory_refresh producer.
+    let proposal = agent_memory::bank_transactions::preview(&root.join("repo"), &files, "refresh")
+        .unwrap();
+    fs::write(root.join("apply.json"), json::encode(&proposal, json::DEFAULT).unwrap()).unwrap();
+    let receipt = agent_memory::bank_transactions::apply(&proposal).unwrap();
+    assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
+    fs::write(root.join("apply-receipt.json"), json::encode(&receipt, json::DEFAULT).unwrap()).unwrap();
 }
 fn state(
     w: &World,
@@ -420,7 +488,6 @@ fn bounded_git_worker() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_offline_capture_stays_readable_and_online_observation_preserves_feature_state
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_offline_capture_stays_readable_and_online_observation_preserves_feature_state() {
     let f = Fixture::new("memory-bank");
     let before = f.state();
@@ -484,7 +551,6 @@ fn test_offline_capture_stays_readable_and_online_observation_preserves_feature_
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_fetched_capacity_preserves_typed_cause_and_local_feature_state
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_fetched_capacity_preserves_typed_cause_and_local_feature_state() {
     let f = Fixture::new("memory-bank");
     let body = format!("# PRIVATE_REMOTE_BODY_CANARY\n{}", "x".repeat(16356));
@@ -521,7 +587,6 @@ fn test_fetched_capacity_preserves_typed_cause_and_local_feature_state() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_lost_success_response_and_squash_readback_do_not_require_a_duplicate_push
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_lost_success_response_and_squash_readback_do_not_require_a_duplicate_push() {
     let f = Fixture::new("memory-bank");
     let before = f.state();
@@ -529,6 +594,7 @@ fn test_lost_success_response_and_squash_readback_do_not_require_a_duplicate_pus
         + "\nReviewed branch-independent learning.\n";
     let candidate = f.publish("projectbrief.md", &content);
     fs::remove_dir_all(f.w.env.get(OsStr::new("AGENT_MEMORY_STATE_HOME")).unwrap()).unwrap();
+    f.reinstall_runtime();
     let first = f.replay(&f.base, &candidate);
     assert_eq!(get(&first, "publication_verified"), &Value::Bool(true));
     assert_eq!(get(&first, "retry_state").as_str(), Some("already-landed"));
@@ -633,7 +699,6 @@ fn merged_publication(retain: bool) -> (Fixture, String, String) {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness() {
     let (f, candidate, _) = merged_publication(false);
     let before = f.state();
@@ -653,7 +718,6 @@ fn test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction() {
     let (f, candidate, landed) = merged_publication(true);
     let before = f.state();
@@ -673,7 +737,6 @@ fn test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correcti
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_later_correction_keeps_historical_publication_receipt_without_claiming_current_truth
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_later_correction_keeps_historical_publication_receipt_without_claiming_current_truth() {
     let f = Fixture::new("memory-bank");
     let candidate = f.publish("projectbrief.md", "# Project\n\nInitial actual learning.\n");
@@ -696,7 +759,6 @@ fn test_later_correction_keeps_historical_publication_receipt_without_claiming_c
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_changed_default_remote_history_and_unrelated_candidate_code_require_review
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_changed_default_remote_history_and_unrelated_candidate_code_require_review() {
     let f = Fixture::new("memory-bank");
     let before = f.state();
@@ -742,7 +804,6 @@ fn test_changed_default_remote_history_and_unrelated_candidate_code_require_revi
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_cursor_loss_combines_independent_edits_and_repeated_normal_merge_without_reversing_memory
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_cursor_loss_combines_independent_edits_and_repeated_normal_merge_without_reversing_memory()
 {
     let f = Fixture::new("memory-bank");
@@ -787,7 +848,6 @@ fn test_cursor_loss_combines_independent_edits_and_repeated_normal_merge_without
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_merge_or_cursor_loss
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_merge_or_cursor_loss()
 {
     let f = Fixture::new("memory-bank");
@@ -849,6 +909,7 @@ fn test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_me
     );
     assert_eq!(before, f.state());
     fs::remove_dir_all(f.w.env.get(OsStr::new("AGENT_MEMORY_STATE_HOME")).unwrap()).unwrap();
+    f.reinstall_runtime();
     assert_eq!(
         get(&v, "candidate_files"),
         get(&f.reconcile(None), "candidate_files")
@@ -856,7 +917,6 @@ fn test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_me
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_last_observed_memory_base_does_not_require_importing_authority_code_ancestry
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_last_observed_memory_base_does_not_require_importing_authority_code_ancestry() {
     let f = Fixture::new("memory-bank");
     git(&f.w, &f.repo, &["checkout", "-b", "stale-feature"]);
@@ -917,7 +977,6 @@ fn test_last_observed_memory_base_does_not_require_importing_authority_code_ance
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_both_changed_same_prose_requires_meaning_review_without_choosing_landing_order
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_both_changed_same_prose_requires_meaning_review_without_choosing_landing_order() {
     let f = Fixture::new("memory-bank");
     fs::write(
@@ -935,7 +994,6 @@ fn test_both_changed_same_prose_requires_meaning_review_without_choosing_landing
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_normal_rebase_keeps_previously_imported_memory_once_and_local_feature_code
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_normal_rebase_keeps_previously_imported_memory_once_and_local_feature_code() {
     let f = Fixture::new("memory-bank");
     git(&f.w, &f.repo, &["checkout", "-b", "feature-rebase"]);
@@ -966,7 +1024,6 @@ fn test_normal_rebase_keeps_previously_imported_memory_once_and_local_feature_co
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_current_untracked_admitted_record_does_not_block_fresh_remote_inventory
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_current_untracked_admitted_record_does_not_block_fresh_remote_inventory() {
     let f = Fixture::new("memory-bank");
     let project = support::record_fixtures::project_id(
@@ -990,7 +1047,6 @@ fn test_current_untracked_admitted_record_does_not_block_fresh_remote_inventory(
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_inactive_stable_version_cannot_be_reactivated_by_an_older_working_copy
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_inactive_stable_version_cannot_be_reactivated_by_an_older_working_copy() {
     let f = Fixture::new("memory-bank");
     let (_, original) = f.add_record();
@@ -1030,7 +1086,6 @@ fn test_inactive_stable_version_cannot_be_reactivated_by_an_older_working_copy()
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_remote_advance_during_observation_requires_new_inventory
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_remote_advance_during_observation_requires_new_inventory() {
     let mut f = Fixture::new("memory-bank");
     let before = f.state();
@@ -1047,7 +1102,7 @@ fn test_remote_advance_during_observation_requires_new_inventory() {
     );
     let child =
         f.w.spawn([
-            OsStr::new(env!("CARGO_BIN_EXE_am")),
+            f.runtime.command.as_os_str(),
             OsStr::new("exchange"),
             OsStr::new("inspect"),
             OsStr::new("--repo"),
@@ -1084,7 +1139,6 @@ fn test_remote_advance_during_observation_requires_new_inventory() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_nested_bank_observation_reconciliation_and_replay_use_same_configured_prefix
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_nested_bank_observation_reconciliation_and_replay_use_same_configured_prefix() {
     let f = Fixture::new("docs/shared memory");
     let candidate = f.publish(
@@ -1113,7 +1167,6 @@ fn test_nested_bank_observation_reconciliation_and_replay_use_same_configured_pr
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged() {
     let f = Fixture::new("memory-bank");
     let other = f.w.inside("parallel observer").unwrap();
@@ -1129,7 +1182,7 @@ fn test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged() {
             "HEAD",
         ],
     );
-    support::identity_fixtures::bind(&f.w, &other).unwrap();
+    support::identity_fixtures::bind_with_command(&f.w, &other, &f.runtime.command).unwrap();
     fs::write(
         other.join("code.rs"),
         "const VALUE: u8 = 3; // separate observer work\n",
@@ -1154,7 +1207,7 @@ fn test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged() {
         .into_iter()
         .map(|repo| {
             f.w.spawn([
-                OsStr::new(env!("CARGO_BIN_EXE_am")),
+                f.runtime.command.as_os_str(),
                 OsStr::new("exchange"),
                 OsStr::new("inspect"),
                 OsStr::new("--fetch"),
@@ -1201,7 +1254,6 @@ fn test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged() {
 }
 // obligation: tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_fetch_failure_after_real_advertisement_has_specific_safe_repair
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn test_fetch_failure_after_real_advertisement_has_specific_safe_repair() {
     use std::os::unix::fs::PermissionsExt;
     let mut f = Fixture::new("memory-bank");

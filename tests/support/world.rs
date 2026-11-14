@@ -450,12 +450,19 @@ impl World {
         self.am_with(args, RunOptions::default())
     }
 
+    fn am_executable(&self) -> OsString {
+        self.env
+            .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+            .cloned()
+            .unwrap_or_else(|| OsString::from(env!("CARGO_BIN_EXE_am")))
+    }
+
     pub fn am_with<I, S>(&self, args: I, options: RunOptions<'_>) -> Result<Output>
     where
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
-        let argv = std::iter::once(OsString::from(env!("CARGO_BIN_EXE_am")))
+        let argv = std::iter::once(self.am_executable())
             .chain(args.into_iter().map(|arg| arg.as_ref().to_owned()))
             .collect();
         self.command_argv(argv, options)?.run()
@@ -468,7 +475,7 @@ impl World {
     {
         let args = helper_arguments(script, args)?;
         let argv = [
-            OsString::from(env!("CARGO_BIN_EXE_am")),
+            self.am_executable(),
             OsString::from("--json"),
         ]
         .into_iter()

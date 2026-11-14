@@ -1,5 +1,5 @@
-//! Registered implementations: the boundary and stream transport seams, the
-//! installed observer scope and the T2f half of the OMP activation interface.
+//! Direct boundary inventory, installed stream transport and observer scope,
+//! and the T2f half of the OMP activation interface.
 use super::inventory::{list_pending, pending_inventory};
 use super::observe::{Observation, ObserverScope, context_value, drain_after_response, observe};
 use super::{Site, all_segments, err, lexists, native_disposition_ids};
@@ -12,7 +12,7 @@ use crate::omp_installation::{
 };
 use crate::omp_projection::same;
 use crate::omp_stream::{self, FrameProof, Installed, ObserveCall, ObserveError};
-use crate::scope_binding::{self, PrivateEnrollmentContext};
+use crate::scope_binding::{self, PrivateEnrollmentContext, RuntimeAuthority};
 use crate::turn_sources::{self, SourceBarrier};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -67,7 +67,7 @@ impl ObserverScope for InstalledScope<'_> {
     }
 }
 
-/// The one `omp_transport` provider of both the boundary and the stream seams.
+/// The installed stream's native transport.
 pub struct Transport {
     runtime_root: Option<PathBuf>,
 }
@@ -93,17 +93,17 @@ impl Transport {
 /// `pending_inventory(repo)` for omp_boundary: `(rows, faults)`.
 pub(crate) fn boundary_pending_inventory(
     repo: &Path,
-    runtime_root: &Path,
+    runtime: RuntimeAuthority<'_>,
 ) -> Result<(Vec<Value>, Vec<Value>)> {
-    let (rows, faults) = pending_inventory(&Site::new(repo, runtime_root))?;
+    let (rows, faults) = pending_inventory(&Site::with_authority(repo, runtime))?;
     Ok((rows, faults.into_iter().map(string).collect()))
 }
 /// `all_segments(repo)` for omp_boundary: `(segment directory, cursor)` pairs.
 pub(crate) fn boundary_all_segments(
     repo: &Path,
-    runtime_root: &Path,
+    runtime: RuntimeAuthority<'_>,
 ) -> Result<Vec<(PathBuf, Value)>> {
-    all_segments(&Site::new(repo, runtime_root), None)?
+    all_segments(&Site::with_authority(repo, runtime), None)?
         .into_iter()
         .map(|segment| Ok((segment.directory.clone(), segment.snapshot()?)))
         .collect()

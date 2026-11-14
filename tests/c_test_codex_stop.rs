@@ -92,7 +92,12 @@ fn complete(w: &World, repo: &std::path::Path, session: &str, turn: &str) {
 #[test]
 // obligation: tests/contracts/test_codex_stop.py::CodexStopContract.test_nonrepository_uninitialized_and_missing_source
 fn nonrepository_uninitialized_and_missing_source_are_quiet() {
-    let w = World::new().unwrap();
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| w.run(argv).unwrap());
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.as_os_str().to_owned(),
+    );
     let repo = w.repository("repo", false).unwrap();
     let outside = w.inside("outside").unwrap();
     fs::create_dir(&outside).unwrap();

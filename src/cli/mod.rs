@@ -265,18 +265,6 @@ pub fn pack_root() -> Result<PathBuf> {
     crate::installation::runtime_pack_root()
 }
 
-/// The executing runtime root: the directory holding `skills/agent-memory`
-/// (the registered pack) and the runtime's `bin/am`. Callers that measure
-/// the runtime (layout resolution, recovery quiescence) take this, never the
-/// pack itself.
-pub fn runtime_root() -> Result<PathBuf> {
-    let pack = pack_root()?;
-    pack.parent()
-        .and_then(std::path::Path::parent)
-        .map(std::path::Path::to_path_buf)
-        .ok_or_else(|| ContractError::new("Cannot locate installed runtime root"))
-}
-
 /// A registry that cannot be written (poisoned lock) stops the binary.
 fn wired(result: Result<()>) -> std::result::Result<(), crate::pack_validation::Invalid> {
     result.map_err(|error| {
@@ -374,9 +362,6 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     }));
     crate::bank_writes::register_recovery_frontier(Some(frontier.clone()));
     crate::bank_contract::register_recovery_coverage(Some(frontier));
-    crate::recovery_frontier::register_layout_resolution(Some(Arc::new(
-        crate::layout_resolution::LayoutResolution,
-    )));
     Ok(())
 }
 

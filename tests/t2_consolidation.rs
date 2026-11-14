@@ -805,7 +805,6 @@ fn preview(repo: &Path, input: &Value) -> Value {
 }
 // obligation: tests/contracts/test_consolidation.py::ConsolidationContract.test_arriving_memory_tampered_delta_and_checkout_changes_require_a_fresh_plan
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn arriving_memory_tampered_delta_and_checkout_require_new_plan() {
     support::in_world(
         "arriving_memory_tampered_delta_and_checkout_require_new_plan",
@@ -842,7 +841,6 @@ fn arriving_memory_tampered_delta_and_checkout_require_new_plan() {
 }
 // obligation: tests/contracts/test_consolidation.py::ConsolidationContract.test_higher_order_pattern_remains_a_proposal_instead_of_an_invented_decision
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn higher_order_pattern_stays_proposal_only() {
     support::in_world("higher_order_pattern_stays_proposal_only", |world| {
         let (repo, bank, actor) = world.fixture();
@@ -858,7 +856,6 @@ fn higher_order_pattern_stays_proposal_only() {
 }
 // obligation: tests/contracts/test_consolidation.py::ConsolidationContract.test_distinct_validity_trust_and_inapplicable_conditions_are_not_silently_folded
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn distinct_validity_trust_and_inapplicable_conditions_refuse() {
     support::in_world(
         "distinct_validity_trust_and_inapplicable_conditions_refuse",
@@ -890,7 +887,6 @@ fn distinct_validity_trust_and_inapplicable_conditions_refuse() {
 }
 // obligation: tests/contracts/test_consolidation.py::ConsolidationContract.test_procedure_capture_remains_pending_separate_explicit_promotion
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn procedure_capture_cannot_bypass_the_admission_transition() {
     support::in_world(
         "procedure_capture_cannot_bypass_the_admission_transition",
@@ -948,7 +944,6 @@ fn procedure_capture_cannot_bypass_the_admission_transition() {
 }
 // obligation: tests/contracts/test_consolidation.py::ConsolidationContract.test_interrupted_uncommitted_consolidation_rolls_back_before_fresh_comparison
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn interrupted_consolidation_rolls_back_before_fresh_comparison() {
     support::in_world(
         "interrupted_consolidation_rolls_back_before_fresh_comparison",
@@ -967,7 +962,7 @@ fn interrupted_consolidation_rolls_back_before_fresh_comparison() {
             );
             let output = world.command(
                 &[
-                    env!("CARGO_BIN_EXE_am").into(),
+                    world.root.join("home/.local/bin/am").into_os_string(),
                     "compact".into(),
                     "apply".into(),
                     "--proposal".into(),
@@ -993,7 +988,6 @@ fn interrupted_consolidation_rolls_back_before_fresh_comparison() {
 }
 // obligation: tests/contracts/test_consolidation.py::ConsolidationContract.test_recorded_completion_cleans_up_without_reapplying_over_later_memory
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn recorded_completion_replays_without_overwriting_later_memory() {
     support::in_world(
         "recorded_completion_replays_without_overwriting_later_memory",
@@ -1014,7 +1008,7 @@ fn recorded_completion_replays_without_overwriting_later_memory() {
                 let saved = world.save(&proposal, &format!("completion-{index}.json"));
                 let output = world.command(
                     &[
-                        env!("CARGO_BIN_EXE_am").into(),
+                        world.root.join("home/.local/bin/am").into_os_string(),
                         "compact".into(),
                         "apply".into(),
                         "--proposal".into(),
@@ -1055,7 +1049,6 @@ fn recorded_completion_replays_without_overwriting_later_memory() {
 }
 // obligation: tests/contracts/test_consolidation.py::ConsolidationContract.test_new_capture_evidence_must_still_match_actual_source_before_apply
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn captured_repository_evidence_is_rechecked_before_apply() {
     support::in_world(
         "captured_repository_evidence_is_rechecked_before_apply",
@@ -1117,7 +1110,6 @@ fn captured_repository_evidence_is_rechecked_before_apply() {
 }
 // obligation: tests/contracts/test_consolidation.py::ConsolidationContract.test_private_plan_and_preview_preserve_ordinary_bank_confidentiality
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn private_plan_and_preview_keep_bodies_off_stdout() {
     support::in_world("private_plan_and_preview_keep_bodies_off_stdout", |world| {
         let (repo, bank, actor) = world.fixture();
@@ -1150,7 +1142,7 @@ fn private_plan_and_preview_keep_bodies_off_stdout() {
         let output = world.root.join("private-preview.json");
         let result = world.command(
             &[
-                env!("CARGO_BIN_EXE_am").into(),
+                world.root.join("home/.local/bin/am").into_os_string(),
                 "compact".into(),
                 "preview".into(),
                 "--repo".into(),
@@ -1189,7 +1181,6 @@ fn private_plan_and_preview_keep_bodies_off_stdout() {
 // obligation: tests/contracts/test_comparison.py::ComparisonContract.test_alternative_wording_finds_equivalent_learning_and_retains_existing_identity_evidence_and_origin
 // obligation: tests/contracts/test_comparison.py::ComparisonContract.test_newly_arrived_duplicate_invalidates_earlier_judgment_and_requires_recomparison
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn actual_comparison_retains_metadata_and_rejects_arrivals() {
     support::in_world(
         "actual_comparison_retains_metadata_and_rejects_arrivals",
@@ -1229,7 +1220,6 @@ fn actual_comparison_retains_metadata_and_rejects_arrivals() {
 // obligation: tests/contracts/test_comparison.py::ComparisonContract.test_unsafe_candidate_or_plausible_source_never_yields_a_novelty_proof_or_executes_commands
 // obligation: tests/contracts/test_comparison.py::ComparisonContract.test_deletion_is_terminal_for_candidate_and_derivation_identity
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn unavailable_unsafe_oversized_and_deleted_sources_never_prove_absence() {
     support::in_world(
         "unavailable_unsafe_oversized_and_deleted_sources_never_prove_absence",
@@ -1350,7 +1340,6 @@ fn unavailable_unsafe_oversized_and_deleted_sources_never_prove_absence() {
 }
 // obligation: tests/contracts/test_comparison.py::ComparisonContract.test_explicit_private_output_keeps_ordinary_comparison_off_stdout
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn private_comparison_keeps_source_body_off_stdout() {
     support::in_world("private_comparison_keeps_source_body_off_stdout", |world| {
         let (repo, bank, actor) = world.fixture();
@@ -1360,7 +1349,7 @@ fn private_comparison_keeps_source_body_off_stdout() {
         let before = world.state(&repo, &bank);
         let command = world.command(
             &[
-                env!("CARGO_BIN_EXE_am").into(),
+                world.root.join("home/.local/bin/am").into_os_string(),
                 "compare".into(),
                 "inspect".into(),
                 "--repo".into(),
@@ -1387,7 +1376,7 @@ fn private_comparison_keeps_source_body_off_stdout() {
         let reviewed_path = world.root.join("reviewed.json");
         let reviewed = world.command(
             &[
-                env!("CARGO_BIN_EXE_am").into(),
+                world.root.join("home/.local/bin/am").into_os_string(),
                 "compare".into(),
                 "review".into(),
                 "--repo".into(),
@@ -1412,7 +1401,7 @@ fn private_comparison_keeps_source_body_off_stdout() {
         let checked_path = world.root.join("checked.json");
         let checked = world.command(
             &[
-                env!("CARGO_BIN_EXE_am").into(),
+                world.root.join("home/.local/bin/am").into_os_string(),
                 "compare".into(),
                 "check".into(),
                 "--repo".into(),

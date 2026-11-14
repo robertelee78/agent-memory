@@ -537,38 +537,63 @@ fn fixture_mapping_uses_real_registered_commands_and_refuses_unknown_helpers() {
 }
 
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregistered_binding() {
     let world = World::new().unwrap();
     let repo = world.repository("repo", false).unwrap();
-    let result: support::Result<_> = support::identity_fixtures::bind(&world, &repo);
-    if agent_memory::cli::table::route_named("identity").is_some() {
-        assert_eq!(
-            result.unwrap().get("resolved").and_then(Value::as_bool),
-            Some(true)
-        );
-        assert_eq!(
-            support::identity_fixtures::bind(&world, &repo)
-                .unwrap()
-                .get("resolved")
-                .and_then(Value::as_bool),
-            Some(true)
-        );
-    } else {
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("scope_binding.py requires am identity, which is not registered")
-        );
+    let runtime = support::installed_runtime::install(&world.root, |argv| {
+        world.run_with(argv, RunOptions { check: false, ..Default::default() }).unwrap()
+    });
+    let proposal = json::decode(
+        include_str!("../skills/agent-memory/templates/router-proposal.example.json"),
+        Default::default(),
+    ).unwrap();
+    let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
+    let bank = repo.join("memory-bank");
+    for (path, body) in rendered.get("files").unwrap().as_object().unwrap() {
+        let path = bank.join(path);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, body.as_str().unwrap()).unwrap();
     }
-    let output = world
-        .helper(
-            "developer_identity.py",
-            [OsStr::new("status"), OsStr::new("--repo"), repo.as_os_str()],
-        )
-        .unwrap();
-    let developer = json::decode_bytes(&output.stdout, json::DecodePolicy::default()).unwrap();
+    let command = |args: &[&OsStr]| {
+        let argv = [runtime.command.as_os_str(), OsStr::new("--json")]
+            .into_iter().chain(args.iter().copied());
+        let output = world.run(argv).unwrap();
+        assert!(output.stderr.is_empty());
+        json::decode_bytes(&output.stdout, Default::default()).unwrap()
+    };
+    let apply = |helper: &str, proposal: &Value| {
+        let path = world.root.join("identity-proposal.json");
+        fs::write(&path, json::encode(proposal, json::DEFAULT).unwrap()).unwrap();
+        command(&[
+            OsStr::new(helper), OsStr::new("apply"), OsStr::new("--proposal"), path.as_os_str(),
+        ])
+    };
+    let developer = command(&[
+        OsStr::new("developer"), OsStr::new("preview"), OsStr::new("--create"),
+        OsStr::new("--label"), OsStr::new("Disposable test developer"),
+    ]);
+    apply("developer", &developer);
+    for _ in 0..2 {
+        let current = command(&[
+            OsStr::new("identity"), OsStr::new("status"), OsStr::new("--repo"), repo.as_os_str(),
+        ]);
+        if current.get("resolved").and_then(Value::as_bool) != Some(true) {
+            let proposal = command(&[
+                OsStr::new("identity"), OsStr::new("preview"), OsStr::new("--repo"),
+                repo.as_os_str(), OsStr::new("--action"), OsStr::new("bind"),
+                OsStr::new("--reason"), OsStr::new("Explicit disposable fixture bank adoption"),
+            ]);
+            let receipt = apply("identity", &proposal);
+            assert_eq!(receipt.get("verified").and_then(Value::as_bool), Some(true));
+        }
+        let result = command(&[
+            OsStr::new("identity"), OsStr::new("status"), OsStr::new("--repo"), repo.as_os_str(),
+        ]);
+        assert_eq!(result.get("resolved").and_then(Value::as_bool), Some(true));
+    }
+    let developer = command(&[
+        OsStr::new("developer"), OsStr::new("status"), OsStr::new("--repo"), repo.as_os_str(),
+    ]);
     assert_eq!(
         developer.get("setup_required").and_then(Value::as_bool),
         Some(false)

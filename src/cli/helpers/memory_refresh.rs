@@ -82,7 +82,7 @@ fn run(matches: &Matches, context: &Context<'_>) -> CommandResult {
     };
     let output = args.text("output").filter(|s| !s.is_empty()).map(Path::new);
     let runtime = if output.is_some() {
-        crate::cli::runtime_root()
+        crate::cli::pack_root()
     } else {
         Err(crate::error::ContractError::new(
             "Runtime location is not needed",

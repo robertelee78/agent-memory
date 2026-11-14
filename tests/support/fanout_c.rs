@@ -118,7 +118,7 @@ fn fault(w: &World, f: &Fixture, op: &str, proposal: Option<&Value>, stage: &str
     if mode == "exit" {
         let result = w.command(
             &[
-                env!("CARGO_BIN_EXE_am").into(),
+                w.root.join("home/.local/bin/am").into_os_string(),
                 "writes".into(),
                 "recover".into(),
                 "--repo".into(),
@@ -137,7 +137,7 @@ fn fault(w: &World, f: &Fixture, op: &str, proposal: Option<&Value>, stage: &str
             let path = w.save(&preview, &format!("unlock-{}.json", uuid()));
             let result = w.command(
                 &[
-                    env!("CARGO_BIN_EXE_am").into(),
+                    w.root.join("home/.local/bin/am").into_os_string(),
                     "writes".into(),
                     "recover".into(),
                     "--repo".into(),
@@ -869,7 +869,7 @@ fn external_change(w: &World, metadata: bool, validate: bool) {
     if validate {
         let out = w.command(
             &[
-                env!("CARGO_BIN_EXE_am").into(),
+                w.root.join("home/.local/bin/am").into_os_string(),
                 "bank".into(),
                 "validate".into(),
                 "--repo".into(),
@@ -2077,7 +2077,7 @@ fn historical_checkout(w: &World) {
     private(&path, &encoded(&data).unwrap());
     let out = w.command(
         &[
-            env!("CARGO_BIN_EXE_am").into(),
+            w.root.join("home/.local/bin/am").into_os_string(),
             "identity".into(),
             "status".into(),
             "--repo".into(),
@@ -2158,7 +2158,7 @@ fn raw_router(w: &World) {
         assert_eq!(saved_originals(&f, &inspected), snapshot(&f.bank));
         let out = w.command(
             &[
-                env!("CARGO_BIN_EXE_am").into(),
+                w.root.join("home/.local/bin/am").into_os_string(),
                 "bank".into(),
                 "validate".into(),
                 "--repo".into(),

@@ -760,7 +760,22 @@ struct SharingFixture {
 impl SharingFixture {
     fn new() -> Self {
         registered();
-        let w = World::new().unwrap();
+        let mut w = World::new().unwrap();
+        let runtime = support::installed_runtime::install(&w.root, |argv| {
+            w.run_with(
+                argv,
+                RunOptions {
+                    check: false,
+                    timeout: std::time::Duration::from_secs(120),
+                    ..Default::default()
+                },
+            )
+            .unwrap()
+        });
+        w.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            runtime.command.clone().into_os_string(),
+        );
         let repo = w.repository("repo", false).unwrap();
         let remote = w.repository("remote.git", true).unwrap();
         git(
@@ -779,7 +794,7 @@ impl SharingFixture {
             std::fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
         }
         std::fs::write(repo.join("code.rs"), "const VALUE: u8 = 1;\n").unwrap();
-        support::identity_fixtures::bind(&w, &repo).unwrap();
+        support::identity_fixtures::bind_with_command(&w, &repo, &runtime.command).unwrap();
         std::fs::write(
             bank.join("activeContext.md"),
             "# Current focus\n\nIndependent local orientation.\n",
@@ -1315,6 +1330,7 @@ fn child_entry() {
     };
     support::world::require_current_world().unwrap();
     registered();
+    support::installed_runtime::register_component_runtime();
     let arguments = json::decode(&arguments, json::DecodePolicy::default())
         .unwrap()
         .as_array()

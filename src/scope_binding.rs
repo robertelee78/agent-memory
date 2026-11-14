@@ -437,13 +437,52 @@ pub trait SourceMarkerObservation {
     fn finish(&mut self) -> Result<()>;
 }
 
+/// Authority is local to an operation; lifecycle pairs never consult installed
+/// receipt or executing-binary authority.
+#[derive(Clone, Copy)]
+pub enum RuntimeAuthority<'a> {
+    Executing(&'a Path),
+    Lifecycle { pack: &'a Path, binary: &'a Path },
+}
+impl<'a> RuntimeAuthority<'a> {
+    pub fn pack(self) -> &'a Path {
+        match self {
+            Self::Executing(pack) | Self::Lifecycle { pack, .. } => pack,
+        }
+    }
+    pub fn from_pair((pack, binary): (&'a Path, &'a Path)) -> Self {
+        Self::Lifecycle { pack, binary }
+    }
+    pub(crate) fn to_owned(self) -> OwnedRuntimeAuthority {
+        match self {
+            Self::Executing(pack) => OwnedRuntimeAuthority::Executing(pack.to_path_buf()),
+            Self::Lifecycle { pack, binary } => OwnedRuntimeAuthority::Lifecycle {
+                pack: pack.to_path_buf(),
+                binary: binary.to_path_buf(),
+            },
+        }
+    }
+}
+pub(crate) enum OwnedRuntimeAuthority {
+    Executing(PathBuf),
+    Lifecycle { pack: PathBuf, binary: PathBuf },
+}
+impl OwnedRuntimeAuthority {
+    pub(crate) fn authority(&self) -> RuntimeAuthority<'_> {
+        match self {
+            Self::Executing(pack) => RuntimeAuthority::Executing(pack),
+            Self::Lifecycle { pack, binary } => RuntimeAuthority::Lifecycle { pack, binary },
+        }
+    }
+}
+
 /// Purpose-limited live identity, sealed by private fields and an unforgeable Rc.
 /// It is neither Clone nor Send; synchronous operation scopes cannot migrate to
 /// another thread. There is deliberately no serialization/Value/write API.
 pub struct PrivateEnrollmentContext {
     root: PathBuf,
     bank: PathBuf,
-    runtime_root: PathBuf,
+    authority: OwnedRuntimeAuthority,
     scope: Value,
     hold: Option<VerifiedEnrollmentHold>,
     context_digest: String,
@@ -497,7 +536,7 @@ impl ReadContext {
             seal: Rc::downgrade(&context.seal),
             root: context.root.clone(),
             bank: context.bank.clone(),
-            runtime_root: context.runtime_root.clone(),
+            runtime_root: context.authority.authority().pack().to_path_buf(),
         }
     }
     fn matches(&self, context: &PrivateEnrollmentContext) -> bool {
@@ -557,7 +596,7 @@ pub fn observe_enrollment_locations<T>(
     enrollment_read_context(&context.root, context)?;
     let previous = ENROLLMENT_LOCATIONS.with(|v| v.replace(Some(ReadContext::of(context))));
     let _restore = RestoreLocations(previous);
-    observe_enrollment_location(&context.root, Some(context), &context.runtime_root)?;
+    observe_enrollment_location(&context.root, Some(context), context.authority.authority().pack())?;
     body()
 }
 pub fn observe_enrollment_location(
@@ -622,10 +661,22 @@ pub fn private_enrollment_context(
     repo: &Path,
     runtime_root: &Path,
 ) -> Result<PrivateEnrollmentContext> {
+    private_enrollment_context_with_authority(repo, RuntimeAuthority::Executing(runtime_root))
+}
+pub fn private_enrollment_context_for_runtime(
+    repo: &Path,
+    runtime: (&Path, &Path),
+) -> Result<PrivateEnrollmentContext> {
+    private_enrollment_context_with_authority(repo, RuntimeAuthority::from_pair(runtime))
+}
+pub fn private_enrollment_context_with_authority(
+    repo: &Path,
+    authority: RuntimeAuthority<'_>,
+) -> Result<PrivateEnrollmentContext> {
     let outcome = fresh_enrollment_locations(|| {
         repository_config::observe_settings(repo, || {
             let mut observation = writes::recovery_frontier_provider()?.observe_source_markers()?;
-            let value = private_enrollment_context_at(repo, runtime_root)?;
+            let value = private_enrollment_context_at(repo, authority)?;
             observation.finish()?;
             Ok(value)
         })
@@ -651,9 +702,16 @@ fn binding_pin(path: &Path) -> Result<Value> {
 }
 fn private_enrollment_context_at(
     repo: &Path,
-    runtime_root: &Path,
+    authority: RuntimeAuthority<'_>,
 ) -> Result<PrivateEnrollmentContext> {
-    let runtime_root = fs::canonical_path(runtime_root, false)?;
+    let runtime_root = fs::canonical_path(authority.pack(), false)?;
+    let authority = match authority {
+        RuntimeAuthority::Executing(_) => RuntimeAuthority::Executing(&runtime_root),
+        RuntimeAuthority::Lifecycle { binary, .. } => RuntimeAuthority::Lifecycle {
+            pack: &runtime_root,
+            binary,
+        },
+    };
     let (root, bank) = writes::bank_path(repo)?;
     let (raw_root, raw_bank, recovery_base, _) = recovery_state::paths(&root, None, &runtime_root)?;
     if raw_root != root || raw_bank != bank {
@@ -668,7 +726,13 @@ fn private_enrollment_context_at(
         .ok_or_else(|| err("Private enrollment source location has no parent"))?;
     crate::turn_sources::check_source_compatibility(source_base)?;
     let frontier = writes::recovery_frontier_provider()?;
-    let hold = frontier.verified_enrollment_hold_at_bank(&raw_root, &raw_bank, &runtime_root)?;
+    let hold = match authority {
+        RuntimeAuthority::Executing(pack) => {
+            frontier.verified_enrollment_hold_at_bank(&raw_root, &raw_bank, pack)?
+        }
+        RuntimeAuthority::Lifecycle { pack, binary } => frontier
+            .verified_enrollment_hold_for_runtime_at_bank(&raw_root, &raw_bank, (pack, binary))?,
+    };
     let scope = match &hold {
         Some(hold) => hold.scope.clone(),
         None => require(&root, None, RequireOptions::default())?,
@@ -744,7 +808,7 @@ fn private_enrollment_context_at(
     Ok(PrivateEnrollmentContext {
         root,
         bank,
-        runtime_root,
+        authority: authority.to_owned(),
         scope,
         hold,
         context_digest,
@@ -755,7 +819,8 @@ fn private_enrollment_context_at(
 pub fn recheck_private_enrollment(
     context: &PrivateEnrollmentContext,
 ) -> Result<&PrivateEnrollmentContext> {
-    let current = private_enrollment_context(&context.root, &context.runtime_root)?;
+    let current =
+        private_enrollment_context_with_authority(&context.root, context.authority.authority())?;
     if current.root != context.root
         || current.bank != context.bank
         || !same(&current.scope, &context.scope)

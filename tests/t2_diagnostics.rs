@@ -2,8 +2,10 @@
 //! in isolated Worlds. Every report is produced in a child copy of this test
 //! binary whose whole environment is the World's, so the process-wide
 //! identity locations never reach the user's HOME and parallel tests never
-//! share them. Installations use a development source with a stand-in `am`
-//! (the installer never runs Cargo), exactly as `t2_installation` does.
+//! share them. Component tests use stand-in development binaries; native OMP
+//! journeys copy the unaltered shipped pack and invoke the genuinely owned am.
+mod support;
+
 use agent_memory::cache_recovery::Qualification;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::diagnostics::{self, Report, Request};
@@ -117,11 +119,11 @@ fn make_writable(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-// ----- seams: honest test implementers of unported callees -----
+// ----- component-test lifecycle seams -----
 
 struct FixtureUpdating;
 impl Updating for FixtureUpdating {
-    fn banks(&self, repositories: &[String], _: &Value, _: bool) -> install::Result<Value> {
+    fn banks(&self, repositories: &[String], _: &Value, _: bool, _: (&Path, &Path), _: Option<(&Path, &Path)>) -> install::Result<Value> {
         Ok(Value::Object(vec![(
             "observed_repositories".into(),
             Value::Array(repositories.iter().cloned().map(Value::String).collect()),
@@ -152,16 +154,17 @@ impl PrivateState for FixturePrivateState {
         _: &Value,
         _: Option<&Value>,
         _: &str,
+        _: (&Path, &Path),
         transition: &mut dyn FnMut() -> install::Result<Option<Value>>,
         body: &mut dyn FnMut(&Value) -> install::Result<Value>,
     ) -> install::Result<Value> {
         transition()?;
         body(&Value::Object(vec![("fixture".into(), Value::Bool(true))]))
     }
-    fn prepare_lifecycle(&self, _: &Value, _: bool) -> install::Result<Value> {
+    fn prepare_lifecycle(&self, _: &Value, _: bool, _: (&Path, &Path)) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn require_compatible(&self, _: &Value, _: &Value, _: &str) -> install::Result<Value> {
+    fn require_compatible(&self, _: &Value, _: &Value, _: &str, _: (&Path, &Path)) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
     fn public_summary(&self, value: &Value) -> install::Result<Value> {
@@ -486,10 +489,6 @@ fn child_entry() {
             "AM-STDOUT:{}",
             json::encode(&printed, json::COMPACT_ASCII).unwrap()
         );
-        return;
-    }
-    if let Ok(request) = std::env::var("AM_DIAG_INSTALL") {
-        native_install_child(&request);
         return;
     }
     let Ok(operation) = std::env::var("AM_DIAG_CHILD") else {
@@ -1614,29 +1613,57 @@ fn missing_and_intentionally_disabled_hook_targets() {
         ["runtime.hook_migration.codex"]
     );
 }
-// ======================================================================
-// Deferred: modules not yet ported
-// ======================================================================
+// Additional native diagnostics consumers
 
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_selected_projection_current_and_stale_do_not_create_audit_or_cache
 #[test]
-#[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn selected_projection_current_and_stale_do_not_create_audit_or_cache() {
     let world = World::new();
-    bank(&world.path("repo"));
-    let value = run(&world, "doctor", &world.path("repo"), None, 0);
-    assert!(!component(&value, "bank.projection").is_empty());
+    let runtime = support::installed_runtime::install(&world.root, |argv| native_process(&world, argv));
+    let repo = world.path("repo");
+    world.git(&repo, &["init", "-q", "-b", "main"]);
+    let directory = bank(&repo);
+    bind(&world, &runtime, &repo);
+    let input = world.path("projection-input.json");
+    write(&input, format!("{{\"project_id\":\"{PROJECT}\",\"records\":[]}}"));
+    let built = native_cli(&world, &runtime, &[
+        "projection", "build", "--repo", repo.to_str().unwrap(),
+        "--input", input.to_str().unwrap(),
+    ], 0);
+    let projection = world.path("projection.json");
+    write(&projection, encode_record(get(&built, "projection")));
+    for current in [true, false] {
+        if !current {
+            let context = directory.join("projectbrief.md");
+            let mut body = std::fs::read_to_string(&context).unwrap();
+            body.push_str("\nA newer canonical observation.\n");
+            write(&context, body);
+        }
+        let before = snapshot(&world.root);
+        // Projection observation distinguishes current from stale without writes.
+        let value = native_cli(&world, &runtime, &[
+            "doctor", "--repo", repo.to_str().unwrap(),
+            "--projection", projection.to_str().unwrap(),
+        ], if current { 0 } else { 1 });
+        let checks = component(&value, "bank.projection");
+        assert_eq!(checks.len(), 1);
+        assert_eq!(text(checks[0], "state"), if current { "pass" } else { "failure" });
+        for key in ["writes_performed", "repairs_performed", "network_performed"] {
+            assert_eq!(get(&value, key), &Value::Bool(false));
+        }
+        assert_eq!(snapshot(&world.root), before);
+    }
 }
 
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_resolved_identity_and_custom_bank_follow_the_selected_worktree
 #[test]
-#[ignore = "needs recovery_frontier registered (identity bind, bank observation)"]
 fn resolved_identity_and_custom_bank_follow_the_selected_worktree() {
     let world = World::new();
+    let runtime = support::installed_runtime::install(&world.root, |argv| native_process(&world, argv));
     let repo = world.path("repo");
     world.git(&repo, &["init", "-q", "-b", "main"]);
     let directory = bank(&repo);
-    bind(&world, &repo);
+    bind(&world, &runtime, &repo);
     world.git(&repo, &["add", "."]);
     world.git(&repo, &["commit", "-q", "-m", "Bound test memory"]);
     let worktree = world.path("additional worktree");
@@ -1652,9 +1679,8 @@ fn resolved_identity_and_custom_bank_follow_the_selected_worktree() {
         ],
     );
     let before = snapshot(&world.root);
-    // memory_refresh is not ported: the refresh prerequisite check fails.
-    let first = run(&world, "doctor", &repo, None, 1);
-    let other = run(&world, "doctor", &worktree, None, 1);
+    let first = native_report(&world, &runtime, "doctor", &repo, 0);
+    let other = native_report(&world, &runtime, "doctor", &worktree, 0);
     assert_eq!(
         get(get(&first, "developer"), "resolved"),
         &Value::Bool(true)
@@ -1689,7 +1715,7 @@ fn resolved_identity_and_custom_bank_follow_the_selected_worktree() {
         ],
     );
     let before = snapshot(&world.root);
-    let status = run(&world, "status", &repo, None, 0);
+    let status = native_report(&world, &runtime, "status", &repo, 0);
     assert_eq!(
         text(get(&status, "bank"), "path"),
         repo.join("project-notes").to_str().unwrap()
@@ -1734,20 +1760,19 @@ fn new_repository_and_precreated_identity_need_setup_without_invented_mismatch()
 
 // obligation: tests/contracts/test_setup_diagnostics.py::SetupDiagnostics.test_bank_binding_required_matching_and_actual_mismatch_are_distinct
 #[test]
-#[ignore = "needs recovery_frontier registered (identity bind)"]
 fn bank_binding_required_matching_and_actual_mismatch_are_distinct() {
-    let installed = Installed::new(Mode::Copy, "codex");
-    let world = &installed.world;
+    let world = World::new();
+    let runtime = native_copy(&world, "codex");
     let repo = world.path("repo");
     world.git(&repo, &["init", "-q", "-b", "main"]);
     let directory = bank(&repo);
     let status = |expected: &str| {
-        let value = run(world, "status", &repo, Some(&installed.binary()), 0);
+        let value = native_report(&world, &runtime, "status", &repo, 0);
         assert_eq!(text(get(&value, "setup"), "state"), expected);
         assert!(!text(get(&value, "setup"), "next_step").is_empty());
     };
     status("binding_required");
-    bind(world, &repo);
+    bind(&world, &runtime, &repo);
     status("bound_not_audited");
     let router = directory.join("MEMORY.md");
     let original = std::fs::read_to_string(&router).unwrap();
@@ -1817,13 +1842,14 @@ fn developer(world: &World, repo: &Path) {
     }
 }
 /// Baseline `identity_fixtures.bind`: adopt the existing bank's identity.
-fn bind(world: &World, repo: &Path) {
+fn bind(world: &World, runtime: &support::installed_runtime::NativeRuntime, repo: &Path) {
     developer(world, repo);
     let repo_text = repo.to_str().unwrap();
-    let current = cli(world, &["identity", "status", "--repo", repo_text]);
+    let current = native_cli(world, runtime, &["identity", "status", "--repo", repo_text], 0);
     if get(&current, "resolved") != &Value::Bool(true) {
-        let proposal = cli(
+        let proposal = native_cli(
             world,
+            runtime,
             &[
                 "identity",
                 "preview",
@@ -1834,8 +1860,13 @@ fn bind(world: &World, repo: &Path) {
                 "--reason",
                 "Explicit disposable fixture bank adoption",
             ],
+            0,
         );
-        let receipt = apply(world, "identity", &proposal);
+        let path = world.path("fixture-identity-proposal.json");
+        write(&path, encode_record(&proposal));
+        let receipt = native_cli(world, runtime, &[
+            "identity", "apply", "--proposal", path.to_str().unwrap(),
+        ], 0);
         assert_eq!(get(&receipt, "verified"), &Value::Bool(true));
     }
 }
@@ -1860,11 +1891,62 @@ fn create_identity(world: &World, repo: &Path) {
 
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_doctor_does_not_resume_a_separately_confirmed_purge_or_initialize_replacement
 #[test]
-#[ignore = "needs recovery_frontier registered (purge-data)"]
 fn doctor_does_not_resume_a_separately_confirmed_purge() {
     let world = World::new();
-    let value = run(&world, "doctor", &world.path("repo"), None, 0);
+    let runtime = support::installed_runtime::install(&world.root, |argv| native_process(&world, argv));
+    let repo = world.path("repo");
+    world.git(&repo, &["init", "-q", "-b", "main"]);
+    let directory = bank(&repo);
+    bind(&world, &runtime, &repo);
+    let preview = native_cli(&world, &runtime, &[
+        "purge-data", "--repo", repo.to_str().unwrap(),
+        "--path", directory.to_str().unwrap(), "--check",
+    ], 0);
+    let confirm = text(get(&preview, "preview"), "confirmation");
+    let argv = vec![
+        runtime.command.as_os_str().to_owned(), "--json".into(), "purge-data".into(),
+        "--repo".into(), repo.as_os_str().to_owned(),
+        "--path".into(), directory.as_os_str().to_owned(),
+        "--confirm".into(), confirm.into(),
+    ];
+    let trace = world.path("purge-trace.jsonl");
+    let interrupted = native_process_with_env(&world, &argv, &[
+        ("AGENT_MEMORY_FAULT_STAGE", "purge-after-detach"),
+        ("AGENT_MEMORY_FAULT_MODE", "exit"),
+        ("AGENT_MEMORY_FAULT_TRACE", trace.to_str().unwrap()),
+    ]);
+    assert_eq!(interrupted.status, agent_memory::process::Status::Code(86));
+    assert!(interrupted.stdout.is_empty());
+    assert!(interrupted.stderr.is_empty());
+    let journal_path = world.state().join("purges").join(format!("{confirm}.json"));
+    let journal = decode(&journal_path);
+    assert_eq!(get(&journal, "preview"), get(&preview, "preview"));
+    let quarantine = PathBuf::from(text(&journal, "stage"));
+    assert!(quarantine.is_dir());
+    assert!(!directory.exists());
+    let before = snapshot(&world.root);
+    let value = native_report(&world, &runtime, "doctor", &repo, 0);
     assert_eq!(text(get(&value, "bank"), "state"), "purge_pending");
+    let fixed = native_cli(&world, &runtime, &[
+        "doctor", "--repo", repo.to_str().unwrap(), "--fix",
+    ], 0);
+    assert_eq!(text(get(&fixed, "bank"), "state"), "purge_pending");
+    for key in ["writes_performed", "repairs_performed", "network_performed"] {
+        assert_eq!(get(&fixed, key), &Value::Bool(false));
+    }
+    assert_eq!(decode(&journal_path), journal);
+    assert_eq!(snapshot(&world.root), before);
+    assert!(quarantine.is_dir());
+    assert!(!directory.exists());
+    let completed = native_cli(&world, &runtime, &[
+        "purge-data", "--repo", repo.to_str().unwrap(),
+        "--path", directory.to_str().unwrap(), "--confirm", confirm,
+    ], 0);
+    assert_eq!(get(&completed, "verified"), &Value::Bool(true));
+    assert_eq!(get(get(&completed, "receipt"), "preview"), get(&preview, "preview"));
+    assert_eq!(get(get(&completed, "receipt"), "deletion_readback_verified"), &Value::Bool(true));
+    assert!(!quarantine.exists());
+    assert!(!directory.exists());
 }
 
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_native_copy_and_link_doctor_distinguishes_extension_and_launchers
@@ -1872,7 +1954,6 @@ fn doctor_does_not_resume_a_separately_confirmed_purge() {
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_native_doctor_rejects_rebound_wrapper_bytes_modes_and_roles
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_native_doctor_never_repairs_missing_observer_locks
 #[test]
-#[ignore = "needs recovery_frontier, memory_refresh registered (bank.inspection, omp.native_boundary)"]
 fn native_omp_doctor_distinguishes_extension_and_launchers() {
     for (install_mode, no_guidance) in
         [(Mode::Copy, false), (Mode::Link, false), (Mode::Copy, true)]
@@ -1887,21 +1968,25 @@ fn native_omp_doctor_distinguishes_extension_and_launchers() {
         );
         let before = snapshot(&world.root);
         let healthy = native.doctor(0);
+        let refresh = component(&healthy, "bank.refresh_prerequisites");
+        assert_eq!(refresh.len(), 1);
+        assert_eq!(text(refresh[0], "state"), "pass");
+        assert_eq!(
+            text(get(&healthy, "refresh"), "scope"),
+            "local-transaction-path-and-recovery-only",
+        );
+        assert_eq!(text(get(&healthy, "bank"), "state"), "validated");
+        assert_eq!(
+            get(get(&healthy, "bank"), "source_stability_verified"),
+            &Value::Bool(true),
+        );
         let wrappers = component(&healthy, "runtime.target.wrapper");
         assert_eq!(wrappers.len(), 1);
         assert_eq!(text(wrappers[0], "path"), extension.to_str().unwrap());
-        assert!(
-            component(&healthy, "runtime.target.command-link")
-                .iter()
-                .all(|check| text(check, "state") == "pass")
-        );
-        let status = run(
-            world,
-            "status",
-            &world.path("repo"),
-            Some(&native.installed.binary()),
-            0,
-        );
+        let commands = component(&healthy, "runtime.target.command-link");
+        assert_eq!(commands.len(), 2);
+        assert!(commands.iter().all(|check| text(check, "state") == "pass"));
+        let status = native.report("status", 0);
         let activation = if no_guidance {
             "no_guidance"
         } else {
@@ -1938,107 +2023,150 @@ fn native_omp_doctor_distinguishes_extension_and_launchers() {
     }
 }
 
-/// Child: install a development source with the native omp preset through
-/// the production `omp_boundary` installation seam.
-fn native_install_child(request: &str) {
-    agent_memory::cli::register_providers().unwrap();
-    let request = json::decode(request, Default::default()).unwrap();
-    let source = PathBuf::from(text(&request, "source"));
-    // dev-tools: the development source pack as the installing process's pack.
-    agent_memory::cli::use_development_pack(Some(source.join("skills/agent-memory")));
-    let mut services = services(Some(source.join("target/release/am")));
-    services.omp_boundary = Some(Arc::new(agent_memory::omp_boundary::InstallationBoundary));
-    let install_mode = if text(&request, "mode") == "copy" {
-        Mode::Copy
-    } else {
-        Mode::Link
-    };
-    let result = install::install_command(
-        &Environment::process(),
-        &services,
-        &InstallRequest {
-            development_source: Some(source.clone()),
-            mode: Some(install_mode),
-            presets: Some("omp".into()),
-            omp_agent_dir: Some(text(&request, "agent_dir").to_owned()),
-            omp_peers_upgraded: true,
-            bin_dir: Some(PathBuf::from(text(&request, "bin_dir"))),
-            no_guidance: get(&request, "no_guidance") == &Value::Bool(true),
-            ..InstallRequest::default()
-        },
-    );
-    println!("AM-CODE:{}", result.exit_code);
-    println!(
-        "AM-RESULT:{}",
-        json::encode(&result.value.unwrap_or(Value::Null), json::COMPACT_ASCII).unwrap()
-    );
+/// Run the owned native command with this World's complete environment.
+fn native_process(world: &World, argv: &[OsString]) -> agent_memory::process::Output {
+    native_process_with_env(world, argv, &[])
 }
 
-/// Baseline `native_fixture`: a native omp installation plus a bank.
+fn native_process_with_env(world: &World, argv: &[OsString], extra: &[(&str, &str)]) -> agent_memory::process::Output {
+    use agent_memory::{clock::Deadline, process};
+    let mut environment: Vec<(OsString, OsString)> = world
+        .pairs()
+        .into_iter()
+        .map(|(key, value)| (key.into(), value.into()))
+        .collect();
+    for (key, relative) in [
+        ("XDG_CACHE_HOME", "cache"),
+        ("GH_CONFIG_DIR", "credentials"),
+        ("AGENT_MEMORY_CONFIG_HOME", "config/agent-memory"),
+        ("AGENT_MEMORY_STATE_HOME", "state/agent-memory"),
+        ("AGENT_MEMORY_BACKUP_HOME", "backups"),
+    ] {
+        environment.push((key.into(), world.path(relative).into_os_string()));
+    }
+    for (key, value) in extra {
+        assert!(key.starts_with("AGENT_MEMORY_FAULT_"));
+        environment.push(((*key).into(), (*value).into()));
+    }
+    let cwd = world.path("repo");
+    process::run(&process::Spec {
+        argv,
+        env: &environment,
+        search_path: false,
+        cwd: Some(&cwd),
+        stdin: process::Input::Null,
+        stdout: process::Target::Capture { limit: 4 * 1024 * 1024 },
+        stderr: process::Target::Capture { limit: 4 * 1024 * 1024 },
+        deadline: Deadline::from_seconds(120.0).unwrap(),
+        new_session: false,
+        file_size_limit: None,
+        umask: Some(0o077),
+        pass_fds: &[],
+    })
+    .unwrap()
+}
+
+fn native_copy(world: &World, presets: &str) -> support::installed_runtime::NativeRuntime {
+    let mut runtime = support::installed_runtime::install(&world.root, |argv| native_process(world, argv));
+    write(&world.path("codex/AGENTS.md"), "User instructions stay here.\n");
+    let installed = native_cli(world, &runtime, &[
+        "install", "--development-source", runtime.source.to_str().unwrap(),
+        "--mode", "copy", "--presets", presets,
+        "--bin-dir", runtime.command.parent().unwrap().to_str().unwrap(),
+    ], 0);
+    assert_eq!(get(&installed, "verified"), &Value::Bool(true));
+    (runtime.pack, runtime.binary) =
+        install::executing_runtime(&world.env(), &runtime.command).unwrap();
+    runtime
+}
+
+fn native_cli(world: &World, runtime: &support::installed_runtime::NativeRuntime, args: &[&str], expected: i32) -> Value {
+    let argv: Vec<_> = [runtime.command.as_os_str().to_owned(), "--json".into()]
+        .into_iter().chain(args.iter().map(|arg| OsString::from(*arg))).collect();
+    let output = native_process(world, &argv);
+    assert_eq!(output.status, agent_memory::process::Status::Code(expected),
+        "stdout={} stderr={}", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+    assert!(output.stderr.is_empty());
+    json::decode_bytes(&output.stdout, Default::default()).unwrap()
+}
+
+fn native_report(world: &World, runtime: &support::installed_runtime::NativeRuntime, operation: &str, repo: &Path, expected: i32) -> Value {
+    let value = native_cli(world, runtime, &[operation, "--repo", repo.to_str().unwrap()], expected);
+    for key in ["writes_performed", "repairs_performed", "network_performed"] {
+        assert_eq!(get(&value, key), &Value::Bool(false), "{key}");
+    }
+    value
+}
+
+/// A genuine native omp installation plus a bank.
 struct Native {
     installed: Installed,
+    runtime: support::installed_runtime::NativeRuntime,
     receipt: Value,
 }
 impl Native {
     fn new(install_mode: Mode, no_guidance: bool) -> Self {
         let world = World::new();
-        let source = development_source(&world, "dev source");
+        let mut runtime = support::installed_runtime::install(&world.root, |argv| native_process(&world, argv));
         let agent = world.path("native root");
         std::fs::create_dir(&agent).unwrap();
-        let request = Value::Object(vec![
-            ("source".into(), text_value(source.to_str().unwrap())),
-            (
-                "mode".into(),
-                text_value(if install_mode == Mode::Copy {
-                    "copy"
-                } else {
-                    "link"
-                }),
-            ),
-            ("agent_dir".into(), text_value(agent.to_str().unwrap())),
-            (
-                "bin_dir".into(),
-                text_value(world.path("owned bin").to_str().unwrap()),
-            ),
-            ("no_guidance".into(), Value::Bool(no_guidance)),
-        ]);
-        let output = Command::new(std::env::current_exe().unwrap())
-            .args([
-                "child_entry",
-                "--exact",
-                "--nocapture",
-                "--test-threads=1",
-                "-q",
-            ])
-            .env_clear()
-            .envs(world.pairs())
-            .env(
-                "AM_DIAG_INSTALL",
-                json::encode(&request, json::DEFAULT).unwrap(),
-            )
-            .current_dir(world.path("repo"))
-            .output()
-            .unwrap();
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let value = stdout
-            .lines()
-            .find_map(|line| line.strip_prefix("AM-RESULT:"))
-            .map(|line| json::decode(line, Default::default()).unwrap())
-            .unwrap_or_else(|| panic!("{stdout}\n{}", String::from_utf8_lossy(&output.stderr)));
-        assert!(
-            stdout.contains("AM-CODE:0\n"),
-            "{}",
-            json::encode(&value, json::INDENT2_ASCII).unwrap()
-        );
-        bank(&world.path("repo"));
-        let receipt = get(&value, "receipt").clone();
-        Self {
-            installed: Installed { world, source },
-            receipt,
+        let mut argv = vec![
+            runtime.command.as_os_str().to_owned(),
+            "--json".into(),
+            "install".into(),
+            "--development-source".into(),
+            runtime.source.as_os_str().to_owned(),
+            "--mode".into(),
+            if install_mode == Mode::Copy { "copy" } else { "link" }.into(),
+            "--presets".into(),
+            "omp".into(),
+            "--omp-agent-dir".into(),
+            agent.into_os_string(),
+            "--omp-peers-upgraded".into(),
+            "--bin-dir".into(),
+            runtime.command.parent().unwrap().as_os_str().to_owned(),
+        ];
+        if no_guidance {
+            argv.push("--no-guidance".into());
         }
+        let output = native_process(&world, &argv);
+        assert_eq!(
+            output.status,
+            agent_memory::process::Status::Code(0),
+            "stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+        assert!(output.stderr.is_empty());
+        let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+        assert_eq!(get(&value, "verified"), &Value::Bool(true), "{value:?}");
+        (runtime.pack, runtime.binary) =
+            install::executing_runtime(&world.env(), &runtime.command).unwrap();
+        bank(&world.path("repo"));
+        let receipt = decode(&world.receipt_path());
+        let source = runtime.source.clone();
+        Self { installed: Installed { world, source }, runtime, receipt }
+    }
+    fn report(&self, operation: &str, expected: i32) -> Value {
+        let output = native_process(&self.installed.world, &[
+            self.runtime.command.as_os_str().to_owned(),
+            "--json".into(),
+            operation.into(),
+            "--repo".into(),
+            self.installed.world.path("repo").into_os_string(),
+        ]);
+        assert_eq!(
+            output.status,
+            agent_memory::process::Status::Code(expected),
+            "stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+        assert!(output.stderr.is_empty());
+        json::decode_bytes(&output.stdout, Default::default()).unwrap()
     }
     fn doctor(&self, expected: i32) -> Value {
-        self.installed.doctor(expected)
+        self.report("doctor", expected)
     }
 }
 
@@ -2047,10 +2175,52 @@ impl Native {
 // obligation: tests/contracts/test_setup_diagnostics.py::SetupDiagnostics.test_busy_bank_and_pending_purge_never_advise_first_use
 // obligation: tests/contracts/test_setup_diagnostics.py::SetupDiagnostics.test_tag_like_filenames_and_mixed_case_competing_router_preserve_real_locator_evidence
 #[test]
-#[ignore = "needs memory_refresh registered (doctor's refresh prerequisites; recovery_frontier for purge-data)"]
 fn installed_setup_evidence_without_implicit_initialization() {
-    let installed = Installed::new(Mode::Copy, "codex");
-    bank(&installed.world.path("repo"));
-    let value = installed.doctor(0);
+    let world = World::new();
+    let runtime = native_copy(&world, "codex");
+    let repo = world.path("repo");
+    world.git(&repo, &["init", "-q", "-b", "main"]);
+    bank(&repo);
+    bind(&world, &runtime, &repo);
+    let before = snapshot(&world.root);
+    let value = native_report(&world, &runtime, "doctor", &repo, 0);
     assert_eq!(text(get(&value, "setup"), "state"), "ready");
+    assert_eq!(text(get(&value, "bank"), "state"), "validated");
+    assert_eq!(
+        get(get(&value, "bank"), "source_stability_verified"),
+        &Value::Bool(true),
+    );
+    assert_eq!(text(get(&value, "project"), "binding_state"), "matches");
+    assert_eq!(
+        get(get(&value, "project"), "authority_verified"),
+        &Value::Bool(true),
+    );
+    for name in ["bank.schema_and_readability", "bank.refresh_prerequisites"] {
+        let checks = component(&value, name);
+        assert_eq!(checks.len(), 1, "{name}");
+        assert_eq!(text(checks[0], "state"), "pass", "{name}");
+    }
+    let refresh = get(&value, "refresh");
+    assert_eq!(
+        text(refresh, "scope"),
+        "local-transaction-path-and-recovery-only",
+    );
+    assert_eq!(text(refresh, "remote_check"), "not-exercised");
+    assert_eq!(get(refresh, "remote_freshness_verified"), &Value::Bool(false));
+    assert_eq!(get(refresh, "canonical_writes_performed"), &Value::Bool(false));
+    let human = native_process(&world, &[
+        runtime.command.as_os_str().to_owned(),
+        "doctor".into(),
+        "--repo".into(),
+        repo.as_os_str().to_owned(),
+    ]);
+    assert_eq!(human.status, agent_memory::process::Status::Code(0));
+    assert!(human.stderr.is_empty());
+    let human = String::from_utf8(human.stdout).unwrap();
+    assert!(human.contains("setup ready"), "{human}");
+    assert!(
+        human.contains(&format!("next {}", text(get(&value, "setup"), "next_step"))),
+        "{human}",
+    );
+    assert_eq!(snapshot(&world.root), before);
 }

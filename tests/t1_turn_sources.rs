@@ -638,18 +638,19 @@ fn in_repository(
         let frontier = std::sync::Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
             || {
                 Ok((
-                    PathBuf::from(env!("CARGO_MANIFEST_DIR")),
-                    std::env::current_exe().map_err(|error| {
-                        agent_memory::error::ContractError::new(error.to_string())
-                    })?,
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+                    PathBuf::from(env!("CARGO_BIN_EXE_am")),
                 ))
             },
         ));
         agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
         agent_memory::bank_contract::register_recovery_coverage(Some(frontier));
+        // These source-store cases use development metadata, never installed identity.
+        let pack = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
+        agent_memory::cli::use_development_pack(Some(pack.clone()));
         body(
             &root.join("repository"),
-            Path::new(env!("CARGO_MANIFEST_DIR")),
+            &pack,
         )?;
         use std::io::Write;
         use std::os::unix::fs::OpenOptionsExt;

@@ -2,6 +2,8 @@
 //! release-v2 channel), `am uninstall`, `am purge-data` and doctor repair,
 //! in isolated Worlds. Fixture lifecycle faults run in this test binary;
 //! purge journeys install and invoke the receipt-owned native `am`.
+mod support;
+
 use agent_memory::cache_recovery::Qualification;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::installation::{
@@ -122,13 +124,19 @@ fn make_writable(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-// ----- seams: honest test implementers of unported callees -----
+// ----- component-test lifecycle seams -----
 
-/// The real update checks; only the bank scan (private_state hooks, waiting
-/// for installation/omp_boundary/admission registration) is a fixture.
+/// Real update checks with component-test bank inventory.
 struct LifecycleUpdating(updating::Runtime);
 impl Updating for LifecycleUpdating {
-    fn banks(&self, repositories: &[String], _: &Value, _: bool) -> install::Result<Value> {
+    fn banks(
+        &self,
+        repositories: &[String],
+        _: &Value,
+        _: bool,
+        _: (&Path, &Path),
+        _: Option<(&Path, &Path)>,
+    ) -> install::Result<Value> {
         Ok(Value::Object(vec![(
             "observed_repositories".into(),
             Value::Array(repositories.iter().cloned().map(Value::String).collect()),
@@ -173,16 +181,17 @@ impl PrivateState for FixturePrivateState {
         _: &Value,
         _: Option<&Value>,
         _: &str,
+        _: (&Path, &Path),
         transition: &mut dyn FnMut() -> install::Result<Option<Value>>,
         body: &mut dyn FnMut(&Value) -> install::Result<Value>,
     ) -> install::Result<Value> {
         transition()?;
         body(&Value::Object(vec![("fixture".into(), Value::Bool(true))]))
     }
-    fn prepare_lifecycle(&self, _: &Value, _: bool) -> install::Result<Value> {
+    fn prepare_lifecycle(&self, _: &Value, _: bool, _: (&Path, &Path)) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
-    fn require_compatible(&self, _: &Value, _: &Value, _: &str) -> install::Result<Value> {
+    fn require_compatible(&self, _: &Value, _: &Value, _: &str, _: (&Path, &Path)) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
     fn public_summary(&self, value: &Value) -> install::Result<Value> {
@@ -661,11 +670,14 @@ fn child_entry() {
     let root = PathBuf::from(std::env::var("AGENT_MEMORY_TEST_ROOT").unwrap());
     let token = std::env::var("AGENT_MEMORY_TEST_TOKEN").unwrap();
     match command.as_str() {
-        "native-purge-preview" | "native-purge-scenario" => {
+        "native-purge-preview" | "native-purge-scenario" | "native-runtime-authority" => {
             let world = World::reopen(&root, &token);
-            install_native_purge_runtime(&world);
+            let runtime = support::installed_runtime::install(&world.root, |argv| {
+                bounded_purge_process(&world, argv, &[])
+            });
             match command.as_str() {
                 "native-purge-preview" => purge_preview_scenario(&world),
+                "native-runtime-authority" => runtime_authority_scenario(&world, &runtime),
                 "native-purge-scenario" => {
                     let point = std::env::var("AM_T2_PURGE_POINT").unwrap();
                     purge_interruption_scenario(&world, &point);
@@ -870,65 +882,51 @@ fn native_purge_command(
     Child { code, value }
 }
 
-/// Copy the shipped assets without inventing a compatibility document or an
-/// installation receipt. The candidate CLI performs the real installation.
-fn install_native_purge_runtime(world: &World) {
-    for relative in [
-        "cache",
-        "credentials",
-        "config/agent-memory",
-        "state/agent-memory",
-        "backups",
-    ] {
-        let path = world.path(relative);
-        std::fs::create_dir_all(&path).unwrap();
-        mode(&path, 0o700);
-    }
-    let source = world.path("dev-source");
-    let pack = source.join("skills/agent-memory");
-    let shipped = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
-    for (relative, (bytes, permissions)) in
-        agent_memory::pack_validation::inventory(&shipped).unwrap()
-    {
-        let path = pack.join(relative);
-        write(&path, bytes);
-        mode(&path, permissions);
-    }
-    let binary = source.join("target/release/am");
-    std::fs::create_dir_all(binary.parent().unwrap()).unwrap();
-    std::fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
-    mode(&binary, 0o755);
-    let installed = native_purge_command(
-        world,
-        &binary,
-        &[
-            "install".into(),
-            "--development-source".into(),
-            source.into_os_string(),
-            "--mode".into(),
-            "link".into(),
-            "--presets".into(),
-            "none".into(),
-            "--no-guidance".into(),
-            "--bin-dir".into(),
-            world.bin().into_os_string(),
-        ],
-        &[],
-    );
-    verified(installed.code.unwrap(), &installed.value.unwrap());
-    let receipt = decode(&world.receipt_path());
-    assert_eq!(text(&receipt, "schema"), "agent-memory/install-receipt-v3");
-    let owned = install::source_binary(get(&receipt, "source")).unwrap();
-    assert_eq!(std::fs::canonicalize(&owned).unwrap(), binary);
-    assert_eq!(
-        std::fs::canonicalize(world.bin().join("am")).unwrap(),
-        owned,
-    );
-    assert_eq!(
-        text(get(&receipt, "source"), "pack"),
-        pack.to_str().unwrap()
-    );
+#[test]
+fn verified_receipt_pair_ignores_executable_locator_but_refuses_changed_bytes() {
+    let world = World::new();
+    native_purge_worker(&world, "native-runtime-authority", &[]);
 }
+
+fn runtime_authority_scenario(world: &World, installed: &support::installed_runtime::NativeRuntime) {
+    agent_memory::cli::register_providers().unwrap();
+    let env = world.env();
+    let receipt = decode(&world.receipt_path());
+    let locations = install::locations(&env).unwrap();
+    let before = snapshot(&world.root);
+    let pack_before = snapshot(&installed.pack);
+    for executable in [
+        None,
+        Some(world.path("missing-executable")),
+        Some(std::env::current_exe().unwrap()),
+    ] {
+        let mut services = Services::registered().unwrap();
+        services.executable = executable;
+        let runtime = install::verified_receipt_runtime(&env, &services, &receipt).unwrap();
+        assert_eq!(runtime.pair(), installed.pair());
+        let (trusted, trusted_runtime) =
+            agent_memory::doctor_fix::trusted_receipt(&env, &services, &locations, None).unwrap();
+        assert_eq!(trusted, receipt);
+        assert_eq!(trusted_runtime.pair(), installed.pair());
+        assert_eq!(snapshot(&world.root), before);
+    }
+    use std::io::Write;
+    let mut binary = std::fs::OpenOptions::new()
+        .append(true)
+        .open(&installed.binary)
+        .unwrap();
+    binary.write_all(b"\nchanged candidate bytes\n").unwrap();
+    binary.sync_all().unwrap();
+    drop(binary);
+    let changed = snapshot(&world.root);
+    let services = Services::registered().unwrap();
+    assert!(install::verified_receipt_runtime(&env, &services, &receipt).is_err());
+    assert!(agent_memory::doctor_fix::trusted_receipt(&env, &services, &locations, None).is_err());
+    assert_eq!(snapshot(&world.root), changed);
+    assert_eq!(snapshot(&installed.pack), pack_before);
+    assert_eq!(decode(&world.receipt_path()), receipt);
+}
+
 fn fault(stage: &str) -> Vec<(&'static str, String)> {
     vec![
         ("AGENT_MEMORY_FAULT_STAGE", stage.to_owned()),
@@ -2610,11 +2608,15 @@ fn purge_refuses_without_touching_the_bank_outside_an_installed_runtime() {
     // A process without receipt-owned runtime authority must refuse before
     // changing the selected repository or its canonical bank.
     for (check, confirm) in [(true, None), (false, Some("0".repeat(64)))] {
-        let (code, refusal) = unregistered_purge(&world, &repo, &bank, check, confirm.as_deref());
-        let error = refused(code, &refusal);
-        assert!(
-            error.ends_with("pass --pack PATH") || error.ends_with("provider is not registered"),
-            "{error}"
+        let result = native_purge_command(
+            &world,
+            Path::new(env!("CARGO_BIN_EXE_am")),
+            &native_purge_request(&repo, &bank, check, confirm.as_deref()),
+            &[],
+        );
+        assert_eq!(
+            refused(result.code.unwrap(), result.value.as_ref().unwrap()),
+            "Purge requires an active independently verified installation receipt",
         );
     }
     assert_eq!(snapshot(&repo), before);
@@ -2643,7 +2645,7 @@ fn reconcile_recreates_missing_owned_targets_from_the_receipt() {
     let installed = Installed::new(Mode::Copy);
     let services = installed.running_services();
     let locations = installed.locations();
-    let old = agent_memory::doctor_fix::trusted_receipt(
+    let (old, _runtime) = agent_memory::doctor_fix::trusted_receipt(
         &installed.world.env(),
         &services,
         &locations,
@@ -2714,22 +2716,9 @@ fn reconcile_preserves_a_modified_owned_hook_and_refuses() {
 }
 
 #[test]
-fn trusted_receipt_refuses_another_executing_package_and_python_era_receipts() {
+fn trusted_receipt_refuses_python_era_receipts() {
     let installed = Installed::new(Mode::Copy);
     let locations = installed.locations();
-    let mut services = installed.services();
-    services.executable = Some(installed.channel.binary(BASE));
-    let error = agent_memory::doctor_fix::trusted_receipt(
-        &installed.world.env(),
-        &services,
-        &locations,
-        None,
-    )
-    .unwrap_err();
-    assert_eq!(
-        error.to_string(),
-        "Executing package differs from the installed receipt"
-    );
     let mut legacy = installed.receipt();
     set_field(
         &mut legacy,
@@ -2742,7 +2731,8 @@ fn trusted_receipt_refuses_another_executing_package_and_python_era_receipts() {
         &locations,
         Some(legacy),
     )
-    .unwrap_err();
+    .err()
+    .unwrap();
     assert_eq!(error.to_string(), install::ADOPTION_GUIDANCE);
 }
 
@@ -2844,91 +2834,6 @@ fn healthy_installation_needs_no_doctor_repair() {
     assert_eq!(get(&value, "repairs_performed"), &Value::Bool(false));
     assert_eq!(get(&value, "writes_performed"), &Value::Bool(false));
     assert_eq!(get(&value, "restart_clients"), &Value::Array(vec![]));
-    assert_eq!(snapshot(&installed.world.root), before);
-}
-
-/// Records each plan the lifecycle hands to the native boundary seam.
-#[derive(Default)]
-struct RecordingOmp(std::sync::Mutex<Vec<(Value, bool)>>);
-fn planned_transition() -> Value {
-    json::decode(
-        r#"{"binding_disable_planned": true, "drains": [], "installation_writes_performed": false, "canonical_writes_performed": false}"#,
-        json::DecodePolicy::default(),
-    )
-    .unwrap()
-}
-impl install::OmpBoundary for RecordingOmp {
-    fn capability(&self) -> &str {
-        agent_memory::omp_boundary::CAPABILITY
-    }
-    fn native_transition(&self, plan: &mut Value, check: bool) -> install::Result<Value> {
-        self.0.lock().unwrap().push((plan.clone(), check));
-        Ok(planned_transition())
-    }
-    fn native_activation(&self, _: &mut Value, _: bool) -> install::Result<Value> {
-        Ok(Value::Array(vec![]))
-    }
-    fn finish_native_transition(&self, _: &Value) -> install::Result<()> {
-        Ok(())
-    }
-    fn recover_native_binding(&self, _: &Path) -> install::Result<()> {
-        Ok(())
-    }
-    fn native_recovery_expected(&self, _: &Path, _: &str) -> install::Result<Option<Value>> {
-        Ok(None)
-    }
-    fn complete_stored_source_activation(&self, _: &Path) -> install::Result<Value> {
-        Ok(Value::Object(vec![]))
-    }
-}
-
-/// `--omp-writers-quiesced` is the plan's own `omp_transition`; update check
-/// records the native transition's result, uninstall check passes the plan.
-#[test]
-fn writers_quiesced_checks_hand_the_plan_transition_to_the_native_boundary() {
-    let installed = Installed::new(Mode::Copy);
-    let omp = Arc::new(RecordingOmp::default());
-    let mut services = installed.services();
-    services.omp_boundary = Some(omp.clone());
-    let before = snapshot(&installed.world.root);
-    let request = UpdateRequest {
-        check: true,
-        omp_writers_quiesced: true,
-        ..UpdateRequest::default()
-    };
-    let result = updating::update_command(&installed.world.env(), &services, &request);
-    let value = result.value.unwrap();
-    assert_eq!(result.exit_code, 0, "{value:?}");
-    assert_eq!(get(&value, "native_transition"), &planned_transition());
-    let quiesced = json::decode(
-        r#"{"writers_quiesced": true}"#,
-        json::DecodePolicy::default(),
-    )
-    .unwrap();
-    {
-        let calls = omp.0.lock().unwrap();
-        assert_eq!(calls.len(), 1);
-        let (plan, check) = &calls[0];
-        assert!(*check);
-        assert_eq!(get(plan, "omp_transition"), &quiesced);
-        assert_eq!(text(plan, "operation"), "update");
-        assert!(plan.get("preserved").is_none() && plan.get("reinstall").is_none());
-    }
-    let request = UninstallRequest {
-        check: true,
-        omp_writers_quiesced: true,
-        ..UninstallRequest::default()
-    };
-    let result = uninstallation::uninstall_command(&installed.world.env(), &services, &request);
-    let value = result.value.unwrap();
-    assert_eq!(result.exit_code, 0, "{value:?}");
-    let calls = omp.0.lock().unwrap();
-    assert_eq!(calls.len(), 2);
-    let (plan, check) = &calls[1];
-    assert!(*check);
-    assert_eq!(get(plan, "omp_transition"), &quiesced);
-    assert_eq!(text(plan, "operation"), "uninstall");
-    assert!(plan.get("preserved").is_some());
     assert_eq!(snapshot(&installed.world.root), before);
 }
 

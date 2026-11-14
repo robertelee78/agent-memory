@@ -14,6 +14,7 @@ use std::ffi::OsString;
 use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+mod support;
 
 const ID: &str = "75b38e17-c36e-4fab-8ba9-5fa51f25de91";
 const OTHER: &str = "bdcb692b-2322-4f21-b9dd-a4a4eca21145";
@@ -361,10 +362,11 @@ fn command_receipts_use_baseline_codecs_and_capacity_free_refusals() {
 
 struct World {
     root: PathBuf,
+    runtime: Option<support::installed_runtime::NativeRuntime>,
 }
 impl World {
     fn env(&self) -> Vec<(OsString, OsString)> {
-        vec![
+        let mut env = vec![
             ("PATH".into(), "/usr/bin:/bin:/usr/local/bin".into()),
             ("HOME".into(), self.root.join("home").into_os_string()),
             (
@@ -385,7 +387,28 @@ impl World {
             ),
             ("GIT_CONFIG_NOSYSTEM".into(), "1".into()),
             ("LC_ALL".into(), "C".into()),
-        ]
+        ];
+        for (key, directory) in [
+            ("XDG_DATA_HOME", "data"),
+            ("XDG_CACHE_HOME", "cache"),
+            ("TMPDIR", "tmp"),
+            ("CODEX_HOME", "codex"),
+            ("CLAUDE_CONFIG_DIR", "claude"),
+            ("OPENCODE_CONFIG_DIR", "opencode"),
+            ("GH_CONFIG_DIR", "credentials"),
+            ("AGENT_MEMORY_BACKUP_HOME", "backups"),
+        ] {
+            env.push((key.into(), self.root.join(directory).into_os_string()));
+        }
+        let marker = self.root.join(".test-world.json");
+        if marker.exists() {
+            let marker = load(&std::fs::read(marker).unwrap()).unwrap();
+            env.extend([
+                ("AGENT_MEMORY_TEST_ROOT".into(), self.root.as_os_str().to_owned()),
+                ("AGENT_MEMORY_TEST_TOKEN".into(), st(&marker, "token").into()),
+            ]);
+        }
+        env
     }
     fn command(&self, argv: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
         let mut env = self.env();
@@ -489,7 +512,10 @@ impl World {
         path
     }
     fn native(&self, args: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
-        let mut argv = vec![OsString::from(env!("CARGO_BIN_EXE_am")), "--json".into()];
+        let mut argv = vec![
+            self.runtime.as_ref().unwrap().command.as_os_str().to_owned(),
+            "--json".into(),
+        ];
         argv.extend_from_slice(args);
         self.command(&argv, extra)
     }
@@ -538,25 +564,47 @@ impl World {
         (current, old)
     }
 }
+fn installed_consumer_case(name: &str) -> bool {
+    matches!(
+        name,
+        "rebind_preserves_aliases_context_code_index_and_head"
+            | "fork_changes_every_namespace_through_real_two_store_binding"
+            | "registry_only_and_torn_bank_interruptions_resume_original_bundle"
+            | "identity_pins_are_rechecked_under_real_bank_lock"
+            | "every_mediated_writer_refuses_unresolved_identity_but_raw_validation_remains_available"
+            | "enrollment_entry_and_exit_independently_recheck_repository_configuration"
+            | "public_status_preserves_whitespace_paths_and_ignores_ambient_git"
+    )
+}
 fn in_world(name: &str, body: impl FnOnce(&World)) {
     if std::env::var("AM_SCOPE_CASE").ok().as_deref() == Some(name) {
-        // Real providers only; the actual frontier receives explicit fixture
-        // runtime/executable callbacks, not a synthetic scope or hold.
+        // Component tests inject real byte locations, never test-executable
+        // installed authority. Enrollment freshness also checks the real receipt.
         cli::register_providers().unwrap();
-        let world = World {
+        let mut world = World {
             root: PathBuf::from(std::env::var_os("AM_SCOPE_ROOT").unwrap()),
+            runtime: None,
         };
-        let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
-            || {
-                Ok((
-                    Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-                    std::env::current_exe()
-                        .map_err(|error| ContractError::new(error.to_string()))?,
-                ))
-            },
-        ));
-        writes::register_recovery_frontier(Some(frontier.clone()));
-        bank::register_recovery_coverage(Some(frontier));
+        world.runtime = installed_consumer_case(name)
+            .then(|| support::installed_runtime::install(&world.root, |argv| world.command(argv, &[])));
+        if world.runtime.is_some() {
+            support::installed_runtime::register_component_runtime();
+        } else {
+            // Metadata-only cases use explicit development bytes, not installed authority.
+            cli::use_development_pack(Some(
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+            ));
+            let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
+                || {
+                    Ok((
+                        Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
+                        PathBuf::from(env!("CARGO_BIN_EXE_am")),
+                    ))
+                },
+            ));
+            writes::register_recovery_frontier(Some(frontier.clone()));
+            bank::register_recovery_coverage(Some(frontier));
+        }
         body(&world);
         use std::io::Write;
         use std::os::unix::fs::OpenOptionsExt;
@@ -570,14 +618,17 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
         completed.sync_all().unwrap();
         return;
     }
-    let root = std::env::temp_dir().join(format!("am-scope-{}", host::uuid4().unwrap()));
-    std::fs::DirBuilder::new()
-        .mode(0o700)
-        .create(&root)
-        .unwrap();
-    let root = std::fs::canonicalize(root).unwrap();
-    std::fs::create_dir(root.join("home")).unwrap();
-    let world = World { root };
+    let disposable = installed_consumer_case(name).then(|| support::World::new().unwrap());
+    let root = if let Some(disposable) = &disposable {
+        disposable.root.clone()
+    } else {
+        let root = std::env::temp_dir().join(format!("am-scope-{}", host::uuid4().unwrap()));
+        std::fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
+        let root = std::fs::canonicalize(root).unwrap();
+        std::fs::create_dir(root.join("home")).unwrap();
+        root
+    };
+    let world = World { root, runtime: None };
     let output = world.command(
         &[
             std::env::current_exe().unwrap().into_os_string(),
@@ -592,7 +643,9 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
         ],
     );
     let completed = std::fs::read(world.root.join("scope-body-completed"));
-    std::fs::remove_dir_all(&world.root).unwrap();
+    if disposable.is_none() {
+        std::fs::remove_dir_all(&world.root).unwrap();
+    }
     assert_eq!(
         output.status,
         process::Status::Code(0),
@@ -709,7 +762,6 @@ fn create_has_initialization_only_handoff_without_chicken_and_egg() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_rebind_previews_bank_change_reads_both_stores_and_preserves_aliases_and_code
 #[test]
-#[ignore = "needs an installed v3 runtime for the real TurnSources canonical-transaction barrier; frontier fixture callbacks do not replace that locator"]
 fn rebind_preserves_aliases_context_code_index_and_head() {
     in_world(
         "rebind_preserves_aliases_context_code_index_and_head",
@@ -770,7 +822,6 @@ fn rebind_preserves_aliases_context_code_index_and_head() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_fork_changes_every_namespace_and_preserves_record_provenance_conditions_and_tombstone
 #[test]
-#[ignore = "needs an installed v3 runtime for the real TurnSources canonical-transaction barrier; frontier fixture callbacks do not replace that locator"]
 fn fork_changes_every_namespace_through_real_two_store_binding() {
     in_world(
         "fork_changes_every_namespace_through_real_two_store_binding",
@@ -882,7 +933,6 @@ fn stale_developer_registry_bank_and_remote_never_overwrite() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_registry_only_interruption_and_torn_bank_resume_with_original_bundle
 #[test]
-#[ignore = "needs an installed v3 runtime for native writes/recovery child processes and the real TurnSources barrier"]
 fn registry_only_and_torn_bank_interruptions_resume_original_bundle() {
     in_world(
         "registry_only_and_torn_bank_interruptions_resume_original_bundle",
@@ -952,7 +1002,6 @@ fn registry_only_and_torn_bank_interruptions_resume_original_bundle() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_identity_is_pinned_from_preview_and_rechecked_under_the_bank_lock
 #[test]
-#[ignore = "needs an installed v3 runtime owning the native writes apply child executable"]
 fn identity_pins_are_rechecked_under_real_bank_lock() {
     in_world("identity_pins_are_rechecked_under_real_bank_lock", |w| {
         let repo = w.repo("repository");
@@ -982,7 +1031,7 @@ fn identity_pins_are_rechecked_under_real_bank_lock() {
             ),
         ]);
         let argv = [
-            OsString::from(env!("CARGO_BIN_EXE_am")),
+            w.root.join("home/.local/bin/am").into_os_string(),
             "--json".into(),
             "writes".into(),
             "apply".into(),
@@ -1035,11 +1084,12 @@ fn identity_pins_are_rechecked_under_real_bank_lock() {
 
 // obligation: tests/contracts/test_scope_binding.py::ScopeBindingContract.test_all_public_mediated_writers_refuse_unresolved_identity_and_raw_reads_remain_available
 #[test]
-#[ignore = "needs an installed v3 runtime for real TurnSources canonical write barriers; no fixture scope capability bypass"]
 fn every_mediated_writer_refuses_unresolved_identity_but_raw_validation_remains_available() {
     in_world(
         "every_mediated_writer_refuses_unresolved_identity_but_raw_validation_remains_available",
         |w| {
+            let state = w.root.join("state/agent-memory");
+            let state_before = agent_memory::installation::fingerprint(&state).unwrap();
             let repo = w.repo("repository");
             let bank = w.bank(&repo, ID, None);
             let content = "# Focus\n\nProposed mediated write.\n";
@@ -1054,7 +1104,7 @@ fn every_mediated_writer_refuses_unresolved_identity_but_raw_validation_remains_
             assert_eq!(w.canonical(&bank), before);
             assert!(!bank.join(".agent-memory.lock").exists());
             bank::validate(&repo, None, None).unwrap();
-            assert!(!w.root.join("state/agent-memory").exists());
+            assert_eq!(agent_memory::installation::fingerprint(&state).unwrap(), state_before);
             w.developer("Fixture developer");
             w.bind(&repo);
             assert!(writes::apply(&single).is_err());
@@ -1324,8 +1374,13 @@ fn enrollment_entry_and_exit_independently_recheck_repository_configuration() {
     in_world(
         "enrollment_entry_and_exit_independently_recheck_repository_configuration",
         |w| {
+            let runtime = agent_memory::installation::executing_runtime(
+                &agent_memory::installation::Environment::process(),
+                &w.root.join("home/.local/bin/am"),
+            )
+            .unwrap();
             for (mutation, action) in [("config", "bind"), ("remote", "link")] {
-                let repo = w.repo(mutation);
+                let repo = w.repo(&format!("{mutation}-repository"));
                 w.git(
                     &repo,
                     &[
@@ -1338,8 +1393,7 @@ fn enrollment_entry_and_exit_independently_recheck_repository_configuration() {
                 let bank = w.bank(&repo, ID, Some("repo://github.com/example/project"));
                 w.developer("Fixture developer");
                 scope::apply(&w.preview(&repo, action)).unwrap();
-                let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
-                let context = scope::private_enrollment_context(&repo, &runtime).unwrap();
+                let context = scope::private_enrollment_context(&repo, &runtime.0).unwrap();
                 assert!(!context.held());
                 assert_eq!(context.project_id(), &s(ID));
                 let original = w.canonical(&bank);
@@ -1383,7 +1437,7 @@ fn enrollment_entry_and_exit_independently_recheck_repository_configuration() {
                         .is_err()
                 );
                 assert!(!entered.get());
-                assert!(scope::private_enrollment_context(&repo, &runtime).is_err());
+                assert!(scope::private_enrollment_context(&repo, &runtime.0).is_err());
                 assert_eq!(w.canonical(&bank), original);
             }
         },

@@ -7,16 +7,27 @@ use std::path::Path;
 use support::cutover::*;
 use support::{RunOptions, World};
 
-#[test]
-fn cutover_dispatch_worker() {
-    dispatch_worker();
-}
 fn cli(w: &World, args: &[OsString]) -> (i32, Value) {
-    let (code, stdout, stderr) = dispatch(w, args, None);
+    let output = w
+        .run_with(
+            std::iter::once(
+                w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+            )
+            .chain(args.iter().cloned()),
+            RunOptions {
+                check: false,
+                timeout: std::time::Duration::from_secs(120),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let Status::Code(code) = output.status else {
+        panic!("Native canary command was signalled: {output:?}");
+    };
     (
         code,
-        json::decode(&stdout, Default::default())
-            .unwrap_or_else(|e| panic!("{e}: {stdout}\n{stderr}")),
+        json::decode_bytes(&output.stdout, Default::default())
+            .unwrap_or_else(|error| panic!("{error}: {output:?}")),
     )
 }
 fn ok(w: &World, args: &[OsString]) -> Value {
@@ -297,20 +308,36 @@ fn checkpoint_provenance_survives_fresh_machine_and_second_developer() {
         .unwrap();
     let machine = r.world.inside("second-machine").unwrap();
     fs::create_dir(&machine).unwrap();
-    for key in [
-        "HOME",
-        "XDG_CONFIG_HOME",
-        "XDG_DATA_HOME",
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "AGENT_MEMORY_CONFIG_HOME",
-        "AGENT_MEMORY_STATE_HOME",
-        "GH_CONFIG_DIR",
+    for (key, relative) in [
+        ("HOME", "home"),
+        ("XDG_CONFIG_HOME", "config"),
+        ("XDG_DATA_HOME", "data"),
+        ("XDG_STATE_HOME", "state"),
+        ("XDG_CACHE_HOME", "cache"),
+        ("AGENT_MEMORY_CONFIG_HOME", "config/agent-memory"),
+        ("AGENT_MEMORY_STATE_HOME", "state/agent-memory"),
+        ("GH_CONFIG_DIR", "credentials"),
     ] {
-        let target = machine.join(key.to_lowercase());
-        fs::create_dir(&target).unwrap();
+        let target = machine.join(relative);
+        fs::create_dir_all(&target).unwrap();
         r.world.env.insert(key.into(), target.into_os_string());
     }
+    let runtime = support::installed_runtime::install(&machine, |argv| {
+        r.world
+            .run_with(
+                argv,
+                RunOptions {
+                    check: false,
+                    timeout: std::time::Duration::from_secs(120),
+                    ..Default::default()
+                },
+            )
+            .unwrap()
+    });
+    r.world.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.clone().into_os_string(),
+    );
     let checked = good(
         &r.world,
         "bank_contract.py",
@@ -327,7 +354,7 @@ fn checkpoint_provenance_survives_fresh_machine_and_second_developer() {
     );
     let second = developer(&r.world);
     assert_ne!(first, second);
-    support::identity_fixtures::bind(&r.world, &clone).unwrap();
+    support::identity_fixtures::bind_with_command(&r.world, &clone, &runtime.command).unwrap();
     let code_before = fs::read(clone.join("app.rs")).unwrap();
     let index = fs::read(clone.join(".git/index")).unwrap();
     let proposal = checkpoint(

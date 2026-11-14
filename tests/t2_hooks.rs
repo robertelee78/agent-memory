@@ -350,13 +350,12 @@ impl Case {
         }
         .state(repo, bank)
     }
-    /// The executing runtime pack for in-process hooks: this source tree's.
+    /// The genuinely installed pack selected by the component locator.
     fn runtime(&self) -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory")
+        agent_memory::cli::pack_root().unwrap()
     }
     fn library(&self, name: &str, input: &str) -> hooks::Output {
-        let pack = self.runtime();
-        hooks::run(name, input.as_bytes(), &move || Ok(pack.clone())).unwrap()
+        hooks::run(name, input.as_bytes(), &agent_memory::cli::pack_root).unwrap()
     }
 }
 
@@ -397,6 +396,12 @@ fn in_world(name: &str, body: impl FnOnce(&Case)) {
     );
     assert_eq!(run.code, 0, "{}\n{}", run.stdout, run.stderr);
     assert!(run.stdout.contains("1 passed"), "{}", run.stdout);
+}
+
+fn in_runtime_world(name: &str, body: impl FnOnce(&Case)) {
+    bank_fixture::in_world(name, |world| {
+        body(&Case { root: world.root.clone() });
+    });
 }
 
 fn node(world: &World) -> Option<PathBuf> {
@@ -1371,26 +1376,43 @@ fn new_and_existing_enrollment_verify_namespace_before_acceptance() {
 
 // obligation: tests/contracts/test_opencode_native_boundary.py::NativeLedger.test_actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session
 #[test]
-#[ignore = "needs recovery_frontier, memory_refresh registered"]
 fn actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session() {
-    in_world(
-        "actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session",
-        |case| {
-            let (repo, _) = case.bank();
-            // The installed layout: <runtime>/bin/am beside <runtime>/skills/agent-memory.
-            let runtime = case.root.join("data/agent-memory/runtime");
-            let hooks_dir = runtime.join("skills/agent-memory/hooks");
-            mkdir(&hooks_dir);
-            mkdir(&runtime.join("bin"));
-            std::os::unix::fs::symlink(AM, runtime.join("bin/am")).unwrap();
-            for name in [
-                "opencode-v2.js",
-                "opencode-v2-queue.js",
-                "boundary-prompt.txt",
-            ] {
-                std::fs::copy(pack_hooks().join(name), hooks_dir.join(name)).unwrap();
-            }
-            let code = r#"
+    let mut world = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&world.root, |argv| {
+        world
+            .run_with(
+                argv,
+                support::RunOptions { check: false, ..Default::default() },
+            )
+            .unwrap()
+    });
+    world.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.as_os_str().to_owned(),
+    );
+    let repo = world.repository("repo", false).unwrap();
+    let remote = world.repository("plugin-authority.git", true).unwrap();
+    world.git(["remote", "add", "origin", remote.to_str().unwrap()]).unwrap();
+    world.git(["config", "--local", "agent-memory.authorityBranch", "main"]).unwrap();
+    let proposal = decode(include_str!(
+        "../skills/agent-memory/templates/router-proposal.example.json"
+    ));
+    let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
+    let bank = repo.join("memory-bank");
+    for (path, body) in get(&rendered, "files").as_object().unwrap() {
+        let path = bank.join(path);
+        mkdir(path.parent().unwrap());
+        private_write(&path, body.as_str().unwrap().as_bytes());
+    }
+    support::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
+    world.git(["add", "memory-bank"]).unwrap();
+    world.git(["commit", "-m", "Synchronized native plugin fixture"]).unwrap();
+    world.git(["push", "origin", "HEAD:main"]).unwrap();
+    let bank_before = tree(&bank);
+    let head_before = world.git(["rev-parse", "HEAD"]).unwrap().stdout;
+    let index_before = world.git(["ls-files", "--stage", "-z"]).unwrap().stdout;
+    let hooks_dir = runtime.pack.join("hooks");
+    let code = r#"
 import {pathToFileURL} from 'node:url';
 const plugin=(await import(pathToFileURL(process.argv[1]))).default;
 const repo=process.argv[2],hooks={},tools={},queues=[],sessions=new Map();
@@ -1402,6 +1424,7 @@ const dispose=await plugin.setup(ctx);
 const source={type:'user',id:'msg_original',text:'Explain the fixture value without creating memory.'};sessions.set('ses_original',[source]);
 const prompt={messageID:source.id,sessionID:'ses_original'};await hooks.prompt(prompt);source.metadata=prompt.metadata;
 const firstBacklog=JSON.parse((await tools.pending_sources({}, {sessionID:'ses_original'})).content);
+if(firstBacklog.pending_count!==1||firstBacklog.sources[0].session_id!=='ses_original'||firstBacklog.sources[0].source_id!==source.id||queues.length!==0)throw Error('source not enrolled before context');
 await hooks.context({sessionID:'ses_original',messages:[{id:source.id}]});await hooks.context({sessionID:'ses_original',messages:[{id:source.id}]});
 if(queues.length!==1||Buffer.byteLength(queues[0].text)>2048||!queues[0].text.includes('Preserve the substantive task answer'))throw Error('unbounded or duplicate queue');
 const rows=sessions.get('ses_original');rows.push({type:'assistant',id:'answer',text:'The fixture value is seven.',finish:'stop',time:{completed:1}},
@@ -1424,32 +1447,30 @@ await hooks.context({sessionID:'ses_original',messages:[{id:interrupted.id}]});
 if(queues.length!==1)throw Error('completed source requeued');
 dispose();process.stdout.write(JSON.stringify({firstBacklog,ack,backlog,missing,recovered,queues:queues.length,bytes:Buffer.byteLength(queues[0].text)}));
 "#;
-            let node = std::env::split_paths(&std::env::var_os("PATH").unwrap())
-                .map(|dir| dir.join("node"))
-                .find(|path| path.exists())
-                .expect("JavaScript runtime");
-            let mut argv = argv(node.to_str().unwrap(), &["--input-type=module", "-e", code]);
-            argv.push(hooks_dir.join("opencode-v2.js").into_os_string());
-            argv.push(repo.clone().into_os_string());
-            let run = finished(
-                process::run_for(
-                    &spec(
-                        &argv,
-                        &case.env(),
-                        &case.root,
-                        Input::Null,
-                        Duration::from_secs(60),
-                    ),
-                    Duration::from_secs(60),
-                )
-                .unwrap(),
-            );
-            assert_eq!(run.code, 0, "{run:?}");
-            let value = run.value();
-            assert_eq!(get(&value, "queues"), &decode("1"));
-            assert!(get(&value, "bytes").as_int().unwrap().as_u64().unwrap() <= 2048);
-        },
+    let node = node(&world).expect("JavaScript runtime in isolated World");
+    let mut argv = argv(node.to_str().unwrap(), &["--input-type=module", "-e", code]);
+    argv.push(hooks_dir.join("opencode-v2.js").into_os_string());
+    argv.push(repo.clone().into_os_string());
+    let run = finished(
+        process::run_for(
+            &spec(
+                &argv,
+                &world_env(&world, &[]),
+                &world.root,
+                Input::Null,
+                Duration::from_secs(60),
+            ),
+            Duration::from_secs(60),
+        )
+        .unwrap(),
     );
+    assert_eq!(run.code, 0, "{run:?}");
+    let value = run.value();
+    assert_eq!(get(&value, "queues"), &decode("1"));
+    assert!(get(&value, "bytes").as_int().unwrap().as_u64().unwrap() <= 2048);
+    assert_eq!(tree(&bank), bank_before);
+    assert_eq!(world.git(["rev-parse", "HEAD"]).unwrap().stdout, head_before);
+    assert_eq!(world.git(["ls-files", "--stage", "-z"]).unwrap().stdout, index_before);
 }
 
 // ----- OpenCode queue (test_opencode_queue.py) -----
@@ -1813,9 +1834,8 @@ fn uninstalled_executable_fails_closed_over_a_bank() {
 
 // obligation: tests/contracts/test_hook_failure.py::HookFailureContract.test_hook_failure_codes_survive_without_source_content
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn hook_failure_codes_survive_without_source_content() {
-    in_world(
+    in_runtime_world(
         "hook_failure_codes_survive_without_source_content",
         |case| {
             let (repo, _) = case.bank();
@@ -1876,9 +1896,8 @@ fn hook_failure_codes_survive_without_source_content() {
 
 // obligation: tests/contracts/test_hook_failure.py::HookFailureContract.test_unresolved_identity_retains_fixed_metadata_without_bank_change
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn unresolved_identity_retains_fixed_metadata_without_bank_change() {
-    in_world(
+    in_runtime_world(
         "unresolved_identity_retains_fixed_metadata_without_bank_change",
         |case| {
             let (repo, bank) = case.bank();
@@ -1941,9 +1960,8 @@ fn claude_event(repo: &Path, session: &str, prompt: &str, transcript: &Path, tex
 
 // obligation: tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_enroll_before_transcript_source_assertion_then_quiet_nullable_stop
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn enroll_before_transcript_source_assertion_then_quiet_nullable_stop() {
-    in_world(
+    in_runtime_world(
         "enroll_before_transcript_source_assertion_then_quiet_nullable_stop",
         |case| {
             let (repo, _) = case.bank();
@@ -2000,9 +2018,8 @@ fn enroll_before_transcript_source_assertion_then_quiet_nullable_stop() {
 
 // obligation: tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_shared_native_prompt_tracks_three_distinct_observations_without_transcript_projection
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn shared_native_prompt_tracks_three_distinct_observations_without_transcript_projection() {
-    in_world(
+    in_runtime_world(
         "shared_native_prompt_tracks_three_distinct_observations_without_transcript_projection",
         |case| {
             let (repo, _) = case.bank();
