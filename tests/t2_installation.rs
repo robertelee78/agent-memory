@@ -356,6 +356,26 @@ fn error_text(value: &Value) -> String {
 /// Publish a complete release-v2 fixture using a throwaway signing key. Only
 /// file:// transport is enabled; no released key, network or executable is used.
 fn signed_release(world: &World, name: &str, binary: &[u8]) -> PathBuf {
+    signed_release_with_surface(
+        world,
+        name,
+        binary,
+        Value::Object(vec![(
+            "commands".into(),
+            Value::Array(vec![
+                Value::String("install".into()),
+                Value::String("update".into()),
+            ]),
+        )]),
+    )
+}
+
+fn signed_release_with_surface(
+    world: &World,
+    name: &str,
+    binary: &[u8],
+    command_surface: Value,
+) -> PathBuf {
     let root = development_source(world, name);
     let pack = root.join(install::RELEASE_PACK);
     write(&pack.join("keys/allowed-signers"), release::ALLOWED_SIGNERS);
@@ -402,13 +422,7 @@ fn signed_release(world: &World, name: &str, binary: &[u8]) -> PathBuf {
             .into_iter()
             .map(|target| (target.into(), identity.clone()))
             .collect(),
-        command_surface: Value::Object(vec![(
-            "commands".into(),
-            Value::Array(vec![
-                Value::String("install".into()),
-                Value::String("update".into()),
-            ]),
-        )]),
+        command_surface,
     };
     let key = root.join("key");
     let command = |args: &[OsString], input: &[u8]| {
@@ -633,6 +647,45 @@ fn signed_bootstrap_installs_bound_bytes_and_exchanges_the_runtime_root() {
             &original
         ));
     }
+}
+
+#[test]
+fn signed_bootstrap_accepts_large_manifests_and_refuses_above_the_manifest_bound() {
+    let world = World::new();
+    let surface = Value::Object(vec![(
+        "commands".into(),
+        Value::Array(vec![Value::String("x".repeat(release::MAX_METADATA + 1))]),
+    )]);
+    let root = signed_release_with_surface(&world, "large release", STAND_IN, surface);
+    let manifest_path = root
+        .join(format!("assets/v{}", env!("CARGO_PKG_VERSION")))
+        .join(release::MANIFEST);
+    let raw = release::regular(&manifest_path, release::MAX_MANIFEST).unwrap();
+    assert!(raw.len() > release::MAX_METADATA);
+    assert!(raw.len() < release::MAX_MANIFEST);
+    let installed = release_ok(&world, &root, &release_request(&root));
+    let runtime = world.path("data/agent-memory/runtime");
+    assert_eq!(
+        release::regular(&runtime.join(release::MANIFEST), release::MAX_MANIFEST).unwrap(),
+        raw
+    );
+    assert_eq!(
+        text(
+            get(get(&installed, "receipt"), "source"),
+            "release_manifest_sha256"
+        ),
+        release::digest(&raw)
+    );
+
+    write(&manifest_path, vec![b' '; release::MAX_MANIFEST + 1]);
+    let before = snapshot(&world.root);
+    let result = install::install_command(
+        &world.env(),
+        &release_services(&root),
+        &release_request(&root),
+    );
+    assert_eq!(result.exit_code, 1, "{}", result.stdout);
+    assert_eq!(snapshot(&world.root), before);
 }
 
 #[test]

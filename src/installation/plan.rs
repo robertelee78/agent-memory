@@ -742,7 +742,7 @@ pub fn source_info(services: &Services, root: &Path, kind: &str) -> Result<Sourc
     if kind == "release" {
         let binary = root.join(RELEASE_BINARY);
         let manifest = release::installed_with(&root, TARGET, &services.release.signers)?;
-        let raw_manifest = release::regular(&root.join(release::MANIFEST), release::MAX_METADATA)?;
+        let raw_manifest = release::regular(&root.join(release::MANIFEST), release::MAX_MANIFEST)?;
         let package = services.artifacts.inspect_runtime(&pack, &binary)?;
         let identity = manifest
             .targets

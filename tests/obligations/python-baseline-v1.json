@@ -1072,7 +1072,7 @@
   {
    "id": "tests/contracts/test_claude_boundary.py::ClaudeBoundaryContract.test_bound_source_and_duplicate_are_fail_closed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1100,21 +1100,21 @@
   {
    "id": "tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_interrupted_old_unicode_completion_retries_without_rewriting_evidence",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_interrupted_prompt_is_discoverable_and_stdin_cannot_claim_publication",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_claude_source_turns.py::ClaudeSourceTurns.test_legacy_unicode_done_is_bounded_and_corruption_is_not_quiet",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1156,7 +1156,7 @@
   {
    "id": "tests/contracts/test_codex_stop.py::CodexStopContract.test_legacy_completion_remains_quiet_without_rewriting_source",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2031,182 +2031,182 @@
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_a_hidden_other_type_superseder_cannot_silently_defeat_the_new_replacement_version",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_ambiguous_evidence_or_older_contexts_still_applying_stays_pending_without_pruning",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_changed_actual_repository_evidence_refuses_automatic_pruning",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_consumed_capture_identity_still_finds_revoked_learning_after_all_inactive_bodies_are_compacted",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_correction_cannot_reuse_unchanged_evidence_or_promote_a_procedural_capture",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_current_context_only_deletion_does_not_globally_erase_a_record",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_deleted_independent_duplicates_cannot_return_from_cached_consolidation_output",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_deletion_refuses_a_copied_router_assertion_until_its_existing_file_workflow_cleans_it",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_deletion_requires_reviewed_removal_of_copied_ordinary_context",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_erasure_includes_consolidated_capture_identity_so_a_saved_capture_cannot_be_admitted_again",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_existing_replacement_is_versioned_and_survives_deletion_of_the_wrong_old_claim",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_expiry_requires_actual_known_boundary_and_policy_retention_is_distinct",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_legacy_flat_consumed_capture_stays_pending_after_revocation_and_compaction",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_narrowing_cannot_replace_the_old_claim_that_still_applies_in_older_contexts",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_reactivation_needs_new_evidence_and_an_explicit_current_period",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_revocation_removes_current_guidance_and_invalidates_projection_and_cached_payload",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_scope_correction_retains_older_branch_guidance_without_applying_it_on_main",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_stale_target_or_context_review_and_tampered_delta_refuse_without_writes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_stronger_correction_keeps_stable_identity_old_origin_and_useful_history",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_terminal_deletion_requires_explicit_bounded_derived_scope_and_removes_only_safe_markers",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance.py::GovernanceContract.test_unresolved_other_developer_claim_keeps_correction_pending",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_changed_supporting_source_at_readback_cannot_commit_pruning_and_rollback_preserves_it",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_correction_crash_requires_owned_lock_recovery_and_rollback_before_fresh_comparison",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_deleting_last_nested_route_preserves_custom_index_context_before_removing_empty_maps",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_explicit_deletion_erases_corrected_versions_and_their_content_bearing_history",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_governance_recovery.py::GovernanceRecoveryContract.test_nested_completed_receipt_refuses_corruption_then_cleans_up_without_requiring_new_evidence",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -3165,7 +3165,7 @@
   {
    "id": "tests/contracts/test_installed_bank_governance.py::InstalledBankRoundtrip.test_governance_alias_checks_intent_at_preview_and_apply_before_writes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5426,70 +5426,70 @@
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_completed_restore_has_distinct_child_and_keeps_parent_historical_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_exact_retry_is_historical_and_never_overwrites_later_context",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_first_replacement_before_progress_supports_known_finish_and_rollback",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_initial_quiescence_requires_exact_independent_review",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_known_finish_and_rollback_follow_exact_journal_boundaries",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_prepare_refuses_demoting_canonical_context_or_typed_prior_guidance",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_prepare_requires_full_coverage_independent_review_real_identity_and_safe_output",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5510,7 +5510,7 @@
   {
    "id": "tests/contracts/test_layout_recovery.py::LayoutRecoveryContract.test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6182,70 +6182,70 @@
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_individual_unlink_keeps_receipt_and_directories_and_checks_changed_bytes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_owned_incomplete_staging_is_retained_not_promoted_to_complete",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_pending_units_cannot_be_deleted_by_retention",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_purge_and_age_cannot_retire_pending_hold",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_public_terminal_cleanup_crash_resume_and_real_historical_retry",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_resolution_and_quiescence_metadata_remain_retained",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_resume_accepts_only_the_one_unlink_before_progress_boundary",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_symlink_hardlink_and_unsafe_mode_never_gain_cleanup_ownership",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_retention.py::LayoutRetentionContract.test_unknown_backup_even_empty_directory_is_not_disposable",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12792,7 +12792,7 @@
   {
    "id": "tests/contracts/test_unified_cli_operations.py::UnifiedCLIOperations.test_installed_correction_preserves_identity_origin_history_and_repeat",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 478,
-   "ported": 326,
-   "unported": 1058
+   "partial": 526,
+   "ported": 332,
+   "unported": 1004
   }
  }
 }

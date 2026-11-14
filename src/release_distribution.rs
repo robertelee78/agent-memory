@@ -75,6 +75,8 @@ pub const MAX_ENTRIES: usize = 4096;
 pub const MAX_ARCHIVE: usize = MAX_BYTES + 1024 * 1024;
 pub const MAX_TAR: usize = MAX_BYTES + MAX_ENTRIES * 1024;
 pub const MAX_METADATA: usize = 65536;
+/// Bounds the signed release-v2 manifest, including its command surface.
+pub const MAX_MANIFEST: usize = 1024 * 1024;
 pub const MAX_BINARY: usize = 64 * 1024 * 1024;
 pub const TARGETS: [&str; 3] = [
     "aarch64-apple-darwin",
@@ -94,16 +96,19 @@ pub fn digest(raw: &[u8]) -> String {
     crate::pack_validation::sha256(raw)
 }
 pub fn parse(raw: &[u8]) -> Result<Value> {
-    require(
-        raw.len() <= MAX_METADATA,
-        "Release metadata exceeds its bound",
-    )?;
+    parse_bounded(raw, MAX_METADATA)
+}
+pub fn parse_manifest(raw: &[u8]) -> Result<Value> {
+    parse_bounded(raw, MAX_MANIFEST)
+}
+fn parse_bounded(raw: &[u8], maximum: usize) -> Result<Value> {
+    require(raw.len() <= maximum, "Release metadata exceeds its bound")?;
     Ok(json::decode_bytes(
         raw,
         DecodePolicy {
             duplicate_keys: DuplicateKeys::Reject,
             non_finite: NonFinite::Reject,
-            max_bytes: MAX_METADATA,
+            max_bytes: maximum,
             ..DecodePolicy::default()
         },
     )?)
@@ -368,7 +373,7 @@ impl ReleaseManifest {
         let mut raw = canonical(&self.value())?;
         raw.push(b'\n');
         require(
-            raw.len() <= MAX_METADATA,
+            raw.len() <= MAX_MANIFEST,
             "Release metadata exceeds its bound",
         )?;
         Ok(raw)
@@ -480,11 +485,11 @@ pub fn verify_manifest_with(
     signers: &str,
 ) -> Result<ReleaseManifest> {
     require(
-        raw.len() <= MAX_METADATA,
+        raw.len() <= MAX_MANIFEST,
         "Manifest or signature exceeds its bound",
     )?;
     verify_signature_with(raw, signature, NAMESPACE, signers)?;
-    ReleaseManifest::from_value(&parse(raw)?, tag)
+    ReleaseManifest::from_value(&parse_manifest(raw)?, tag)
 }
 pub fn verify_manifest(raw: &[u8], signature: &[u8], tag: Option<&str>) -> Result<ReleaseManifest> {
     verify_manifest_with(raw, signature, tag, ALLOWED_SIGNERS)
@@ -1405,9 +1410,9 @@ pub fn probe_with(
     options: DownloadOptions,
     signers: &str,
 ) -> Result<ReleaseObservation> {
-    let raw = download_with(first_manifest_url, MAX_METADATA, options)?;
+    let raw = download_with(first_manifest_url, MAX_MANIFEST, options)?;
     // The first response is untrusted; it chooses only a syntactically constrained tag.
-    let value = parse(&raw)?;
+    let value = parse_manifest(&raw)?;
     let version = text(&value, "version").unwrap_or("");
     require(stable_version(version), "Invalid stable release tag")?;
     let tag = format!("v{version}");
@@ -1455,7 +1460,7 @@ pub fn installed(root: &Path, triple: &str) -> Result<ReleaseManifest> {
 }
 pub fn installed_with(root: &Path, triple: &str, signers: &str) -> Result<ReleaseManifest> {
     let manifest = verify_manifest_with(
-        &regular(&root.join(MANIFEST), MAX_METADATA)?,
+        &regular(&root.join(MANIFEST), MAX_MANIFEST)?,
         &regular(&root.join(SIGNATURE), 4096)?,
         None,
         signers,

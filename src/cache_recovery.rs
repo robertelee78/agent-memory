@@ -187,16 +187,21 @@ pub fn observe_with(root: &Path, install: &dyn Installation) -> Result<Observati
                 walk(&child, root, &rel, next_barrier, observation, held, total)?;
                 held.push((PathBuf::from(&rel), child, pin));
             } else {
+                let maximum = if rel == release::MANIFEST {
+                    release::MAX_MANIFEST
+                } else {
+                    release::MAX_FILE
+                };
                 require(
-                    pin.nlink == 1 && pin.size >= 0 && pin.size as usize <= release::MAX_FILE,
+                    pin.nlink == 1 && pin.size >= 0 && pin.size as usize <= maximum,
                     &format!("linked or oversized file at {rel}"),
                 )?;
                 let raw = child
-                    .read_bounded(release::MAX_FILE)
+                    .read_bounded(maximum)
                     .map_err(|e| ContractError::new(e.to_string()))?;
                 *total += raw.len();
                 require(
-                    *total <= release::MAX_BYTES + MAX_CACHE_BYTES + 2 * release::MAX_METADATA,
+                    *total <= release::MAX_BYTES + MAX_CACHE_BYTES + release::MAX_MANIFEST + 4096,
                     "source byte inventory exceeds its bound",
                 )?;
                 require(

@@ -351,3 +351,18 @@ impl RecoveryReadSet {
         Ok(true)
     }
 }
+
+impl RecoveryReadSet {
+    pub(crate) fn root(&self) -> &Path {
+        &self.root
+    }
+    pub(crate) fn manifest(&self) -> &Value {
+        &self.manifest
+    }
+    pub(crate) fn proposal(&self) -> &Value {
+        &self.proposal
+    }
+    pub(crate) fn transaction(&self) -> &[u8] {
+        &self.transaction
+    }
+}

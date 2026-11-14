@@ -404,6 +404,18 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     ))?;
     crate::admission::register_comparison(Some(Arc::new(crate::comparison::Comparison)));
     crate::discovery::register_comparison(Some(Arc::new(crate::comparison::Comparison)));
+    for operation in ["correct", "supersede", "revoke", "forget"] {
+        wired(crate::bank_transactions::register_transaction_validator(
+            operation,
+            Some(Arc::new(crate::governance::Governance)),
+        ))?;
+    }
+    crate::bank_contract::register_route_table(Some(Arc::new(
+        helpers::layout_recovery::RouteTable,
+    )));
+    crate::layout_restore::register_layout_recovery(Some(Arc::new(
+        crate::layout_recovery::LayoutRecovery,
+    )));
     Ok(())
 }
 

@@ -197,6 +197,58 @@ fn signed_manifest_has_one_strict_v2_definition_and_canonical_encoding() {
     );
 }
 
+#[test]
+fn signed_manifest_accepts_command_surfaces_above_the_api_metadata_bound() {
+    let p = Publisher::new();
+    let files = pack_files();
+    let mut m = manifest(&files, &archive(&files), b"runtime");
+    m.command_surface = object([("commands", string("x".repeat(release::MAX_METADATA + 1)))]);
+    let raw = m.encoded().unwrap();
+    assert!(release::canonical(&m.command_surface).unwrap().len() > release::MAX_METADATA);
+    assert!(raw.len() < release::MAX_MANIFEST);
+    assert!(release::parse(&raw).is_err());
+    assert_eq!(
+        ReleaseManifest::from_value(&release::parse_manifest(&raw).unwrap(), None).unwrap(),
+        m
+    );
+    let signature = p.sign(&raw, release::NAMESPACE);
+    assert_eq!(
+        release::verify_manifest_with(&raw, &signature, None, &p.signers).unwrap(),
+        m
+    );
+    assert!(release::verify_manifest_with(&raw, &vec![b'x'; 4097], None, &p.signers).is_err());
+}
+
+#[test]
+fn signed_manifest_refuses_bytes_above_the_manifest_bound() {
+    let p = Publisher::new();
+    let files = pack_files();
+    let mut m = manifest(&files, &archive(&files), b"runtime");
+    m.command_surface = object([("commands", string(""))]);
+    let overhead = m.encoded().unwrap().len();
+    m.command_surface = object([(
+        "commands",
+        string("x".repeat(release::MAX_MANIFEST - overhead)),
+    )]);
+    let mut raw = m.encoded().unwrap();
+    assert_eq!(raw.len(), release::MAX_MANIFEST);
+    let signature = p.sign(&raw, release::NAMESPACE);
+    assert_eq!(
+        release::verify_manifest_with(&raw, &signature, None, &p.signers).unwrap(),
+        m
+    );
+    raw.push(b' ');
+    let signature = p.sign(&raw, release::NAMESPACE);
+    assert!(release::parse_manifest(&raw).is_err());
+    let error = release::verify_manifest_with(&raw, &signature, None, &p.signers).unwrap_err();
+    assert!(error.to_string().contains("exceeds its bound"));
+    m.command_surface = object([(
+        "commands",
+        string("x".repeat(release::MAX_MANIFEST - overhead + 1)),
+    )]);
+    assert!(m.encoded().is_err());
+}
+
 // obligation: tests/contracts/test_download_diagnostics.py::DownloadBootstrap.test_invalid_signature_is_not_retried
 #[test]
 fn tampering_signature_or_payload_refuses() {
@@ -299,6 +351,7 @@ fn manifest_schema_rejects_legacy_unknown_fields_invalid_targets_and_numbers() {
         assert!(release::parse(raw).is_err());
     }
     assert!(release::parse(&vec![b' '; release::MAX_METADATA + 1]).is_err());
+    assert!(release::parse_manifest(&vec![b' '; release::MAX_MANIFEST + 1]).is_err());
 }
 
 #[test]
@@ -468,7 +521,8 @@ fn file_url_acquisition_uses_selected_tag_after_first_fetch() {
     let p = Publisher::new();
     let files = pack_files();
     let raw = archive(&files);
-    let m = manifest(&files, &raw, b"runtime");
+    let mut m = manifest(&files, &raw, b"runtime");
+    m.command_surface = object([("commands", string("x".repeat(release::MAX_METADATA + 1)))]);
     let assets = p.scratch.path.join("assets");
     let version = assets.join("v0.0.15");
     agent_memory::fs::private_mkdir(&version).unwrap();
@@ -497,7 +551,7 @@ fn file_url_acquisition_uses_selected_tag_after_first_fetch() {
     assert!(
         release::download(
             &format!("file://{}", first.display()),
-            release::MAX_METADATA
+            release::MAX_MANIFEST
         )
         .is_err()
     );
@@ -591,7 +645,8 @@ impl cache::Installation for FixtureInstallation {
 fn recovery_fixture(p: &Publisher) -> (PathBuf, Value) {
     let root = p.scratch.path.join("source");
     let files = pack_files();
-    let m = manifest(&files, &archive(&files), b"runtime");
+    let mut m = manifest(&files, &archive(&files), b"runtime");
+    m.command_surface = object([("commands", string("x".repeat(release::MAX_METADATA + 1)))]);
     let raw = m.encoded().unwrap();
     let signature = p.sign(&raw, release::NAMESPACE);
     write_pack(&root.join("skills/agent-memory"), &files);
@@ -655,6 +710,26 @@ fn recovery_fixture(p: &Publisher) -> (PathBuf, Value) {
         ),
     ]);
     (root, receipt)
+}
+
+#[test]
+fn cache_observation_uses_the_manifest_bound_for_signed_source_metadata() {
+    let p = Publisher::new();
+    let (root, _) = recovery_fixture(&p);
+    let path = root.join(release::MANIFEST);
+    assert!(
+        release::regular(&path, release::MAX_MANIFEST)
+            .unwrap()
+            .len()
+            > release::MAX_METADATA
+    );
+    std::fs::write(&path, vec![b' '; release::MAX_MANIFEST + 1]).unwrap();
+    let error = cache::observe_with(&root, &FixtureInstallation).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("linked or oversized file at release-manifest.json")
+    );
 }
 fn add_cache(root: &Path, stem: &str, raw: &[u8]) -> PathBuf {
     let relative = Path::new("skills/agent-memory/scripts/agent_memory/__pycache__");

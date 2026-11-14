@@ -309,3 +309,16 @@ pub fn random_bytes(buffer: &mut [u8]) -> Result<()> {
 pub fn current_executable() -> Result<PathBuf> {
     std::env::current_exe().map_err(|_| ContractError::new("Cannot locate executing runtime"))
 }
+
+/// Supplementary process groups, bounded by the kernel's reported count.
+pub fn groups() -> Result<Vec<u32>> {
+    let count = unsafe { libc::getgroups(0, std::ptr::null_mut()) };
+    let capacity = usize::try_from(count)
+        .map_err(|_| ContractError::new("Supplementary groups are unavailable"))?;
+    let mut buffer: Vec<libc::gid_t> = vec![0; capacity];
+    let written = unsafe { libc::getgroups(count, buffer.as_mut_ptr()) };
+    let written = usize::try_from(written)
+        .map_err(|_| ContractError::new("Supplementary groups are unavailable"))?;
+    buffer.truncate(written);
+    Ok(buffer)
+}

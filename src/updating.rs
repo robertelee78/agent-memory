@@ -625,7 +625,7 @@ pub fn release_transition(source: &Value, candidate: &Value) -> Result<()> {
 /// Root command names declared by a signed runtime root's command surface.
 pub fn declared_commands(root: &Path, signers: &str) -> Result<BTreeSet<String>> {
     let manifest = release::verify_manifest_with(
-        &release::regular(&root.join(release::MANIFEST), release::MAX_METADATA)?,
+        &release::regular(&root.join(release::MANIFEST), release::MAX_MANIFEST)?,
         &release::regular(&root.join(release::SIGNATURE), MAX_SIGNATURE)?,
         None,
         signers,

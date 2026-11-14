@@ -235,6 +235,35 @@ pub trait RecoveryFrontier: Send + Sync {
         owner: Option<&[u8]>,
         transaction: Option<&[u8]>,
     ) -> Result<Value>;
+    /// Exact verified hold of a completed rollback, or None.
+    fn rolled_back_predecessor(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Option<crate::scope_binding::VerifiedEnrollmentHold>>;
+    fn inherited_pending_rows(&self, repo: &Path, runtime_root: &Path) -> Result<Vec<Value>>;
+    fn prospective_token(
+        &self,
+        repo: &Path,
+        manifest: &Value,
+        pending_units: &[Value],
+        predecessor: Option<&crate::scope_binding::VerifiedEnrollmentHold>,
+        owner: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Value>;
+    #[allow(clippy::too_many_arguments)]
+    fn install(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        proposal: &Value,
+        pending_ledger: &Value,
+        hold_id: &str,
+        owner: &[u8],
+        predecessor: Option<&crate::scope_binding::VerifiedEnrollmentHold>,
+        runtime_root: &Path,
+    ) -> Result<Value>;
 }
 /// Baseline recovery_frontier marker schemas; recovery_frontier reuses these.
 pub const HOLD: &str = "agent-memory/layout-frontier-hold-v1";
@@ -245,6 +274,16 @@ pub trait RecoveryTransactions: Send + Sync {
     fn apply_checkpoint(&self, proposal: &Value) -> Result<Value>;
     /// Baseline recovery_transactions.apply_transaction.
     fn apply_transaction(&self, proposal: &Value) -> Result<Value>;
+    fn nested_receipt(&self, journal: &Value, path: &Path) -> Result<Option<Value>>;
+    fn recover_nested(
+        &self,
+        repo: &Path,
+        operation_id: Option<&str>,
+        nested_id: Option<&str>,
+        mode: Option<&str>,
+        proposal: Option<&Value>,
+        runtime_root: &Path,
+    ) -> Result<Value>;
 }
 pub trait Security: Send + Sync {
     fn guarded_start(

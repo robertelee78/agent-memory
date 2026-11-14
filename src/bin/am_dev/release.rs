@@ -51,7 +51,7 @@ pub fn register_providers(providers: Option<Providers>) -> Result<()> {
             "Release command surface must be an object",
         )?;
         require(
-            release::canonical(&providers.command_surface)?.len() <= release::MAX_METADATA,
+            release::canonical(&providers.command_surface)?.len() <= release::MAX_MANIFEST,
             "Release metadata exceeds its bound",
         )?;
     }
@@ -225,7 +225,7 @@ fn sign(
     let maximum = if namespace == release::BINARY_NAMESPACE {
         release::MAX_BINARY
     } else {
-        release::MAX_METADATA
+        release::MAX_MANIFEST
     };
     release::verify_signature_with(
         &release::regular(&path, maximum)?,
@@ -1390,7 +1390,7 @@ printf 200
         let reparsed = release::verify_manifest_with(
             &release::regular(
                 &fixture.root.join("built").join(release::MANIFEST),
-                release::MAX_METADATA,
+                release::MAX_MANIFEST,
             )
             .unwrap(),
             &release::regular(&fixture.root.join("built").join(release::SIGNATURE), 4096).unwrap(),

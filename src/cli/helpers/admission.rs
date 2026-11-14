@@ -94,7 +94,7 @@ fn input(m: &Matches, name: &str, maximum: usize) -> Result<Value> {
         .ok_or_else(|| ContractError::new("Missing admission input"))?;
     domain::read_input(Path::new(path), maximum)
 }
-fn private_preview(repo: &Path, value: Value, output: Option<&str>) -> Result<Value> {
+pub(crate) fn private_preview(repo: &Path, value: Value, output: Option<&str>) -> Result<Value> {
     let token = crate::bank_writes::recovery_frontier_provider()?.observe(repo)?;
     let units = get(&token, "unit_ids")
         .as_array()

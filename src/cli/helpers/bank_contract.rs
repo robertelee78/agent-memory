@@ -21,8 +21,7 @@ static VALIDATE: Parser = Parser {
     exclusive: &[],
     subcommands: None,
 };
-// Baseline also declares `recover-layout` (routed to recover_layout.py) first;
-// it is registered with layout recovery, which is not yet ported.
+// Recovery is dispatched to its typed helper before parsing bank commands.
 static PARSER: Parser = Parser {
     description: Some(
         "Read-only rendering and validation of the first-release router/file contract.",
@@ -33,6 +32,11 @@ static PARSER: Parser = Parser {
         dest: "command",
         required: true,
         commands: &[
+            Subcommand {
+                name: "recover-layout",
+                help: Some("source-preserving reviewed layout recovery"),
+                parser: &super::layout_recovery::PARSER,
+            },
             Subcommand {
                 name: "render",
                 help: Some("emit a file proposal; write nothing"),
@@ -51,7 +55,11 @@ pub static HELPER: Helper = Helper {
     script: "bank_contract.py",
     module: "bank_contract",
     parser: &PARSER,
-    routes: &[],
+    routes: &[crate::cli::Route {
+        name: "recover-layout",
+        helper: &super::layout_recovery::HELPER,
+        prefix: &[],
+    }],
     run,
 };
 
