@@ -783,8 +783,9 @@ pub fn development_source(w: &World, name: &str) -> PathBuf {
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
         &source.join("skills/agent-memory"),
     );
-    fs::create_dir_all(source.join("target/release")).unwrap();
-    fs::copy(env!("CARGO_BIN_EXE_am"), source.join("target/release/am")).unwrap();
+    super::installed_runtime::stage_binary(&source.join("target/release/am"), |argv| {
+        w.run(argv).unwrap()
+    });
     source
 }
 pub fn copy_tree(source: &Path, target: &Path) {

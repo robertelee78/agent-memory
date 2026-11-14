@@ -24,9 +24,9 @@ pub fn source(world: &World) -> PathBuf {
         &Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
         &root.join("skills/agent-memory"),
     );
-    std::fs::create_dir_all(root.join("target/release")).unwrap();
-    std::fs::copy(env!("CARGO_BIN_EXE_am"), root.join("target/release/am")).unwrap();
-    mode(&root.join("target/release/am"), 0o755);
+    super::installed_runtime::stage_binary(&root.join("target/release/am"), |argv| {
+        world.run(argv).unwrap()
+    });
     root
 }
 

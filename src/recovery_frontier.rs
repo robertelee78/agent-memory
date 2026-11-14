@@ -203,6 +203,8 @@ pub fn marker_bytes(bank: &Path, name: &str, expected: Option<&[u8]>) -> Result<
     }
 }
 fn read_marker(bank: &Path, name: &str, expected: Option<&[u8]>) -> Result<Option<Vec<u8>>> {
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("frontier.marker.before-read")?;
     if expected.is_some_and(|raw| name != MARKER || raw.len() > sharing_limits::MAX_PRIVATE) {
         return Err(err("Invalid exact owned transaction marker witness"));
     }
@@ -218,6 +220,8 @@ fn read_marker(bank: &Path, name: &str, expected: Option<&[u8]>) -> Result<Optio
         Ok(info) => info,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             chain.recheck().map_err(io)?;
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("frontier.marker.after-read")?;
             return Ok(None);
         }
         Err(error) => return Err(io(error)),
@@ -257,6 +261,8 @@ fn read_marker(bank: &Path, name: &str, expected: Option<&[u8]>) -> Result<Optio
             "Recovery marker or bank binding changed during observation",
         ));
     }
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("frontier.marker.after-read")?;
     Ok(Some(bytes))
 }
 pub fn marker_value(raw: &[u8]) -> Result<Value> {
@@ -1062,6 +1068,8 @@ pub fn verified_hold_at_bank(
     runtime: &Path,
     binary: &Path,
 ) -> Result<Option<VerifiedHold>> {
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("frontier.verified-hold.before-entry")?;
     let token = observe_bank(root, bank, owner, transaction, true, runtime)?;
     let Some(bytes) = marker_bytes(bank, MARKER, None)? else {
         return Ok(None);

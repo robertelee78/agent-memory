@@ -963,17 +963,13 @@ fn registry_only_and_torn_bank_interruptions_resume_original_bundle() {
             .iter()
             .enumerate()
             {
+                // Each fault is an independent adoption, even though this native
+                // fixture shares one registry across both cases.
+                let identity = host::uuid4().unwrap();
+                let remote = format!("https://github.com/owner/project-{index}.git");
                 let repo = w.repo(&format!("repository-{index}"));
-                w.git(
-                    &repo,
-                    &[
-                        "remote",
-                        "add",
-                        "origin",
-                        "https://github.com/owner/project.git",
-                    ],
-                );
-                let bank = w.bank(&repo, ID, None);
+                w.git(&repo, &["remote", "add", "origin", &remote]);
+                let bank = w.bank(&repo, &identity, None);
                 w.developer("Fixture developer");
                 let p = w.preview(&repo, "bind");
                 let file = w.save(&p, "binding-proposal.json");
@@ -998,12 +994,31 @@ fn registry_only_and_torn_bank_interruptions_resume_original_bundle() {
                     encoded(g(&p, "proposal")).unwrap()
                 );
                 assert_eq!(g(&w.status(&repo), "resolved"), &Value::Bool(false));
+                let registry_before_resume =
+                    std::fs::read(w.root.join("config/projects.json")).unwrap();
                 if bank.join(".agent-memory.lock").exists() {
                     let recovery = writes::recover(&repo, None).unwrap();
                     writes::recover(&repo, Some(&recovery)).unwrap();
                 }
                 let done = scope::apply(&p).unwrap();
                 assert_eq!(g(&done, "verified"), &Value::Bool(true));
+                assert_eq!(g(&done, "project_id"), &s(&identity));
+                assert_eq!(
+                    g(&done, "developer_id"),
+                    g(g(&p, "proposal"), "developer_id")
+                );
+                assert_eq!(
+                    std::fs::read(w.root.join("config/projects.json")).unwrap(),
+                    registry_before_resume
+                );
+                let expected: BTreeMap<String, Vec<u8>> = g(tx, "files")
+                    .as_object()
+                    .unwrap()
+                    .iter()
+                    .map(|(path, body)| (path.clone(), body.as_str().unwrap().as_bytes().to_vec()))
+                    .collect();
+                assert_eq!(w.canonical(&bank), expected);
+                assert_eq!(g(&w.status(&repo), "resolved"), &Value::Bool(true));
                 assert!(!bank.join(txn::MARKER).exists());
                 assert!(!bundle.exists());
                 std::fs::write(
