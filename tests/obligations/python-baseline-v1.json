@@ -7192,7 +7192,7 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::ExplicitNativeOwnership.test_all_never_enables_omp_and_root_is_required",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7206,14 +7206,14 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::ExplicitNativeOwnership.test_explicit_root_and_peer_attestation_never_come_from_environment",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::ExplicitNativeOwnership.test_saved_root_changes_and_implicit_all_removal_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7536,7 +7536,7 @@
    "id": "tests/contracts/test_omp_boundary.py::StoredBatchControls",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7795,7 +7795,7 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_held_unknown_foreign_malformed_and_unsafe_owners_never_become_busy",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -7872,7 +7872,7 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_rebound_inode_after_flock_observation_is_not_classified_as_busy",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7921,14 +7921,14 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_bank_replaced_by_symlink_before_open_is_typed_without_closing_foreign_fds",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_clean_release_at_each_observation_boundary_is_not_recovery",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7942,7 +7942,7 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_initial_lstat_io_error_is_typed_without_opening_descriptors",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7956,28 +7956,28 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_noncontention_first_ex_error_removes_only_creators_empty_slot",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_nonempty_short_owner_write_remains_interruption_not_initialization",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_owner_write_oserror_preserves_publication_evidence_and_closes_creator",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_preexisting_empty_slot_is_never_creator_cleanup_authority",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7998,21 +7998,21 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_replacement_at_checked_boundaries_remains_hard_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_zero_initialization_cannot_rebind_its_pinned_bank",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_zero_initialization_requires_exact_safe_slot_properties",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8537,9 +8537,9 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::FrozenImports.test_unpreloaded_late_packed_module_is_refused_without_blocking_stdlib",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Python late-module loader/interpreter execution has no remaining compiled Rust runtime path."
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::LinuxImageControls.test_close_during_hash_does_not_publish_or_leak",
@@ -8768,44 +8768,44 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_armed_started_precommit_memory_error_retains_original_unknown_response",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Only catchable Python MemoryError/RecursionError or Python resource-exhaustion injection is tested. Rust exposes no catchable equivalent; allocation/stack exhaustion are process-fatal. Real I/O, SIGINT, exit codes, inode swaps and thread refusal remain separate real tests."
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_borrowed_consumer_refuses_foreign_thread_source_observation_without_fallback",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_borrowed_consumer_refuses_live_observation_without_fallback",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "enforced at compile time by Rust ownership/types; no runtime path exists"
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_borrowed_consumer_refuses_released_source_observation_without_fallback",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "enforced at compile time by Rust ownership/types; no runtime path exists"
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_borrowed_consumer_refuses_stream_observation_without_fallback",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "enforced at compile time by Rust ownership/types; no runtime path exists"
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_borrowed_consumer_refuses_transport_observation_without_fallback",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "enforced at compile time by Rust ownership/types; no runtime path exists"
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_beforewrite_or_exit_retries_only_identical_source_after_unlock",
@@ -8915,14 +8915,14 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_executor_borrowed_entry_refuses_actual_source_inode_swap",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_executor_borrowed_exit_refuses_actual_source_inode_swap",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -8957,16 +8957,16 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_ordinary_started_memory_error_retains_original_unknown_response",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Only catchable Python MemoryError/RecursionError or Python resource-exhaustion injection is tested. Rust exposes no catchable equivalent; allocation/stack exhaustion are process-fatal. Real I/O, SIGINT, exit codes, inode swaps and thread refusal remain separate real tests."
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_ordinary_started_recursion_error_retains_original_unknown_response",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Only catchable Python MemoryError/RecursionError or Python resource-exhaustion injection is tested. Rust exposes no catchable equivalent; allocation/stack exhaustion are process-fatal. Real I/O, SIGINT, exit codes, inode swaps and thread refusal remain separate real tests."
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_output_loss_after_actual_reserve_then_exit_fault_retains_one_unknown_root",
@@ -8992,9 +8992,9 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postcommit_resource_exhaustion_is_not_ordinary_wake_success",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Only catchable Python MemoryError/RecursionError or Python resource-exhaustion injection is tested. Rust exposes no catchable equivalent; allocation/stack exhaustion are process-fatal. Real I/O, SIGINT, exit codes, inode swaps and thread refusal remain separate real tests."
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_busy_is_one_batch_and_leaves_discoverable_enrollments",
@@ -9069,28 +9069,28 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::HeldLockObservations.test_actual_descriptor_identity_and_closed_observation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::HeldLockObservations.test_nested_barrier_exposes_actual_executor_held_observation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::HeldLockObservations.test_parent_checks_only_existing_private_lock_mode",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::LateWindowControls.test_cancel_before_clock_cannot_revive_source_nonce",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9265,16 +9265,16 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_removed_public_observer_flag_refuses_before_any_source_write",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_reparented_linux_window_cannot_reserve",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "fabricates private Linux image readiness with impossible PID/fd state; the Rust type cannot be constructed without real qualified image/proc checks. Reparenting refusal is proved by the image tests and in #249 Linux native qualification. Main approved this note and added the Linux refusal to Gate D."
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_replacement_and_end_after_start_preserve_result",
@@ -9314,7 +9314,7 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_persistence_truncation_is_not_literal_complete_learning",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9503,16 +9503,16 @@
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_optional_writer_memory_error_keeps_fatal_policy",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Only catchable Python MemoryError/RecursionError or Python resource-exhaustion injection is tested. Rust exposes no catchable equivalent; allocation/stack exhaustion are process-fatal. Real I/O, SIGINT, exit codes, inode swaps and thread refusal remain separate real tests."
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_optional_writer_recursion_error_keeps_fatal_policy",
    "registered": true,
-   "status": "unported",
+   "status": "not-applicable",
    "rust_test": null,
-   "note": null
+   "note": "Only catchable Python MemoryError/RecursionError or Python resource-exhaustion injection is tested. Rust exposes no catchable equivalent; allocation/stack exhaustion are process-fatal. Real I/O, SIGINT, exit codes, inode swaps and thread refusal remain separate real tests."
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_retained_root_after_cursor_failure_stays_unknown_and_rootless",
@@ -9874,14 +9874,14 @@
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_completion_absence_preserves_interrupts_and_fatal_failures",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_completion_absence_rechecks_normal_and_ordinary_failures",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -13202,10 +13202,10 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "not-applicable": 90,
-   "partial": 772,
-   "ported": 431,
-   "unported": 569
+   "not-applicable": 102,
+   "partial": 778,
+   "ported": 452,
+   "unported": 530
   }
  }
 }

@@ -341,6 +341,8 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
         Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(CanonicalWriter::Absent),
         Err(_) => return Err(fail("Canonical writer marker cannot be safely inspected")),
     };
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.after-lstat")?;
     let safe = |v: fs::Identity| {
         v.is_regular()
             && v.uid == crate::host::effective_uid()
@@ -354,6 +356,8 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
             "Unknown or unsafe canonical writer marker; preserve for inspection",
         ));
     }
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.before-open")?;
     let mut file = match dir.open_at(name, libc::O_RDONLY | libc::O_NONBLOCK, 0) {
         Ok(v) => v,
         Err(e) if e.kind() == io::ErrorKind::NotFound => {
@@ -369,10 +373,16 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
             ));
         }
     };
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.after-open")?;
     let before = file.stat().map_err(|_| unsafe_observation())?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.after-initial-fstat")?;
     let Some(current) = current_name()? else {
         return Ok(CanonicalWriter::Absent);
     };
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.after-first-name-stat")?;
     let same_identity = |a: fs::Identity, b: fs::Identity| {
         a.dev == b.dev && a.ino == b.ino && a.mode == b.mode && a.uid == b.uid && a.nlink == b.nlink
     };
@@ -399,6 +409,8 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
         .map_err(|_| fail("Canonical writer bank changed; preserve for inspection"))?;
     if before.size == 0 {
         let after = file.stat().map_err(|_| unsafe_observation())?;
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("registry.probe.after-empty-fstat")?;
         let Some(current) = current_name()? else {
             return Ok(CanonicalWriter::Absent);
         };
@@ -427,9 +439,13 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
         }
     };
     let after = file.stat().map_err(|_| unsafe_observation())?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.after-read-fstat")?;
     let Some(current) = current_name()? else {
         return Ok(CanonicalWriter::Absent);
     };
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.after-read-name-stat")?;
     if !same(before, after) || !same(after, current) {
         if current_name()?.is_none() {
             return Ok(CanonicalWriter::Absent);
@@ -466,9 +482,15 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
         ));
     }
     crate::lifecycle::time_value(get(&owner, "start"))?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.before-flock")?;
     let (held, unheld) = match FlockGuard::try_acquire_owned(file, LockMode::Shared) {
         Ok(guard) => (Some(guard), None),
-        Err((file, LockError::Busy)) => (None, Some(file)),
+        Err((file, LockError::Busy)) => {
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("registry.probe.after-busy-flock")?;
+            (None, Some(file))
+        }
         Err((_, _)) => return Err(unsafe_observation()),
     };
     let inspected = match (&held, &unheld) {
@@ -477,9 +499,13 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
         (None, None) => return Err(unsafe_observation()),
     }
     .map_err(|_| unsafe_observation())?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.after-final-fstat")?;
     let Some(current) = current_name()? else {
         return Ok(CanonicalWriter::Absent);
     };
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.probe.after-final-name-stat")?;
     if !same(after, inspected) || !same(inspected, current) {
         if current_name()?.is_none() {
             return Ok(CanonicalWriter::Absent);
@@ -719,7 +745,23 @@ pub fn exclusive<T>(
             }
         })?;
     let created = file.stat().map_err(io_error)?;
-    let guard = match FlockGuard::try_acquire_owned(file, LockMode::Exclusive) {
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("registry.exclusive.before-first-ex")?;
+    #[cfg(feature = "dev-tools")]
+    let acquisition = (|| {
+        for (stage, errno) in [
+            ("registry.exclusive.first-ex-enolck", libc::ENOLCK),
+            ("registry.exclusive.first-ex-enotsup", libc::ENOTSUP),
+        ] {
+            if crate::bank_writes::fault(stage).is_err() {
+                return Err((file, LockError::Io(io::Error::from_raw_os_error(errno))));
+            }
+        }
+        FlockGuard::try_acquire_owned(file, LockMode::Exclusive)
+    })();
+    #[cfg(not(feature = "dev-tools"))]
+    let acquisition = FlockGuard::try_acquire_owned(file, LockMode::Exclusive);
+    let guard = match acquisition {
         Ok(guard) => guard,
         Err((file, error)) => {
             fs::discard_created_empty_slot(&parent.join(name), &file, created).map_err(|error| {
@@ -751,6 +793,8 @@ pub fn exclusive<T>(
         finished: false,
     };
     let outcome = (|| {
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("registry.exclusive.before-owner-write")?;
         let written = owner.guard.write_once(&owner.payload).map_err(|_| {
             ContractError::new(
                 "Metadata owner publication failed; preserve the marker for inspection",
@@ -762,6 +806,8 @@ pub fn exclusive<T>(
             ));
         }
         owner.guard.descriptor().fsync().map_err(io_error)?;
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("registry.exclusive.after-owner-fsync")?;
         body(&owner.payload)
     })();
     owner.finish()?;

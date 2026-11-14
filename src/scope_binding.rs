@@ -673,6 +673,8 @@ fn private_enrollment_context_at(
         Some(hold) => hold.scope.clone(),
         None => require(&root, None, RequireOptions::default())?,
     };
+    #[cfg(feature = "dev-tools")]
+    writes::fault("enrollment.scope.after-require")?;
     let token = match &hold {
         Some(hold) => hold.token.clone(),
         None => frontier.observe_enrollment_bank(&raw_root, &raw_bank, &runtime_root)?,

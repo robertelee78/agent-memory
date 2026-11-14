@@ -1524,6 +1524,9 @@ impl Drop for Child {
     }
 }
 fn fault_child(world: &World, stage: &str, action: &str) -> Child {
+    fault_child_with_mode(world, stage, "pause", action)
+}
+fn fault_child_with_mode(world: &World, stage: &str, mode: &str, action: &str) -> Child {
     world.write(".test-world.json", b"{\"token\":\"bank-fault-regression\"}");
     Child(
         std::process::Command::new(std::env::current_exe().unwrap())
@@ -1532,7 +1535,7 @@ fn fault_child(world: &World, stage: &str, action: &str) -> Child {
             .env("AGENT_MEMORY_TEST_ROOT", &world.root)
             .env("AGENT_MEMORY_TEST_TOKEN", "bank-fault-regression")
             .env("AGENT_MEMORY_FAULT_STAGE", stage)
-            .env("AGENT_MEMORY_FAULT_MODE", "pause")
+            .env("AGENT_MEMORY_FAULT_MODE", mode)
             .env("AGENT_MEMORY_FAULT_DIR", world.path("missing/rendezvous"))
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
@@ -1575,6 +1578,18 @@ fn isolated_bank_fault_child() {
     };
     if action == "fault" {
         agent_memory::bank_writes::fault("regression/pause").unwrap();
+    } else if action == "two-stages" {
+        agent_memory::bank_writes::fault("regression/first").unwrap();
+        let root = std::path::PathBuf::from(std::env::var_os("AGENT_MEMORY_TEST_ROOT").unwrap());
+        std::fs::write(root.join("first-completed"), b"").unwrap();
+        agent_memory::bank_writes::fault("regression/second").unwrap();
+    } else if action == "invalid-selector" {
+        assert_eq!(
+            agent_memory::bank_writes::fault("regression/first")
+                .unwrap_err()
+                .message(),
+            "Fault injection requires an explicit disposable test world"
+        );
     } else {
         let root = std::path::PathBuf::from(std::env::var_os("AGENT_MEMORY_TEST_ROOT").unwrap());
         let fixture = WriterWorld {
@@ -1610,6 +1625,76 @@ fn pause_fault_creates_missing_rendezvous_and_writes_ready() {
     assert!(child.0.try_wait().unwrap().is_none());
     std::fs::write(directory.join("regression%2Fpause.release"), b"").unwrap();
     finish_child(&mut child);
+}
+
+#[cfg(feature = "dev-tools")]
+#[test]
+fn two_fault_stages_rendezvous_in_order_in_one_real_child() {
+    let world = World::new();
+    let directory = world.path("missing/rendezvous");
+    let mut child = fault_child(&world, "regression/first,regression/second", "two-stages");
+    await_ready(&mut child, &directory.join("regression%2Ffirst.ready"));
+    assert!(!world.path("first-completed").exists());
+    assert!(!directory.join("regression%2Fsecond.ready").exists());
+    std::fs::write(directory.join("regression%2Ffirst.release"), b"").unwrap();
+    await_ready(&mut child, &directory.join("regression%2Fsecond.ready"));
+    assert!(world.path("first-completed").is_file());
+    assert!(child.0.try_wait().unwrap().is_none());
+    std::fs::write(directory.join("regression%2Fsecond.release"), b"").unwrap();
+    finish_child(&mut child);
+
+    let world = World::new();
+    let directory = world.path("missing/rendezvous");
+    let mut child = fault_child_with_mode(
+        &world,
+        "regression/first,regression/second",
+        "pause,exit",
+        "two-stages",
+    );
+    await_ready(&mut child, &directory.join("regression%2Ffirst.ready"));
+    assert!(!world.path("first-completed").exists());
+    std::fs::write(directory.join("regression%2Ffirst.release"), b"").unwrap();
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
+    loop {
+        if let Some(status) = child.0.try_wait().unwrap() {
+            assert_eq!(status.code(), Some(86));
+            break;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "fault child never exited at its second stage"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    assert!(world.path("first-completed").is_file());
+    assert!(!directory.join("regression%2Fsecond.ready").exists());
+}
+
+#[cfg(feature = "dev-tools")]
+#[test]
+fn fault_stage_lists_refuse_empty_and_duplicate_entries() {
+    for selector in [
+        "regression/first,",
+        ",regression/first",
+        "regression/first,,regression/second",
+        "regression/first,regression/first",
+    ] {
+        let world = World::new();
+        let mut child = fault_child(&world, selector, "invalid-selector");
+        finish_child(&mut child);
+        assert!(!world.path("missing/rendezvous").exists());
+    }
+    for mode in ["pause,exit,error", "pause,", ",exit", "pause,unknown"] {
+        let world = World::new();
+        let mut child = fault_child_with_mode(
+            &world,
+            "regression/first,regression/second",
+            mode,
+            "invalid-selector",
+        );
+        finish_child(&mut child);
+        assert!(!world.path("missing/rendezvous").exists());
+    }
 }
 
 // obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_preview_and_inspect_are_read_only_and_apply_replaces_one_file_with_readback

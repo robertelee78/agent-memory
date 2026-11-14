@@ -89,6 +89,15 @@ impl FlockGuard {
     }
     /// One write through the locked descriptor (baseline `os.write`), retried only on EINTR.
     pub fn write_once(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        #[cfg(feature = "dev-tools")]
+        {
+            if crate::bank_writes::fault("registry.exclusive.owner-write-short").is_err() {
+                return self.descriptor.write_once(bytes.get(..1).unwrap_or(bytes));
+            }
+            if crate::bank_writes::fault("registry.exclusive.owner-write-eio").is_err() {
+                return Err(io::Error::from_raw_os_error(libc::EIO));
+            }
+        }
         self.descriptor.write_once(bytes)
     }
 }
@@ -112,6 +121,7 @@ pub struct PrivateLock {
     path: PathBuf,
     identity: Identity,
     parent_identity: Identity,
+    existing_only: bool,
 }
 impl PrivateLock {
     pub fn acquire(
@@ -171,6 +181,7 @@ impl PrivateLock {
             path: path.to_path_buf(),
             identity,
             parent_identity,
+            existing_only,
         };
         held.recheck()?;
         Ok(held)
@@ -180,22 +191,37 @@ impl PrivateLock {
         self.guard.descriptor()
     }
     pub fn recheck(&self) -> Result<()> {
-        self.parents.recheck().map_err(|_| {
-            ContractError::new("Private source lock parent changed; retain pending evidence")
-        })?;
-        if !self
-            .parents
-            .directory()
-            .stat()
-            .map_err(contract_io)?
-            .same_inode(self.parent_identity)
-        {
-            return Err(ContractError::new(
-                "Private source lock parent changed; retain pending evidence",
-            ));
+        if self.existing_only {
+            self.parents.recheck().map_err(|_| {
+                ContractError::new("Private source lock parent changed; retain pending evidence")
+            })?;
+            if !self
+                .parents
+                .directory()
+                .stat()
+                .map_err(contract_io)?
+                .same_inode(self.parent_identity)
+            {
+                return Err(ContractError::new(
+                    "Private source lock parent changed; retain pending evidence",
+                ));
+            }
         }
-        let named = self
-            .parents
+        // Baseline default locks bind the named inode, not its parent inode.
+        // Read-only/existing-only locks additionally pin their original parent.
+        let fresh;
+        let parents = if self.existing_only {
+            &self.parents
+        } else {
+            fresh = DirectoryChain::open(
+                self.path
+                    .parent()
+                    .ok_or_else(|| ContractError::new("Private source lock parent changed"))?,
+            )
+            .map_err(contract_io)?;
+            &fresh
+        };
+        let named = parents
             .directory()
             .stat_at(self.path.file_name().expect("lock has a filename"))
             .map_err(contract_io)?;

@@ -7,7 +7,7 @@ use super::{
     shared_inventory, snapshot_path, source_bound_origin, text,
 };
 use crate::codec::json::Value;
-use crate::error::Result;
+use crate::error::{ContractError, Result};
 use crate::lifecycle::{get, object, string};
 use crate::omp_projection::{self, exclusions, same, truthy};
 use crate::scope_binding::{self, RequireOptions};
@@ -391,7 +391,15 @@ pub fn segment_inventory(site: &Site<'_>, directory: &Path, cursor: &Value) -> R
                 return registration(site, directory, cursor, enrollment, false);
             }
             if state.is_none() && !inventory_failed {
-                match shared_inventory(site, cursor) {
+                let observation = (|| {
+                    #[cfg(feature = "dev-tools")]
+                    crate::bank_writes::fault("omp.join.before-shared-inventory")?;
+                    let value = shared_inventory(site, cursor)?;
+                    #[cfg(feature = "dev-tools")]
+                    crate::bank_writes::fault("omp.join.after-shared-inventory")?;
+                    Ok::<_, ContractError>(value)
+                })();
+                match observation {
                     Ok(value) => state = Some(value),
                     Err(_) => inventory_failed = true,
                 }
@@ -407,6 +415,8 @@ pub fn segment_inventory(site: &Site<'_>, directory: &Path, cursor: &Value) -> R
                 }
             }
             let (observation, mut errors) = registration_lookup(state, enrollment)?;
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.join.after-row-lookup")?;
             if observation.is_none() && errors.is_empty() && sample.is_some() {
                 errors = vec![string("registration-fault-retained")];
             }

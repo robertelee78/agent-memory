@@ -241,15 +241,24 @@ pub fn wake(
     } else if source_completion.is_some() {
         return Err(err("Wake requires a committed finite source"));
     }
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.reservation.before-reserve")?;
     if !delivery_window.is_some_and(DeliveryWindow::reserve) {
         return Ok(pending("pending-undeliverable-window"));
     }
     let reserved = (|| -> Result<()> {
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("omp.reservation.after-reserve")?;
         retain(&target, &value, MAX_RECORD)?;
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("omp.reservation.after-root")?;
         let mut control = control_of(&root_cursor);
         set(&mut control, "generated_guidance", string(&guidance));
         set(&mut root_cursor, "control_interval", control);
-        replace_cursor(&root_path, &root_cursor)
+        replace_cursor(&root_path, &root_cursor)?;
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("omp.reservation.after-cursor")?;
+        Ok(())
     })();
     if reserved.is_err() {
         // Reservation may have reached durable storage. Never retry this attempt.
@@ -567,6 +576,8 @@ fn sweep_input(repo: &Path, session: &str, action: &str, payload: &Value) -> Res
         return Err(err("Native stored sweep exceeds bound"));
     };
     let (view, root) = omp_projection::checked_view(repo, session, payload)?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.checked-view.after-validation")?;
     let branch_ids = ids(get(payload, "branch_ids"))?;
     let inherited_ids = ids(get(payload, "inherited_ids"))?;
     let parents: BTreeSet<&str> = get(&view, "native_parents")
@@ -1840,6 +1851,8 @@ fn observed(
         let entries = std::mem::take(&mut sweep.entries);
         drop(sweep);
         scope_binding::recheck_private_enrollment(context)?;
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("omp.checkpoint.before-recheck")?;
         if call.source_completion.is_some() {
             // Same checks as the actual successful context exits, against the
             // actual executor-held source barrier and this transport lock.

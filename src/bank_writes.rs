@@ -560,7 +560,23 @@ pub fn proposal_value(prepared: &Value) -> Result<&Value> {
 }
 /// Faults are opt-in, token-bound disposable worlds; Markdown never enables them.
 pub fn fault(stage: &str) -> Result<()> {
-    if std::env::var("AGENT_MEMORY_FAULT_STAGE").ok().as_deref() != Some(stage) {
+    let selector = std::env::var("AGENT_MEMORY_FAULT_STAGE").ok();
+    let selected = selector.as_deref() == Some(stage);
+    #[cfg(feature = "dev-tools")]
+    let selected = if let Some(list) = selector.as_deref().filter(|list| list.contains(',')) {
+        let mut seen = std::collections::BTreeSet::new();
+        for entry in list.split(',') {
+            if entry.is_empty() || !seen.insert(entry) {
+                return Err(err(
+                    "Fault injection requires an explicit disposable test world",
+                ));
+            }
+        }
+        seen.contains(stage)
+    } else {
+        selected
+    };
+    if !selected {
         return Ok(());
     }
     let root = PathBuf::from(
@@ -596,7 +612,28 @@ pub fn fault(stage: &str) -> Result<()> {
     {
         return Err(invalid());
     }
-    match std::env::var("AGENT_MEMORY_FAULT_MODE").ok().as_deref() {
+    let mode = std::env::var("AGENT_MEMORY_FAULT_MODE").ok();
+    let selected_mode = mode.as_deref();
+    #[cfg(feature = "dev-tools")]
+    let selected_mode = if let Some(modes) = mode.as_deref().filter(|modes| modes.contains(',')) {
+        let stages = selector.as_deref().ok_or_else(invalid)?;
+        let count = stages.split(',').count();
+        if modes.split(',').count() != count
+            || modes
+                .split(',')
+                .any(|mode| !matches!(mode, "pause" | "exit" | "error"))
+        {
+            return Err(invalid());
+        }
+        let position = stages
+            .split(',')
+            .position(|entry| entry == stage)
+            .ok_or_else(invalid)?;
+        modes.split(',').nth(position)
+    } else {
+        selected_mode
+    };
+    match selected_mode {
         Some("exit") => std::process::exit(86),
         Some("pause") => {
             let directory = PathBuf::from(

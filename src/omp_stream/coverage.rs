@@ -556,7 +556,7 @@ impl Coverage {
 
     /// Binding check, then the stream lock, then an unchanged OPEN.
     pub(crate) fn control<T>(&self, body: impl FnOnce() -> Result<T>) -> Result<T> {
-        verified(
+        let result = verified(
             &*self.authority,
             &self.repo,
             &self.binding,
@@ -572,7 +572,12 @@ impl Coverage {
                     body()
                 })
             },
-        )
+        );
+        #[cfg(feature = "dev-tools")]
+        if result.as_ref().is_err_and(super::busy) {
+            crate::bank_writes::fault("omp.metadata.after-busy")?;
+        }
+        result
     }
 
     fn attempt_value(&self, attempt: &Attempt<'_>) -> Result<(Value, bool)> {
@@ -729,6 +734,8 @@ impl Coverage {
                 ));
             }
             let digest = retain(&path, &value, MAX_IDENTITY)?;
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.attempt.after-retain")?;
             if invalid_retry {
                 self.invalid_attempt_retained.set(true);
             }
@@ -872,7 +879,11 @@ impl Coverage {
                 Value::Array(source_refs(&Value::Array(references.to_vec()))?),
             ),
         ]);
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("omp.outcome.before-guard")?;
         self.control(|| {
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.outcome.before-commit")?;
             retain(
                 &self
                     .directory
@@ -880,9 +891,12 @@ impl Coverage {
                     .join(format!("{sequence}.json")),
                 &value,
                 MAX_METADATA,
-            )
-            .map(|_| ())
-        })
+            )?;
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.outcome.after-commit")?;
+            Ok(())
+        })?;
+        Ok(())
     }
 
     pub fn transition(&self, value: &Value) -> Result<()> {
@@ -995,6 +1009,8 @@ impl Coverage {
                 ]),
                 4096,
             )?;
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.close.after-retain")?;
             Ok(true)
         })
     }

@@ -146,6 +146,8 @@ impl<'c> SourceCompletion<'c> {
         if !self.live.get() || !self.source_committed.get() {
             return Err(err("Wake requires a committed finite source"));
         }
+        #[cfg(feature = "dev-tools")]
+        crate::bank_writes::fault("omp.before-reserve.before-open")?;
         super::with_lock(&coverage.lock_path, false, false, || {
             let current = read_required(&coverage.directory.join("open.json"), MAX_METADATA)?;
             if !same(&current, &coverage.open)
@@ -396,6 +398,8 @@ impl FiniteExecutor {
             None
         } else {
             request_identity(request, &known)?;
+            #[cfg(feature = "dev-tools")]
+            crate::bank_writes::fault("omp.request-identity.after-validation")?;
             // A non-text kind is carried as an unknown kind: the attempt
             // validation then refuses it as invalid-request.
             match get(get(payload, "view"), "source_kind") {
@@ -612,6 +616,12 @@ impl FiniteExecutor {
                     };
                 }
                 Err(error) => {
+                    #[cfg(feature = "dev-tools")]
+                    if error.busy() {
+                        crate::bank_writes::fault("omp.observer.after-busy-error")?;
+                    } else {
+                        crate::bank_writes::fault("omp.observer.after-error")?;
+                    }
                     if let Some(completion) = completion.filter(|c| c.source_committed()) {
                         break (
                             "verified",

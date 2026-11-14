@@ -1023,6 +1023,8 @@ fn walk_evidence(
 /// Baseline `_drain_inventory(repo)`: the bound complete evidence enumeration,
 /// including orphan shared namespaces, and its digest.
 pub fn drain_inventory(repo: &Path, runtime_root: &Path) -> Result<(Value, String)> {
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.drain.before-inventory")?;
     let base = base(repo)?;
     let (mut rows, faults) = crate::omp_transport::boundary_pending_inventory(repo, runtime_root)?;
     let mut pins = Vec::new();

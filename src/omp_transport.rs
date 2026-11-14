@@ -35,7 +35,7 @@ pub use inventory::{
 pub use observe::{
     Observation, ObserverScope, checked_payload_coverage, observe, resolve_tool_result, wake,
 };
-pub use providers::{Harness, InstalledScope, Transport};
+pub use providers::{Harness, InstalledHarness, InstalledScope, Transport};
 pub(crate) use providers::{boundary_all_segments, boundary_pending_inventory, boundary_source};
 
 /// Retained snapshot and manifest read bound (baseline `16 * 1024 * 1024`).
@@ -1322,6 +1322,8 @@ pub fn capture(
     manual: Option<&ManualRead<'_>>,
     persisted: bool,
 ) -> Result<Option<Value>> {
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.capture.before-commit")?;
     let native = turn_sources::bounded(get(entry, "id"), 512)?.to_owned();
     let name = sha_text(&native);
     let snapshot_ref = snapshot_reference(&native);
@@ -1363,6 +1365,8 @@ pub fn capture(
         &record,
         MAX_RECORD,
     )?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.capture.after-commit")?;
     // Only the observer ingest path can resolve a previously sealed gap.
     if sealed {
         let manifest_hash = digest(&read(&directory.join("segment.json"), MAX_PAYLOAD)?)?;

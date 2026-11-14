@@ -966,6 +966,8 @@ fn manual_comparison_inner(
     let text =
         String::from_utf8(raw).map_err(|_| ContractError::new("Native manual is not UTF-8"))?;
     provider.verify_targets(std::slice::from_ref(&target), get(&receipt, "source"))?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.manual.before-final-receipt")?;
     require(
         transport_digest(&observer_binding_with(
             provider,
@@ -974,6 +976,8 @@ fn manual_comparison_inner(
         )?)? == receipt_sha,
         "Native manual receipt changed",
     )?;
+    #[cfg(feature = "dev-tools")]
+    crate::bank_writes::fault("omp.manual.after-final-receipt")?;
     parents.recheck()?;
     require(
         fd.stat()? == before && parents.directory().stat_at(name)? == before,

@@ -329,7 +329,7 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
                 env: crate::installation::Environment::process(),
                 services,
                 executable,
-                harness: crate::omp_transport::Harness,
+                harness: crate::omp_transport::InstalledHarness,
             })
         });
         wired(activation.and_then(|activation| {

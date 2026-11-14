@@ -33,11 +33,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust toolchain and target
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         shell: sh
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt --target '${{ matrix.target }}'
-          rustup default stable
+          rustup toolchain install
           rustc --version --verbose
       - name: Require a host that runs the target natively
         shell: sh
@@ -67,11 +66,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust toolchain and musl target
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
         shell: sh
-        run: |
-          rustup toolchain install stable --profile minimal --target '${{ matrix.target }}'
-          rustup default stable
+        run: rustup toolchain install
       - name: Build
         shell: sh
         run: cargo build --locked --release --bins --target '${{ matrix.target }}'

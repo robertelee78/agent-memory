@@ -233,6 +233,10 @@ fn entries_snapshot(path: &Path, maximum: usize, message: &str) -> Result<Option
     fs::trust::state(path)?;
     let chain = DirectoryChain::open(path).map_err(io)?;
     let before = chain.directory().stat().map_err(io)?;
+    #[cfg(feature = "dev-tools")]
+    if path.file_name() == Some(OsStr::new("pending")) {
+        writes::fault("enrollment.index.during-scan")?;
+    }
     let names = chain
         .directory()
         .entries_bounded(maximum)
@@ -741,6 +745,8 @@ pub fn index(ns: &Namespace, context: Option<&PrivateEnrollmentContext>) -> Resu
         if let Some(context) = context {
             scope::recheck_private_enrollment(context)?;
         }
+        #[cfg(feature = "dev-tools")]
+        writes::fault("enrollment.index.before-exclusive")?;
         if !exclusive(&path, &value, MAX_SOURCE)? {
             continue;
         }
@@ -1108,6 +1114,8 @@ fn append_source_at(
             if !exclusive(&path, &value, MAX_SOURCE)? {
                 continue;
             }
+            #[cfg(feature = "dev-tools")]
+            writes::fault("enrollment.source.after-exclusive")?;
             scope::recheck_private_enrollment(context)?;
             index(ns, Some(context))?;
             scope::recheck_private_enrollment(context)?;
@@ -1628,7 +1636,11 @@ pub fn private_inventory(
     identity: &Value,
     context: &PrivateEnrollmentContext,
 ) -> Result<Value> {
+    #[cfg(feature = "dev-tools")]
+    writes::fault("enrollment.inventory.before-read")?;
     let value = inventory(directory, identity)?;
+    #[cfg(feature = "dev-tools")]
+    writes::fault("enrollment.inventory.after-read")?;
     if !context.held() {
         return Ok(value);
     }
@@ -1692,6 +1704,8 @@ pub fn inspect_enrollment(
     }
     locked(&ns.directory, || {
         let value = private_inventory(&ns.directory, &ns.identity, context)?;
+        #[cfg(feature = "dev-tools")]
+        writes::fault("omp.join.between-locked-passes")?;
         if !same(
             &value,
             &private_inventory(&ns.directory, &ns.identity, context)?,

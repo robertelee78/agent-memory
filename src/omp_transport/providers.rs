@@ -168,10 +168,42 @@ impl omp_stream::OmpTransport for Transport {
 
 /// The T2f half of `omp_installation::OmpActivation`, composed with the
 /// installation half by `installation::InstallationActivation`.
-pub struct Harness;
+pub struct Harness {
+    pack_root: PathBuf,
+}
+impl Harness {
+    pub fn at(pack_root: &Path) -> Self {
+        Self {
+            pack_root: pack_root.to_path_buf(),
+        }
+    }
+    pub fn installed() -> omp_installation::Result<Self> {
+        Ok(Self::at(&crate::cli::pack_root()?))
+    }
+}
 
-fn harness_root() -> omp_installation::Result<PathBuf> {
-    Ok(crate::cli::pack_root()?)
+/// Keep CLI registration lazy: an initial installation has no owned pack yet.
+pub struct InstalledHarness;
+impl crate::installation::OmpHarness for InstalledHarness {
+    fn diagnostics(&self, repo: &Path) -> omp_installation::Result<NativeDiagnostics> {
+        crate::installation::OmpHarness::diagnostics(&Harness::installed()?, repo)
+    }
+    fn observe_marker(
+        &self,
+        repo: &Path,
+        held: Option<&dyn HeldSource>,
+        operation: &mut dyn FnMut(&Value) -> omp_installation::Result<()>,
+    ) -> omp_installation::Result<()> {
+        crate::installation::OmpHarness::observe_marker(
+            &Harness::installed()?,
+            repo,
+            held,
+            operation,
+        )
+    }
+    fn instruction_uri(&self, relative: &str) -> Option<String> {
+        crate::omp_projection::instruction_uri(relative)
+    }
 }
 
 fn stream_diagnostics(
@@ -200,7 +232,7 @@ fn stream_diagnostics(
 
 impl crate::installation::OmpHarness for Harness {
     fn diagnostics(&self, repo: &Path) -> omp_installation::Result<NativeDiagnostics> {
-        let runtime_root = harness_root()?;
+        let runtime_root = &self.pack_root;
         let diagnostics = turn_sources::read_only_locks(|| {
             let base = omp_boundary::base(repo)?;
             let pending = if lexists(&base.join("omp-source-v1"))? {
@@ -229,7 +261,7 @@ impl crate::installation::OmpHarness for Harness {
         held: Option<&dyn HeldSource>,
         operation: &mut dyn FnMut(&Value) -> omp_installation::Result<()>,
     ) -> omp_installation::Result<()> {
-        let runtime_root = harness_root()?;
+        let runtime_root = &self.pack_root;
         match held {
             Some(held) => {
                 omp_boundary::observe_marker_operation(repo, Some(held), &runtime_root, operation)?;

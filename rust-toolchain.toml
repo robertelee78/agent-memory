@@ -1,0 +1,6 @@
+# The toolchain every gate and release build uses (CI installs it from here).
+[toolchain]
+channel = "1.99.1"
+profile = "minimal"
+components = ["rustfmt"]
+targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-musl", "aarch64-unknown-linux-musl"]
