@@ -360,6 +360,20 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
         "refresh",
         Some(Arc::new(crate::memory_refresh::MemoryRefresh)),
     ))?;
+    let frontier = Arc::new(crate::recovery_frontier::FrontierProvider::new(|| {
+        let executable =
+            std::env::current_exe().map_err(|error| ContractError::new(error.to_string()))?;
+        crate::installation::executing_runtime(
+            &crate::installation::Environment::process(),
+            &executable,
+        )
+        .map_err(|error| match error {
+            crate::installation::Error::Contract(error) => error,
+            other => ContractError::new(other.to_string()),
+        })
+    }));
+    crate::bank_writes::register_recovery_frontier(Some(frontier.clone()));
+    crate::bank_contract::register_recovery_coverage(Some(frontier));
     Ok(())
 }
 

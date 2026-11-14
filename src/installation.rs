@@ -28,8 +28,8 @@ pub use plan::{
     source_info, stage_release,
 };
 pub use providers::{
-    InstallationActivation, OmpHarness, installation_inventory, omp_activation_template,
-    omp_locations, omp_verify_targets, pack_root,
+    InstallationActivation, OmpHarness, executing_runtime, installation_inventory,
+    omp_activation_template, omp_locations, omp_verify_targets, pack_root,
 };
 pub(crate) use providers::{
     installed_receipt, into_contract, managed_source_info, runtime_pack_root,

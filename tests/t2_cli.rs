@@ -415,9 +415,11 @@ fn pack_default_without_registered_location_is_a_typed_refusal() {
         assert_eq!(
             text(&output.stderr),
             format!(
-                "{prog}: No installed Rust runtime receipt owns this executable; pass --pack PATH\n"
+                "{prog}: No installed Rust runtime receipt owns this executable; use the trusted bootstrap installer\n"
             )
         );
+        assert!(fs::read_dir(dir.0.join("home")).unwrap().next().is_none());
+        assert!(fs::read_dir(dir.0.join("config")).unwrap().next().is_none());
     }
     let missing = dir.run("am", &["validate-pack", "--pack", "absent"]);
     assert_eq!(missing.status.code(), Some(1));
