@@ -98,7 +98,7 @@ The implementation worker ran no build/test/formatter/Python command. Parent ver
 - `cargo fmt --check`: pass.
 - `cargo check --offline --all-targets --features dev-tools`: pass, no warnings.
 - `cargo test --offline --features dev-tools --target <triple> --test t1_layout_history_workspace`: **7 passed, 0 failed, 2 security-dependency ignored**, three consecutive runs for each of `x86_64-unknown-linux-gnu` and `x86_64-unknown-linux-musl`.
-- `cargo test --offline --features dev-tools --target <triple> --no-fail-fast`: **568 passed, 0 failed, 26 ignored** on each target. The full-suite ignored count includes existing dependency-gated tests; it is not a claim of complete cutover coverage.
+- `cargo test --offline --features dev-tools --target <triple> --no-fail-fast`: **545 passed, 0 failed, 26 ignored** across 27 top-level harnesses on each target. An initial count of 568 incorrectly included nested fixture subprocess summaries; this is the corrected harness-only total, with no rerun or source change. The ignored count includes existing dependency-gated tests; it is not a claim of complete cutover coverage.
 - Actual GNU binary `am private --help`: exit 0, displays the real `create` and `put` subcommands. The active binary regression also proves exact invalid-name and 16 MiB overflow refusal envelopes without a security provider.
 - Required production panic scan: no matches in the three new production files; the changed capacity merge was scanned again after correction.
 - Parent `am-dev obligations mark --status partial --ids-file /tmp/layout-history-workspace-obligation-ids.txt`: pass. The one authored baseline obligation remains **partial**, not ported.
