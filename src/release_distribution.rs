@@ -668,8 +668,9 @@ pub fn package_identity(root: &Path) -> Result<(String, String, Value)> {
     let text = std::str::from_utf8(&skill.0)
         .map_err(|_| ContractError::new("Portable metadata is not UTF-8"))?;
     let declarations: Vec<_> = text
-        .lines()
+        .split('\n')
         .filter_map(|line| line.strip_prefix("metadata: "))
+        .filter(|value| value.starts_with('{') && value.ends_with('}') && value.len() > 2)
         .collect();
     require(
         declarations.len() == 1,
@@ -1108,9 +1109,10 @@ fn download_error(url: &str, attempts: Vec<Value>, elapsed: u64, budget: f64) ->
     );
     let mut fields = vec![("schema".into(), string("agent-memory/download-failure-v1"))];
     fields.extend(location.as_object().unwrap_or(&[]).iter().cloned());
+    let attempt_count = attempts.len();
     fields.extend([
-        ("attempt_count".into(), Value::Int(attempts.len().into())),
         ("attempts".into(), Value::Array(attempts)),
+        ("attempt_count".into(), Value::Int(attempt_count.into())),
         ("elapsed_seconds".into(), rounded_seconds(elapsed)),
         ("budget_seconds".into(), Value::Float(budget)),
         ("reason".into(), string(category)),
