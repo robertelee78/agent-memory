@@ -1298,3 +1298,56 @@ fn descriptor_chunks_preserve_offsets_and_native_fifo_semantics() {
     assert_eq!(fifo.read_chunk(&mut chunk).unwrap(), 3);
     assert_eq!(&chunk, b"xyz");
 }
+
+#[test]
+fn post_create_mode_failure_removes_only_the_created_file() {
+    let root = PrivateDirectory::new();
+    let directory = Descriptor::open_directory(root.path()).unwrap();
+    // Invalid permission bits deterministically fail after open+fstat on both OSes.
+    let error = directory
+        .create_exclusive(OsStr::new("temporary"), libc::O_WRONLY, 0o10000)
+        .unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
+    assert_eq!(
+        error.to_string(),
+        "File mode must contain permission bits only"
+    );
+    assert!(!root.join("temporary").exists());
+    file(&root.join("existing"), b"preserve");
+    assert_eq!(
+        directory
+            .create_exclusive(OsStr::new("existing"), libc::O_WRONLY, 0o10000)
+            .unwrap_err()
+            .kind(),
+        std::io::ErrorKind::AlreadyExists
+    );
+    assert_eq!(fs::read(root.join("existing")).unwrap(), b"preserve");
+}
+
+#[test]
+fn descriptor_mode_changes_the_held_inode_and_rejects_nonpermission_bits() {
+    let root = PrivateDirectory::new();
+    let directory = Descriptor::open_directory(root.path()).unwrap();
+    let held = directory
+        .create_exclusive(OsStr::new("original"), libc::O_WRONLY, 0o600)
+        .unwrap();
+    fs::rename(root.join("original"), root.join("moved")).unwrap();
+    file(&root.join("original"), b"replacement");
+    held.set_mode(0o640).unwrap();
+    assert_eq!(
+        fs::metadata(root.join("moved")).unwrap().mode() & 0o7777,
+        0o640
+    );
+    assert_eq!(
+        fs::metadata(root.join("original")).unwrap().mode() & 0o7777,
+        0o600
+    );
+    assert_eq!(
+        held.set_mode(0o10000).unwrap_err().kind(),
+        std::io::ErrorKind::InvalidInput
+    );
+    assert_eq!(
+        fs::metadata(root.join("moved")).unwrap().mode() & 0o7777,
+        0o640
+    );
+}

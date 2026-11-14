@@ -171,9 +171,57 @@ fn legacy_rollout_boolean_cannot_authorize_new_capability() {
 }
 
 #[test]
-fn rust_reissue_never_inherits_current_rollout_attestation() {
+fn rust_receipt_reuses_current_binding_without_renewed_attestation() {
     let world = World::new();
-    let old = receipt(&world.root(), false);
+    let mut old = receipt(&world.root(), false);
+    set(&mut old, "schema", s("agent-memory/install-receipt-v3"));
+    let reused = omp::configuration(&Configuration::default(), Some(&old), "omp", false)
+        .unwrap()
+        .unwrap();
+    assert_eq!(&reused, field(&old, "omp_binding"));
+    assert_eq!(field(&reused, "rollout_attested"), &Value::Bool(true));
+}
+
+#[test]
+fn python_receipt_adoption_requires_renewed_attestation() {
+    let world = World::new();
+    for schema in [
+        "agent-memory/install-receipt-v1",
+        "agent-memory/install-receipt-v2",
+    ] {
+        let mut old = receipt(&world.root(), false);
+        set(&mut old, "schema", s(schema));
+        assert_eq!(
+            error(omp::configuration(
+                &Configuration::default(),
+                Some(&old),
+                "omp",
+                false
+            )),
+            "Native omp requires --presets omp, --omp-agent-dir and --omp-peers-upgraded after quiescing/upgrading bank peers"
+        );
+        let args = Configuration {
+            omp_peers_upgraded: true,
+            ..Configuration::default()
+        };
+        let renewed = omp::configuration(&args, Some(&old), "omp", false)
+            .unwrap()
+            .unwrap();
+        assert_eq!(&renewed, field(&old, "omp_binding"));
+        assert_eq!(field(&renewed, "rollout_attested"), &Value::Bool(true));
+    }
+}
+
+#[test]
+fn rust_receipt_with_stale_capability_requires_renewed_attestation() {
+    let world = World::new();
+    let mut old = receipt(&world.root(), false);
+    set(&mut old, "schema", s("agent-memory/install-receipt-v3"));
+    set(
+        &mut old,
+        "omp_binding",
+        omp::binding(&world.root(), false, omp::HISTORICAL_READER_CAPABILITY).unwrap(),
+    );
     assert_eq!(
         error(omp::configuration(
             &Configuration::default(),
@@ -181,18 +229,20 @@ fn rust_reissue_never_inherits_current_rollout_attestation() {
             "omp",
             false
         )),
-        "Native omp requires --presets omp, --omp-agent-dir and --omp-peers-upgraded after quiescing/upgrading bank peers"
+        "Stored-source authority upgrade requires renewed --omp-peers-upgraded for omp-stored-source-v2"
     );
     let args = Configuration {
         omp_peers_upgraded: true,
         ..Configuration::default()
     };
+    let renewed = omp::configuration(&args, Some(&old), "omp", false)
+        .unwrap()
+        .unwrap();
     assert_eq!(
-        omp::configuration(&args, Some(&old), "omp", false)
-            .unwrap()
-            .unwrap(),
-        field(&old, "omp_binding").clone()
+        field(&renewed, "peer_reader_capability"),
+        &s(omp::READER_CAPABILITY)
     );
+    assert_eq!(field(&renewed, "rollout_attested"), &Value::Bool(true));
 }
 
 #[test]

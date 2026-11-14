@@ -265,7 +265,23 @@ impl Descriptor {
             ));
         }
         let opened = self.open_at(name, flags | libc::O_CREAT | libc::O_EXCL, mode)?;
-        status(unsafe { libc::fchmod(opened.as_raw_fd(), mode as libc::mode_t) })?;
+        let identity = match opened.stat() {
+            Ok(identity) => identity,
+            Err(error) => {
+                // No identity was obtainable; match the baseline's post-create cleanup.
+                let _ = self.unlink_at(name);
+                return Err(error);
+            }
+        };
+        if let Err(error) = opened.set_mode(mode) {
+            if self
+                .stat_at(name)
+                .is_ok_and(|current| current.same_inode(identity))
+            {
+                let _ = self.unlink_at(name);
+            }
+            return Err(error);
+        }
         Ok(opened)
     }
 
@@ -613,6 +629,17 @@ impl Descriptor {
         }
         names.sort();
         Ok(Some(names))
+    }
+
+    /// Set permission bits on this held inode, never on a re-resolved path.
+    pub fn set_mode(&self, mode: u32) -> io::Result<()> {
+        if mode > 0o7777 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "File mode must contain permission bits only",
+            ));
+        }
+        status(unsafe { libc::fchmod(self.as_raw_fd(), mode as libc::mode_t) })
     }
 }
 

@@ -794,6 +794,68 @@ fn termination_while_the_binary_runs_still_removes_scratch() {
     }
 }
 
+#[test]
+fn hangup_while_the_binary_runs_still_removes_scratch() {
+    for shell in shells() {
+        let world = World::new();
+        world.publish(
+            TRIPLE,
+            &world.binary_text("kill -HUP \"$PPID\"\nexit 0"),
+            BINARY_NAMESPACE,
+            &world.key,
+        );
+        let output = world.run(&shell, &[]);
+        assert_eq!(output.status.code(), Some(129), "{}", text(&output.stderr));
+        assert!(world.record("argv0").is_some());
+        world.assert_clean();
+    }
+}
+
+#[test]
+fn interrupt_while_the_binary_runs_still_removes_scratch() {
+    for shell in shells() {
+        let world = World::new();
+        world.publish(
+            TRIPLE,
+            &world.binary_text("kill -INT \"$PPID\"\nexit 0"),
+            BINARY_NAMESPACE,
+            &world.key,
+        );
+        let output = world.run(&shell, &[]);
+        assert_eq!(output.status.code(), Some(130), "{}", text(&output.stderr));
+        assert!(world.record("argv0").is_some());
+        world.assert_clean();
+    }
+}
+
+#[test]
+fn signals_during_mktemp_cannot_leak_an_unassigned_scratch_directory() {
+    for shell in shells() {
+        for signal in ["HUP", "INT", "TERM"] {
+            let world = World::new();
+            world.publish_default();
+            world.remove_tool("mktemp");
+            write_executable(
+                &world.tools.join("mktemp"),
+                &format!(
+                    "#!/bin/sh\n'{mktemp}' \"$@\"\nkill -{signal} \"$PPID\"\n",
+                    mktemp = required("mktemp").display()
+                ),
+            );
+            let output = world.run(&shell, &[]);
+            assert_eq!(
+                output.status.code(),
+                Some(7),
+                "{}: {signal}: {}",
+                shell.display(),
+                text(&output.stderr)
+            );
+            assert!(world.record("argv0").is_some());
+            world.assert_clean();
+        }
+    }
+}
+
 // obligation: tests/contracts/test_download_diagnostics.py::DownloadBootstrap.test_failed_download_never_activates_and_has_guidance
 #[test]
 fn missing_assets_fail_as_downloads_without_running_anything() {

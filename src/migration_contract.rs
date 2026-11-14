@@ -229,7 +229,14 @@ fn read_catalog(pack: &Path, files: &Value) -> Result<(Value, String)> {
             max_bytes: CATALOG_MAX_BYTES,
             ..DecodePolicy::default()
         },
-    )?;
+    )
+    .map_err(|error| {
+        if error.message() == "Non-finite JSON value" {
+            ContractError::new("Nonfinite migration catalog")
+        } else {
+            error
+        }
+    })?;
     Ok((value, measured))
 }
 

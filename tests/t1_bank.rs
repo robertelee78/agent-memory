@@ -8,6 +8,18 @@ use agent_memory::error::Result;
 
 const PROJECT: &str = "8e0b66aa-2be5-4fa3-b47f-1245474aa7dd";
 const UPDATED: &str = "2026-10-22T17:00:00Z";
+const MINIMAL_ROUTER: &str = concat!(
+    "---\nschema: \"agent-memory/v1\"\nproject-id: \"8e0b66aa-2be5-4fa3-b47f-1245474aa7dd\"\nrouter-updated: \"2026-10-22T17:00:00Z\"\n---\n",
+    "# Project memory\n\nRouter time describes this map, not every file's revision.\n\n## Routes\n\n",
+    "| Path | Purpose | Scope | Lifecycle | Read when |\n| --- | --- | --- | --- | --- |\n",
+    "| [projectbrief.md](<projectbrief.md>) | Orient the agent | repository | active | When resuming work |\n",
+    "\n## Omitted contexts\n\n",
+    "- `productContext.md`: No relevant evidence supplied yet\n",
+    "- `activeContext.md`: No relevant evidence supplied yet\n",
+    "- `systemPatterns.md`: No relevant evidence supplied yet\n",
+    "- `techContext.md`: No relevant evidence supplied yet\n",
+    "- `progress.md`: No relevant evidence supplied yet\n"
+);
 fn s(text: impl Into<String>) -> Value {
     Value::String(text.into())
 }
@@ -83,22 +95,52 @@ fn byte_zero_schema_and_restricted_metadata_errors() {
     let f = files(false);
     let original = router(&f);
     let bad = [
-        format!("\u{feff}{original}"),
-        format!("prefix\n{original}"),
-        original.replace("\"agent-memory/v1\"", "\"agent-memory/v999\""),
-        original.replacen("schema: ", "unknown: ", 1),
-        original.replacen("---\n", "---\nschema: alias\n", 1),
-        original.replace("\"agent-memory/v1\"", "&alias something"),
-        original.replace("\"agent-memory/v1\"", "!tag something"),
-        original.replace("\"agent-memory/v1\"", "{\"x\": 1, \"x\": 2}"),
-        original.replace("\"agent-memory/v1\"", "\"unterminated"),
-        original.replace(
-            "schema: \"agent-memory/v1\"",
-            "schema:\n  nested: unsupported",
+        (
+            format!("\u{feff}{original}"),
+            "Frontmatter must start at byte zero with --- and LF",
+        ),
+        (
+            format!("prefix\n{original}"),
+            "Frontmatter must start at byte zero with --- and LF",
+        ),
+        (
+            original.replace("\"agent-memory/v1\"", "\"agent-memory/v999\""),
+            "Unsupported bank schema; no mutation or implicit migration is allowed. Inspect am migrate preview for an explicitly bundled chain.",
+        ),
+        (
+            original.replacen("schema: ", "unknown: ", 1),
+            "Unknown metadata key: unknown",
+        ),
+        (
+            original.replacen("---\n", "---\nschema: alias\n", 1),
+            "Duplicate metadata key: schema",
+        ),
+        (
+            original.replace("\"agent-memory/v1\"", "&alias something"),
+            "Unsupported YAML syntax; quote the scalar or use JSON flow syntax",
+        ),
+        (
+            original.replace("\"agent-memory/v1\"", "!tag something"),
+            "Unsupported YAML syntax; quote the scalar or use JSON flow syntax",
+        ),
+        (
+            original.replace("\"agent-memory/v1\"", "{\"x\": 1, \"x\": 2}"),
+            "Invalid JSON-compatible metadata value: Duplicate metadata key: x",
+        ),
+        (
+            original.replace("\"agent-memory/v1\"", "\"unterminated"),
+            "Invalid JSON-compatible metadata value: Unterminated string at byte 13",
+        ),
+        (
+            original.replace(
+                "schema: \"agent-memory/v1\"",
+                "schema:\n  nested: unsupported",
+            ),
+            "Metadata value or scalar block list required",
         ),
     ];
-    for text in bad {
-        assert!(bank::parse_router(&text).is_err());
+    for (text, expected) in bad {
+        assert_eq!(bank::parse_router(&text).unwrap_err().to_string(), expected);
     }
 }
 // obligation: tests/contracts/test_router.py::RouterContract.test_timezone_offsets_are_validated_without_normalizing_invalid_components
@@ -139,7 +181,15 @@ fn missing_empty_and_omitted_existing_targets_fail() {
                 }
             }
         }
-        assert!(bank::validate_files(&f, None).is_err(), "{case}");
+        let expected = match case {
+            "missing" | "empty" => "Missing or empty routed file: projectbrief.md",
+            _ => "Context exists but is marked omitted: progress.md",
+        };
+        assert_eq!(
+            bank::validate_files(&f, None).unwrap_err().to_string(),
+            expected,
+            "{case}"
+        );
     }
 }
 // obligation: tests/contracts/test_router.py::RouterContract.test_router_bounds_duplicate_routes_and_orphan_files
@@ -151,25 +201,43 @@ fn router_bounds_duplicate_routes_and_orphan_files() {
         .lines()
         .find(|l| l.contains("[projectbrief.md]"))
         .unwrap();
-    for text in [
-        original.replace(row, &format!("{row}\n{row}")),
-        format!("{original}{}", "x".repeat(16384)),
-        original.replace("(<projectbrief.md>)", "(<projectbrief.md)"),
-        original.replace("| repository |", "| component:../other |"),
-        original.replace(
-            row,
-            &(0..65)
-                .map(|n| row.replace("projectbrief.md", &format!("topics/{n}.md")))
-                .collect::<Vec<_>>()
-                .join("\n"),
+    for (text, expected) in [
+        (
+            original.replace(row, &format!("{row}\n{row}")),
+            "Duplicate route path",
+        ),
+        (
+            format!("{original}{}", "x".repeat(16384)),
+            "Router byte limit exceeded",
+        ),
+        (
+            original.replace("(<projectbrief.md>)", "(<projectbrief.md)"),
+            "Route requires an explicit relative Markdown link",
+        ),
+        (
+            original.replace("| repository |", "| component:../other |"),
+            "Component conditions require canonical repository-relative paths",
+        ),
+        (
+            original.replace(
+                row,
+                &(0..65)
+                    .map(|n| row.replace("projectbrief.md", &format!("topics/{n}.md")))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            ),
+            "Route limit exceeded; use a bounded topic index",
         ),
     ] {
-        assert!(bank::parse_router(&text).is_err());
+        assert_eq!(bank::parse_router(&text).unwrap_err().to_string(), expected);
     }
     if let Value::Object(map) = &mut f {
         map.push(("topics/orphan.md".into(), s("Not reachable")));
     }
-    assert!(bank::validate_files(&f, None).is_err());
+    assert_eq!(
+        bank::validate_files(&f, None).unwrap_err().to_string(),
+        "Project Markdown must be reachable from the bounded route map"
+    );
 }
 // obligation: tests/contracts/test_router.py::RouterContract.test_optional_authority_anchor_uses_the_common_reader_and_canonical_identifiers
 #[test]
@@ -193,19 +261,7 @@ fn optional_authority_anchor_uses_the_common_reader_and_canonical_identifiers() 
 fn rendering_matches_committed_contract_bytes() {
     let result = bank::render(&proposal(false)).unwrap();
     let f = field(&result, "files");
-    let expected = concat!(
-        "---\nschema: \"agent-memory/v1\"\nproject-id: \"8e0b66aa-2be5-4fa3-b47f-1245474aa7dd\"\nrouter-updated: \"2026-10-22T17:00:00Z\"\n---\n",
-        "# Project memory\n\nRouter time describes this map, not every file's revision.\n\n## Routes\n\n",
-        "| Path | Purpose | Scope | Lifecycle | Read when |\n| --- | --- | --- | --- | --- |\n",
-        "| [projectbrief.md](<projectbrief.md>) | Orient the agent | repository | active | When resuming work |\n",
-        "\n## Omitted contexts\n\n",
-        "- `productContext.md`: No relevant evidence supplied yet\n",
-        "- `activeContext.md`: No relevant evidence supplied yet\n",
-        "- `systemPatterns.md`: No relevant evidence supplied yet\n",
-        "- `techContext.md`: No relevant evidence supplied yet\n",
-        "- `progress.md`: No relevant evidence supplied yet\n"
-    );
-    assert_eq!(router(f), expected);
+    assert_eq!(router(f), MINIMAL_ROUTER);
     assert_eq!(
         field(&bank::validate_files(f, None).unwrap(), "project_id"),
         &s(PROJECT)
@@ -262,11 +318,21 @@ fn index_byte_row_and_unicode_framing_limits_are_enforced_before_a_valid_result(
             let mut r = route("topics/example.md");
             let old = field(&r, key).as_str().unwrap().to_owned();
             set(&mut r, key, s(format!("{old}{separator}extra")));
-            assert!(layout::index_text("topics/index.md", &index_meta(), &[r]).is_err());
+            assert_eq!(
+                layout::index_text("topics/index.md", &index_meta(), &[r])
+                    .unwrap_err()
+                    .to_string(),
+                "Route cells require nonempty single-line text without pipes or backslashes"
+            );
         }
     }
     let routes: Vec<_> = (0..65).map(|n| route(&format!("topics/{n}.md"))).collect();
-    assert!(layout::index_text("topics/index.md", &index_meta(), &routes).is_err());
+    assert_eq!(
+        layout::index_text("topics/index.md", &index_meta(), &routes)
+            .unwrap_err()
+            .to_string(),
+        "A useful bounded topic index requires explicit routes"
+    );
     let text = layout::index_text(
         "topics/index.md",
         &index_meta(),
@@ -277,7 +343,12 @@ fn index_byte_row_and_unicode_framing_limits_are_enforced_before_a_valid_result(
         "project-id: ",
         &format!("project-id: {}", " ".repeat(17000)),
     );
-    assert!(layout::validate_index("topics/index.md", oversized.as_bytes()).is_err());
+    assert_eq!(
+        layout::validate_index("topics/index.md", oversized.as_bytes())
+            .unwrap_err()
+            .to_string(),
+        "Topic index byte limit exceeded"
+    );
 }
 // obligation: tests/contracts/test_bank_layout.py::LayoutContract.test_source_index_locations_reject_controls_and_preserve_ordinary_unicode_and_spaces
 #[test]
@@ -703,10 +774,28 @@ fn memo_keeps_companion_records_and_rechecks_router() {
         let second = bank::validate_files(&f, Some(&mut b)).unwrap();
         assert_eq!(first, second);
         assert_eq!(a, b);
+        let mut changed_body = f.clone();
+        put(
+            &mut changed_body,
+            "episodes/retry notes.md",
+            "not a standalone record".into(),
+        );
+        assert_eq!(router(&changed_body), router(&f));
+        assert_eq!(
+            bank::validate_files(&changed_body, None)
+                .unwrap_err()
+                .to_string(),
+            "Invalid optional record, index or history; inspect the original file"
+        );
         let mut changed = f;
         let text = router(&changed).replace(PROJECT, "not-a-project");
         put(&mut changed, "MEMORY.md", text);
-        assert!(bank::validate_files(&changed, None).is_err());
+        assert_eq!(
+            bank::validate_files(&changed, None)
+                .unwrap_err()
+                .to_string(),
+            "project-id must be a canonical random UUIDv4"
+        );
     });
 }
 #[test]
@@ -728,7 +817,7 @@ struct World {
 impl World {
     fn new() -> Self {
         use std::os::unix::fs::PermissionsExt;
-        let root = std::env::temp_dir().join(format!(
+        let root = std::path::Path::new("/tmp").join(format!(
             "agent-memory-test-corebank-{}",
             agent_memory::host::uuid4().unwrap()
         ));
@@ -877,21 +966,38 @@ fn write_proposals_refuse_missing_scope_provider_and_invalid_paths() {
         ("content", s("# Updated\n")),
         ("scope_context", Value::Null),
     ]);
-    assert!(
+    assert_eq!(
         agent_memory::bank_writes::proposal_value(&proposal)
             .unwrap_err()
-            .to_string()
-            .contains("scope_binding")
+            .to_string(),
+        "scope_binding provider is not registered"
     );
-    for path in [
-        "../outside.md",
-        "/tmp/outside.md",
-        "MEMORY.md",
-        "topics/.runtime.md",
+    for (path, expected) in [
+        (
+            "../outside.md",
+            "Route escapes the bank or names runtime/hidden state",
+        ),
+        (
+            "/tmp/outside.md",
+            "Route escapes the bank or names runtime/hidden state",
+        ),
+        (
+            "MEMORY.md",
+            "Routes must name Markdown targets other than the router",
+        ),
+        (
+            "topics/.runtime.md",
+            "Route escapes the bank or names runtime/hidden state",
+        ),
     ] {
         let mut bad = proposal.clone();
         set(&mut bad, "path", s(path));
-        assert!(agent_memory::bank_writes::proposal_value(&bad).is_err());
+        assert_eq!(
+            agent_memory::bank_writes::proposal_value(&bad)
+                .unwrap_err()
+                .to_string(),
+            expected
+        );
     }
     let response = agent_memory::bank_writes::command_result(
         "apply",
@@ -1090,4 +1196,672 @@ fn malformed_deep_command_values_refuse_encoding_instead_of_panicking() {
         field(index.value.as_ref().unwrap(), "error"),
         &s("Invalid optional record layout, index or canonical bank; inspect original files")
     );
+}
+
+#[test]
+fn route_table_validates_later_rows_before_duplicate_paths() {
+    let header =
+        "| Path | Purpose | Scope | Lifecycle | Read when |\n| --- | --- | --- | --- | --- |\n";
+    let row = "| [topics/a.md](<topics/a.md>) | A | repository | active | When needed |\n";
+    let invalid = "| [topics/x.md](<wrong.md>) | X | repository | active | When needed |\n";
+    assert_eq!(
+        bank::parse_table(&format!("{header}{row}{row}{invalid}"), "MEMORY.md")
+            .unwrap_err()
+            .to_string(),
+        "Route label and relative target must agree"
+    );
+    assert_eq!(
+        bank::parse_table(&format!("{header}{row}{row}"), "MEMORY.md")
+            .unwrap_err()
+            .to_string(),
+        "Duplicate route path"
+    );
+    assert_eq!(
+        bank::parse_table(&format!("{header}|\n"), "MEMORY.md")
+            .unwrap_err()
+            .to_string(),
+        "Route row must have five columns"
+    );
+}
+
+#[test]
+fn add_context_routes_has_byte_exact_golden_with_python_line_boundaries() {
+    const PREFIX: &str = concat!(
+        "---\nschema: \"agent-memory/v1\"\nproject-id: \"8e0b66aa-2be5-4fa3-b47f-1245474aa7dd\"\n",
+        "router-updated: \"2026-10-22T17:00:00Z\"\n---\n",
+        "# Project memory\n\nPreserve this unrelated prose.\n\n## Routes\n\n",
+        "| Path | Purpose | Scope | Lifecycle | Read when |\n| --- | --- | --- | --- | --- |\n",
+        "| [projectbrief.md](<projectbrief.md>) | Original purpose | repository | active | Original trigger |"
+    );
+    const NEW_ROW: &str = "| [activeContext.md](<activeContext.md>) | Scoped handoff, unresolved questions and next step | repository | active | When resuming the matching task or investigating its questions |\n";
+    for ending in [
+        "\n", "\r\n", "\u{b}", "\u{c}", "\u{1c}", "\u{1d}", "\u{1e}", "\u{85}", "\u{2028}",
+        "\u{2029}",
+    ] {
+        let omissions = format!(
+            "\n## Omitted contexts\n\n- `productContext.md`: Not relevant{ending}- `activeContext.md`: No handoff{ending}- `systemPatterns.md`: Not relevant{ending}- `techContext.md`: Not relevant{ending}- `progress.md`: Not relevant{ending}"
+        );
+        // The extra LF after the row's break is a separate trailing blank line.
+        let input = format!("{PREFIX}{ending}\n{omissions}");
+        let before = bank::parse_router(&input).unwrap();
+        assert_eq!(before.2.as_object().unwrap().len(), 5);
+        // For LF/CRLF the row already ends in LF; other boundaries need one.
+        let expected = format!(
+            "{}{ending}{}{NEW_ROW}\n{}",
+            PREFIX.replace(UPDATED, "2026-10-23T17:00:00Z"),
+            if ending.ends_with('\n') { "" } else { "\n" },
+            omissions.replace(&format!("- `activeContext.md`: No handoff{ending}"), "")
+        );
+        assert_eq!(
+            bank::add_context_routes(
+                &input,
+                &["activeContext.md".into()],
+                &s("2026-10-23T17:00:00Z")
+            )
+            .unwrap()
+            .as_bytes(),
+            expected.as_bytes(),
+            "line ending {ending:?}"
+        );
+    }
+}
+
+#[test]
+fn add_context_routes_preserves_lf_only_frontmatter_substitution() {
+    let f = files(false);
+    let input = router(&f).replace(
+        "router-updated: \"2026-10-22T17:00:00Z\"",
+        "router-updated: \"2026-10-22T17:00:00Z\"\u{b}canonical-remote: \"repo://github.com/owner/project\"",
+    );
+    // Python's multiline `^...$` replacement is LF-delimited, not splitlines:
+    // the whole router-updated line (including its VT-delimited key) is replaced.
+    let output =
+        bank::add_context_routes(&input, &["activeContext.md".into()], &s(UPDATED)).unwrap();
+    assert!(!output.contains("canonical-remote"));
+    assert_eq!(output.matches("router-updated:").count(), 1);
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn non_utf8_repository_sibling_does_not_alias_the_bank() {
+    use std::os::unix::ffi::OsStringExt;
+    let world = World::new();
+    world.mkdir("repo/memory-bank");
+    let sibling = world
+        .path("repo")
+        .join(std::ffi::OsString::from_vec(b"caf\xe9.txt".to_vec()));
+    std::fs::write(&sibling, b"unrelated repository data").unwrap();
+    bank::bank_root(&world.path("repo/memory-bank")).unwrap();
+    assert_eq!(
+        std::fs::read(sibling).unwrap(),
+        b"unrelated repository data"
+    );
+}
+
+#[test]
+fn state_root_resolves_unset_empty_and_explicit_home_without_creating_it() {
+    use agent_memory::bank_writes::{StateEnvironment, state_root_with};
+    use std::path::Path;
+    let world = World::new();
+    let environment = StateEnvironment {
+        state_home: None,
+        xdg_state_home: None,
+        home: Some("".into()),
+    };
+    assert_eq!(
+        state_root_with(None, &environment).unwrap(),
+        Path::new("/.local/state/agent-memory")
+    );
+    let environment = StateEnvironment {
+        home: None,
+        ..environment
+    };
+    let expected =
+        agent_memory::host::expanduser_with_home(Path::new("~/.local/state/agent-memory"), None)
+            .unwrap();
+    assert_eq!(state_root_with(None, &environment).unwrap(), expected);
+    let environment = StateEnvironment {
+        home: Some(world.path("not-created").into_os_string()),
+        ..environment
+    };
+    assert_eq!(
+        state_root_with(None, &environment).unwrap(),
+        world.path("not-created/.local/state/agent-memory")
+    );
+    assert!(!world.path("not-created").exists());
+}
+
+#[test]
+fn missing_tombstone_registration_is_not_user_file_corruption_even_when_nested() {
+    use agent_memory::error::Kind;
+    let id = "b3dcae21-f5f3-40ac-bcfe-e845a3d2868b";
+    let path = format!("history/tombstones/{id}.md");
+    let metadata = obj([
+        ("id", s(id)),
+        ("scope", s(PROJECT)),
+        ("deleted-at", s(UPDATED)),
+        ("deletion-authority", s(PROJECT)),
+        ("reason-class", s("incorrect")),
+    ]);
+    for nested in [false, true] {
+        let mut f = files(false);
+        put(&mut f, &path, record_text(&metadata, ""));
+        let mut tombstone_route = route(&path);
+        set(&mut tombstone_route, "lifecycle", s("deleted"));
+        if nested {
+            let index =
+                layout::index_text("topics/index.md", &index_meta(), &[tombstone_route]).unwrap();
+            put(&mut f, "topics/index.md", index);
+            root_route(&mut f, &route("topics/index.md"));
+        } else {
+            root_route(&mut f, &tombstone_route);
+        }
+        let error = bank::validate_files(&f, None).unwrap_err();
+        assert_eq!(error.kind(), &Kind::MissingProvider);
+        assert_eq!(error.to_string(), "Tombstone parser is not registered");
+    }
+}
+
+fn register_observation() {
+    static REGISTER: std::sync::Once = std::sync::Once::new();
+    REGISTER.call_once(|| {
+        bank::register_bank_observation(Some(std::sync::Arc::new(
+            agent_memory::bank_observation::BankObservation,
+        )))
+    });
+}
+
+struct WriterWorld {
+    world: World,
+    environment: agent_memory::bank_writes::StateEnvironment,
+}
+impl WriterWorld {
+    fn new() -> Self {
+        use std::os::unix::fs::PermissionsExt;
+        register_observation();
+        let world = World::new();
+        world.mkdir("repo/memory-bank");
+        for (path, text) in files(false).as_object().unwrap() {
+            world.write(
+                &format!("repo/memory-bank/{path}"),
+                text.as_str().unwrap().as_bytes(),
+            );
+        }
+        std::fs::set_permissions(
+            world.path("repo/memory-bank/projectbrief.md"),
+            std::fs::Permissions::from_mode(0o640),
+        )
+        .unwrap();
+        let environment = agent_memory::bank_writes::StateEnvironment {
+            state_home: Some(world.path("state").into_os_string()),
+            xdg_state_home: None,
+            home: None,
+        };
+        Self { world, environment }
+    }
+    fn repo(&self) -> std::path::PathBuf {
+        self.world.path("repo")
+    }
+    fn bank(&self) -> std::path::PathBuf {
+        self.world.path("repo/memory-bank")
+    }
+    fn prepared(&self) -> Value {
+        obj([
+            ("schema", s("agent-memory/write-proposal-v1")),
+            ("operation_id", s(PROJECT)),
+            ("operation", s("replace")),
+            ("repo_root", s(self.repo().to_str().unwrap())),
+            ("project_id", s(PROJECT)),
+            ("observed_hashes", bank::scan_hashes(&self.bank()).unwrap()),
+            ("path", s("projectbrief.md")),
+            ("content", s("# Revised project\n\nVerified new context.\n")),
+            ("scope_context", Value::Null),
+        ])
+    }
+    fn receipt_path(&self) -> std::path::PathBuf {
+        agent_memory::bank_writes::state_paths_with(
+            &self.repo(),
+            &self.bank(),
+            PROJECT,
+            &self.environment,
+        )
+        .unwrap()
+        .1
+    }
+    fn apply(&self, prepared: &Value) -> Result<Value> {
+        agent_memory::bank_writes::apply_with_identity_and_environment(
+            prepared,
+            |owner| {
+                let owner = agent_memory::developer_identity::load(owner)?;
+                assert_eq!(field(&owner, "operation_id"), &s(PROJECT));
+                assert_eq!(field(&owner, "operation"), &s("bank-replace"));
+                assert_eq!(
+                    std::fs::read(self.bank().join(".agent-memory.lock")).unwrap(),
+                    agent_memory::developer_identity::encoded(&owner).unwrap()
+                );
+                Ok(())
+            },
+            &self.environment,
+            agent_memory::host::Sources {
+                uuid4: || Ok(PROJECT.into()),
+                utc_now: || Ok("2026-10-23T17:00:00+00:00".into()),
+            },
+        )
+    }
+    fn assert_no_temporary(&self) {
+        assert!(std::fs::read_dir(self.bank()).unwrap().all(|entry| {
+            !entry
+                .unwrap()
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".agent-memory-write-")
+        }));
+    }
+}
+
+#[test]
+fn real_observation_scans_sources_and_write_protocol_refuses_missing_providers_without_writes() {
+    let fixture = WriterWorld::new();
+    let original = std::fs::read(fixture.bank().join("projectbrief.md")).unwrap();
+    let (physical, hashes, sources) = bank::scan_sources(&fixture.bank()).unwrap();
+    assert_eq!(physical.as_object().unwrap().len(), 2);
+    assert_eq!(hashes, bank::scan_hashes(&fixture.bank()).unwrap());
+    assert_eq!(sources["projectbrief.md"], original);
+    assert_eq!(
+        agent_memory::bank_writes::preview(
+            &fixture.repo(),
+            "projectbrief.md",
+            "# Revised\n",
+            "replace"
+        )
+        .unwrap_err()
+        .to_string(),
+        "Repository boundary security scan provider is not registered"
+    );
+    let prepared = fixture.prepared();
+    let error = fixture.apply(&prepared).unwrap_err();
+    assert_eq!(error.kind(), &agent_memory::error::Kind::MissingProvider);
+    assert_eq!(
+        error.to_string(),
+        "scope_binding provider is not registered"
+    );
+    assert_eq!(
+        std::fs::read(fixture.bank().join("projectbrief.md")).unwrap(),
+        original
+    );
+    assert!(!fixture.receipt_path().exists());
+    assert!(!fixture.bank().join(".agent-memory.lock").exists());
+    fixture.assert_no_temporary();
+}
+
+#[test]
+fn canonical_receipt_path_record_load_roundtrip_accepts_hardlinks() {
+    use std::os::unix::fs::PermissionsExt;
+    let fixture = WriterWorld::new();
+    let path = fixture.receipt_path();
+    let payload = concat!(
+        "{\n  \"operation_id\": \"8e0b66aa-2be5-4fa3-b47f-1245474aa7dd\",\n",
+        "  \"schema\": \"agent-memory/write-receipt-v1\",\n  \"verified\": true\n}\n"
+    )
+    .as_bytes();
+    agent_memory::bank_writes::record(&path, payload).unwrap();
+    assert_eq!(std::fs::read(&path).unwrap(), payload);
+    assert_eq!(
+        std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
+    std::fs::hard_link(&path, fixture.world.path("receipt-backup.json")).unwrap();
+    let read = agent_memory::fs::read_source_with_options(
+        path.parent().unwrap(),
+        std::path::Path::new(path.file_name().unwrap()),
+        agent_memory::bank_writes::MAX_RECEIPT_BYTES,
+        agent_memory::fs::ReadOptions::default(),
+    )
+    .unwrap();
+    let decoded = agent_memory::bank_writes::load_receipt(&read.bytes).unwrap();
+    assert_eq!(field(&decoded, "operation_id"), &s(PROJECT));
+    assert_eq!(field(&decoded, "verified"), &Value::Bool(true));
+    assert_eq!(read.bytes, payload);
+    assert_eq!(
+        agent_memory::bank_writes::record(&path, b"unexpected replacement")
+            .unwrap_err()
+            .to_string(),
+        "Registry changed immediately before replacement; preserve the external edit"
+    );
+    assert_eq!(std::fs::read(path).unwrap(), payload);
+}
+
+struct Child(std::process::Child);
+impl Drop for Child {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+fn fault_child(world: &World, stage: &str, action: &str) -> Child {
+    world.write(".test-world.json", b"{\"token\":\"bank-fault-regression\"}");
+    Child(
+        std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", "isolated_bank_fault_child", "--nocapture"])
+            .env("BANK_FAULT_CHILD", action)
+            .env("AGENT_MEMORY_TEST_ROOT", &world.root)
+            .env("AGENT_MEMORY_TEST_TOKEN", "bank-fault-regression")
+            .env("AGENT_MEMORY_FAULT_STAGE", stage)
+            .env("AGENT_MEMORY_FAULT_MODE", "pause")
+            .env("AGENT_MEMORY_FAULT_DIR", world.path("missing/rendezvous"))
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .unwrap(),
+    )
+}
+fn await_ready(child: &mut Child, path: &std::path::Path) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while !path.exists() {
+        assert!(
+            child.0.try_wait().unwrap().is_none(),
+            "fault child exited before ready"
+        );
+        assert!(
+            std::time::Instant::now() < deadline,
+            "fault child never wrote ready"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+}
+fn finish_child(child: &mut Child) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
+    loop {
+        if let Some(status) = child.0.try_wait().unwrap() {
+            assert!(status.success(), "fault child failed: {status}");
+            break;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "fault child timed out"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+}
+#[test]
+fn isolated_bank_fault_child() {
+    let Ok(action) = std::env::var("BANK_FAULT_CHILD") else {
+        return;
+    };
+    if action == "fault" {
+        agent_memory::bank_writes::fault("regression/pause").unwrap();
+    } else {
+        register_observation();
+        let root = std::path::PathBuf::from(std::env::var_os("AGENT_MEMORY_TEST_ROOT").unwrap());
+        let fixture = WriterWorld {
+            world: World { root: root.clone() },
+            environment: agent_memory::bank_writes::StateEnvironment {
+                state_home: Some(root.join("state").into_os_string()),
+                xdg_state_home: None,
+                home: None,
+            },
+        };
+        let prepared = agent_memory::developer_identity::load(
+            &std::fs::read(root.join("proposal.json")).unwrap(),
+        )
+        .unwrap();
+        let result = fixture.apply(&prepared);
+        // The parent owns the disposable world for the whole interleaving.
+        std::mem::forget(fixture);
+        assert_eq!(result.unwrap_err().to_string(), action);
+    }
+}
+
+// obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_lock_precedes_inventory_and_second_writer_and_reader_stop
+#[test]
+fn pause_fault_creates_missing_rendezvous_and_writes_ready() {
+    let world = World::new();
+    let directory = world.path("missing/rendezvous");
+    assert!(!directory.exists());
+    let mut child = fault_child(&world, "regression/pause", "fault");
+    let ready = directory.join("regression%2Fpause.ready");
+    await_ready(&mut child, &ready);
+    assert!(directory.is_dir());
+    assert_eq!(std::fs::read(&ready).unwrap(), b"");
+    assert!(child.0.try_wait().unwrap().is_none());
+    std::fs::write(directory.join("regression%2Fpause.release"), b"").unwrap();
+    finish_child(&mut child);
+}
+
+// obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_preview_and_inspect_are_read_only_and_apply_replaces_one_file_with_readback
+#[test]
+#[ignore = "needs recovery_frontier scope_binding security turn_sources registered"]
+fn write_preview_apply_preserves_mode_readback_and_exact_receipt_bytes() {
+    use std::os::unix::fs::PermissionsExt;
+    let fixture = WriterWorld::new();
+    let originals = files(false);
+    let preview = agent_memory::bank_writes::preview_with_sources(
+        &fixture.repo(),
+        "projectbrief.md",
+        "# Revised project\n\nVerified new context.\n",
+        "replace",
+        agent_memory::host::Sources {
+            uuid4: || Ok(PROJECT.into()),
+            utc_now: || Ok(UPDATED.into()),
+        },
+    )
+    .unwrap();
+    assert_eq!(field(&preview, "writes_performed"), &Value::Bool(false));
+    assert_eq!(field(&preview, "verified"), &Value::Bool(false));
+    assert!(!fixture.bank().join(".agent-memory.lock").exists());
+    assert!(!fixture.receipt_path().exists());
+    for (path, text) in originals.as_object().unwrap() {
+        assert_eq!(
+            std::fs::read(fixture.bank().join(path)).unwrap(),
+            text.as_str().unwrap().as_bytes()
+        );
+    }
+    let applied = fixture.apply(&preview).unwrap();
+    assert_eq!(field(&applied, "outcome"), &s("replaced"));
+    assert_eq!(field(&applied, "verified"), &Value::Bool(true));
+    assert_eq!(field(&applied, "writes_performed"), &Value::Bool(true));
+    assert_eq!(field(&applied, "still_current"), &Value::Bool(true));
+    assert_eq!(
+        field(&applied, "changed_memory_paths"),
+        &Value::Array(vec![s("memory-bank/projectbrief.md")])
+    );
+    assert_eq!(
+        std::fs::read(fixture.bank().join("projectbrief.md")).unwrap(),
+        b"# Revised project\n\nVerified new context.\n"
+    );
+    assert_eq!(
+        std::fs::read(fixture.bank().join("MEMORY.md")).unwrap(),
+        router(&originals).as_bytes()
+    );
+    assert_eq!(
+        std::fs::metadata(fixture.bank().join("projectbrief.md"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o640
+    );
+    assert_eq!(
+        std::fs::metadata(fixture.receipt_path())
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o600
+    );
+    assert_eq!(
+        std::fs::read(fixture.receipt_path()).unwrap(),
+        expected_write_receipt(field(&preview, "proposal"), &fixture.bank(), "replaced")
+    );
+    fixture.assert_no_temporary();
+    assert!(!fixture.bank().join(".agent-memory.lock").exists());
+}
+
+fn expected_write_receipt(proposal: &Value, bank: &std::path::Path, outcome: &str) -> Vec<u8> {
+    use sha2::{Digest, Sha256};
+    // Baseline developer_identity.encoded: sorted keys, indent=2, UTF-8, LF.
+    // The fixture has only safe ASCII path bytes, so no JSON escaping is needed.
+    let digest = |bytes: &[u8]| {
+        Sha256::digest(bytes)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    };
+    let router_sha = digest(MINIMAL_ROUTER.as_bytes());
+    let before_sha =
+        digest(b"# projectbrief.md\n\nUseful project context; see [source](../README.md).\n");
+    assert_eq!(
+        field(proposal, "content"),
+        &s("# Revised project\n\nVerified new context.\n")
+    );
+    let after_sha = digest(b"# Revised project\n\nVerified new context.\n");
+    let repo = field(proposal, "repo_root").as_str().unwrap();
+    let scope = field(proposal, "scope_context");
+    assert_eq!(
+        scope,
+        &Value::Null,
+        "this golden is for unresolved-scope internal writes"
+    );
+    let request = format!(
+        concat!(
+            "{{\n  \"content\": \"# Revised project\\n\\nVerified new context.\\n\",\n",
+            "  \"observed_hashes\": {{\n    \"MEMORY.md\": \"{}\",\n    \"projectbrief.md\": \"{}\"\n  }},\n",
+            "  \"operation\": \"replace\",\n  \"operation_id\": \"{}\",\n  \"path\": \"projectbrief.md\",\n",
+            "  \"project_id\": \"{}\",\n  \"repo_root\": \"{}\",\n  \"schema\": \"agent-memory/write-proposal-v1\",\n",
+            "  \"scope_context\": null\n}}\n"
+        ),
+        router_sha, before_sha, PROJECT, PROJECT, repo
+    );
+    let request_sha = digest(request.as_bytes());
+    format!(concat!(
+        "{{\n  \"bank_path\": \"{}\",\n  \"changed_memory_paths\": [\n    \"memory-bank/projectbrief.md\"\n  ],\n",
+        "  \"observed_hashes\": {{\n    \"MEMORY.md\": \"{}\",\n    \"projectbrief.md\": \"{}\"\n  }},\n",
+        "  \"operation_id\": \"{}\",\n  \"outcome\": \"{}\",\n  \"project_id\": \"{}\",\n",
+        "  \"readback_at\": \"2026-10-23T17:00:00+00:00\",\n  \"request_sha256\": \"{}\",\n",
+        "  \"resulting_hashes\": {{\n    \"MEMORY.md\": \"{}\",\n    \"projectbrief.md\": \"{}\"\n  }},\n",
+        "  \"schema\": \"agent-memory/write-receipt-v1\",\n  \"verified\": true\n}}\n"
+    ), bank.display(), router_sha, before_sha, PROJECT, outcome, PROJECT, request_sha, router_sha, after_sha).into_bytes()
+}
+
+// obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_interrupted_after_replace_is_distinct_from_a_failed_write_and_replay_converges
+// obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_lost_response_after_receipt_replays_without_duplicate_or_replacement
+#[test]
+#[ignore = "needs scope_binding recovery_frontier security turn_sources registered"]
+fn already_present_then_receipted_replay_preserves_bytes_and_hardlinked_receipt() {
+    use std::os::unix::fs::MetadataExt;
+    let fixture = WriterWorld::new();
+    let prepared = fixture.prepared();
+    std::fs::write(
+        fixture.bank().join("projectbrief.md"),
+        field(&prepared, "content").as_str().unwrap(),
+    )
+    .unwrap();
+    let before = std::fs::metadata(fixture.bank().join("projectbrief.md")).unwrap();
+    let applied = fixture.apply(&prepared).unwrap();
+    assert_eq!(field(&applied, "outcome"), &s("already-present"));
+    assert_eq!(field(&applied, "already_applied"), &Value::Bool(false));
+    assert_eq!(field(&applied, "writes_performed"), &Value::Bool(false));
+    assert_eq!(
+        std::fs::metadata(fixture.bank().join("projectbrief.md"))
+            .unwrap()
+            .ino(),
+        before.ino()
+    );
+    assert_eq!(
+        std::fs::metadata(fixture.bank().join("projectbrief.md"))
+            .unwrap()
+            .mtime_nsec(),
+        before.mtime_nsec()
+    );
+    let receipt = std::fs::read(fixture.receipt_path()).unwrap();
+    assert_eq!(
+        receipt,
+        expected_write_receipt(&prepared, &fixture.bank(), "already-present")
+    );
+    std::fs::hard_link(fixture.receipt_path(), fixture.world.path("backup.json")).unwrap();
+    let replay = fixture.apply(&prepared).unwrap();
+    assert_eq!(field(&replay, "already_applied"), &Value::Bool(true));
+    assert_eq!(field(&replay, "still_current"), &Value::Bool(true));
+    assert_eq!(field(&replay, "writes_performed"), &Value::Bool(false));
+    std::fs::write(
+        fixture.bank().join("projectbrief.md"),
+        b"# Later external change\n",
+    )
+    .unwrap();
+    let replay = fixture.apply(&prepared).unwrap();
+    assert_eq!(field(&replay, "still_current"), &Value::Bool(false));
+    assert_eq!(
+        std::fs::read(fixture.bank().join("projectbrief.md")).unwrap(),
+        b"# Later external change\n"
+    );
+    assert_eq!(std::fs::read(fixture.receipt_path()).unwrap(), receipt);
+    fixture.assert_no_temporary();
+}
+
+// obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_invalid_scope_symlinks_and_operation_id_reuse_refuse
+#[test]
+#[ignore = "needs scope_binding recovery_frontier security turn_sources registered"]
+fn unexpected_receipt_is_preserved_during_apply() {
+    let fixture = WriterWorld::new();
+    let prepared = fixture.prepared();
+    agent_memory::bank_writes::record(&fixture.receipt_path(), b"{}\n").unwrap();
+    let before = std::fs::read(fixture.bank().join("projectbrief.md")).unwrap();
+    assert_eq!(
+        fixture.apply(&prepared).unwrap_err().to_string(),
+        "Unknown receipt or operation ID reused for another proposal; preserve it"
+    );
+    assert_eq!(
+        std::fs::read(fixture.bank().join("projectbrief.md")).unwrap(),
+        before
+    );
+    assert_eq!(std::fs::read(fixture.receipt_path()).unwrap(), b"{}\n");
+    fixture.assert_no_temporary();
+}
+
+// obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_external_target_edit_immediately_before_replacement_is_not_overwritten
+// obligation: tests/contracts/test_bank_writes.py::BankWritesContract.test_failure_before_replace_leaves_the_original_and_no_verified_receipt
+#[test]
+#[ignore = "needs scope_binding recovery_frontier security turn_sources registered"]
+fn replacement_error_wins_when_the_temporary_was_removed_and_cleanup_leaves_no_files() {
+    for remove_temporary in [false, true] {
+        let fixture = WriterWorld::new();
+        let prepared = fixture.prepared();
+        fixture.world.write(
+            "proposal.json",
+            &agent_memory::developer_identity::encoded(&prepared).unwrap(),
+        );
+        let mut child = fault_child(
+            &fixture.world,
+            "before-recheck",
+            "External edit observed immediately before replacement; preserve it",
+        );
+        let rendezvous = fixture.world.path("missing/rendezvous");
+        await_ready(&mut child, &rendezvous.join("before-recheck.ready"));
+        std::fs::write(
+            fixture.bank().join("projectbrief.md"),
+            b"# Manual edit preserved\n",
+        )
+        .unwrap();
+        if remove_temporary {
+            for entry in std::fs::read_dir(fixture.bank()).unwrap() {
+                let entry = entry.unwrap();
+                if entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(".agent-memory-write-")
+                {
+                    std::fs::remove_file(entry.path()).unwrap();
+                }
+            }
+        }
+        std::fs::write(rendezvous.join("before-recheck.release"), b"").unwrap();
+        finish_child(&mut child);
+        assert_eq!(
+            std::fs::read(fixture.bank().join("projectbrief.md")).unwrap(),
+            b"# Manual edit preserved\n"
+        );
+        assert!(!fixture.receipt_path().exists());
+        assert!(!fixture.bank().join(".agent-memory.lock").exists());
+        fixture.assert_no_temporary();
+    }
 }

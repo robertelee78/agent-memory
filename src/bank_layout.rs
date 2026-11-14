@@ -29,6 +29,13 @@ const INDEX_FIELDS: &[&str] = &["schema", "project-id", "updated"];
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
+fn optional_error(error: ContractError) -> ContractError {
+    if matches!(error.kind(), crate::error::Kind::MissingProvider) {
+        error
+    } else {
+        err("Invalid optional record, index or history; inspect the original file")
+    }
+}
 pub fn index_header(metadata: &Value, path: &str) -> Result<()> {
     bank::path_value(&string(path))?;
     if !path.starts_with("topics/") {
@@ -236,12 +243,12 @@ impl Inventory<'_> {
             stack.push(path.to_owned());
             for child in &children {
                 self.visit(child, &chain, index_depth + 1, stack)
-                    .map_err(|_| invalid())?;
+                    .map_err(optional_error)?;
             }
             stack.pop();
             return Ok(());
         }
-        let (kind, metadata) = records::validate(&metadata, body, &[]).map_err(|_| invalid())?;
+        let (kind, metadata) = records::validate(&metadata, body, &[]).map_err(optional_error)?;
         let mut entry = entry(&kind);
         let id = get(&metadata, "id")
             .as_str()

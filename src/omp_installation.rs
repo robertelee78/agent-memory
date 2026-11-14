@@ -10,7 +10,7 @@ use std::sync::{Arc, RwLock};
 
 pub const READER_CAPABILITY: &str = "omp-stored-source-v2";
 pub const HISTORICAL_READER_CAPABILITY: &str = "omp-harness-v1";
-pub const MAX_RECEIPT: usize = 16 * 1024 * 1024;
+pub const MAX_RECEIPT: usize = 1024 * 1024;
 pub const MAX_MANUAL: usize = 16 * 1024 * 1024;
 pub const MAX_ACTIVATION: usize = 2 * 1024 * 1024;
 const FIELDS: [&str; 6] = [
@@ -166,11 +166,19 @@ pub fn configuration(
                 "Stored-source authority upgrade requires renewed --omp-peers-upgraded for omp-stored-source-v2",
             )?;
         }
-        // A Rust re-issue never inherits an earlier rollout declaration, even v2.
-        require(
-            args.omp_peers_upgraded,
-            "Native omp requires --presets omp, --omp-agent-dir and --omp-peers-upgraded after quiescing/upgrading bank peers",
-        )?;
+        // Python-era adoption requires a fresh attestation; Rust re-issues
+        // retain the baseline reuse of an already-current reader capability.
+        if old.is_some_and(|receipt| {
+            matches!(
+                text(receipt, "schema"),
+                Some("agent-memory/install-receipt-v1" | "agent-memory/install-receipt-v2")
+            )
+        }) {
+            require(
+                args.omp_peers_upgraded,
+                "Native omp requires --presets omp, --omp-agent-dir and --omp-peers-upgraded after quiescing/upgrading bank peers",
+            )?;
+        }
         return binding(root, no_guidance, READER_CAPABILITY).map(Some);
     }
     require(
@@ -191,7 +199,6 @@ fn targets(receipt: &Value) -> Result<&[Value]> {
 fn target<'a>(receipt: &'a Value, path: &str) -> Result<&'a Value> {
     targets(receipt)?
         .iter()
-        .rev()
         .find(|v| text(v, "path") == Some(path))
         .ok_or_else(|| ContractError::new("Native target is absent from ownership receipt").into())
 }
@@ -532,8 +539,12 @@ fn read_receipt(state: &Path) -> Result<Option<Value>> {
     if !fs::trust::record(&path)?.present {
         return Ok(None);
     }
-    let raw = fs::read_source(state, Path::new("receipt.json"), MAX_RECEIPT)
-        .map_err(|e| ContractError::new(e.to_string()))?;
+    let raw = fs::read_source(state, Path::new("receipt.json"), MAX_RECEIPT).map_err(|_| {
+        ContractError::new(format!(
+            "Missing, linked or oversized installation record: {}",
+            path.display()
+        ))
+    })?;
     let value = json::decode_bytes(
         &raw.bytes,
         DecodePolicy {
@@ -543,6 +554,59 @@ fn read_receipt(state: &Path) -> Result<Option<Value>> {
             ..DecodePolicy::default()
         },
     )?;
+    require(
+        value.as_object().is_some()
+            && matches!(
+                text(&value, "schema"),
+                Some(
+                    "agent-memory/install-receipt-v1"
+                        | "agent-memory/install-receipt-v2"
+                        | "agent-memory/install-receipt-v3"
+                )
+            )
+            && get(&value, "verified") == &Value::Bool(true)
+            && text(&value, "installation_id").is_some()
+            && get(&value, "targets").as_array().is_some()
+            && get(&value, "source").as_object().is_some(),
+        &format!("Invalid installation ownership receipt: {}", path.display()),
+    )?;
+    if get(&value, "uninstalled") == &Value::Bool(true) {
+        return Ok(None);
+    }
+    for item in targets(&value)? {
+        require(
+            item.as_object().is_some()
+                && matches!(
+                    text(item, "kind"),
+                    Some(
+                        "copy"
+                            | "link"
+                            | "wrapper"
+                            | "activation"
+                            | "source"
+                            | "hook-config"
+                            | "hook-link"
+                    )
+                ),
+            "Malformed target ownership receipt",
+        )?;
+        let normalized = if let Some(path) = text(item, "path").map(Path::new) {
+            require(
+                path.is_absolute(),
+                &format!("Installation paths must be absolute: {}", path.display()),
+            )?;
+            let parent = fs::canonical_path(path.parent().unwrap_or(path), false)?;
+            path.components()
+                .next_back()
+                .is_some_and(|name| parent.join(name.as_os_str()) == path)
+        } else {
+            false
+        };
+        require(
+            normalized && item.get("identity").is_some(),
+            "Malformed target ownership receipt",
+        )?;
+    }
     validate_receipt(&value)?;
     Ok(Some(value))
 }
@@ -971,5 +1035,184 @@ pub fn owned_manual(receipt: &Value, relative: &str) -> Result<Option<OwnedManua
     match mint() {
         Err(Error::Contract(_)) => Ok(None),
         result => result,
+    }
+}
+
+#[cfg(test)]
+mod receipt_reader_tests {
+    use super::*;
+    use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+
+    struct State(PathBuf);
+
+    impl State {
+        fn new() -> Self {
+            let path = std::env::temp_dir()
+                .join(format!("am-omp-receipt-{}", crate::host::uuid4().unwrap()));
+            std::fs::DirBuilder::new()
+                .mode(0o700)
+                .create(&path)
+                .unwrap();
+            Self(fs::canonical_path(&path, true).unwrap())
+        }
+
+        fn write(&self, value: &Value) {
+            // Receipts are 0600 lifecycle records; never depend on the umask.
+            let path = self.0.join("receipt.json");
+            std::fs::write(&path, receipt_encoding(value).unwrap()).unwrap();
+            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
+        }
+    }
+
+    impl Drop for State {
+        fn drop(&mut self) {
+            std::fs::remove_dir_all(&self.0).unwrap();
+        }
+    }
+
+    fn receipt() -> Value {
+        object([
+            ("schema", string("agent-memory/install-receipt-v1")),
+            ("verified", Value::Bool(true)),
+            ("installation_id", string("baseline-string")),
+            ("targets", Value::Array(vec![])),
+            ("source", object([] as [(&str, Value); 0])),
+        ])
+    }
+
+    #[test]
+    fn baseline_uninstall_receipt_stops_before_native_validation_or_hashing() {
+        let state = State::new();
+        let mut value = receipt();
+        *value.get_mut("schema").unwrap() = string("agent-memory/install-receipt-v2");
+        // Baseline uninstall retains the OMP binding but removes owned files.
+        // Absent runtime bytes and targets prove this returns before validation.
+        if let Value::Object(fields) = &mut value {
+            fields.extend([
+                (
+                    "omp_binding".to_owned(),
+                    binding(state.0.to_str().unwrap(), false, READER_CAPABILITY).unwrap(),
+                ),
+                ("uninstalled".to_owned(), Value::Bool(true)),
+                (
+                    "artifact_files".to_owned(),
+                    object([] as [(&str, Value); 0]),
+                ),
+            ]);
+        }
+        state.write(&value);
+        assert_eq!(read_receipt(&state.0).unwrap(), None);
+        assert!(!state.0.join("bin/am").exists());
+    }
+
+    #[test]
+    fn receipt_reader_enforces_one_mib_and_verified_before_native_validation() {
+        let state = State::new();
+        let mut value = receipt();
+        *value.get_mut("verified").unwrap() = Value::Bool(false);
+        state.write(&value);
+        assert_eq!(
+            read_receipt(&state.0).unwrap_err().to_string(),
+            format!(
+                "Invalid installation ownership receipt: {}",
+                state.0.join("receipt.json").display()
+            )
+        );
+        let mut raw = receipt_encoding(&receipt()).unwrap();
+        raw.resize(1536 * 1024, b' ');
+        std::fs::write(state.0.join("receipt.json"), &raw).unwrap();
+        assert_eq!(
+            read_receipt(&state.0).unwrap_err().to_string(),
+            format!(
+                "Missing, linked or oversized installation record: {}",
+                state.0.join("receipt.json").display()
+            )
+        );
+        raw.truncate(MAX_RECEIPT);
+        std::fs::write(state.0.join("receipt.json"), raw).unwrap();
+        assert_eq!(
+            receipt_encoding(&read_receipt(&state.0).unwrap().unwrap()).unwrap(),
+            receipt_encoding(&receipt()).unwrap()
+        );
+    }
+
+    #[test]
+    fn receipt_reader_checks_top_level_shape_and_each_target() {
+        let state = State::new();
+        let base = receipt();
+        for (key, invalid) in [
+            ("schema", string("unknown")),
+            ("installation_id", Value::Null),
+            ("targets", Value::Null),
+            ("source", Value::Array(vec![])),
+        ] {
+            let mut value = base.clone();
+            *value.get_mut(key).unwrap() = invalid;
+            state.write(&value);
+            assert_eq!(
+                read_receipt(&state.0).unwrap_err().to_string(),
+                format!(
+                    "Invalid installation ownership receipt: {}",
+                    state.0.join("receipt.json").display()
+                )
+            );
+        }
+        for kind in [
+            "copy",
+            "link",
+            "wrapper",
+            "activation",
+            "source",
+            "hook-config",
+            "hook-link",
+        ] {
+            let mut value = base.clone();
+            *value.get_mut("targets").unwrap() = Value::Array(vec![object([
+                ("kind", string(kind)),
+                ("path", string(state.0.join("owned").to_str().unwrap())),
+                ("identity", Value::Null),
+            ])]);
+            state.write(&value);
+            assert_eq!(
+                receipt_encoding(&read_receipt(&state.0).unwrap().unwrap()).unwrap(),
+                receipt_encoding(&value).unwrap()
+            );
+        }
+        for target in [
+            Value::Null,
+            object([
+                ("kind", string("unknown")),
+                ("path", string("/owned")),
+                ("identity", Value::Null),
+            ]),
+            object([("kind", string("copy")), ("path", string("/owned"))]),
+        ] {
+            let mut value = base.clone();
+            *value.get_mut("targets").unwrap() = Value::Array(vec![target]);
+            state.write(&value);
+            assert_eq!(
+                read_receipt(&state.0).unwrap_err().to_string(),
+                "Malformed target ownership receipt"
+            );
+        }
+        let mut relative = base.clone();
+        *relative.get_mut("targets").unwrap() = Value::Array(vec![object([
+            ("kind", string("copy")),
+            ("path", string("relative")),
+            ("identity", Value::Null),
+        ])]);
+        state.write(&relative);
+        assert_eq!(
+            read_receipt(&state.0).unwrap_err().to_string(),
+            "Installation paths must be absolute: relative"
+        );
+    }
+
+    #[test]
+    fn duplicate_observer_and_answer_first_targets_select_the_first_entry() {
+        let first = object([("path", string("/owned")), ("kind", string("wrapper"))]);
+        let last = object([("path", string("/owned")), ("kind", string("copy"))]);
+        let value = object([("targets", Value::Array(vec![first.clone(), last]))]);
+        assert_eq!(target(&value, "/owned").unwrap(), &first);
     }
 }

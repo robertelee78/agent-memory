@@ -267,45 +267,48 @@ fn scope() -> Result<Arc<dyn ScopeBinding>> {
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("scope_binding provider is not registered"))
+        .ok_or_else(|| missing("scope_binding provider is not registered"))
 }
 fn checkpoint() -> Result<Arc<dyn Checkpoint>> {
     CHECKPOINT
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("checkpoint provider is not registered"))
+        .ok_or_else(|| missing("checkpoint provider is not registered"))
 }
 fn frontier() -> Result<Arc<dyn RecoveryFrontier>> {
     FRONTIER
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("recovery_frontier provider is not registered"))
+        .ok_or_else(|| missing("recovery_frontier provider is not registered"))
 }
 fn recovery() -> Result<Arc<dyn RecoveryTransactions>> {
     RECOVERY
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("recovery_transactions provider is not registered"))
+        .ok_or_else(|| missing("recovery_transactions provider is not registered"))
 }
 fn security() -> Result<Arc<dyn Security>> {
     SECURITY
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("security provider is not registered"))
+        .ok_or_else(|| missing("security provider is not registered"))
 }
 fn turn_sources() -> Result<Arc<dyn TurnSources>> {
     TURN_SOURCES
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("turn_sources provider is not registered"))
+        .ok_or_else(|| missing("turn_sources provider is not registered"))
 }
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
+}
+fn missing(message: &str) -> ContractError {
+    ContractError::missing_provider(message)
 }
 fn io_error(error: impl std::fmt::Display) -> ContractError {
     ContractError::new(error.to_string())
@@ -368,22 +371,18 @@ pub fn state_root(repo: Option<&Path>) -> Result<PathBuf> {
     state_root_with(repo, &StateEnvironment::current())
 }
 pub fn state_root_with(repo: Option<&Path>, environment: &StateEnvironment) -> Result<PathBuf> {
-    let raw = environment
-        .state_home
-        .as_ref()
-        .filter(|s| !s.is_empty())
-        .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            let base = environment
-                .xdg_state_home
-                .as_ref()
-                .map(PathBuf::from)
-                .unwrap_or_else(|| {
-                    PathBuf::from(environment.home.as_deref().unwrap_or(OsStr::new("~")))
-                        .join(".local/state")
-                });
-            base.join("agent-memory")
-        });
+    let raw = if let Some(raw) = environment.state_home.as_ref().filter(|s| !s.is_empty()) {
+        PathBuf::from(raw)
+    } else {
+        let base = match &environment.xdg_state_home {
+            Some(base) => PathBuf::from(base),
+            None => host::expanduser_with_home(
+                Path::new("~/.local/state"),
+                environment.home.as_deref(),
+            )?,
+        };
+        base.join("agent-memory")
+    };
     let root = host::expanduser_with_home(&raw, environment.home.as_deref())?;
     if !root.is_absolute()
         || root.components().any(|p| matches!(p, Component::ParentDir))
@@ -821,7 +820,14 @@ impl Temporary<'_> {
         if !self.present {
             return Ok(());
         }
-        let current = self.directory.stat_at(&self.name).map_err(io_error)?;
+        let current = match self.directory.stat_at(&self.name) {
+            Ok(current) => current,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                self.present = false;
+                return Ok(());
+            }
+            Err(error) => return Err(io_error(error)),
+        };
         if !current.same_inode(self.identity) {
             self.present = false;
             return Err(err("Write temporary changed; preserve it for inspection"));
@@ -888,7 +894,7 @@ pub fn apply_with_identity_and_environment(
                 return Err(err("Bank project identity changed after preview"));
             }
             if exists(&receipt_path)? {
-                let raw = fs::read_regular(
+                let raw = fs::read_source_with_options(
                     receipt_path
                         .parent()
                         .ok_or_else(|| err("Write receipt has no directory"))?,
@@ -898,9 +904,10 @@ pub fn apply_with_identity_and_environment(
                             .ok_or_else(|| err("Write receipt has no filename"))?,
                     ),
                     MAX_RECEIPT_BYTES,
+                    fs::ReadOptions::default(),
                 )
                 .map_err(io_error)?
-                .0;
+                .bytes;
                 let known = load_receipt(&raw)?;
                 if known.as_object().is_none()
                     || get(&known, "schema").as_str() != Some("agent-memory/write-receipt-v1")
@@ -970,10 +977,18 @@ pub fn apply_with_identity_and_environment(
                 let mut file = directory
                     .create_exclusive(&temp_name, libc::O_WRONLY, before.mode & 0o777)
                     .map_err(io_error)?;
+                let identity = match file.stat() {
+                    Ok(identity) => identity,
+                    Err(error) => {
+                        // No initial identity is available: match baseline cleanup.
+                        let _ = directory.unlink_at(&temp_name);
+                        return Err(io_error(error));
+                    }
+                };
                 let mut temporary = Temporary {
                     directory,
                     name: temp_name,
-                    identity: file.stat().map_err(io_error)?,
+                    identity,
                     present: true,
                 };
                 let replacement = (|| -> Result<()> {
@@ -1019,8 +1034,9 @@ pub fn apply_with_identity_and_environment(
                     fault("after-replace")?;
                     Ok(())
                 })();
-                temporary.finish()?;
+                let cleanup = temporary.finish();
                 replacement?;
+                cleanup?;
             }
             if !hashes_equal(&snapshot(&root, Some(owner))?.1, &expected) {
                 return Err(err(

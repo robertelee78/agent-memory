@@ -88,7 +88,7 @@ pub(crate) fn bank_observation_provider() -> Result<Arc<dyn BankObservation>> {
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("bank_observation provider is not registered"))
+        .ok_or_else(|| missing("bank_observation provider is not registered"))
 }
 pub fn register_recovery_coverage(provider: Option<Arc<dyn RecoveryCoverage>>) {
     *COVERAGE.write().unwrap_or_else(|e| e.into_inner()) = provider;
@@ -98,7 +98,7 @@ pub(crate) fn recovery_coverage_provider() -> Result<Arc<dyn RecoveryCoverage>> 
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("recovery_frontier coverage provider is not registered"))
+        .ok_or_else(|| missing("recovery_frontier coverage provider is not registered"))
 }
 pub fn register_route_table(provider: Option<Arc<dyn RouteTable>>) {
     *ROUTES.write().unwrap_or_else(|e| e.into_inner()) = provider;
@@ -121,11 +121,14 @@ pub fn recover_layout(arguments: &[String]) -> Result<crate::lifecycle::CommandR
         .read()
         .unwrap_or_else(|e| e.into_inner())
         .clone()
-        .ok_or_else(|| err("RouteTable provider is not registered"))?;
+        .ok_or_else(|| missing("RouteTable provider is not registered"))?;
     provider.execute("recover-layout", arguments)
 }
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
+}
+fn missing(message: &str) -> ContractError {
+    ContractError::missing_provider(message)
 }
 pub(crate) fn trim(s: &str) -> &str {
     s.trim_matches(|c: char| c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c))
@@ -281,14 +284,44 @@ pub fn route_table(routes: &[Value], source: &str) -> Result<String> {
     }
     Ok(text)
 }
-fn split_lines(text: &str) -> impl Iterator<Item = &str> {
-    text.split([
-        '\n', '\r', '\u{b}', '\u{c}', '\u{1c}', '\u{1d}', '\u{1e}', '\u{85}', '\u{2028}',
-        '\u{2029}',
-    ])
+/// Python `str.splitlines`, including its CRLF coalescing and terminal-break rule.
+fn split_lines(text: &str, keepends: bool) -> impl Iterator<Item = &str> {
+    let mut rest = text;
+    std::iter::from_fn(move || {
+        if rest.is_empty() {
+            return None;
+        }
+        let boundary = rest.char_indices().find(|(_, c)| {
+            matches!(
+                c,
+                '\n' | '\r'
+                    | '\u{b}'
+                    | '\u{c}'
+                    | '\u{1c}'
+                    | '\u{1d}'
+                    | '\u{1e}'
+                    | '\u{85}'
+                    | '\u{2028}'
+                    | '\u{2029}'
+            )
+        });
+        let Some((start, character)) = boundary else {
+            let line = rest;
+            rest = "";
+            return Some(line);
+        };
+        let mut end = start + character.len_utf8();
+        // Invariant: char_indices and len_utf8 delimit complete UTF-8 characters.
+        if character == '\r' && rest.get(end..).is_some_and(|tail| tail.starts_with('\n')) {
+            end += 1;
+        }
+        let line = rest.get(..if keepends { end } else { start })?;
+        rest = rest.get(end..)?;
+        Some(line)
+    })
 }
 pub fn parse_table(text: &str, source: &str) -> Result<Vec<Value>> {
-    let rows: Vec<_> = split_lines(text)
+    let rows: Vec<_> = split_lines(text, false)
         .map(trim)
         .filter(|s| !s.is_empty())
         .collect();
@@ -301,12 +334,14 @@ pub fn parse_table(text: &str, source: &str) -> Result<Vec<Value>> {
         return Err(err("Route limit exceeded; use a bounded topic index"));
     }
     let mut routes = Vec::new();
-    let mut seen = HashSet::new();
     for row in rows.iter().skip(2) {
-        let row = row
-            .strip_prefix('|')
-            .and_then(|s| s.strip_suffix('|'))
-            .ok_or_else(|| err("Invalid route table row"))?;
+        let row = if *row == "|" {
+            ""
+        } else {
+            row.strip_prefix('|')
+                .and_then(|s| s.strip_suffix('|'))
+                .ok_or_else(|| err("Invalid route table row"))?
+        };
         let mut cells: Vec<_> = row.split('|').map(trim).collect();
         if cells.len() != FIELDS.len() {
             return Err(err("Route row must have five columns"));
@@ -349,10 +384,13 @@ pub fn parse_table(text: &str, source: &str) -> Result<Vec<Value>> {
                 .map(|(k, v)| ((*k).to_owned(), string(v)))
                 .collect(),
         ))?;
-        if !seen.insert(label.to_owned()) {
+        routes.push(route);
+    }
+    let mut seen = HashSet::new();
+    for route in &routes {
+        if !seen.insert(required_text(route, "path", "Duplicate route path")?) {
             return Err(err("Duplicate route path"));
         }
-        routes.push(route);
     }
     Ok(routes)
 }
@@ -437,7 +475,7 @@ pub fn parse_router(text: &str) -> Result<ParsedRouter> {
     let routes = parse_table(table, "MEMORY.md")?;
     let mut omitted = Vec::new();
     if trim(omissions) != "None." {
-        for line in split_lines(trim(omissions)) {
+        for line in split_lines(trim(omissions), false) {
             let (path, reason) = line
                 .strip_prefix("- `")
                 .and_then(|s| s.split_once("`: "))
@@ -531,7 +569,7 @@ pub fn add_context_routes(text: &str, paths: &[String], updated: &Value) -> Resu
     let (table, omissions) = rest
         .split_once("\n## Omitted contexts\n")
         .ok_or_else(|| err("Router needs exactly one Routes and Omitted contexts section"))?;
-    let lines: Vec<_> = table.split_inclusive('\n').collect();
+    let lines: Vec<_> = split_lines(table, true).collect();
     let mut insertion = lines.len();
     while lines
         .get(insertion.wrapping_sub(1))
@@ -543,12 +581,7 @@ pub fn add_context_routes(text: &str, paths: &[String], updated: &Value) -> Resu
     if !table.is_empty() && !table.ends_with('\n') {
         table.push('\n');
     }
-    table.push_str(
-        &route_table(&new_routes, "MEMORY.md")?
-            .split_inclusive('\n')
-            .skip(2)
-            .collect::<String>(),
-    );
+    table.extend(split_lines(&route_table(&new_routes, "MEMORY.md")?, true).skip(2));
     table.extend(lines.iter().skip(insertion).copied());
     let omissions = if omitted
         .as_object()
@@ -558,8 +591,7 @@ pub fn add_context_routes(text: &str, paths: &[String], updated: &Value) -> Resu
     {
         "\n\nNone.\n".to_owned()
     } else {
-        omissions
-            .split_inclusive('\n')
+        split_lines(omissions, true)
             .filter(|line| {
                 !paths
                     .iter()
@@ -787,22 +819,22 @@ pub fn physical_paths(bank: &Path) -> Result<Vec<String>> {
                 let child = dir.open_directory_at(&name).map_err(|_| {
                     err("Cannot completely inspect bank paths; preserve the existing layout")
                 })?;
-                if child.stat().map_err(|e| err(&e.to_string()))? != info {
+                if child.stat().map_err(|_| err("Bank paths changed during inspection, including runtime lock state; preserve the existing layout and retry when writers are idle"))? != info {
                     return Err(err(
-                        "Cannot completely inspect bank paths; preserve the existing layout",
+                        "Bank paths changed during inspection, including runtime lock state; preserve the existing layout and retry when writers are idle",
                     ));
                 }
                 walk(&child, &path, paths, count, depth + 1)?;
             }
-            if dir.stat_at(&name).map_err(|e| err(&e.to_string()))? != info {
+            if dir.stat_at(&name).map_err(|_| err("Bank paths changed during inspection, including runtime lock state; preserve the existing layout and retry when writers are idle"))? != info {
                 return Err(err(
-                    "Cannot completely inspect bank paths; preserve the existing layout",
+                    "Bank paths changed during inspection, including runtime lock state; preserve the existing layout and retry when writers are idle",
                 ));
             }
         }
         if dir.stat().map_err(|e| err(&e.to_string()))? != before {
             return Err(err(
-                "Cannot completely inspect bank paths; preserve the existing layout",
+                "Bank paths changed during inspection, including runtime lock state; preserve the existing layout and retry when writers are idle",
             ));
         }
         Ok(())

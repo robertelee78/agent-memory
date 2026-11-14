@@ -348,6 +348,34 @@ fn catalog_must_be_the_bundled_unchanged_bounded_declaration() {
 }
 
 #[test]
+fn nonfinite_catalog_constants_use_the_baseline_refusal() {
+    let pack = Pack::new();
+    for token in ["NaN", "Infinity", "-Infinity"] {
+        let raw = format!(
+            "{{\"schema\":\"agent-memory/migration-catalog-v2\",\"codecs\":[],\"steps\":[],\"x\":{token}}}"
+        );
+        let files = pack.write(raw.as_bytes());
+        assert_eq!(
+            contract::inspect(pack.path(), &compatibility(&[]), &files, &Compiled)
+                .unwrap_err()
+                .to_string(),
+            "Nonfinite migration catalog",
+            "{token}"
+        );
+    }
+}
+
+#[test]
+fn cycles_through_readable_schemas_are_refused() {
+    let mut steps = chain_steps();
+    steps.push(step("readable-to-legacy", NATIVE, LEGACY, "first"));
+    assert_eq!(
+        refusal(&catalog(chain_codecs(), steps), &[LEGACY, MIDDLE]),
+        "Migration catalog contains a cycle"
+    );
+}
+
+#[test]
 fn malformed_catalogs_are_refused_without_panic() {
     let shape = "Unsupported migration catalog shape";
     let native = || vec![codec(NATIVE, "native")];

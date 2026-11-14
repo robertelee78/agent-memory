@@ -373,7 +373,8 @@ pub fn validate_with_parser(
                 "Tombstones must not retain policy or provenance fields",
             ));
         }
-        let parser = parser.ok_or_else(|| err("Tombstone parser is not registered"))?;
+        let parser = parser
+            .ok_or_else(|| ContractError::missing_provider("Tombstone parser is not registered"))?;
         return Ok((
             "tombstone".into(),
             parser.parse(&(frontmatter::write(entries)? + body))?,

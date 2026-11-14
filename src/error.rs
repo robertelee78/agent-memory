@@ -34,6 +34,8 @@ pub enum Kind {
     IdentityUnresolved,
     /// Canonical writer contention permits bounded rediscovery, never authority.
     SourceTransportBusy { initializing: bool },
+    /// A required runtime provider has not been registered.
+    MissingProvider,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -144,6 +146,12 @@ impl ContractError {
             kind: Kind::SourceTransportBusy { initializing },
             message: "Canonical writer unavailable; preserve pending source work and rediscover"
                 .into(),
+        }
+    }
+    pub(crate) fn missing_provider(message: impl Into<String>) -> Self {
+        Self {
+            kind: Kind::MissingProvider,
+            message: message.into(),
         }
     }
 }

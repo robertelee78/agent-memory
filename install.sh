@@ -134,7 +134,12 @@ am_workspace() {
     *) am_parent=/tmp ;;
   esac
   umask 077
+  # Do not exit before the assignment records the directory to clean up.
+  trap '' HUP INT TERM
   am_directory=$(mktemp -d "$am_parent/am-bootstrap.XXXXXXXX" 2>/dev/null) || am_directory=
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
   if [ -z "$am_directory" ] || [ ! -d "$am_directory" ] || [ -h "$am_directory" ]; then
     am_refuse workspace temporary-directory 1 'Could not create a private temporary directory. Check TMPDIR space and permissions.'
   fi
