@@ -1128,28 +1128,28 @@
   {
    "id": "tests/contracts/test_client_hooks.py::ClientHookContract.test_ambiguous_json_is_refused",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_client_hooks.py::ClientHookContract.test_owned_entry_roundtrip_preserves_foreign_edits",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_client_hooks.py::ClientHookContract.test_stop_shape_and_json_boolean_are_not_coerced",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_client_hooks.py::ClientHookContract.test_unowned_collision_and_mutated_or_duplicate_owned_entries_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -2381,35 +2381,35 @@
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_independent_adapters_worktrees_private_bounds_and_readonly_absence",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_linked_worktree_rejects_state_in_main_checkout_memory",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_malformed_fields_are_refused_and_missing_clear_writes_nothing",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_non_git_file_only_diagnostics_are_not_hook_failures",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_one_corrupt_adapter_does_not_hide_other_failure",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -2444,7 +2444,7 @@
   {
    "id": "tests/contracts/test_hook_failure.py::HookFailureContract.test_unsafe_or_oversized_metadata_is_preserved_and_refused",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3529,7 +3529,7 @@
   {
    "id": "tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_known_dispute_survives_rewording_changed_framing_and_registry_recovery",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6799,35 +6799,35 @@
   {
    "id": "tests/contracts/test_managed_source_bounds.py::ManagedSourceBoundsContract.test_actual_git_stdout_overflow_is_bounded_and_owned_child_is_collected",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_managed_source_bounds.py::ManagedSourceBoundsContract.test_file_replacement_by_link_or_fifo_refuses_without_following_or_blocking",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_managed_source_bounds.py::ManagedSourceBoundsContract.test_growth_during_actual_descriptor_read_is_capped",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_managed_source_bounds.py::ManagedSourceBoundsContract.test_nonportable_executable_cannot_lose_owner_execution_but_keep_group_execution",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_managed_source_bounds.py::ManagedSourceBoundsContract.test_replacement_refs_cannot_substitute_another_source_tree",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -6841,7 +6841,7 @@
   {
    "id": "tests/contracts/test_managed_source_ownership.py::ManagedSourceOwnershipContract.test_clean_index_refresh_previews_updates_and_repeats_preserving_old_source_and_bank",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6855,7 +6855,7 @@
   {
    "id": "tests/contracts/test_managed_source_ownership.py::ManagedSourceOwnershipContract.test_hidden_tracked_changes_extra_ignored_files_modes_and_channel_are_preserved_and_refused",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6869,7 +6869,7 @@
   {
    "id": "tests/contracts/test_managed_source_ownership.py::ManagedSourceOwnershipContract.test_local_ownership_does_not_execute_fsmonitor_or_filters_or_follow_ambient_git_directory",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 129,
-   "ported": 61,
-   "unported": 1672
+   "partial": 133,
+   "ported": 76,
+   "unported": 1653
   }
  }
 }

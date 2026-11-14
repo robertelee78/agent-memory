@@ -1247,3 +1247,54 @@ fn prefix_reads_bound_bytes_not_source_size_and_refuse_nonregular_files() {
         Err(amfs::ReadError::NotRegular)
     ));
 }
+
+#[test]
+fn descriptor_chunks_preserve_offsets_and_native_fifo_semantics() {
+    let root = PrivateDirectory::new();
+    file(&root.join("data"), b"abcdefgh");
+    file(&root.join("empty"), b"");
+    let directory = Descriptor::open_directory(root.path()).unwrap();
+    let mut data = directory
+        .open_at(OsStr::new("data"), libc::O_RDONLY, 0)
+        .unwrap();
+    let mut chunk = [0; 3];
+    assert_eq!(data.read_chunk(&mut chunk).unwrap(), 3);
+    assert_eq!(&chunk, b"abc");
+    assert_eq!(data.read_chunk(&mut chunk).unwrap(), 3);
+    assert_eq!(&chunk, b"def");
+    assert_eq!(data.read_chunk(&mut chunk).unwrap(), 2);
+    assert_eq!(chunk.get(..2), Some(b"gh".as_slice()));
+    assert_eq!(data.read_chunk(&mut chunk).unwrap(), 0);
+    let mut empty = directory
+        .open_at(OsStr::new("empty"), libc::O_RDONLY, 0)
+        .unwrap();
+    assert_eq!(empty.read_chunk(&mut chunk).unwrap(), 0);
+    assert!(
+        Descriptor::open_directory(root.path())
+            .unwrap()
+            .read_chunk(&mut chunk)
+            .is_err()
+    );
+    assert!(
+        Command::new("mkfifo")
+            .arg(root.join("fifo"))
+            .status()
+            .unwrap()
+            .success()
+    );
+    let mut fifo = directory
+        .open_at(OsStr::new("fifo"), libc::O_RDONLY | libc::O_NONBLOCK, 0)
+        .unwrap();
+    // No writer: a nonblocking FIFO reports EOF, never blocks.
+    assert_eq!(fifo.read_chunk(&mut chunk).unwrap(), 0);
+    let mut writer = directory
+        .open_at(OsStr::new("fifo"), libc::O_WRONLY | libc::O_NONBLOCK, 0)
+        .unwrap();
+    assert_eq!(
+        fifo.read_chunk(&mut chunk).unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+    writer.write_all(b"xyz").unwrap();
+    assert_eq!(fifo.read_chunk(&mut chunk).unwrap(), 3);
+    assert_eq!(&chunk, b"xyz");
+}

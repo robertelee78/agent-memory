@@ -21,3 +21,10 @@ handoff::register_checkpoint waits for checkpoint
 omp_installation::register_activation waits for installation, omp_boundary, omp_projection, omp_stream, omp_transport, turn_sources
 project_identity::register_layout_observation waits for layout_recovery_observation
 repository_config::register_security_scan waits for security
+managed_source::register_installation waits for installation
+sharing_hold_mapping::register_hold_causes waits for sharing_holds
+sharing_hold_mapping::register_security_scan waits for security
+sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
+turn_check::register_memory_refresh waits for memory_refresh
+turn_check::register_scope_binding waits for scope_binding
+turn_check::register_turn_sources waits for turn_sources

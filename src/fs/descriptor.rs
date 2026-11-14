@@ -463,6 +463,25 @@ impl Descriptor {
         Ok(bytes)
     }
 
+    /// One allocation-free read at the current offset, retrying only EINTR.
+    /// Zero means EOF (or an empty buffer). FIFO blocking/nonblocking semantics
+    /// are those selected when opening the descriptor; callers validate type.
+    pub fn read_chunk(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        self.require_io()?;
+        loop {
+            // The slice owns a valid writable region of exactly buffer.len().
+            let amount =
+                unsafe { libc::read(self.as_raw_fd(), buffer.as_mut_ptr().cast(), buffer.len()) };
+            if amount >= 0 {
+                return Ok(amount as usize);
+            }
+            let error = io::Error::last_os_error();
+            if error.kind() != io::ErrorKind::Interrupted {
+                return Err(error);
+            }
+        }
+    }
+
     pub fn unlink_at(&self, name: &OsStr) -> io::Result<()> {
         status(unsafe { libc::unlinkat(self.as_raw_fd(), child_name(name)?.as_ptr(), 0) })
     }
