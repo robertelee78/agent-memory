@@ -104,8 +104,8 @@ fn pending() -> BTreeMap<String, String> {
             .unwrap_or_else(|| panic!("{PENDING}: `{line}` names no module to wait for"));
         let reason = reason.trim();
         assert!(
-            reason.starts_with("waits for "),
-            "{PENDING}: `{line}` must say `waits for <modules>`"
+            reason.starts_with("waits for ") || reason.starts_with("blocked by "),
+            "{PENDING}: `{line}` must say `waits for <modules>` or `blocked by <reason>`"
         );
         assert!(
             listed.insert(point.to_owned(), reason.to_owned()).is_none(),
@@ -158,6 +158,11 @@ fn a_pending_registration_names_a_module_that_is_not_ported_yet() {
     };
     let mut ready = Vec::new();
     for (point, reason) in pending() {
+        // A named blocker (an API gap, not a missing module) stays pending
+        // until it is resolved; the cutover gate below still requires none.
+        if reason.starts_with("blocked by ") {
+            continue;
+        }
         let waits: Vec<&str> = reason
             .trim_start_matches("waits for ")
             .split(',')

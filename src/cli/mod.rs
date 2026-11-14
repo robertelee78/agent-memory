@@ -313,6 +313,10 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     let _ = crate::sharing_hold_mapping::register_hold_causes(Box::new(
         crate::sharing_holds::HoldCauses,
     ));
+    crate::bank_writes::register_turn_sources(Some(Arc::new(crate::turn_sources::TurnSources)));
+    wired(crate::turn_check::register_turn_sources(Box::new(
+        crate::turn_sources::TurnSources,
+    )))?;
     Ok(())
 }
 

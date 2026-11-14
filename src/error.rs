@@ -38,6 +38,8 @@ pub enum Kind {
     MissingProvider,
     /// Known-dispute state refusal; preserves the baseline failure code and repair.
     HoldFailure { code: String, repair: String },
+    /// Published source completion requires the registered T2c authority gate.
+    SourcePublicationUnavailable,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -166,6 +168,23 @@ impl ContractError {
             kind: Kind::HoldFailure {
                 code: code.into(),
                 repair: repair.into(),
+            },
+            message: message.into(),
+        }
+    }
+
+    pub(crate) fn missing_source_publication() -> Self {
+        Self {
+            kind: Kind::SourcePublicationUnavailable,
+            message: "PublicationGate provider is not registered; publication remains pending"
+                .into(),
+        }
+    }
+
+    pub(crate) fn source_lock_busy(message: &str) -> Self {
+        Self {
+            kind: Kind::SourceTransportBusy {
+                initializing: false,
             },
             message: message.into(),
         }
