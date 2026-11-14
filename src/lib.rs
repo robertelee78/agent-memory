@@ -4,6 +4,8 @@
 //! domain module reaches the system through them and none may weaken a
 //! refusal defined there.
 
+pub mod admission;
+pub mod admission_navigation;
 pub mod artifact;
 pub mod authority;
 pub mod bank_capacity;
@@ -70,11 +72,13 @@ pub mod runtime_faults;
 pub mod scope_binding;
 pub mod scopes;
 pub mod security;
+pub mod sharing_boundary;
 pub mod sharing_hold_mapping;
 pub mod sharing_holds;
 pub mod sharing_limits;
 pub mod sharing_recovery;
 pub mod tombstones;
+pub mod trust_paths;
 pub mod turn_check;
 pub mod turn_sources;
 pub mod unicode;

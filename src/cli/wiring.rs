@@ -2,8 +2,9 @@
 //! already exists as plain functions. They add no behaviour: each method
 //! forwards to the baseline-named function of the implementing module.
 use crate::codec::json::Value;
-use crate::error::Result;
-use std::path::Path;
+use crate::error::{ContractError, Result};
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
 
 /// `bank_transactions` asks `project_identity.status(repo)`.
 pub(super) struct ProjectStatus;
@@ -138,5 +139,68 @@ impl crate::installation::seams::PrivateState for LifecyclePrivateState {
 
     fn public_summary(&self, value: &Value) -> crate::installation::Result<Value> {
         Ok(crate::private_state::public_summary(value)?)
+    }
+}
+
+/// `private_state` hooks over their baseline owners: omp_boundary (native
+/// registry and source state), installation (receipt and target readback)
+/// and admission (bounded quiescence input).
+pub(super) struct PrivateStateHooks;
+
+impl crate::private_state::PrivateStateHooks for PrivateStateHooks {
+    fn native_registry(&self, _runtime_root: &Path) -> Result<Value> {
+        crate::omp_boundary::registry()
+    }
+
+    fn native_source_state_bindings(
+        &self,
+        installation: Option<&Value>,
+        registered: &Value,
+        _runtime_root: &Path,
+    ) -> Result<BTreeSet<PathBuf>> {
+        crate::omp_boundary::source_state_bindings(installation, registered)
+    }
+
+    fn has_native_source_state(&self, base: &Path, _runtime_root: &Path) -> Result<bool> {
+        crate::omp_boundary::has_native_source_state(base)
+    }
+
+    fn shared_native_source_evidence(
+        &self,
+        repo: &Path,
+        base: &Path,
+        runtime_root: &Path,
+    ) -> Result<bool> {
+        crate::omp_boundary::shared_native_source_evidence(repo, base, runtime_root)
+    }
+
+    fn required_source_capabilities(
+        &self,
+        repo: &Path,
+        runtime_root: &Path,
+    ) -> Result<BTreeSet<String>> {
+        crate::omp_boundary::required_source_capabilities(repo, runtime_root)
+    }
+
+    fn read_receipt(&self, state: &Path, _runtime_root: &Path) -> Result<Option<Value>> {
+        crate::installation::read_receipt(&crate::installation::Environment::process(), state)
+            .map_err(crate::installation::into_contract)
+    }
+
+    fn verify_targets(&self, targets: &Value, source: &Value, _runtime_root: &Path) -> Result<()> {
+        let targets: Vec<&Value> = targets
+            .as_array()
+            .ok_or_else(|| ContractError::new("Installation receipt targets are malformed"))?
+            .iter()
+            .collect();
+        let services = crate::installation::Services::registered()
+            .map_err(crate::installation::into_contract)?;
+        crate::installation::verify_targets(&services, &targets, Some(source), false)
+            .map(|_| ())
+            .map_err(crate::installation::into_contract)
+    }
+
+    fn read_input(&self, path: &Path, maximum: usize, _runtime_root: &Path) -> Result<Value> {
+        crate::admission::read_input(path, maximum)
     }
 }

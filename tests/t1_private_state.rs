@@ -474,7 +474,7 @@ fn inventory_missing_registration_is_readonly_and_typed() {
 // admission, source barrier or runtime-capability provider is installed here.
 // obligation: tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_routerless_notes_and_ordinary_receipts_remain_readonly_without_native_obligations
 #[test]
-#[ignore = "needs private_state_hooks, recovery_frontier and turn_sources registered"]
+#[ignore = "needs recovery_frontier registered (bank observation decides compatibility)"]
 fn routerless_notes_and_receipts_remain_readonly() {
     isolated("routerless_notes_and_receipts_remain_readonly", |root| {
         agent_memory::cli::register_providers().unwrap();
@@ -516,7 +516,6 @@ fn routerless_notes_and_receipts_remain_readonly() {
 
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_native_absence_rechecks_normal_and_ordinary_failures
 #[test]
-#[ignore = "needs private_state_hooks, recovery_frontier and turn_sources registered"]
 fn native_absence_rechecks_normal_and_ordinary_failures() {
     isolated(
         "native_absence_rechecks_normal_and_ordinary_failures",
@@ -553,7 +552,6 @@ fn native_absence_rechecks_normal_and_ordinary_failures() {
 
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_native_absence_preserves_interrupts_and_fatal_failures
 #[test]
-#[ignore = "needs private_state_hooks, recovery_frontier and turn_sources registered"]
 fn native_absence_preserves_original_unwind_and_raced_evidence() {
     isolated(
         "native_absence_preserves_original_unwind_and_raced_evidence",
@@ -586,7 +584,6 @@ fn native_absence_preserves_original_unwind_and_raced_evidence() {
 
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_unchanged_absence_allows_normal_exit_and_preserves_ordinary_error
 #[test]
-#[ignore = "needs private_state_hooks, recovery_frontier and turn_sources registered"]
 fn unchanged_native_absence_preserves_ordinary_refusal() {
     isolated(
         "unchanged_native_absence_preserves_ordinary_refusal",
@@ -613,7 +610,6 @@ fn unchanged_native_absence_preserves_ordinary_refusal() {
 
 // obligation: tests/contracts/test_update_discovery_gaps.py::UpdateDiscoveryGapsContract.test_saved_bank_binding_keeps_missing_repository_and_bank_required
 #[test]
-#[ignore = "needs private_state_hooks, recovery_frontier and turn_sources registered"]
 fn saved_missing_repository_and_bank_remain_required_and_block_activation() {
     isolated(
         "saved_missing_repository_and_bank_remain_required_and_block_activation",
@@ -673,7 +669,6 @@ fn saved_missing_repository_and_bank_remain_required_and_block_activation() {
 }
 
 #[test]
-#[ignore = "needs private_state_hooks registered"]
 fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
     isolated(
         "nested_activation_restores_context_after_unwind_and_exact_rechecks",
@@ -744,7 +739,6 @@ fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
 
 // obligation: tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_lockless_orphan_native_or_malformed_sources_refuse_readonly
 #[test]
-#[ignore = "needs private_state_hooks, recovery_frontier and turn_sources registered"]
 fn lockless_native_names_and_malformed_shared_sources_refuse_readonly() {
     isolated(
         "lockless_native_names_and_malformed_shared_sources_refuse_readonly",

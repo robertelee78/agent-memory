@@ -53,7 +53,7 @@ impl crate::cli::PackRoot for RuntimePackRoot {
     }
 }
 
-fn into_contract(error: super::Error) -> ContractError {
+pub(crate) fn into_contract(error: super::Error) -> ContractError {
     match error {
         super::Error::Contract(error) => error,
         other => ContractError::new(other.to_string()),

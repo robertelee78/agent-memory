@@ -488,6 +488,10 @@ fn child_entry() {
         );
         return;
     }
+    if let Ok(request) = std::env::var("AM_DIAG_INSTALL") {
+        native_install_child(&request);
+        return;
+    }
     let Ok(operation) = std::env::var("AM_DIAG_CHILD") else {
         return;
     };
@@ -1840,11 +1844,184 @@ fn doctor_does_not_resume_a_separately_confirmed_purge() {
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_native_doctor_rejects_rebound_wrapper_bytes_modes_and_roles
 // obligation: tests/contracts/test_runtime_diagnostics.py::RuntimeDiagnosticsContract.test_native_doctor_never_repairs_missing_observer_locks
 #[test]
-#[ignore = "fixture installs native omp without --omp-agent-dir/--omp-peers-upgraded, so install refuses"]
+#[ignore = "needs omp_projection, omp_transport registered (omp_installation::register_activation for omp.native_boundary)"]
 fn native_omp_doctor_distinguishes_extension_and_launchers() {
-    let installed = Installed::new(Mode::Copy, "omp");
-    let value = installed.doctor(0);
-    assert!(!component(&value, "runtime.target.wrapper").is_empty());
+    for (install_mode, no_guidance) in
+        [(Mode::Copy, false), (Mode::Link, false), (Mode::Copy, true)]
+    {
+        let native = Native::new(install_mode, no_guidance);
+        let world = &native.installed.world;
+        let binding = get(&native.receipt, "omp_binding");
+        let extension = PathBuf::from(text(binding, "extension_target"));
+        assert_eq!(
+            std::fs::metadata(&extension).unwrap().mode() & 0o7777,
+            0o644
+        );
+        let before = snapshot(&world.root);
+        let healthy = native.doctor(0);
+        let wrappers = component(&healthy, "runtime.target.wrapper");
+        assert_eq!(wrappers.len(), 1);
+        assert_eq!(text(wrappers[0], "path"), extension.to_str().unwrap());
+        assert!(
+            component(&healthy, "runtime.target.command-link")
+                .iter()
+                .all(|check| text(check, "state") == "pass")
+        );
+        let status = run(
+            world,
+            "status",
+            &world.path("repo"),
+            Some(&native.installed.binary()),
+            0,
+        );
+        let activation = if no_guidance {
+            "no_guidance"
+        } else {
+            "receipt-owned"
+        };
+        for value in [&healthy, &status] {
+            let omp = get(value, "omp");
+            assert_eq!(text(get(omp, "answer_first"), "activation"), activation);
+            assert_eq!(text(get(omp, "answer_first"), "automation"), "unqualified");
+            assert_eq!(
+                text(get(omp, "answer_first"), "native_loading"),
+                "not-observed"
+            );
+        }
+        assert_eq!(snapshot(&world.root), before);
+        let original = std::fs::read(&extension).unwrap();
+        std::fs::write(
+            &extension,
+            [original.as_slice(), b"\nchanged ownership bytes\n"].concat(),
+        )
+        .unwrap();
+        let failed = native.doctor(1);
+        let check = component(&failed, "runtime.target.wrapper");
+        assert_eq!(text(check[0], "state"), "failure");
+        std::fs::write(&extension, &original).unwrap();
+        mode(&extension, 0o600);
+        let failed = native.doctor(1);
+        assert_eq!(
+            text(component(&failed, "runtime.target.wrapper")[0], "state"),
+            "failure"
+        );
+        mode(&extension, 0o644);
+        native.doctor(0);
+    }
+}
+
+/// The development source pack as the executing runtime pack of the
+/// installing process (the production provider needs an installed receipt).
+struct DevelopmentPack(PathBuf);
+impl agent_memory::cli::PackRoot for DevelopmentPack {
+    fn pack_root(&self) -> agent_memory::error::Result<PathBuf> {
+        Ok(self.0.clone())
+    }
+}
+
+/// Child: install a development source with the native omp preset through
+/// the production `omp_boundary` installation seam.
+fn native_install_child(request: &str) {
+    agent_memory::cli::register_providers().unwrap();
+    let request = json::decode(request, Default::default()).unwrap();
+    let source = PathBuf::from(text(&request, "source"));
+    agent_memory::cli::register_pack_root(Some(Arc::new(DevelopmentPack(
+        source.join("skills/agent-memory"),
+    ))));
+    let mut services = services(Some(source.join("target/release/am")));
+    services.omp_boundary = Some(Arc::new(agent_memory::omp_boundary::InstallationBoundary));
+    let install_mode = if text(&request, "mode") == "copy" {
+        Mode::Copy
+    } else {
+        Mode::Link
+    };
+    let result = install::install_command(
+        &Environment::process(),
+        &services,
+        &InstallRequest {
+            development_source: Some(source.clone()),
+            mode: Some(install_mode),
+            presets: Some("omp".into()),
+            omp_agent_dir: Some(text(&request, "agent_dir").to_owned()),
+            omp_peers_upgraded: true,
+            bin_dir: Some(PathBuf::from(text(&request, "bin_dir"))),
+            no_guidance: get(&request, "no_guidance") == &Value::Bool(true),
+            ..InstallRequest::default()
+        },
+    );
+    println!("AM-CODE:{}", result.exit_code);
+    println!(
+        "AM-RESULT:{}",
+        json::encode(&result.value.unwrap_or(Value::Null), json::COMPACT_ASCII).unwrap()
+    );
+}
+
+/// Baseline `native_fixture`: a native omp installation plus a bank.
+struct Native {
+    installed: Installed,
+    receipt: Value,
+}
+impl Native {
+    fn new(install_mode: Mode, no_guidance: bool) -> Self {
+        let world = World::new();
+        let source = development_source(&world, "dev source");
+        let agent = world.path("native root");
+        std::fs::create_dir(&agent).unwrap();
+        let request = Value::Object(vec![
+            ("source".into(), text_value(source.to_str().unwrap())),
+            (
+                "mode".into(),
+                text_value(if install_mode == Mode::Copy {
+                    "copy"
+                } else {
+                    "link"
+                }),
+            ),
+            ("agent_dir".into(), text_value(agent.to_str().unwrap())),
+            (
+                "bin_dir".into(),
+                text_value(world.path("owned bin").to_str().unwrap()),
+            ),
+            ("no_guidance".into(), Value::Bool(no_guidance)),
+        ]);
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "child_entry",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "-q",
+            ])
+            .env_clear()
+            .envs(world.pairs())
+            .env(
+                "AM_DIAG_INSTALL",
+                json::encode(&request, json::DEFAULT).unwrap(),
+            )
+            .current_dir(world.path("repo"))
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let value = stdout
+            .lines()
+            .find_map(|line| line.strip_prefix("AM-RESULT:"))
+            .map(|line| json::decode(line, Default::default()).unwrap())
+            .unwrap_or_else(|| panic!("{stdout}\n{}", String::from_utf8_lossy(&output.stderr)));
+        assert!(
+            stdout.contains("AM-CODE:0\n"),
+            "{}",
+            json::encode(&value, json::INDENT2_ASCII).unwrap()
+        );
+        bank(&world.path("repo"));
+        let receipt = get(&value, "receipt").clone();
+        Self {
+            installed: Installed { world, source },
+            receipt,
+        }
+    }
+    fn doctor(&self, expected: i32) -> Value {
+        self.installed.doctor(expected)
+    }
 }
 
 // obligation: tests/contracts/test_setup_diagnostics.py::SetupDiagnostics.test_index_head_custom_location_and_worktree_prove_known_missing_without_replacement

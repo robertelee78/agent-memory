@@ -27,6 +27,7 @@ pub use plan::{
     hook_paths, lifecycle_paths, preflight_layout, preflight_path, prepare, presets, public_plan,
     source_info, stage_release,
 };
+pub(crate) use providers::into_contract;
 pub use providers::{
     CacheInstallation, InstallationActivation, InstalledReceiptProvider, MANAGED_SOURCE_INFO,
     ManagedSourceInfo, OmpHarness, RuntimePackRoot, installation_inventory,

@@ -363,6 +363,14 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
         "initialize",
         Some(Arc::new(crate::initialization::Validator)),
     ))?;
+    wired(crate::bank_transactions::register_transaction_validator(
+        "capture",
+        Some(Arc::new(crate::admission::Admission)),
+    ))?;
+    crate::private_state::register_private_state_hooks(Some(Arc::new(wiring::PrivateStateHooks)));
+    crate::sharing_recovery::register_sharing_boundary(Some(Arc::new(
+        crate::sharing_boundary::SharingBoundary,
+    )));
     Ok(())
 }
 

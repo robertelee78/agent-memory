@@ -1,5 +1,6 @@
 //! One file per baseline helper: its parser declaration and typed handler.
 
+pub mod admission;
 pub mod artifact;
 pub mod authority;
 pub mod bank_contract;
@@ -19,6 +20,7 @@ pub mod records;
 pub mod scope_binding;
 pub mod scopes;
 pub mod security;
+pub mod sharing_boundary;
 pub mod sharing_recovery;
 pub mod uninstallation;
 pub mod updating;

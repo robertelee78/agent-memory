@@ -25,12 +25,19 @@ const fn route(name: &'static str, helper: &'static super::Helper) -> Entry {
 /// then installation's own install, update, uninstall, purge-data, recover,
 /// version, status, doctor. Unported modules have no line.
 pub static ENTRIES: &[Entry] = &[
+    Entry::Route(Route {
+        name: "capture",
+        helper: &helpers::admission::HELPER,
+        prefix: &["capture"],
+    }),
+    route("admission", &helpers::admission::HELPER),
     route("developer", &helpers::developer_identity::HELPER),
     route("identity", &helpers::scope_binding::HELPER),
     route("init", &helpers::initialization::HELPER),
     route("bank", &helpers::bank_contract::HELPER),
     route("omp-boundary", &helpers::omp_boundary::HELPER),
     route("private", &helpers::private_workspace::HELPER),
+    route("sharing", &helpers::sharing_boundary::HELPER),
     route("exchange", &helpers::sharing_recovery::HELPER),
     route("writes", &helpers::bank_writes::HELPER),
     route("migrate", &helpers::migration::HELPER),

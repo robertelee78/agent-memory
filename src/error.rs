@@ -57,6 +57,8 @@ pub enum Kind {
         component: String,
         repair: String,
     },
+    /// Protected admission input was unavailable, redirected or publicly mutable.
+    PrivateInput,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -265,5 +267,11 @@ impl ContractError {
     pub(crate) fn with_message(mut self, message: String) -> Self {
         self.message = message;
         self
+    }
+    pub(crate) fn private_input(message: impl Into<String>) -> Self {
+        Self {
+            kind: Kind::PrivateInput,
+            message: message.into(),
+        }
     }
 }

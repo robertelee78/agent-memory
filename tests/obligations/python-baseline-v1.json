@@ -36,7 +36,7 @@
   {
    "id": "tests/contracts/test_admission.py::AdmissionContract.test_draft_fills_identity_without_deciding_or_writing",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -85,7 +85,7 @@
   {
    "id": "tests/contracts/test_admission.py::AdmissionContract.test_start_keeps_semantic_review_pending_and_never_writes_bank",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -99,70 +99,70 @@
   {
    "id": "tests/contracts/test_admission.py::AdmissionContract.test_transient_redundant_source_and_tracker_copies_are_discarded",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission.py::AdmissionContract.test_unconfirmed_proposals_and_weak_sources_never_become_confirmed_decisions",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission.py::AdmissionContract.test_unmerged_capture_requires_actual_conditions_and_never_claims_code_landed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission.py::AdmissionContract.test_unsafe_and_raw_conversation_capture_is_quarantined_without_content_copies",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission.py::AdmissionContract.test_user_correction_admits_small_record_and_history_automatically_without_git_changes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission_privacy.py::AdmissionPrivacyContract.test_intermediate_symlink_is_refused",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission_privacy.py::AdmissionPrivacyContract.test_platform_temporary_alias_with_private_directory",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission_privacy.py::AdmissionPrivacyContract.test_private_input_and_refuse_readable_or_redirected",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission_privacy.py::AdmissionPrivacyContract.test_public_cli_explains_private_workspace",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_admission_privacy.py::AdmissionPrivacyContract.test_replacement_during_read_is_refused",
    "registered": false,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -1646,14 +1646,14 @@
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_meaningful_admission_creates_native_topics_preserves_payloads_and_replays",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_navigation_without_trace_collision_or_substituted_proposal_refuses",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6925,7 +6925,7 @@
   {
    "id": "tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12176,21 +12176,21 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_changed_configuration_invalidates_prepared_write_without_touching_either_bank",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_configured_branch_or_remote_default_observation_never_uses_feature_branch_as_authority",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_custom_bank_cannot_verify_its_own_claims_as_repository_source_evidence",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12211,7 +12211,7 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_default_boundary_tracks_only_markdown_without_awa_vox_or_writes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12239,7 +12239,7 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_ignored_or_untracked_memory_and_tracked_runtime_artifacts_block_eligibility",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12260,7 +12260,7 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_nested_configured_bank_is_shared_by_identity_writes_inspection_and_audit",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12274,7 +12274,7 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_secret_shaped_selected_remote_is_refused_without_eligibility_or_echo",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12295,14 +12295,14 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_unsafe_bank_prefix_is_withheld_for_explicit_and_discovered_locations",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_unsafe_content_or_interrupted_bank_is_never_an_eligible_empty_success",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 331,
-   "ported": 282,
-   "unported": 1249
+   "partial": 349,
+   "ported": 288,
+   "unported": 1225
   }
  }
 }
