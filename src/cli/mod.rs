@@ -355,6 +355,9 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     crate::private_state::register_recovery_quiescence(Some(Arc::new(
         crate::recovery_quiescence::RecoveryQuiescence,
     )));
+    crate::security::register_migration_audit(Some(Arc::new(
+        crate::migration::LocationAudit::executable(),
+    )));
     Ok(())
 }
 

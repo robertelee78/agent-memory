@@ -19,6 +19,5 @@ private_state::register_private_state_hooks waits for installation, omp_boundary
 doctor_fix::register_diagnostics waits for diagnostics
 turn_sources::register_publication_gate waits for memory_publication, sharing_recovery
 omp_stream::register_omp_transport waits for omp_transport
-security::register_migration_audit waits for migration
 omp_boundary::register_omp_transport waits for omp_transport
 layout_restore::register_layout_recovery waits for layout_recovery

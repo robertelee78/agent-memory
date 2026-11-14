@@ -41,6 +41,7 @@ pub mod layout_units;
 pub mod lifecycle;
 pub mod local_registry;
 pub mod managed_source;
+pub mod migration;
 pub mod migration_codecs;
 pub mod migration_contract;
 pub mod model_reference;

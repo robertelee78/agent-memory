@@ -31,6 +31,7 @@ pub static ENTRIES: &[Entry] = &[
     route("omp-boundary", &helpers::omp_boundary::HELPER),
     route("private", &helpers::private_workspace::HELPER),
     route("writes", &helpers::bank_writes::HELPER),
+    route("migrate", &helpers::migration::HELPER),
     route("artifact", &helpers::artifact::HELPER),
     route("authority-policy", &helpers::authority::HELPER),
     route("bank-layout", &helpers::bank_layout::HELPER),
