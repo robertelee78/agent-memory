@@ -78,7 +78,7 @@ pub fn preflight(
     require(
         binaries.keys().map(String::as_str).collect::<BTreeSet<_>>()
             == release::TARGETS.into_iter().collect(),
-        "Exactly four prebuilt target binaries are required",
+        "Exactly three prebuilt target binaries are required",
     )?;
     let mut inspections = BTreeMap::new();
     for triple in release::TARGETS {
@@ -279,7 +279,7 @@ fn build_trusted(
             .map(String::as_str)
             .collect::<BTreeSet<_>>()
             == release::TARGETS.into_iter().collect(),
-        "Exactly four prebuilt target binaries are required",
+        "Exactly three prebuilt target binaries are required",
     )?;
     let listing = run(
         &root,
@@ -1430,7 +1430,10 @@ printf 200
         assert_eq!(events.lines().filter(|v| *v == "create").count(), 1);
         assert_eq!(events.lines().filter(|v| *v == "publish").count(), 1);
         assert_eq!(events.lines().filter(|v| *v == "push").count(), 1);
-        assert_eq!(events.lines().filter(|v| *v == "upload").count(), 12);
+        assert_eq!(
+            events.lines().filter(|v| *v == "upload").count(),
+            4 + 2 * release::TARGETS.len()
+        );
         let raw_release = run(
             &fixture.inputs.root,
             &[

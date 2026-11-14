@@ -12,7 +12,7 @@ Working rules for anyone porting or reviewing a slice of the v0.0.15 Rust cutove
 ## What to run
 
 - `cargo fmt --check`; `cargo check --offline --all-targets --features dev-tools` with no warnings in your files; your own test target green three times in a row; then the whole suite with `cargo test --offline --no-fail-fast`.
-- Say exactly which platform(s) you ran on (triple, kernel, rustc). Code must build for `aarch64-apple-darwin`, `x86_64-apple-darwin`, `x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`: use only libc symbols present on both macOS and linux-musl, or cfg-gate them.
+- Say exactly which platform(s) you ran on (triple, kernel, rustc). Code must build for `aarch64-apple-darwin`, `x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`: use only libc symbols present on both macOS and linux-musl, or cfg-gate them.
 
 ## Porting rules
 

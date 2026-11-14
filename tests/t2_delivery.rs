@@ -275,6 +275,17 @@ fn manifest_schema_rejects_legacy_unknown_fields_invalid_targets_and_numbers() {
     *value.get_mut("targets").unwrap() = object([("unsupported", Value::Null)]);
     assert!(ReleaseManifest::from_value(&value, None).is_err());
     let mut value = m.value();
+    if let Value::Object(targets) = value.get_mut("targets").unwrap() {
+        let binary = targets[0].1.clone();
+        targets.push((concat!("x86_64", "-apple-darwin").into(), binary));
+    }
+    assert!(
+        ReleaseManifest::from_value(&value, None)
+            .unwrap_err()
+            .to_string()
+            .contains("Unknown release targets")
+    );
+    let mut value = m.value();
     if let Value::Object(pairs) = &mut value {
         pairs.push(("extra".into(), Value::Null));
     }
@@ -1190,7 +1201,7 @@ impl agent_memory::pack_validation::CommandSurface for NoExecutableSurface {
 
 #[cfg(feature = "dev-tools")]
 #[test]
-fn builder_preflight_uses_runtime_inspection_for_all_four_prebuilt_targets() {
+fn builder_preflight_uses_runtime_inspection_for_all_three_prebuilt_targets() {
     let p = Publisher::new();
     let root = p.scratch.path.join("portable");
     let mut files = release::Inventory::new();
@@ -1243,12 +1254,37 @@ fn builder_preflight_uses_runtime_inspection_for_all_four_prebuilt_targets() {
         &agent_memory::migration_contract::Bundled,
     )
     .unwrap();
-    assert_eq!(inspections.len(), 4);
+    assert_eq!(inspections.len(), 3);
     let digests: BTreeSet<_> = inspections
         .values()
         .map(|value| value.get("artifact_digest").unwrap().as_str().unwrap())
         .collect();
-    assert_eq!(digests.len(), 4);
+    assert_eq!(digests.len(), 3);
+    let mut extra = binaries.clone();
+    extra.insert(
+        concat!("x86_64", "-apple-darwin").into(),
+        binaries.values().next().unwrap().clone(),
+    );
+    assert!(
+        agent_memory::release_builder::preflight(
+            &root,
+            &extra,
+            &NoExecutableSurface,
+            &agent_memory::migration_contract::Bundled
+        )
+        .is_err()
+    );
+    let mut missing = binaries.clone();
+    missing.remove(release::TARGETS[0]);
+    assert!(
+        agent_memory::release_builder::preflight(
+            &root,
+            &missing,
+            &NoExecutableSurface,
+            &agent_memory::migration_contract::Bundled
+        )
+        .is_err()
+    );
     let binary = binaries.values().next().unwrap();
     std::fs::set_permissions(binary, std::fs::Permissions::from_mode(0o644)).unwrap();
     assert!(

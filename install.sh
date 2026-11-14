@@ -45,7 +45,7 @@ am_help() {
     'Quiescence gates: --layout-quiescence VALUE, --omp-layout-quiescence VALUE' \
     'Explicit sources: --development-source PATH or --remote URL --ref BRANCH' \
     'Bootstrap: downloads the signed am binary for this host, verifies it with ssh-keygen, then runs am install.' \
-    'Requires curl and ssh-keygen. Hosts: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.' \
+    'Requires curl and ssh-keygen. Hosts: aarch64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.' \
     'After installation: am --version; am update; am uninstall'
 }
 
@@ -121,7 +121,6 @@ am_detect() {
   esac
   case $am_os/$am_arch in
     darwin/aarch64) am_triple=aarch64-apple-darwin ;;
-    darwin/x86_64) am_triple=x86_64-apple-darwin ;;
     linux/x86_64) am_triple=x86_64-unknown-linux-musl ;;
     linux/aarch64) am_triple=aarch64-unknown-linux-musl ;;
     *) am_triple= ;;
@@ -297,7 +296,7 @@ trap 'exit 143' TERM
 am_detect
 am_validate "$@"
 if [ -z "$am_triple" ]; then
-  am_refuse target unsupported-target 1 'No signed am binary exists for this host. Supported: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.'
+  am_refuse target unsupported-target 1 'No signed am binary exists for this host. Supported: aarch64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.'
 fi
 if ! command -v curl > /dev/null 2>&1; then
   am_refuse dependency missing-curl 1 'curl is required to download the signed am binary. Install curl, then retry.'

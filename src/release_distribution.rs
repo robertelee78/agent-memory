@@ -76,9 +76,8 @@ pub const MAX_ARCHIVE: usize = MAX_BYTES + 1024 * 1024;
 pub const MAX_TAR: usize = MAX_BYTES + MAX_ENTRIES * 1024;
 pub const MAX_METADATA: usize = 65536;
 pub const MAX_BINARY: usize = 64 * 1024 * 1024;
-pub const TARGETS: [&str; 4] = [
+pub const TARGETS: [&str; 3] = [
     "aarch64-apple-darwin",
-    "x86_64-apple-darwin",
     "x86_64-unknown-linux-musl",
     "aarch64-unknown-linux-musl",
 ];

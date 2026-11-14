@@ -17,7 +17,7 @@ const PRODUCTION_BASE: &str =
     "https://github.com/robertelee78/agent-memory/releases/latest/download/";
 const BINARY_NAMESPACE: &str = "agent-memory.release-binary";
 const MANIFEST_NAMESPACE: &str = "agent-memory.release";
-const SUPPORTED_REPAIR: &str = "No signed am binary exists for this host. Supported: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.";
+const SUPPORTED_REPAIR: &str = "No signed am binary exists for this host. Supported: aarch64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.";
 const SIGNATURE_REPAIR: &str = "The downloaded am binary is not signed by the pinned release key. Nothing was run; retry, and report a persistent failure.";
 const DOWNLOAD_PREFIX: &str = "Failed downloaded bytes were not accepted for activation. ";
 const NETWORK_GUIDANCE: &str = "Retry the same command after checking network, DNS, VPN/proxy access and connection speed to the reported host.";
@@ -517,7 +517,6 @@ fn truncated_script_executes_no_prefix() {
 fn every_supported_host_selects_its_own_signed_binary() {
     let hosts = [
         ("Darwin", "arm64", "aarch64-apple-darwin"),
-        ("Darwin", "x86_64", "x86_64-apple-darwin"),
         ("Linux", "x86_64", "x86_64-unknown-linux-musl"),
         ("Linux", "aarch64", "aarch64-unknown-linux-musl"),
         ("Linux", "arm64", "aarch64-unknown-linux-musl"),
@@ -543,7 +542,6 @@ fn every_supported_host_selects_its_own_signed_binary() {
 fn real_uname_selects_the_host_triple() {
     let triple = match (std::env::consts::OS, std::env::consts::ARCH) {
         ("macos", "aarch64") => "aarch64-apple-darwin",
-        ("macos", "x86_64") => "x86_64-apple-darwin",
         ("linux", "x86_64") => "x86_64-unknown-linux-musl",
         ("linux", "aarch64") => "aarch64-unknown-linux-musl",
         _ => return,
@@ -560,6 +558,7 @@ fn real_uname_selects_the_host_triple() {
 #[test]
 fn unsupported_target_refuses_with_exact_constant_json() {
     let cases = [
+        ("Darwin", "x86_64", "darwin", "x86_64"),
         ("Linux", "riscv64", "linux", "riscv64"),
         ("FreeBSD", "amd64", "freebsd", "x86_64"),
         ("Linux", "i686", "linux", "x86"),
@@ -590,7 +589,7 @@ fn unsupported_target_refuses_with_exact_constant_json() {
     let output = world.run(Path::new("/bin/sh"), &[]);
     assert_eq!(
         output.stdout,
-        b"{\"schema\":\"agent-memory/bootstrap-failure-v1\",\"stage\":\"target\",\"reason\":\"unsupported-target\",\"os\":\"linux\",\"arch\":\"riscv64\",\"curl_exit\":null,\"http_status\":null,\"activation_accepted\":false,\"repair\":\"No signed am binary exists for this host. Supported: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.\"}\n"
+        b"{\"schema\":\"agent-memory/bootstrap-failure-v1\",\"stage\":\"target\",\"reason\":\"unsupported-target\",\"os\":\"linux\",\"arch\":\"riscv64\",\"curl_exit\":null,\"http_status\":null,\"activation_accepted\":false,\"repair\":\"No signed am binary exists for this host. Supported: aarch64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.\"}\n"
     );
     assert_eq!(output.stderr, b"");
 }
