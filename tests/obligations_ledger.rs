@@ -53,6 +53,21 @@ fn live_ledger_is_consistent() {
 }
 
 #[test]
+fn not_applicable_entries_need_a_note_and_no_rust_test() {
+    let ledger = json::decode(r#"{"schema":"agent-memory/port-obligations-v1","status_values":["unported","partial","ported","not-applicable"],"methods":[{"id":"a","status":"not-applicable","registered":true,"note":"evaluation controller retired"},{"id":"b","status":"not-applicable","registered":true,"note":"  "}],"counts":{"static_methods":2,"generated_selectors":0,"registered":2,"unregistered":0,"by_status":{"not-applicable":2}},"other":{}}"#, Default::default()).unwrap();
+    let findings = obligations::check(&ledger, &[ann("a", true)]);
+    assert!(
+        has(&findings, "b: not-applicable entry needs a note"),
+        "{findings:?}"
+    );
+    assert!(!has(&findings, "a: not-applicable entry needs a note"));
+    assert!(
+        has(&findings, "a: annotated id is not-applicable"),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn synthetic_rules_report_each_offender() {
     let ledger = fixture();
     assert!(obligations::check(&ledger, &[ann("b", true)]).is_empty());

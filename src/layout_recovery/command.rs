@@ -287,10 +287,14 @@ fn run(
                 output && c.operation_id.is_some(),
                 "Recovery publication requires operation-scoped private output",
             )?;
-            let provider = publication::layout_publication_provider()?;
             match c.stage {
-                Some("inspect") => provider.inspect(c.repo, id()?, request, runtime_root),
-                Some("prepare") => provider.prepare(
+                Some("inspect") => crate::layout_recovery_publication::inspect(
+                    c.repo,
+                    id()?,
+                    request,
+                    runtime_root,
+                ),
+                Some("prepare") => crate::layout_recovery_publication::prepare(
                     c.repo,
                     id()?,
                     request.ok_or_else(|| {
@@ -298,7 +302,7 @@ fn run(
                     })?,
                     runtime_root,
                 ),
-                Some("land") => provider.land(
+                Some("land") => crate::layout_recovery_publication::land(
                     c.repo,
                     id()?,
                     request.ok_or_else(|| {

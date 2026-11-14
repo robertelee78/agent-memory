@@ -4,7 +4,6 @@
 mod command;
 mod journal;
 mod mutation;
-pub mod publication;
 mod validation;
 use crate::codec::json::Value;
 use crate::developer_identity::{encoded, sha256_hex};

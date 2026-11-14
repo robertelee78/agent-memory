@@ -107,7 +107,7 @@ pub fn exact<'a>(value: &'a Value, keys: &[&str], schema: Option<&str>) -> Resul
 pub fn text(value: &Value, maximum: usize) -> Result<&str> {
     let accepted = value
         .as_str()
-        .filter(|s| !s.trim().is_empty() && s.len() <= maximum);
+        .filter(|s| !bank::trim(s).is_empty() && s.len() <= maximum);
     accepted.ok_or_else(|| err("A bounded explicit source-preservation judgment is required"))
 }
 fn judgment(value: &Value) -> Result<&str> {

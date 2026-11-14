@@ -7,7 +7,8 @@
   "partial",
   "ported",
   "implementation-only",
-  "blocker"
+  "blocker",
+  "not-applicable"
  ],
  "suite_count": 894,
  "method_count": 1862,

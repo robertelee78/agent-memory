@@ -1795,3 +1795,19 @@ fn public_purge_and_age_cannot_retire_pending_hold() {
         );
     });
 }
+
+#[test]
+fn publication_judgment_matches_python_strip_without_rewriting_padded_value() {
+    let padded = s("\u{001f} source-bound judgment \u{001f}");
+    assert_eq!(
+        agent_memory::layout_recovery_publication::text(&padded, 4096).unwrap(),
+        "\u{001f} source-bound judgment \u{001f}"
+    );
+    let only_python_whitespace = s("\u{001f} \u{001f}");
+    assert_eq!(
+        agent_memory::layout_recovery_publication::text(&only_python_whitespace, 4096)
+            .unwrap_err()
+            .to_string(),
+        "A bounded explicit source-preservation judgment is required"
+    );
+}

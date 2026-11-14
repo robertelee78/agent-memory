@@ -9,4 +9,3 @@ bank_writes::register_recovery_frontier waits for recovery_frontier
 bank_writes::register_recovery_transactions waits for recovery_transactions
 sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
 turn_check::register_memory_refresh waits for memory_refresh
-layout_recovery::publication::register_layout_publication blocked by the LayoutPublication adapter over layout_recovery_publication (layout_recovery lane follow-up)

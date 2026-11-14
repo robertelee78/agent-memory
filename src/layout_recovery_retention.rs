@@ -7,7 +7,7 @@ use crate::codec::json::Value;
 use crate::developer_identity::{load_with_limit, uuid_valid};
 use crate::error::Result;
 use crate::fs::{Descriptor, trust};
-use crate::layout_recovery::publication;
+use crate::layout_recovery_publication::{self as publication, Evidence};
 use crate::layout_resolution::{
     MALFORMED, err, field, file_sha, frontier, has_keys, int, io_error, items, keys, locked, lstat,
     number, operation_paths, operation_row, operations, path_text, publish_index, read_optional,
@@ -514,9 +514,6 @@ fn child_info(
     Ok((info, proposal))
 }
 
-/// `(root, bank, base, directory, terminal)` of a terminal operation.
-type Evidence = publication::OperationEvidence;
-
 /// Baseline `_operation_evidence(repo, operation_id, owner=)`.
 fn operation_evidence(
     repo: &Path,
@@ -527,12 +524,7 @@ fn operation_evidence(
     let (root, bank, base, directory) = operation_paths(repo, operation_id, runtime_root)?;
     let index = state::index(&root, runtime_root)?;
     if operations(&index)?.get(operation_id).is_some() {
-        return publication::layout_publication_provider()?.operation_evidence(
-            &root,
-            operation_id,
-            owner,
-            runtime_root,
-        );
+        return publication::operation_evidence(&root, operation_id, owner, runtime_root);
     }
     let pins = inventory(&directory)?;
     let (child, proposal) = child_info(
@@ -598,7 +590,13 @@ fn operation_evidence(
             field(&proposal, "parent_ledger_head_sha256")?.clone(),
         ),
     ]);
-    Ok((root, bank, base, directory, terminal))
+    Ok(Evidence {
+        root,
+        bank,
+        base,
+        directory,
+        terminal,
+    })
 }
 
 /// Baseline `_probe_dependencies(bank, other, operation_id, inventory)`.
@@ -1026,8 +1024,13 @@ fn preview(
     owner: Option<&[u8]>,
     runtime_root: &Path,
 ) -> Result<Value> {
-    let (root, _, base, directory, terminal) =
-        operation_evidence(repo, operation_id, owner, runtime_root)?;
+    let Evidence {
+        root,
+        base,
+        directory,
+        terminal,
+        ..
+    } = operation_evidence(repo, operation_id, owner, runtime_root)?;
     if !eq_text(get(&terminal, "kind"), "child-restore") {
         let index = state::index(&root, runtime_root)?;
         require(
@@ -1109,19 +1112,19 @@ pub fn inspect(
     for (_, pin) in object_pairs(field(&proposal, "delete")?)? {
         deletion_bytes += int(field(pin, "bytes")?).ok_or_else(|| err(MALFORMED))?;
     }
-    Ok(publication::result(
+    publication::result(
         "retention-inspect",
         operation_id,
         "retention-preview",
-        vec![
+        object([
             ("proposal", proposal),
             ("cleanup_id", cleanup_id),
             ("deletion_bytes", number(deletion_bytes)),
             ("rollback_capability_surrendered", Value::Bool(true)),
             ("canonical_eligibility", string("unavailable")),
             ("semantic_recovery_complete", Value::Bool(false)),
-        ],
-    ))
+        ]),
+    )
 }
 
 /// Baseline `_review(proposal)`: separate independent review of this exact
@@ -1150,7 +1153,7 @@ pub fn review(proposal: &Value) -> Result<()> {
         "Retention reviewer requires actual developer attribution",
     )?;
     for name in ["harness", "session", "evidence"] {
-        publication::text(get(reviewer, name), publication::TEXT_MAXIMUM)?;
+        publication::text(get(reviewer, name), 4096)?;
     }
     // Developer UUID is attribution, not authentication. Independence is a real
     // separate session, bound explicitly rather than guessed from source prose.
@@ -1180,9 +1183,9 @@ pub fn review(proposal: &Value) -> Result<()> {
         "Cleanup author cannot self-approve the dependency review",
     )?;
     for name in ["author_harness", "author_session", "evidence", "statement"] {
-        publication::text(get(authorization, name), publication::TEXT_MAXIMUM)?;
+        publication::text(get(authorization, name), 4096)?;
     }
-    publication::text(get(review, "rationale"), publication::TEXT_MAXIMUM)?;
+    publication::text(get(review, "rationale"), 4096)?;
     lifecycle::time_value(get(review, "reviewed_at"))?;
     Ok(())
 }
@@ -1355,19 +1358,19 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
                 && same(&read_value(&cleanup.join("proposal.json"))?, proposal),
             "Cleanup UUID was reused with another request",
         )?;
-        return Ok(publication::result(
+        return publication::result(
             "retention-apply",
             operation_id,
             "retention-cleaned",
-            vec![
+            object([
                 ("cleanup_id", string(cleanup_id)),
                 ("receipt", known),
                 ("already_applied", Value::Bool(true)),
                 ("receipt_is_historical", Value::Bool(true)),
                 ("original_bytes_available", Value::Bool(false)),
                 ("rollback_available", Value::Bool(false)),
-            ],
-        ));
+            ]),
+        );
     }
     let project_id = text(proposal, "project_id")?;
     let scope_context = field(proposal, "scope_context")?;
@@ -1544,11 +1547,11 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
         state::write_once(&cleanup.join("receipt.json"), &receipt)?;
         Ok((receipt, cache_state))
     })?;
-    Ok(publication::result(
+    publication::result(
         "retention-apply",
         operation_id,
         "retention-cleaned",
-        vec![
+        object([
             ("cleanup_id", string(cleanup_id)),
             ("receipt", receipt),
             ("private_artifact_writes_performed", Value::Bool(true)),
@@ -1557,6 +1560,6 @@ pub fn apply(repo: &Path, supplied: &Value, runtime_root: &Path) -> Result<Value
             ("rollback_available", Value::Bool(false)),
             ("semantic_recovery_complete", Value::Bool(false)),
             ("derived_cache_state", string(cache_state)),
-        ],
-    ))
+        ]),
+    )
 }

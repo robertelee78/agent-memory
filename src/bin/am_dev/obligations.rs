@@ -123,6 +123,15 @@ pub fn check(ledger: &Value, annotations: &[Annotation]) -> Vec<String> {
             findings.push(format!("{id}: invalid status {status}"));
         }
         *totals.entry(status).or_default() += 1;
+        // A not-applicable obligation names why no Rust test can exist.
+        if status == "not-applicable"
+            && !method
+                .get("note")
+                .and_then(Value::as_str)
+                .is_some_and(|note| !note.trim().is_empty())
+        {
+            findings.push(format!("{id}: not-applicable entry needs a note"));
+        }
         match method.get("registered").and_then(Value::as_bool) {
             Some(true) => registered += 1,
             Some(false) => {}
@@ -141,6 +150,9 @@ pub fn check(ledger: &Value, annotations: &[Annotation]) -> Vec<String> {
         match ids.get(annotation.id.as_str()) {
             None => findings.push(format!("{location}: unknown annotation id")),
             Some(&"unported") => findings.push(format!("{location}: annotated id is unported")),
+            Some(&"not-applicable") => {
+                findings.push(format!("{location}: annotated id is not-applicable"))
+            }
             _ => {}
         }
     }
@@ -250,6 +262,8 @@ pub fn encode_ledger(ledger: &Value) -> Result<String, String> {
     Ok(result)
 }
 
+const USAGE: &str = "usage: obligations summary | obligations mark --status <ported|partial> --ids-file <path> | obligations mark --status not-applicable --ids-file <path> --note <reason>";
+
 fn execute(args: &[String], manifest: &Path) -> Result<(), String> {
     let path = manifest.join(LEDGER);
     let bytes = bounded_read(&path, MAX_LEDGER)?;
@@ -259,42 +273,133 @@ fn execute(args: &[String], manifest: &Path) -> Result<(), String> {
             let mut statuses = BTreeMap::<&str, usize>::new();
             let mut files = BTreeMap::<&str, usize>::new();
             for method in members(&ledger, "methods")? {
-                let id = method.get("id").and_then(Value::as_str).ok_or("method missing id")?;
-                let status = method.get("status").and_then(Value::as_str).ok_or("method missing status")?;
+                let id = method
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .ok_or("method missing id")?;
+                let status = method
+                    .get("status")
+                    .and_then(Value::as_str)
+                    .ok_or("method missing status")?;
                 *statuses.entry(status).or_default() += 1;
-                *files.entry(id.split_once("::").map_or(id, |(file, _)| file)).or_default() += 1;
+                *files
+                    .entry(id.split_once("::").map_or(id, |(file, _)| file))
+                    .or_default() += 1;
             }
             println!("By status:");
-            for (status, count) in &statuses { println!("  {status}: {count}"); }
+            for (status, count) in &statuses {
+                println!("  {status}: {count}");
+            }
             println!("By contract file:");
-            for (file, count) in files { println!("  {file}: {count}"); }
-            println!("Unported list size: {}", statuses.get("unported").copied().unwrap_or(0));
+            for (file, count) in files {
+                println!("  {file}: {count}");
+            }
+            println!(
+                "Unported list size: {}",
+                statuses.get("unported").copied().unwrap_or(0)
+            );
         }
-        [command, flag1, status, flag2, ids_path] if command == "mark" && flag1 == "--status" && flag2 == "--ids-file" && matches!(status.as_str(), "ported" | "partial") => {
+        [command, ..] if command == "mark" => {
+            let (status, ids_path, note) = match args {
+                [_, flag1, status, flag2, ids_path]
+                    if flag1 == "--status"
+                        && flag2 == "--ids-file"
+                        && matches!(status.as_str(), "ported" | "partial") =>
+                {
+                    (status, ids_path, None)
+                }
+                [_, flag1, status, flag2, ids_path, flag3, note]
+                    if flag1 == "--status"
+                        && status == "not-applicable"
+                        && flag2 == "--ids-file"
+                        && flag3 == "--note"
+                        && !note.trim().is_empty() =>
+                {
+                    (status, ids_path, Some(note))
+                }
+                _ => return Err(USAGE.into()),
+            };
             let ids_bytes = bounded_read(Path::new(ids_path), MAX_LEDGER)?;
             let ids_text = std::str::from_utf8(&ids_bytes).map_err(|e| e.to_string())?;
-            let ids: BTreeSet<&str> = ids_text.lines().map(str::trim).filter(|s| !s.is_empty()).collect();
-            let methods = ledger.get_mut("methods").and_then(|v| if let Value::Array(a) = v { Some(a) } else { None }).ok_or("methods must be an array")?;
+            let ids: BTreeSet<&str> = ids_text
+                .lines()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .collect();
+            let methods = ledger
+                .get_mut("methods")
+                .and_then(|v| {
+                    if let Value::Array(a) = v {
+                        Some(a)
+                    } else {
+                        None
+                    }
+                })
+                .ok_or("methods must be an array")?;
             let mut found = BTreeSet::new();
             for method in methods.iter_mut() {
-                let id = method.get("id").and_then(Value::as_str).ok_or("method missing id")?.to_owned();
-                if ids.contains(id.as_str()) { found.insert(id); *method.get_mut("status").ok_or("method missing status")? = Value::String(status.clone()); }
+                let id = method
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .ok_or("method missing id")?
+                    .to_owned();
+                if ids.contains(id.as_str()) {
+                    found.insert(id);
+                    *method.get_mut("status").ok_or("method missing status")? =
+                        Value::String(status.clone());
+                    if let Some(note) = note {
+                        *method.get_mut("note").ok_or("method missing note")? =
+                            Value::String(note.clone());
+                    }
+                }
             }
-            let missing: Vec<_> = ids.iter().filter(|id| !found.contains(**id)).copied().collect();
-            if !missing.is_empty() { return Err(format!("unknown ids: {}", missing.join(", "))); }
+            let missing: Vec<_> = ids
+                .iter()
+                .filter(|id| !found.contains(**id))
+                .copied()
+                .collect();
+            if !missing.is_empty() {
+                return Err(format!("unknown ids: {}", missing.join(", ")));
+            }
             let mut totals = BTreeMap::<String, usize>::new();
-            for method in methods { let s = method.get("status").and_then(Value::as_str).ok_or("method missing status")?; *totals.entry(s.to_owned()).or_default() += 1; }
-            let counts = ledger.get_mut("counts").and_then(|v| v.get_mut("by_status")).ok_or("missing counts.by_status")?;
-            *counts = Value::Object(totals.into_iter().map(|(s,n)| (s, Value::Int(n.into()))).collect());
+            for method in methods {
+                let s = method
+                    .get("status")
+                    .and_then(Value::as_str)
+                    .ok_or("method missing status")?;
+                *totals.entry(s.to_owned()).or_default() += 1;
+            }
+            let counts = ledger
+                .get_mut("counts")
+                .and_then(|v| v.get_mut("by_status"))
+                .ok_or("missing counts.by_status")?;
+            *counts = Value::Object(
+                totals
+                    .into_iter()
+                    .map(|(s, n)| (s, Value::Int(n.into())))
+                    .collect(),
+            );
             let output = encode_ledger(&ledger)?;
             if output.as_bytes() != bytes {
                 let temp = path.with_extension(format!("json.{}.tmp", std::process::id()));
-                let mut file = OpenOptions::new().write(true).create_new(true).open(&temp).map_err(|e| format!("{}: {e}", temp.display()))?;
-                let write_result = (|| { file.set_permissions(fs::metadata(&path)?.permissions())?; file.write_all(output.as_bytes())?; file.sync_all()?; fs::rename(&temp, &path) })();
-                if let Err(e) = write_result { let _ = fs::remove_file(&temp); return Err(format!("{}: {e}", path.display())); }
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .open(&temp)
+                    .map_err(|e| format!("{}: {e}", temp.display()))?;
+                let write_result = (|| {
+                    file.set_permissions(fs::metadata(&path)?.permissions())?;
+                    file.write_all(output.as_bytes())?;
+                    file.sync_all()?;
+                    fs::rename(&temp, &path)
+                })();
+                if let Err(e) = write_result {
+                    let _ = fs::remove_file(&temp);
+                    return Err(format!("{}: {e}", path.display()));
+                }
             }
         }
-        _ => return Err("usage: obligations summary | obligations mark --status <ported|partial> --ids-file <path>".into()),
+        _ => return Err(USAGE.into()),
     }
     Ok(())
 }
