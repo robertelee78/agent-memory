@@ -272,13 +272,31 @@ fn existing_wrapped_prohibition_cannot_be_mapped_to_positive_force() {
 #[test]
 fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
     let world = World::new().unwrap();
-    // Cargo's target-specific uplift may hard-link the executable. Release
-    // readers deliberately accept only a private, ordinary single-link input.
-    let binary = world.inside("guide-example-am").unwrap();
-    std::fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
+    let runtime = support::installed_runtime::install(&world.root, |argv| world.run(argv).unwrap());
+    let inventory = agent_memory::pack_validation::inventory(&runtime.pack).unwrap();
+    let portable_pack = world.root.join("portable guide pack");
+    for (relative, (bytes, permissions)) in &inventory {
+        let path = portable_pack.join(relative);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, bytes).unwrap();
+        // Inventory preserves checkout modes; normalize only this separate
+        // portable input, leaving the installed source and receipt untouched.
+        let mode = if permissions & 0o111 != 0 {
+            0o755
+        } else {
+            0o644
+        };
+        support::lifecycle::mode(&path, mode);
+    }
     let value = call(
         &world,
-        &["capture-guide-examples", "--am", binary.to_str().unwrap()],
+        &[
+            "capture-guide-examples",
+            "--am",
+            runtime.binary.to_str().unwrap(),
+            "--pack",
+            portable_pack.to_str().unwrap(),
+        ],
         0,
     );
     let examples = get(&value, "examples").as_array().unwrap();
@@ -305,10 +323,22 @@ fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
         "Render input needs project-id, router-updated, contexts and omitted"
     );
     assert!(text(&examples[2], "observed_stderr").contains("unknown-operation"));
-    let pack = Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
-    for (path, digest) in get(&value, "artifact_files").as_object().unwrap() {
+    let artifact_files = get(&value, "artifact_files").as_object().unwrap();
+    assert_eq!(
+        artifact_files
+            .iter()
+            .map(|(path, _)| path.as_str())
+            .collect::<std::collections::BTreeSet<_>>(),
+        inventory
+            .keys()
+            .map(String::as_str)
+            .collect::<std::collections::BTreeSet<_>>(),
+    );
+    for (path, digest) in artifact_files {
         use sha2::{Digest, Sha256};
-        let actual: String = Sha256::digest(std::fs::read(pack.join(path)).unwrap())
+        let raw = std::fs::read(portable_pack.join(path)).unwrap();
+        assert_eq!(&raw, &inventory[path].0);
+        let actual: String = Sha256::digest(&raw)
             .iter()
             .map(|byte| format!("{byte:02x}"))
             .collect();

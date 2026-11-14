@@ -19,8 +19,27 @@ impl NativeRuntime {
     }
 }
 
+/// Publish exact Cargo bytes at mode 0755 through the caller's bounded runner.
+/// Only the copy child owns a writable descriptor; atomic publication replaces
+/// existing targets without following aliases or truncating a running inode.
+pub fn stage_binary(binary: &Path, mut run: impl FnMut(&[OsString]) -> Output) {
+    let parent = binary.parent().unwrap();
+    std::fs::create_dir_all(parent).unwrap();
+    let staged = parent.join(format!(".am-{}", agent_memory::host::uuid4().unwrap()));
+    let output = run(&[
+        "/bin/cp".into(),
+        "--".into(),
+        env!("CARGO_BIN_EXE_am").into(),
+        staged.as_os_str().to_owned(),
+    ]);
+    assert_eq!(output.status, Status::Code(0), "runtime copy: {output:?}");
+    assert!(output.stderr.is_empty(), "{:?}", output.stderr);
+    std::fs::set_permissions(&staged, std::fs::Permissions::from_mode(0o755)).unwrap();
+    std::fs::rename(staged, binary).unwrap();
+}
+
 /// The runner owns the isolated environment and bounded child deadline. It
-/// receives a complete argv and must not modify process-global providers/env.
+/// receives complete copy/installer argv and must not modify global providers/env.
 pub fn install(root: &Path, mut run: impl FnMut(&[OsString]) -> Output) -> NativeRuntime {
     for relative in [
         "cache",
@@ -45,9 +64,7 @@ pub fn install(root: &Path, mut run: impl FnMut(&[OsString]) -> Output) -> Nativ
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(permissions)).unwrap();
     }
     let binary = source.join("target/release/am");
-    std::fs::create_dir_all(binary.parent().unwrap()).unwrap();
-    std::fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
-    std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755)).unwrap();
+    stage_binary(&binary, &mut run);
     let command = root.join("home/.local/bin/am");
     let output = run(&[
         binary.as_os_str().to_owned(),

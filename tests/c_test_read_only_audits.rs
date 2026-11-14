@@ -25,6 +25,38 @@ fn snapshot(root: &std::path::Path) -> BTreeMap<String, (Vec<u8>, u32)> {
 }
 
 #[test]
+fn private_native_staging_replaces_aliases_without_mutating_inputs() {
+    let w = World::new().unwrap();
+    let shared = std::path::Path::new(env!("CARGO_BIN_EXE_am"));
+    let shared_bytes = fs::read(shared).unwrap();
+    let shared_mode = fs::metadata(shared).unwrap().permissions().mode();
+    let unrelated = w.root.join("unrelated executable");
+    fs::write(&unrelated, b"unrelated bytes\n").unwrap();
+    fs::set_permissions(&unrelated, fs::Permissions::from_mode(0o700)).unwrap();
+    let binary = w.root.join("private runtime");
+    std::os::unix::fs::symlink(&unrelated, &binary).unwrap();
+    for _ in 0..2 {
+        support::installed_runtime::stage_binary(&binary, |argv| w.run(argv).unwrap());
+        assert!(fs::symlink_metadata(&binary).unwrap().is_file());
+        assert_eq!(fs::read(&binary).unwrap(), shared_bytes);
+        assert_eq!(
+            fs::metadata(&binary).unwrap().permissions().mode() & 0o7777,
+            0o755,
+        );
+        assert_eq!(fs::read(&unrelated).unwrap(), b"unrelated bytes\n");
+        assert_eq!(
+            fs::metadata(&unrelated).unwrap().permissions().mode() & 0o7777,
+            0o700,
+        );
+    }
+    assert_eq!(fs::read(shared).unwrap(), shared_bytes);
+    assert_eq!(
+        fs::metadata(shared).unwrap().permissions().mode(),
+        shared_mode,
+    );
+}
+
+#[test]
 // obligation: tests/contracts/test_read_only_audits.py::ReadOnlyAudits.test_direct_hook_and_boundary_helpers_do_not_create_source_caches
 fn direct_native_hooks_and_boundary_help_preserve_runtime_bytes_and_modes() {
     let mut w = World::new().unwrap();

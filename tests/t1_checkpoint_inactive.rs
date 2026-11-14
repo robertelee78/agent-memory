@@ -22,7 +22,7 @@ struct NativeWorld {
 }
 impl NativeWorld {
     fn new() -> Result<Self> {
-        let world = World::new()?;
+        let mut world = World::new()?;
         let runtime = support::installed_runtime::install(&world.root, |argv| {
             world
                 .run_with(
@@ -34,6 +34,10 @@ impl NativeWorld {
                 )
                 .expect("Bounded genuine runtime installer")
         });
+        world.env.insert(
+            "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+            runtime.command.as_os_str().to_owned(),
+        );
         Ok(Self { world, runtime })
     }
 }
@@ -1484,8 +1488,9 @@ fn copied_native_binary_preserves_untrusted_markdown_and_refuses_actor_switch() 
     }
     let binary = copied.join("target/release/am");
     fs::create_dir_all(binary.parent().unwrap())?;
-    fs::copy(&w.runtime.binary, &binary)?;
-    fs::set_permissions(&binary, fs::Permissions::from_mode(0o755))?;
+    support::installed_runtime::stage_binary(&binary, |argv| {
+        w.run(argv).expect("Bounded genuine copied binary staging")
+    });
     let installed = w.run([
         binary.as_os_str(),
         OsStr::new("--json"),
@@ -1629,15 +1634,31 @@ fn git_carried_terminal_marker_survives_private_state_loss_and_rebinding() -> Re
         },
     )?;
     let expected = files(&clone.join("memory-bank"))?;
+    for name in agent_memory::installation::COMMAND_NAMES {
+        let retained = w.runtime.command.with_file_name(name);
+        assert_eq!(fs::canonicalize(&retained)?, w.runtime.binary);
+        fs::remove_file(retained)?;
+    }
+    // Lose all private configuration and state, including installation receipts.
+    // The installer uses XDG roots; changing only the AM roots retains ownership.
+    fs::remove_dir_all(w.root.join("config"))?;
+    fs::remove_dir_all(w.root.join("state"))?;
     let fresh_config = w.inside("fresh-config")?;
     let fresh_state = w.inside("fresh-state")?;
     w.world.env.insert(
+        "XDG_CONFIG_HOME".into(),
+        fresh_config.as_os_str().to_owned(),
+    );
+    w.world
+        .env
+        .insert("XDG_STATE_HOME".into(), fresh_state.as_os_str().to_owned());
+    w.world.env.insert(
         "AGENT_MEMORY_CONFIG_HOME".into(),
-        fresh_config.into_os_string(),
+        fresh_config.join("agent-memory").into_os_string(),
     );
     w.world.env.insert(
         "AGENT_MEMORY_STATE_HOME".into(),
-        fresh_state.into_os_string(),
+        fresh_state.join("agent-memory").into_os_string(),
     );
     let fresh_command = w.root.join("home/.local/fresh-bin/am");
     let installed = w.run([
@@ -1657,6 +1678,23 @@ fn git_carried_terminal_marker_survives_private_state_loss_and_rebinding() -> Re
     let installed = json::decode_bytes(&installed.stdout, json::DecodePolicy::default())?;
     assert_eq!(get(&installed, "verified").as_bool(), Some(true));
     assert_eq!(fs::canonicalize(&fresh_command)?, w.runtime.binary);
+    let receipt = json::decode_bytes(
+        &fs::read(fresh_state.join("agent-memory/install/receipt.json"))?,
+        json::DecodePolicy::default(),
+    )?;
+    assert_eq!(
+        agent_memory::installation::source_binary(get(&receipt, "source"))
+            .expect("Genuine reinstalled receipt records its executable"),
+        w.runtime.binary
+    );
+    assert_eq!(
+        get(get(&receipt, "source"), "pack").as_str(),
+        w.runtime.pack.to_str()
+    );
+    w.world.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        fresh_command.as_os_str().to_owned(),
+    );
     w.runtime.command = fresh_command;
     let request = object([
         ("project_id", string(PROJECT)),
@@ -2071,12 +2109,14 @@ fn public_markdown_matrix_and_utf8_boundary_preserve_every_original_source() -> 
         );
         assert_eq!(files(&bank)?, before);
     }
-    // Measure the exact public rendered observation, not the pure render size.
+    // Append directly after the managed section's canonical blank separator;
+    // an extra separator belongs to that replaced section, not the source notes.
     let sample = get(get(get(&prepared, "proposal"), "write"), "content")
         .as_str()
         .ok_or_else(|| support::WorldError::invalid("No checkpoint content"))?;
-    let prefix = "\n## Boundary notes\n\n";
-    let padding = 16384 - sample.len() - prefix.len() - 1;
+    assert!(sample.ends_with("\n\n"));
+    let prefix = "## Boundary notes\n\n";
+    let padding = checkpoint::LIMIT - sample.len() - prefix.len() - 1;
     let notes = format!(
         "{prefix}{}{}\n",
         "é".repeat(padding / 2),
@@ -2090,15 +2130,19 @@ fn public_markdown_matrix_and_utf8_boundary_preserve_every_original_source() -> 
         get(&current, "observed_active_sha256").clone(),
     );
     let boundary = preview(&w, &repo, &value)?;
-    assert_eq!(
-        get(get(get(&boundary, "proposal"), "write"), "content")
-            .as_str()
-            .map(str::len),
-        Some(16384)
-    );
+    let boundary_body = get(get(get(&boundary, "proposal"), "write"), "content")
+        .as_str()
+        .ok_or_else(|| support::WorldError::invalid("No boundary checkpoint content"))?;
+    assert_eq!(boundary_body.len(), checkpoint::LIMIT);
+    assert!(boundary_body.contains(LEGACY));
+    assert_eq!(boundary_body.strip_suffix(notes.as_str()), Some(sample));
     assert_eq!(
         get(&apply(&w, &boundary)?, "verified").as_bool(),
         Some(true)
+    );
+    assert_eq!(
+        fs::read(bank.join("activeContext.md"))?,
+        boundary_body.as_bytes()
     );
     let before = files(&bank)?;
     for _ in 0..2 {

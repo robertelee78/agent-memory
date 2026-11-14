@@ -41,7 +41,9 @@ fn child_environment_has_private_roots_and_no_credentials() {
 #[test]
 fn public_command_with_spaces_gets_only_world_environment() {
     let world = World::new().unwrap();
-    let executable = world.root.join("command with spaces");
+    let directory = world.root.join("command with spaces");
+    std::fs::create_dir(&directory).unwrap();
+    let executable = directory.join("env");
     symlink("/usr/bin/env", &executable).unwrap();
     let output = world.run([&executable]).unwrap();
     let env = String::from_utf8(output.stdout).unwrap();

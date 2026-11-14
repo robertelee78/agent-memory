@@ -214,27 +214,41 @@ pub fn capture(am: &Path, pack: &Path) -> Result<Value> {
         ("runtime_paths_are_disposable", Value::Bool(true)),
     ]))
 }
+/// Capture against explicit native executable/portable-pack inputs, retaining
+/// the adjacent executable and checkout pack defaults for developer invocations.
 pub fn run(args: &[String]) -> i32 {
     let result = (|| -> Result<Value> {
-        let am = if args.is_empty() {
-            std::env::current_exe()?
+        let mut am = None;
+        let mut pack = None;
+        let mut remaining = args;
+        while !remaining.is_empty() {
+            match remaining {
+                [option, path, rest @ ..] if option == "--am" && am.is_none() => {
+                    am = Some(PathBuf::from(path));
+                    remaining = rest;
+                }
+                [option, path, rest @ ..] if option == "--pack" && pack.is_none() => {
+                    pack = Some(PathBuf::from(path));
+                    remaining = rest;
+                }
+                _ => {
+                    return Err(ContractError::new(
+                        "Usage: am-dev capture-guide-examples [--am PATH] [--pack PATH]",
+                    )
+                    .into());
+                }
+            }
+        }
+        let am = match am {
+            Some(am) => am,
+            None => std::env::current_exe()?
                 .parent()
                 .ok_or_else(|| ContractError::new("Developer binary has no parent"))?
-                .join("am")
-        } else if args.len() == 2 && args.first().is_some_and(|arg| arg == "--am") {
-            PathBuf::from(
-                args.get(1)
-                    .ok_or_else(|| ContractError::new("Missing am binary"))?,
-            )
-        } else {
-            return Err(
-                ContractError::new("Usage: am-dev capture-guide-examples [--am PATH]").into(),
-            );
+                .join("am"),
         };
-        capture(
-            &am,
-            &Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
-        )
+        let pack = pack
+            .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"));
+        capture(&am, &pack)
     })();
     match result.and_then(|value| Ok(json::encode(&value, json::INDENT2_ASCII)?)) {
         Ok(raw) => {
