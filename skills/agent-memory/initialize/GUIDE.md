@@ -142,12 +142,12 @@ Ordinary context remains orientation-only and requires statement qualification.
 
 ## Observe
 
-With `SKILL_DIR` resolved to this portable package:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/initialize.py" inspect --repo /path/to/repo > /private/path/inventory.json
-python3 -I "$SKILL_DIR/scripts/initialize.py" read --repo /path/to/repo --path README.md
-python3 -I "$SKILL_DIR/scripts/initialize.py" read --repo /path/to/repo --path docs/adr/001-example.md
+am init inspect --repo /path/to/repo > /private/path/inventory.json
+am init read --repo /path/to/repo --path README.md
+am init read --repo /path/to/repo --path docs/adr/001-example.md
 ```
 
 `inspect` writes nothing. It reports the bank's state, observed memory hashes,
@@ -170,7 +170,7 @@ memory. This skill does not implement a competing AWA tracker client or change
 Projects during initialization.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/initialize.py" inspect --repo /path/to/repo \
+am init inspect --repo /path/to/repo \
   --awa-evidence /private/path/awa-evidence.json > /private/path/inventory.json
 ```
 
@@ -210,9 +210,9 @@ An existing bank uses ordinary resolved identity; independent clone/fork or
 authority ambiguity requires its explicit binding decision first.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/initialize.py" preview --repo /path/to/repo \
+am init preview --repo /path/to/repo \
   --review /private/path/review.json > /private/path/initialize.json
-python3 -I "$SKILL_DIR/scripts/initialize.py" apply --proposal /private/path/initialize.json
+am init apply --proposal /private/path/initialize.json
 ```
 
 ## Read back
@@ -243,7 +243,7 @@ A verified initialization is a useful local bank or a reviewed fill of missing o
 
 On a visible lock or marker, the session MUST preserve the original proposal
 and recovery journal. It MUST recover the dead bank lock using the documented
-preview/apply workflow, then explicitly preview `bank_transactions.py recover
+preview/apply workflow, then explicitly preview `am transaction recover
 --repo PATH --mode finish` or `--mode rollback` and apply that recovery proposal.
 The private journal retains the original selected-source hashes, branch/HEAD,
 AWA handoff and reviewed interpretation. Finish MUST revalidate that evidence

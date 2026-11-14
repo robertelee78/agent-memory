@@ -309,6 +309,10 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     let _ = crate::managed_source::register_installation(&crate::installation::MANAGED_SOURCE_INFO);
     // Set-once registry: a repeated composition keeps the first provider.
     let _ = crate::turn_check::register_scope_binding(Box::new(wiring::EnrollmentScope));
+    // Set-once registry: a repeated composition keeps the first provider.
+    let _ = crate::sharing_hold_mapping::register_hold_causes(Box::new(
+        crate::sharing_holds::HoldCauses,
+    ));
     Ok(())
 }
 

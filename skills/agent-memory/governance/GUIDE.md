@@ -26,7 +26,7 @@ it MUST NOT use current-main evidence to revoke all older contexts.
 
 ## Inputs and preconditions
 
-The portable `govern_memory.py preview` reads one UTF8 JSON request, at most
+The `am govern preview` command reads one UTF8 JSON request, at most
 256 KiB, with exactly these fields:
 
 | Field | Required value |
@@ -184,26 +184,26 @@ does not prove that every paraphrase was found.
 
 ## Apply
 
-With `SKILL_DIR` resolved, keep requests/proposals outside the canonical bank and
+With the installed `am` command available, keep requests/proposals outside the canonical bank and
 sharing delta:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/govern_memory.py" preview --repo /path/to/repo \
+am govern preview --repo /path/to/repo \
   --request /private/path/governance-request.json > /private/path/governance.json
-python3 -I "$SKILL_DIR/scripts/govern_memory.py" apply \
+am govern apply \
   --proposal /private/path/governance.json
 ```
 
 The two-phase variant MUST use separate planning and final proof-bearing requests:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/govern_memory.py" plan --repo /path/to/repo \
+am govern plan --repo /path/to/repo \
   --request /private/path/planning-request.json --private-output /private/path/plan.json
 # Complete independent coverage review and ordinary comparison review here.
-python3 -I "$SKILL_DIR/scripts/govern_memory.py" preview --repo /path/to/repo \
+am govern preview --repo /path/to/repo \
   --request /private/path/governance-request.json --plan /private/path/plan.json \
   --private-output /private/path/governance.json
-python3 -I "$SKILL_DIR/scripts/govern_memory.py" apply \
+am govern apply \
   --proposal /private/path/governance.json
 ```
 

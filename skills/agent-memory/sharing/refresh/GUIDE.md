@@ -71,7 +71,7 @@ an owner-only directory `/tmp/am-private-example`, use
 as `--output refresh-inspection.json` is refused before refresh work starts.
 Choose a fresh private filename and preserve any existing receipt.
 
-With `SKILL_DIR` resolved to this package:
+With the installed `am` command available:
 
 An agent MAY first run `am refresh current --repo REPO` for a narrow no-import
 observation. `bank-synchronized` means only that the complete observed canonical
@@ -90,8 +90,8 @@ the full review below or its specific recovery. Do not treat this observation as
 proof that other sessions have no private pending work.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --output /private/refresh-inspection.json
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --base FULL_SHARED_COMMIT --output /private/explicit-refresh-inspection.json
+am refresh inspect --v2 --repo /path/to/repo --output /private/refresh-inspection.json
+am refresh inspect --v2 --repo /path/to/repo --base FULL_SHARED_COMMIT --output /private/explicit-refresh-inspection.json
 ```
 
 The session MUST retain the stored complete result and extract its nested
@@ -120,7 +120,7 @@ canonical knowledge. Local state MUST remain outside Git and the bank.
 ## Plan
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" prepare --v2 --repo /path/to/repo --input /private/refresh-input.json --output /private/prepared-refresh.json
+am refresh prepare --v2 --repo /path/to/repo --input /private/refresh-input.json --output /private/prepared-refresh.json
 ```
 
 Only `prepared` contains a `proposal`. The session MUST retain the complete
@@ -147,7 +147,7 @@ The session MUST retain the conflict packet while independent imports proceed.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" apply --v2 --input /private/prepared-refresh.json --output /private/applied-refresh.json
+am refresh apply --v2 --input /private/prepared-refresh.json --output /private/applied-refresh.json
 ```
 
 ## Read back

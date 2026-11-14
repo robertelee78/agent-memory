@@ -45,12 +45,12 @@ A session MUST distinguish rendering a safe inactive representation from applyin
 The pure format helper compacts an **already inactive** standalone record:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/inactive_records.py" compact \
+am inactive-records compact \
   --file /private/path/inactive-record.md
 ```
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/inactive_records.py" filter --repo /path/to/repo \
+am inactive-records filter --repo /path/to/repo \
   --input /private/path/derived-records.json
 ```
 
@@ -93,7 +93,7 @@ rather than reuse a cached payload. A later bank change invalidates the check;
 consumers MUST repeat it before a rebuild/consolidation write and recheck their
 observations under the bank lock when applying a proposal.
 
-The older `tombstones.py filter` remains a terminal-deletion-only format guard;
+The older `am tombstones filter` remains a terminal-deletion-only format guard;
 a session MUST NOT treat it as lifecycle-current recall. Neither helper owns
 or invalidates arbitrary third-party caches, authenticates a developer, admits
 learning or publishes memory. A session MUST follow

@@ -20,11 +20,11 @@ meaning. Runtime removal does not require principal setup or a project bank.
 
 ## Inputs and preconditions
 
-Before removing managed code, the session MUST resolve `SKILL_DIR` to a trusted
-complete package outside the targets being removed, or retain a way to obtain
-that package. Its source helper survives removal of the installed wrapper and
-provides recovery, repeat and reinstall without relying on deleted code.
-Python 3.11 or later and the existing external ownership receipt are required.
+Before removing managed code, the session MUST retain an independently trusted
+`am` binary outside the targets being removed, or a way to obtain it through the
+verified bootstrap. This provides recovery, repeat and reinstall without relying
+on deleted code. A copied pack alone is not executable. The existing external
+ownership receipt is required; `am --version` checks the available command.
 
 ## Observe
 
@@ -72,7 +72,7 @@ session MUST NOT delete such records or the marker to force removal.
 The session MUST preview removal before applying it:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall --check > /private/path/uninstall-plan.json
+am uninstall --check > /private/path/uninstall-plan.json
 ```
 
 The session MUST review each target's before/after identity and the `preserved`
@@ -86,7 +86,7 @@ After an authorized acceptable preview, the session MUST run the same helper
 without `--check`, or the installed `agent-memory uninstall` command:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall > /private/path/uninstall-receipt.json
+am uninstall > /private/path/uninstall-receipt.json
 ```
 
 The lifecycle lock, external journal and native per-target moves retain rollback
@@ -114,8 +114,8 @@ Git metadata from the removed source.
 ## Outcomes
 
 The session MUST report removal, preserved conflicts and the returned reinstall
-recipe separately. The recipe's `${SKILL_DIR}` placeholder MUST be resolved to
-an available trusted complete package before invoking its `argv`. The
+recipe separately. The recipe MUST invoke an available independently trusted
+`am` binary, obtained through the verified bootstrap if necessary. The
 [installation operation](../install/GUIDE.md) then previews and reinstalls the
 recorded channel or developer source and targets against the existing bank;
 it MUST NOT initialize replacement memory. Repeating the trusted uninstall
@@ -134,7 +134,7 @@ The session MUST recover interrupted runtime removal using the trusted complete
 package, even when the installed command and managed source are gone:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/installer.py" recover
+am recover
 ```
 
 The session MUST inspect the recovery result before retrying uninstall.

@@ -61,7 +61,7 @@ Render accepts exactly `path`, `project-id`, `updated` and `routes`. Each route
 has `path`, `purpose`, `scope`, `lifecycle` and `read-when`. It returns proposed
 content, not a write. Inspect returns descriptors and source hashes from the
 canonical bank; it preserves its Markdown, code, HEAD, index and runtime state.
-The existing `bank_contract.py validate` and transaction validator use the same
+The existing `am bank validate` and transaction validator use the same
 layout algorithm. Exit 0 means valid layout/format or rendered index; exit 1
 means refusal. These results MUST NOT be treated as admission, source review,
 identity authentication, a current-guidance decision or a durable mutation.
@@ -121,13 +121,13 @@ Missing evidence MUST NOT be filled with invented requirements.
 
 ## Apply
 
-With `SKILL_DIR` resolved to the packaged skill directory:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_layout.py" inspect --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/bank_layout.py" model
-python3 -I "$SKILL_DIR/scripts/bank_layout.py" render-index --input /tmp/topic-index.json
-python3 -I "$SKILL_DIR/scripts/bank_layout.py" validate-index --file memory-bank/topics/index.md --path topics/index.md
+am bank-layout inspect --repo /path/to/repo
+am bank-layout model
+am bank-layout render-index --input /tmp/topic-index.json
+am bank-layout validate-index --file memory-bank/topics/index.md --path topics/index.md
 ```
 
 ## Read back

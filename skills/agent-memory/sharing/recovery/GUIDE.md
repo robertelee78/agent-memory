@@ -59,11 +59,11 @@ peer recall MUST be reported separately.
 
 ## Observe
 
-With `SKILL_DIR` resolved to this package:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" inspect --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" inspect --repo /path/to/repo --fetch
+am exchange inspect --repo /path/to/repo
+am exchange inspect --repo /path/to/repo --fetch
 ```
 
 Untracked canonical learning does not prevent this read-only remote inventory;
@@ -99,14 +99,14 @@ A session MUST choose the actual observed case: inventory a possibly completed p
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" replay --repo /path/to/repo --request /private/replay.json
+am exchange replay --repo /path/to/repo --request /private/replay.json
 ```
 
 For a mechanical three-way baseline/candidate inspection, the session MUST use the appropriate reconcile/base branch below.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" reconcile --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" reconcile --repo /path/to/repo --base FULL_SHA
+am exchange reconcile --repo /path/to/repo
+am exchange reconcile --repo /path/to/repo --base FULL_SHA
 ```
 
 ## Read back

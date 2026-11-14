@@ -50,10 +50,10 @@ MUST NOT be represented as an independent agent's understanding.
 
 ## Apply
 
-With `SKILL_DIR` resolved to this package:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/retrieve.py" --repo /path/to/repo \
+am search --repo /path/to/repo \
   --request /private/path/recall.json
 ```
 

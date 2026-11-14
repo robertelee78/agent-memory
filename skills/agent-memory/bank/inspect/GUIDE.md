@@ -30,16 +30,16 @@ This operation has no mutation plan: it inspects existing files. A session MUST 
 
 ## Apply
 
-With `SKILL_DIR` resolved to the packaged skill directory:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project
+am inspect --repo /path/to/project
 ```
 
 For deliberate inspection of one existing ordinary context file:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project --path activeContext.md
+am inspect --repo /path/to/project --path activeContext.md
 ```
 
 This selector MUST require the same-project identity and current safety/source

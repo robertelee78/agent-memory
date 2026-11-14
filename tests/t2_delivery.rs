@@ -1176,6 +1176,16 @@ impl agent_memory::pack_validation::CommandSurface for NoExecutableSurface {
             "Fixture declares no executable command routes",
         ))
     }
+
+    fn command(
+        &self,
+        _name: &str,
+    ) -> agent_memory::pack_validation::Result<
+        Option<(agent_memory::pack_validation::Dispatch, Vec<String>)>,
+    > {
+        // Intentionally non-executable test surface.
+        Ok(None)
+    }
 }
 
 #[cfg(feature = "dev-tools")]

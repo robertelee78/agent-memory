@@ -1199,6 +1199,14 @@ printf 200
                 "Fixture has no executable routes",
             ))
         }
+        /// Intentionally non-executable test surface: no command resolves.
+        fn command(
+            &self,
+            _name: &str,
+        ) -> crate::pack_validation::Result<Option<(crate::pack_validation::Dispatch, Vec<String>)>>
+        {
+            Ok(None)
+        }
     }
     struct Fixture {
         root: PathBuf,

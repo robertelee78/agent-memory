@@ -22,7 +22,7 @@ The session MUST use the actual fresh source-bound comparison and applicable cur
 
 ## Inputs and preconditions
 
-The packaged `consolidate_learning.py` takes a JSON input with exactly:
+The `am compact` command takes a JSON input with exactly:
 
 | Field | Required value |
 | --- | --- |
@@ -80,12 +80,12 @@ An edited, foreign or stale plan MUST refuse rather than bypass qualification.
 
 ## Apply
 
-With `SKILL_DIR` resolved, save evidence and proposals outside canonical memory:
+With the installed `am` command available, save evidence and proposals outside canonical memory:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" preview --repo /path/to/repo \
+am compact preview --repo /path/to/repo \
   --input /private/path/maintenance-input.json > /private/path/maintenance.json
-python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" apply \
+am compact apply \
   --proposal /private/path/maintenance.json
 ```
 
@@ -93,13 +93,13 @@ For that two-phase workflow, keep the planning judgment input separate from the
 final proof-bearing input:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" plan --repo /path/to/repo \
+am compact plan --repo /path/to/repo \
   --input /private/path/planning-input.json --private-output /private/path/plan.json
 # Complete independent coverage review and ordinary comparison review here.
-python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" preview --repo /path/to/repo \
+am compact preview --repo /path/to/repo \
   --input /private/path/maintenance-input.json --plan /private/path/plan.json \
   --private-output /private/path/maintenance.json
-python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" apply \
+am compact apply \
   --proposal /private/path/maintenance.json
 ```
 

@@ -52,6 +52,7 @@ pub mod runtime_faults;
 pub mod scope_binding;
 pub mod scopes;
 pub mod sharing_hold_mapping;
+pub mod sharing_holds;
 pub mod sharing_limits;
 pub mod tombstones;
 pub mod turn_check;

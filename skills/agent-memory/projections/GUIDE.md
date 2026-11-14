@@ -38,15 +38,15 @@ The session MUST plan a disposable reference object and distinguish any private 
 
 ## Apply
 
-With `SKILL_DIR` resolved to this package:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/projection.py" build --repo /path/to/repo \
+am projection build --repo /path/to/repo \
   --input /private/path/references.json
 ```
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/projection.py" check --repo /path/to/repo \
+am projection check --repo /path/to/repo \
   --input /private/path/projection.json
 ```
 

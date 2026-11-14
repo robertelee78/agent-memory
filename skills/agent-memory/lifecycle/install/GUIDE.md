@@ -20,23 +20,23 @@ semantics. Installation does not require a project bank or developer identity.
 
 ## Inputs and preconditions
 
-A session MUST use Python 3.11 or later, Git, and a supported local filesystem.
-A complete package is required to run the Python helper directly. The standalone
-`install.sh` bootstrap obtains a temporary verified portable release when invoked
-through curl-to-bash; it requires Bash 3.2+, curl and OpenSSH SSH-signature support
-in addition to Python and Git. The default managed channel is the latest stable
-GitHub Release with the pinned AM key. An explicit `--development-source` selects
-a local checkout or copied complete package; the installer MUST NOT mutate that
-source. Explicit Git sources and legacy old-process activations remain unsigned:
+A session MUST use Git and a supported local filesystem. The standalone
+`install.sh` bootstrap requires a POSIX shell, curl and OpenSSH SSH-signature
+support. It verifies and installs the native `am` command; `am --version`
+checks that command. A copied pack alone is not executable. The default managed
+channel is the latest stable GitHub Release with the pinned AM key. An explicit
+`--development-source` selects a local checkout or copied complete package with
+a prebuilt `am` binary for the host; the installer MUST NOT mutate that source.
+Legacy unsigned activations remain unsigned historical evidence:
 a digest alone binds bytes and modes, not publisher authenticity. Signed release
 verification authenticates publisher bytes before candidate execution; the fetched
 bootstrap itself remains the initial HTTPS trust anchor. The portable archive
 contains no repository development memory, Git history or consumer bank binding.
 
 The executing verifier MUST already be trusted. In-package checks cannot
-authenticate Python code that has already loaded from an attacker-writable
-runtime. If that exposure is possible, the session MUST use a trusted complete
-outside helper for inspection and recovery.
+authenticate code that has already loaded from an attacker-writable runtime.
+If that exposure is possible, the session MUST use an independently trusted
+`am` binary for inspection and recovery.
 
 Lifecycle state MUST be current-user-owned and private (0700); sensitive records
 MUST be ordinary, single-link, current-user-owned and not group/other writable.
@@ -101,11 +101,11 @@ The bootstrap delegates the same installer and removes its temporary source on
 exit. The runtime and external receipt MUST remain in their separate durable
 owned locations. Bootstrap scratch MUST NOT become a development source.
 
-With `SKILL_DIR` resolved to a trusted complete package, the session MUST preview
+With an installed or independently trusted `am` binary, the session MUST preview
 the intended source and target configuration before activation. For example:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/installer.py" install --check --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
+am install --check --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
 ```
 
 The session MUST compare each target's current and planned identity. Check mode
@@ -123,7 +123,7 @@ After an authorized acceptable preview, the session MUST run the same install
 configuration without `--check`:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/installer.py" install --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
+am install --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
 ```
 
 The installer stages all targets, checks atomic replacement on each target
@@ -171,11 +171,11 @@ available rather than being silently removed.
 
 ## Diagnostic fallback
 
-When installation is interrupted, the session MUST use the trusted source helper
-even if the installed command does not exist:
+When installation is interrupted, the session MUST use an independently trusted
+`am` binary obtained through the verified bootstrap if the installed command cannot run:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/installer.py" recover
+am recover
 ```
 
 Recovery verifies a committed receipt or rolls back an incomplete activation.

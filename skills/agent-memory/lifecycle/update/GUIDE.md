@@ -23,8 +23,9 @@ reconciled; it does not turn strict recovery's refusal into verified success.
 ## Inputs and preconditions
 
 The session MUST identify the external installation receipt and the recorded
-source kind and channel. Python 3.11 or later and Git are required; signed
-acquisition additionally requires curl and OpenSSH SSH-signature support.
+source kind and channel. The bootstrap-installed `am` command (checked with
+`am --version`) and Git are required; signed acquisition additionally requires
+curl and OpenSSH SSH-signature support.
 An explicit development source MUST NOT be updated by this operation. The signed default requires the pinned publisher signature before candidate
 execution. Explicit Git channels and old-process first activations remain
 unsigned; a digest or fast-forward alone does not authenticate the publisher. Optional agent client executables are not prerequisites.
@@ -41,11 +42,11 @@ activation block, rather than copy the memory protocol into client settings.
 
 ## Plan
 
-With `SKILL_DIR` resolved to a trusted complete package, the session MUST preview
+With the trusted installed `am` command, the session MUST preview
 an update before activation:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/update_runtime.py" update --check > /private/path/update-check.json
+am update --check > /private/path/update-check.json
 ```
 
 The session MAY add repeated `--repo /absolute/repository` arguments for relevant
@@ -93,12 +94,12 @@ After an acceptable authorized check, the session MUST invoke the same trusted
 helper without `--check`:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/update_runtime.py" update > /private/path/update-receipt.json
+am update > /private/path/update-receipt.json
 ```
 
-The installed `agent-memory update` command dispatches this operation. A trusted
-new source helper remains available when an older installed command cannot yet
-dispatch update. The session MUST NOT edit or pull into the active managed
+The installed `agent-memory update` command dispatches this operation. If an
+older installed command cannot activate the native runtime, the session MUST
+rerun the verified bootstrap. It MUST NOT edit or pull into the active managed
 checkout to bootstrap that command.
 
 ## Read back
@@ -114,8 +115,8 @@ after inspection. This does not claim zero temporary filesystem writes.
 The session MUST require exit 0 and `verified: true` after activation, or
 `check_complete: true` for a successful preview. The updater stages a complete
 candidate without changing active source. It proves signed-release version/identity
-and Python compatibility, or fast-forward/version for an explicit Git channel,
-validates the package, then uses the owned per-target
+and native target/command-surface compatibility, validates the package, then uses
+the owned per-target
 transaction. It verifies client-visible packages and the actual installed
 command before publishing the new external receipt. Native exchange and the
 journal MUST NOT be described as a single global atomic switch.
@@ -137,31 +138,13 @@ an outside-package code revision produces no unnecessary restart advice.
 
 ### Opaque cache drift
 
-For a recorded signed runtime, the updater MAY qualify narrowly recognized,
-owned Python cache additions when every signed payload file and metadata still
-match the authenticated old release and original receipt. It MUST preserve the
-whole old runtime, including opaque cache bytes, through the ordinary journaled
-backup and acquire a fresh authenticated candidate even for a same-version
-repair. It MUST NOT execute or parse those caches, weaken exact new-runtime
-verification, change project memory or bless the dirty source in a new receipt.
-
-A preview MUST report planned `cache_recovery` separately from
-`update_available`; the latter MAY be false for same-version recovery. It MUST
-remain read-only for active targets, receipts, banks and repository state. A
-successful replacement MUST identify preserved source backups and report that
-cache validity was not established. A clean current installation stays a no-op.
-Only the source target and unchanged links to that exact qualified source are
-covered; independently copied client packages retain strict ownership checks.
-Extra cache directories MUST pass the shared path policy, including private
-ancestor protection. Directory mode 0775 or 0777 beneath a verified private
-barrier MAY qualify; reachable unsafe writable directories MUST still refuse.
-
-Updated launchers MUST prevent reads of existing AM bytecode before package
-imports. The first transition from an older affected updater MUST use the
-operator-trusted signed one-line installer; the old process cannot acquire new
-recovery behavior retroactively. A failed transaction MAY restore its prior dirty
-source, but MUST remain unverified/pending and MUST NOT invoke that old runtime
-as a verification step. A trusted source-only retry requalifies the state.
+Unexpected runtime additions remain ownership drift. A session MUST preserve
+the affected runtime and external receipt for independently trusted inspection;
+it MUST NOT remove unexpected files or weaken exact runtime verification to
+force an update. Transition from an older runtime requires the operator-trusted
+verified bootstrap. After committed adoption, an older runtime MUST NOT be
+reactivated or used as a verification step. Project memory and pending recovery
+evidence remain outside runtime replacement ownership.
 
 ## Failure handling
 

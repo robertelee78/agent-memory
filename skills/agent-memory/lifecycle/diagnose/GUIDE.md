@@ -14,13 +14,13 @@ work before developer selection, installation or bank initialization.
 ## Required context
 
 The session MUST load the [maintain domain](../../maintain/GUIDE.md) first.
-It SHOULD use a trusted complete package outside affected installation targets
-when the installed wrapper or source cannot run. It MUST resolve `SKILL_DIR`
-to that package rather than a deleted or incomplete managed checkout.
+It SHOULD use a trusted `am` binary outside affected installation targets
+when the installed command cannot run. A copied guidance pack alone does not
+supply an executable runtime.
 
 ## Inputs and preconditions
 
-Python 3.11 or newer is required. Git enables local revision and repository
+The bootstrap-installed `am` command is required; check it with `am --version`. Git enables local revision and repository
 evidence; no provider credentials, agent-client executable, network connection
 or identity bootstrap is needed. Signed-source authentication requires OpenSSH
 SSH-signature support; its absence remains a runtime failure, not bank corruption.
@@ -29,11 +29,10 @@ one bank is inspected. A session MUST retain original journals and user edits.
 
 ## Observe
 
-The session SHOULD start with the installed `am version --json` or
-the trusted source helper:
+The session SHOULD start with the installed or independently trusted command:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/diagnose.py" version --json
+am version --json
 ```
 
 The session MUST distinguish `executing_source` from the installation's
@@ -46,7 +45,7 @@ is receipt history until doctor verifies ownership. An inactive receipt is
 For a quick current view, the session SHOULD run:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/diagnose.py" status --repo /absolute/repository --json
+am status --repo /absolute/repository --json
 ```
 
 Status reads selected/default and indexed router candidates, local identity
@@ -79,7 +78,7 @@ initialize, restore a bank, clean markers or resume a purge automatically.
 The session SHOULD run the deeper read-only audit when setup or health is unclear:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/diagnose.py" doctor --repo /absolute/repository --json
+am doctor --repo /absolute/repository --json
 ```
 
 The installed machine equivalents are `am status --json` and `am doctor --json`.
@@ -93,20 +92,14 @@ It then runs doctor again and reports repairs and remaining refusals. It does no
 infer identity, overwrite modified targets, resume purges,
 or rebuild an arbitrary selected projection. Active locks, untrusted sources,
 changed hooks and ambiguous transactions remain preserved for inspection.
-Packaged public entrypoints disable Python bytecode before importing product
-modules. A session MUST use these entrypoints for supported audits. For custom
-Python inspection, it MUST pass `-B` or set `sys.dont_write_bytecode = True`
-before the first product import; setting it after imports is too late. `-I`
-alone does not disable bytecode. A session MUST NOT call a bare product import
-read-only unless bytecode suppression is already established.
+A session MUST use the public `am` commands for supported audits.
 
-Supported runtime audits preserve the complete artifact file bytes and modes;
-they MUST NOT filter executable caches out of an integrity comparison. Unexpected
-`__pycache__` or `.pyc` files remain drift, even if all receipt-owned source bytes
-match. A session MUST preserve them and use a trusted outside helper to inspect
-the receipt and changed targets. Read-only diagnostics grant no permission to clean caches,
-rewrite receipts or force an update. A source hash identifies bytes, not the
-process that wrote an unexpected file.
+Supported runtime audits preserve the complete artifact file bytes and modes.
+Unexpected files remain drift, even if all receipt-owned bytes match. A session
+MUST preserve them and use an independently trusted `am` binary to inspect the
+receipt and changed targets. Read-only diagnostics grant no permission to remove
+unexpected files, rewrite receipts or force an update. A source hash identifies
+bytes, not the process that wrote an unexpected file.
 
 Runtime-artifact immutability is distinct from a declared private audit outside
 the package: governed recall may write such an audit while preserving canonical

@@ -176,7 +176,7 @@ and observation for the existing comparison review; preserve the exact returned
 capture and proof for preview. An ineligible or unconfirmed candidate returns no
 discovery or comparison request. This helper does not admit or publish learning.
 
-The [admission helper](../scripts/admit_learning.py) is also available as the
+The [admission command](../admission/GUIDE.md) is available through the
 installed CLI. `am admission draft --repo REPO --input PRIVATE_JSON` fills the random record ID,
 bound project/developer IDs and timestamps. Supply a JSON object with exactly:
 `body`, `kind`, `scope`, `applicability`, `conditions`, `source`, `evidence`,
@@ -185,7 +185,7 @@ Use actual source, harness/session, applicability and evidence; the assessment
 fields and legal values are defined in [admission](../admission/GUIDE.md).
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" draft --repo REPO --input PRIVATE_JSON
+am admission draft --repo REPO --input PRIVATE_JSON
 ```
 
 Pass the returned `request` to `am admission capture`, then complete semantic

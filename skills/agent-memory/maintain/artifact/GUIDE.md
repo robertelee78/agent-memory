@@ -21,9 +21,9 @@ when a semantic question remains unresolved.
 ## Inputs and preconditions
 
 The session MUST identify the complete package directory and use a trusted
-inspector against an unreviewed candidate. The inspector requires Python 3.11
-or later and the standard library. Governed repository operations also require
-Git; optional service adapters have their own prerequisites. No agent client
+inspector against an unreviewed candidate. Inspection requires the `am` command
+installed by the bootstrap; `am --version` checks it. Governed repository
+operations also require Git; optional service adapters have their own prerequisites. No agent client
 or client API is a core prerequisite.
 
 ## Observe
@@ -44,10 +44,10 @@ establish installation ownership, a trusted source revision or active clients.
 
 ## Apply
 
-With `SKILL_DIR` resolved to the trusted package, the session MUST run:
+With the trusted installed `am` command available, the session MUST run:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/artifact.py" inspect --pack /path/to/complete/package > /private/path/artifact.json
+am artifact inspect --pack /path/to/complete/package > /private/path/artifact.json
 ```
 
 ## Read back

@@ -66,7 +66,7 @@ not audited admissions or concurrency-safe mediated replacements.
 When normal observation refuses an oversized source, unsupported root handoff
 or invalid routing, use `am bank recover-layout`, not capture/checkpoint,
 initialization, truncation or raised normal limits. For example, the packaged
-inspection command is `python3 -I "$SKILL_DIR/scripts/recover_layout.py" inspect --repo REPO --output PRIVATE_INSPECTION_JSON`.
+inspection command is `am bank recover-layout inspect --repo REPO --output PRIVATE_INSPECTION_JSON`.
 The helper accepts the same operations and arguments. `am recover` remains runtime recovery.
 
 Recovery observes at most 1,048,576 bytes per ordinary source, 67,108,864 total
@@ -106,12 +106,12 @@ raw transcripts. Exact xattr values are private metadata, not terminal output
 or evidence to publish.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" inspect --repo REPO --output PRIVATE_INSPECTION_JSON
+am bank recover-layout inspect --repo REPO --output PRIVATE_INSPECTION_JSON
 # Take OPERATION from the safe result; read every numbered private source page.
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" inspect --repo REPO --operation OPERATION_UUID --page 0 --output PRIVATE_PAGE_JSON
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" prepare --repo REPO --operation OPERATION_UUID --input PRIVATE_REVIEW_JSON --output PRIVATE_PROPOSAL_JSON
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" apply --repo REPO --operation OPERATION_UUID --proposal PRIVATE_PROPOSAL_JSON
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" status --repo REPO --operation OPERATION_UUID
+am bank recover-layout inspect --repo REPO --operation OPERATION_UUID --page 0 --output PRIVATE_PAGE_JSON
+am bank recover-layout prepare --repo REPO --operation OPERATION_UUID --input PRIVATE_REVIEW_JSON --output PRIVATE_PROPOSAL_JSON
+am bank recover-layout apply --repo REPO --operation OPERATION_UUID --proposal PRIVATE_PROPOSAL_JSON
+am bank recover-layout status --repo REPO --operation OPERATION_UUID
 ```
 
 Pages contain source UUID, exact original offset/length, continuation, base64
@@ -226,10 +226,10 @@ semantic absence. Applicable post-apply recall has its own actual qualification
 or pending result, separate from the committed layout receipt.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" recover --repo REPO --operation OPERATION_UUID --mode finish --output PRIVATE_FINISH_JSON
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" recover --repo REPO --proposal PRIVATE_FINISH_JSON
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" rollback --repo REPO --operation OPERATION_UUID --output PRIVATE_RESTORE_JSON
-python3 -I "$SKILL_DIR/scripts/recover_layout.py" rollback --repo REPO --proposal PRIVATE_RESTORE_JSON
+am bank recover-layout recover --repo REPO --operation OPERATION_UUID --mode finish --output PRIVATE_FINISH_JSON
+am bank recover-layout recover --repo REPO --proposal PRIVATE_FINISH_JSON
+am bank recover-layout rollback --repo REPO --operation OPERATION_UUID --output PRIVATE_RESTORE_JSON
+am bank recover-layout rollback --repo REPO --proposal PRIVATE_RESTORE_JSON
 ```
 
 Known-operation recovery pins the exact journal, marker, read-set, partial

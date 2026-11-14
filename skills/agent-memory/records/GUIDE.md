@@ -122,13 +122,13 @@ The format helper plans only a returned representation. A session MUST separate 
 
 ## Apply
 
-With `SKILL_DIR` resolved to the packaged skill directory:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/record_contract.py" model
-python3 -I "$SKILL_DIR/scripts/record_contract.py" render --input /tmp/record-proposal.json
-python3 -I "$SKILL_DIR/scripts/record_contract.py" validate --file memory-bank/topics/example.md --require redaction
-python3 -I "$SKILL_DIR/scripts/record_contract.py" applicability --file memory-bank/topics/example.md --input /tmp/record-context.json
+am record-contract model
+am record-contract render --input /tmp/record-proposal.json
+am record-contract validate --file memory-bank/topics/example.md --require redaction
+am record-contract applicability --file memory-bank/topics/example.md --input /tmp/record-context.json
 ```
 
 ## Read back

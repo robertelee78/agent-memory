@@ -46,11 +46,11 @@ success alone are insufficient.
 
 ## Plan
 
-The session MUST obtain a read-only exact preview, with `SKILL_DIR` resolved to
-a trusted complete package:
+The session MUST obtain a read-only exact preview using the trusted installed
+`am` command:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --check > /private/path/purge-preview.json
+am purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --check > /private/path/purge-preview.json
 ```
 
 The example bank path MUST be replaced by the repository's actual resolved bank,
@@ -67,7 +67,7 @@ MUST use the same repository/path selection and replace
 `CONFIRMED_PREVIEW_SHA256` with that operator-confirmed digest:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --confirm CONFIRMED_PREVIEW_SHA256 > /private/path/purge-receipt.json
+am purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --confirm CONFIRMED_PREVIEW_SHA256 > /private/path/purge-receipt.json
 ```
 
 The installed `agent-memory purge-data` command uses the same options. Changed
@@ -112,7 +112,7 @@ After the original writer has ended, the session MUST inspect the retained
 external record under the installation state's `purges/` directory and retry
 the same already confirmed command to finish its recorded quarantine. The
 helper checks the original root/entry identities and stale purge lock ownership.
-Runtime `installer.py recover` is for runtime activation and MUST NOT be used
+Runtime `am recover` is for runtime activation and MUST NOT be used
 as a substitute for this separately confirmed data operation. An unreadable,
 linked or mismatched purge journal requires bounded manual reconciliation;
 the session MUST NOT guess another deletion target.

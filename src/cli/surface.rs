@@ -296,6 +296,7 @@ const HELP: [&str; 2] = ["-h", "--help"];
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Declared {
     dispatches: BTreeMap<String, Dispatch>,
+    commands: BTreeMap<String, (Dispatch, Vec<String>)>,
 }
 
 impl Declared {
@@ -326,19 +327,46 @@ impl Declared {
         let mut commands = BTreeSet::new();
         let mut flags: BTreeSet<String> = HELP.iter().map(|f| (*f).to_owned()).collect();
         let mut root_routes = Vec::new();
+        let mut public_commands = BTreeMap::new();
         for command in array(declaration, "commands")? {
-            match text(command, "kind")? {
+            let (name, dispatch, prefix) = match text(command, "kind")? {
                 "route" => {
                     let route = field(command, "route")?;
-                    commands.insert(text(route, "name")?.to_owned());
+                    let name = text(route, "name")?;
                     root_routes.push(route.clone());
+                    let dispatch = dispatches
+                        .get(&format!("scripts/{}", text(route, "helper")?))
+                        .ok_or_else(|| malformed("route helper"))?
+                        .clone();
+                    let prefix = text_items(route, "prefix")?
+                        .into_iter()
+                        .map(str::to_owned)
+                        .collect();
+                    (name, dispatch, prefix)
                 }
                 "native" => {
-                    commands.insert(text(command, "name")?.to_owned());
-                    let mut ignored = BTreeSet::new();
-                    walk(field(command, "parser")?, &mut ignored, &mut flags, 1)?;
+                    let name = text(command, "name")?;
+                    let mut operations = BTreeSet::new();
+                    let mut options: BTreeSet<String> =
+                        HELP.iter().map(|flag| (*flag).to_owned()).collect();
+                    walk(field(command, "parser")?, &mut operations, &mut options, 1)?;
+                    flags.extend(options.iter().cloned());
+                    let dispatch = Dispatch {
+                        module: text(root, "module")?.to_owned(),
+                        commands: operations,
+                        flags: options,
+                        routes: BTreeMap::new(),
+                    };
+                    (name, dispatch, Vec::new())
                 }
                 _ => return Err(malformed("kind")),
+            };
+            commands.insert(name.to_owned());
+            if public_commands
+                .insert(name.to_owned(), (dispatch, prefix))
+                .is_some()
+            {
+                return Err(malformed("duplicate command"));
             }
         }
         let root_dispatch = Dispatch {
@@ -370,7 +398,10 @@ impl Declared {
                 }
             }
         }
-        Ok(Self { dispatches })
+        Ok(Self {
+            dispatches,
+            commands: public_commands,
+        })
     }
 
     /// The provider for the running binary's own table.
@@ -384,7 +415,7 @@ impl Declared {
 }
 
 impl CommandSurface for Declared {
-    fn dispatch(&self, script: &str, files: &Inventory) -> pack_validation::Result<Dispatch> {
+    fn dispatch(&self, script: &str, _files: &Inventory) -> pack_validation::Result<Dispatch> {
         let dispatch = self.dispatches.get(script).ok_or_else(|| {
             Invalid::new(
                 "dispatch",
@@ -392,16 +423,10 @@ impl CommandSurface for Declared {
                 "Helper is not declared by the signed command surface",
             )
         })?;
-        for route in dispatch.routes.values() {
-            let child = format!("scripts/{}", route.helper);
-            if !files.contains_key(&child) {
-                return Err(Invalid::new(
-                    "dispatch",
-                    script,
-                    format!("Delegated helper is missing: {child}"),
-                ));
-            }
-        }
         Ok(dispatch.clone())
+    }
+
+    fn command(&self, name: &str) -> pack_validation::Result<Option<(Dispatch, Vec<String>)>> {
+        Ok(self.commands.get(name).cloned())
     }
 }

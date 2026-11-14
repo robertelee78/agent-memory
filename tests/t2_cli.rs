@@ -686,19 +686,18 @@ fn command_surface_declaration_equals_the_parser_table() {
         declared.scripts().count(),
         scripts.iter().collect::<BTreeSet<_>>().len() + 1
     );
-    // A documented delegated helper missing from the pack cannot hide behind `am`.
-    let without = inventory(&["installer.py", "scope_policy.py"]);
-    let refused = declared
-        .dispatch("scripts/installer.py", &without)
-        .unwrap_err();
-    assert_eq!(refused.code, "dispatch");
+    // Native commands are in the binary, not executable files in the pack.
+    let empty = Inventory::new();
+    assert!(declared.dispatch("scripts/installer.py", &empty).is_ok());
+    assert!(declared.command("developer").unwrap().is_some());
     assert!(
-        refused
-            .detail
-            .starts_with("Delegated helper is missing: scripts/")
+        declared
+            .command("not-a-declared-command")
+            .unwrap()
+            .is_none()
     );
     let unknown = declared
-        .dispatch("scripts/retrieve.py", &files)
+        .dispatch("scripts/not_a_declared_helper.py", &files)
         .unwrap_err();
     assert_eq!(unknown.code, "dispatch");
     // A tampered declaration is refused, never partially trusted.
@@ -1174,8 +1173,8 @@ fn owned_children_complete_normally_with_the_handler_installed() {
 }
 
 /// The binary registers the migration contract, so artifact inspection fails
-/// or succeeds on the pack itself, never on a missing provider. (The committed
-/// pack is refused today because its guides still name Python helper scripts.)
+/// or succeeds on the pack itself, never on a missing provider. Commands whose
+/// modules are not yet registered remain explicit pack validation failures.
 #[test]
 fn artifact_inspection_has_its_migration_provider() {
     let dir = PrivateDir::new();
@@ -1187,4 +1186,148 @@ fn artifact_inspection_has_its_migration_provider() {
         "{stdout}"
     );
     assert!(!stdout.contains("provider is not registered"), "{stdout}");
+}
+
+fn native_guide_command(
+    surface: &Declared,
+    command: &str,
+) -> agent_memory::pack_validation::Result<Value> {
+    let dir = PrivateDir::new();
+    let pack = dir.0.join("pack");
+    DirBuilder::new().mode(0o700).create(&pack).unwrap();
+    fs::write(
+        pack.join("SKILL.md"),
+        format!(
+            "---\nname: agent-memory\ndescription: Native command contract\nmetadata: {{\"version\":\"0.0.15\"}}\n---\n\n## Route\n\n```sh\n{command}\n```\n"
+        ),
+    )
+    .unwrap();
+    agent_memory::pack_validation::validate_with_surface(&pack, Some(surface))
+}
+
+fn declaration_field_mut<'a>(value: &'a mut Value, key: &str) -> &'a mut Value {
+    let Value::Object(pairs) = value else {
+        panic!("Declaration object");
+    };
+    &mut pairs.iter_mut().find(|(name, _)| name == key).unwrap().1
+}
+
+fn native_guide_surface() -> Declared {
+    let mut declaration = surface::declaration();
+    let Value::Array(helpers) = declaration_field_mut(&mut declaration, "helpers") else {
+        panic!("Declaration helpers");
+    };
+    let bank = helpers
+        .iter_mut()
+        .find(|helper| helper.get("script").and_then(Value::as_str) == Some("bank_contract.py"))
+        .unwrap();
+    // A nested route exercises child operation/flag checks independently of
+    // the top-level bank parser; both parsers come from the actual table.
+    *declaration_field_mut(bank, "routes") =
+        decode(r#"[{"name":"render","helper":"authority_policy.py","prefix":[]}]"#);
+    let Value::Array(commands) = declaration_field_mut(&mut declaration, "commands") else {
+        panic!("Declaration commands");
+    };
+    commands.push(decode(
+        r#"{"kind":"route","route":{"name":"status-prefix","helper":"developer_identity.py","prefix":["status"]}}"#,
+    ));
+    Declared::from_value(&declaration).unwrap()
+}
+
+#[test]
+fn native_guides_resolve_routes_helpers_prefixes_aliases_and_help() {
+    let declared = native_guide_surface();
+    for command in [
+        "am developer status --repo /path/to/repo",
+        "am authority-policy model",
+        "agent-memory authority-policy assess --input /private/request.json",
+        "am status-prefix --repo /path/to/repo --json",
+        "am bank render model",
+        "am bank render assess --input /private/request.json --json",
+        "am developer --help",
+        "am bank render --help",
+        "am authority-policy -h",
+        "am --help",
+        "am --json --help",
+        "am -h",
+    ] {
+        let result = native_guide_command(&declared, command);
+        assert!(result.is_ok(), "{command}: {result:?}");
+    }
+}
+
+#[test]
+fn native_guides_refuse_unknown_commands_operations_flags_and_python_forms() {
+    let declared = native_guide_surface();
+    for (command, detail) in [
+        (
+            "am not-a-declared-command --help",
+            "Command am not-a-declared-command is not declared by the command surface",
+        ),
+        (
+            "am authority-policy unknown",
+            "Unknown documented operation for am authority-policy",
+        ),
+        (
+            "am authority-policy model --not-a-flag",
+            "Unknown documented option for am authority-policy",
+        ),
+        (
+            "am bank render unknown",
+            "Unknown documented operation for am bank",
+        ),
+        (
+            "am bank render model --repo REPO",
+            "Unknown documented option for am bank",
+        ),
+        (
+            "python3 -I \"$SKILL_DIR/scripts/checkpoint.py\" inspect",
+            "Python helper invocations are not supported; document the am command",
+        ),
+        (
+            "/bin/sh \"$SKILL_DIR/hooks/python3.sh\" \"$SKILL_DIR/scripts/checkpoint.py\" inspect",
+            "Python helper invocations are not supported; document the am command",
+        ),
+    ] {
+        let issue = native_guide_command(&declared, command).unwrap_err();
+        assert_eq!(issue.code, "dispatch", "{command}: {issue:?}");
+        assert_eq!(issue.detail, detail, "{command}");
+        assert_eq!(issue.path, "SKILL.md", "{command}");
+    }
+}
+
+#[test]
+fn native_surface_resolves_only_commands_in_the_table_without_pack_scripts() {
+    let declared = Declared::current().unwrap();
+    for entry in cli::table::ENTRIES {
+        let (dispatch, prefix) = declared.command(entry.name()).unwrap().unwrap();
+        match entry {
+            Entry::Route(route) => {
+                assert_eq!(prefix, route.prefix);
+                assert_eq!(
+                    dispatch,
+                    declared
+                        .dispatch(
+                            &format!("scripts/{}", route.helper.script),
+                            &Inventory::new()
+                        )
+                        .unwrap()
+                );
+            }
+            Entry::Native(native) => {
+                let mut operations = BTreeSet::new();
+                let mut flags = ["-h", "--help"].into_iter().map(str::to_owned).collect();
+                walk(native.parser, &mut operations, &mut flags);
+                assert!(prefix.is_empty());
+                assert_eq!(dispatch.commands, operations);
+                assert_eq!(dispatch.flags, flags);
+            }
+        }
+    }
+    assert!(
+        declared
+            .command("not-a-declared-command")
+            .unwrap()
+            .is_none()
+    );
 }

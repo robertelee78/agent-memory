@@ -440,10 +440,7 @@ mod pack_contract {
         let root = PackDir::fixture();
         root.write("scripts/checkpoint.py",format!("from pathlib import Path\nPath({:?}).write_text('executed')\nraise RuntimeError('candidate code')\n",root.0.join("must-not-exist")));
         assert!(pack::validate(&root.0).is_ok());
-        root.append(
-            "SKILL.md",
-            "\n```sh\npython3 -I \"$SKILL_DIR/scripts/checkpoint.py\" inspect\n```\n",
-        );
+        root.append("SKILL.md", "\n```sh\nam checkpoint inspect\n```\n");
         assert_eq!(
             pack::validate_with_surface(&root.0, None).unwrap_err().code,
             "command-surface-unregistered"
@@ -2982,5 +2979,219 @@ mod private_output_contract {
             Some(&Value::Int(0.into()))
         );
         assert_eq!(receipt.get("conflicts_pending"), Some(&Value::Bool(true)));
+    }
+}
+
+mod native_guide_structure {
+    use agent_memory::codec::json::Value;
+    use agent_memory::pack_validation as pack;
+    use std::collections::{BTreeMap, BTreeSet};
+    use std::path::Path;
+
+    fn acyclic(
+        path: &str,
+        graph: &BTreeMap<String, BTreeSet<String>>,
+        visiting: &mut BTreeSet<String>,
+        complete: &mut BTreeSet<String>,
+    ) {
+        assert!(
+            !visiting.contains(path),
+            "Mandatory loading cycle at {path}"
+        );
+        if complete.contains(path) {
+            return;
+        }
+        visiting.insert(path.to_owned());
+        for child in graph.get(path).into_iter().flatten() {
+            acyclic(child, graph, visiting, complete);
+        }
+        visiting.remove(path);
+        complete.insert(path.to_owned());
+    }
+
+    /// The public validator intentionally preserves its fail-fast refusal order.
+    /// Check every real guide's structure independently of unported commands,
+    /// without supplying a permissive command surface or rewriting the pack.
+    #[test]
+    fn committed_native_pack_preserves_sections_links_loading_and_reachability() {
+        let root = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/skills/agent-memory"));
+        let files = pack::inventory(root).unwrap();
+        let mut documents = BTreeMap::new();
+        let mut metadata = BTreeMap::new();
+        let mut originals = BTreeMap::new();
+        let mut shell_blocks = BTreeMap::new();
+        for (path, (raw, _)) in &files {
+            if !path.ends_with(".md") {
+                continue;
+            }
+            let document = std::str::from_utf8(raw).unwrap();
+            let (meta, body) = if path == "SKILL.md" {
+                let (meta, body) = pack::frontmatter(
+                    document,
+                    &[
+                        "name",
+                        "description",
+                        "metadata",
+                        "license",
+                        "compatibility",
+                    ],
+                    path,
+                )
+                .unwrap();
+                assert_eq!(
+                    meta.get("name").and_then(Value::as_str),
+                    Some("agent-memory")
+                );
+                assert!(pack::semantic_version(
+                    meta.get("metadata").unwrap().get("version").unwrap()
+                ));
+                (meta, body)
+            } else {
+                pack::frontmatter(document, &["kind", "domain", "file-operations"], path).unwrap()
+            };
+            let (prose, shells) = pack::markdown(body).unwrap();
+            documents.insert(path.clone(), prose);
+            metadata.insert(path.clone(), meta);
+            originals.insert(path.clone(), body.to_owned());
+            shell_blocks.insert(path.clone(), shells);
+        }
+        let mut graph: BTreeMap<String, BTreeSet<String>> = documents
+            .keys()
+            .map(|path| (path.clone(), BTreeSet::new()))
+            .collect();
+        let mut mandatory = graph.clone();
+        let anchors: BTreeMap<_, _> = documents
+            .iter()
+            .map(|(path, prose)| (path.clone(), pack::anchors(prose)))
+            .collect();
+        for (path, prose) in &documents {
+            for (_, target) in pack::reference_definitions(prose).unwrap() {
+                pack::destination(path, &target, &files).unwrap();
+            }
+            for link in pack::link_occurrences(prose, None).unwrap() {
+                let (destination, anchor) = pack::destination(path, &link.target, &files).unwrap();
+                if let Some(destination) = destination {
+                    assert!(
+                        anchor.is_empty()
+                            || anchors
+                                .get(&destination)
+                                .is_some_and(|set| set.contains(&anchor)),
+                        "{path}: missing anchor in {destination}: {anchor}"
+                    );
+                    if !link.image && documents.contains_key(&destination) {
+                        graph.get_mut(path).unwrap().insert(destination);
+                    }
+                }
+            }
+            for target in pack::mandatory_targets(prose, path, &files, None).unwrap() {
+                if documents.contains_key(&target) {
+                    mandatory.get_mut(path).unwrap().insert(target);
+                }
+            }
+            // The literal shell scanner runs even when a command is not ported.
+            for block in &shell_blocks[path] {
+                for line in block.replace("\\\n", " ").lines() {
+                    let line = line.trim();
+                    if line.is_empty() || line.starts_with('#') {
+                        continue;
+                    }
+                    let argv = pack::command_argv(line, path).unwrap();
+                    if argv.first().is_some_and(|program| program == "git") {
+                        pack::git_operation(&argv, path).unwrap();
+                    } else {
+                        assert!(
+                            argv.first().is_some_and(|program| {
+                                matches!(program.as_str(), "am" | "agent-memory")
+                            }),
+                            "{path}: {line}"
+                        );
+                    }
+                }
+            }
+        }
+        for (path, meta) in &metadata {
+            if meta.get("kind").and_then(Value::as_str) != Some("operation") {
+                continue;
+            }
+            let prose = &documents[path];
+            let headings: Vec<_> = prose
+                .lines()
+                .filter_map(|line| line.strip_prefix("## "))
+                .collect();
+            assert_eq!(headings, pack::SECTIONS, "{path}");
+            for heading in pack::SECTIONS {
+                let section = originals[path]
+                    .split_once(&format!("## {heading}\n"))
+                    .unwrap()
+                    .1
+                    .split("\n## ")
+                    .next()
+                    .unwrap();
+                assert!(!section.trim().is_empty(), "{path}: empty {heading}");
+            }
+            let domain = meta.get("domain").and_then(Value::as_str).unwrap();
+            let parent = format!("{domain}/GUIDE.md");
+            assert_eq!(
+                metadata[&parent].get("kind").and_then(Value::as_str),
+                Some("domain"),
+                "{path}"
+            );
+            let context = prose
+                .split_once("## Required context\n")
+                .unwrap()
+                .1
+                .split("\n## ")
+                .next()
+                .unwrap();
+            assert!(
+                pack::mandatory_targets(context, path, &files, None)
+                    .unwrap()
+                    .contains(&parent),
+                "{path}: required owner"
+            );
+            assert!(graph[&parent].contains(path), "{path}: owner navigation");
+            mandatory.get_mut(path).unwrap().insert(parent);
+            assert!(
+                !shell_blocks[path].is_empty() || meta.get("file-operations").is_some(),
+                "{path}: missing command/file-only operation"
+            );
+        }
+        let route = documents["SKILL.md"]
+            .split_once("## Route\n")
+            .unwrap()
+            .1
+            .split("\n## ")
+            .next()
+            .unwrap();
+        for row in route.lines().filter(|line| line.starts_with('|')) {
+            let targets = pack::links(row, None).unwrap();
+            if let [(_, domain), (_, operation)] = targets.as_slice() {
+                if metadata
+                    .get(operation)
+                    .and_then(|meta| meta.get("kind"))
+                    .and_then(Value::as_str)
+                    == Some("operation")
+                {
+                    let owner = metadata[operation]
+                        .get("domain")
+                        .and_then(Value::as_str)
+                        .unwrap();
+                    assert_eq!(domain, &format!("{owner}/GUIDE.md"), "{row}");
+                }
+            }
+        }
+        let mut reached = BTreeSet::new();
+        let mut pending = vec!["SKILL.md".to_owned()];
+        while let Some(path) = pending.pop() {
+            if reached.insert(path.clone()) {
+                pending.extend(graph[&path].iter().cloned());
+            }
+        }
+        assert_eq!(reached, documents.keys().cloned().collect());
+        let mut visiting = BTreeSet::new();
+        let mut complete = BTreeSet::new();
+        for path in mandatory.keys() {
+            acyclic(path, &mandatory, &mut visiting, &mut complete);
+        }
     }
 }

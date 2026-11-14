@@ -63,10 +63,10 @@ tokenizer, outside untrusted memory, and write this exact counter shape:
 
 ## Apply
 
-With `SKILL_DIR` resolved to the portable package, a session MAY preview:
+With the installed `am` command available, a session MAY preview:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/assemble_context.py" preview --repo /path/to/repo \
+am context preview --repo /path/to/repo \
   --request /private/path/assembly.json
 ```
 
@@ -85,7 +85,7 @@ an LLM estimate, a remembered count, or a counter supplied by memory content.
 It MUST then check the current evidence and exact text again:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/assemble_context.py" check --repo /path/to/repo \
+am context check --repo /path/to/repo \
   --request /private/path/assembly.json --counter /private/path/counter.json
 ```
 

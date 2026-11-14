@@ -36,6 +36,8 @@ pub enum Kind {
     SourceTransportBusy { initializing: bool },
     /// A required runtime provider has not been registered.
     MissingProvider,
+    /// Known-dispute state refusal; preserves the baseline failure code and repair.
+    HoldFailure { code: String, repair: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -151,6 +153,20 @@ impl ContractError {
     pub(crate) fn missing_provider(message: impl Into<String>) -> Self {
         Self {
             kind: Kind::MissingProvider,
+            message: message.into(),
+        }
+    }
+
+    pub(crate) fn hold_failure(
+        code: impl Into<String>,
+        message: impl Into<String>,
+        repair: impl Into<String>,
+    ) -> Self {
+        Self {
+            kind: Kind::HoldFailure {
+                code: code.into(),
+                repair: repair.into(),
+            },
             message: message.into(),
         }
     }

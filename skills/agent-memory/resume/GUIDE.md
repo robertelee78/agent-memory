@@ -55,7 +55,7 @@ paths, `include_context: true`, actual task/component `context`, supported
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/retrieve.py" --repo /path/to/repo \
+am search --repo /path/to/repo \
   --request /private/path/task-recall.json
 ```
 

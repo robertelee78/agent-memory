@@ -12,20 +12,13 @@ session SHOULD use its own worktree or branch. This skill is harness agnostic.
 
 The words MUST, MUST NOT, SHOULD and MAY carry their RFC 2119 meanings in this
 file and its linked guides. A session MUST resolve `SKILL_DIR` to the directory
-containing this file before using a packaged script. Use the installed `am` command
-when available. For packaged scripts, a session MUST use the documented
-helper commands with Python 3.11 or later in isolated mode. Each documented helper
-disables bytecode writes and isolates its cache before importing package code.
-Installed `am` and client hooks select a supported interpreter. If an older system Python
-appears first on PATH, put a supported Python first before running the examples.
+containing this file when opening packaged guidance or templates. The `am`
+command installed by the bootstrap is REQUIRED for the commands in this pack;
+`am --version` checks that it is available. Copying the pack does not install
+an executable runtime.
 
-A session MUST NOT use ad hoc bare-Python imports of a managed AM installation
-as routine troubleshooting. Prefer the public CLI or documented helper. Any
-independently necessary diagnostic import of known-trusted source MUST disable
-bytecode writes before package code runs, using `-I -B`. Isolated mode ignores
-Python environment flags; `-B` prevents writes but does not authenticate or
-suppress reading an existing cache. An installation whose integrity is unverified
-MUST NOT be imported as its own verifier; use an independently trusted helper.
+An installation whose integrity is unverified MUST NOT be used as its own
+verifier; use an independently trusted `am` binary for inspection and recovery.
 
 
 ## Loading contract
@@ -52,9 +45,9 @@ source evidence, including AWA work when available, before storing new context.
 
 A session MUST read [offline/GUIDE.md](offline/GUIDE.md) for initial file-based
 setup, inspection, manual checkpoint or resume. It SHOULD open only the material
-its current operation needs. The guide works without an installed CLI or any
-optional service. Packaged Python helpers provide mechanical validation; they
-do not grant authority or establish that a lesson is true.
+its current operation needs. Plain Markdown remains readable without a runtime
+or optional service. Mechanical validation requires the installed `am` command;
+it does not grant authority or establish that a lesson is true.
 
 A session MUST read existing applicable memory before proposing new durable
 learning. It MUST follow [discovery/GUIDE.md](discovery/GUIDE.md) for meaning-based

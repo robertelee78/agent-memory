@@ -87,10 +87,10 @@ heading level or unterminated fences require inspection/clarification.
 
 ## Observe
 
-With `SKILL_DIR` resolved to this portable package:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/checkpoint.py" inspect --repo /path/to/repo > /private/path/current.json
+am checkpoint inspect --repo /path/to/repo > /private/path/current.json
 ```
 
 Inspect is read-only and does not require identity setup. It returns current
@@ -137,22 +137,22 @@ For that preparation only, input `observed_active_sha256` is `null`:
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/checkpoint.py" preview --repo /path/to/repo \
+am checkpoint preview --repo /path/to/repo \
   --input /private/path/fields.json > /private/path/checkpoint.json
-python3 -I "$SKILL_DIR/scripts/checkpoint.py" apply --proposal /private/path/checkpoint.json
+am checkpoint apply --proposal /private/path/checkpoint.json
 ```
 
 For an intentionally omitted active context, the session MUST use the separate preparation branch below rather than applying the ordinary single-file proposal.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/checkpoint.py" prepare --repo /path/to/repo \
+am checkpoint prepare --repo /path/to/repo \
   --input /private/path/fields.json > /private/path/prepare.json
 ```
 
 ## Read back
 
 Prepare is read-only. Its `transaction` property is the complete multi-file
-proposal for `bank_transactions.py apply`; the session MUST extract that JSON
+proposal for `am transaction apply`; the session MUST extract that JSON
 object to a private file, inspect and apply it as the separate router operation.
 This changes only the router and newly useful active context, preserving other
 files. It does not initialize an absent/invalid bank. After preparation, the
@@ -177,7 +177,7 @@ A stale active hash, any other changed bank file, changed identity, lock or
 interruption MUST stop the operation and preserve newer work. The session MUST
 reread before creating a fresh proposal, retaining compatible manual learning.
 After a crash, it MUST recover the owned dead bank lock through
-`bank_writes.py recover` preview/apply, then retry the same checkpoint proposal.
+`am writes recover` preview/apply, then retry the same checkpoint proposal.
 Known receipts never reapply over a later correction; `verified: false` or
 `still_current: false` MUST NOT be called current success.
 

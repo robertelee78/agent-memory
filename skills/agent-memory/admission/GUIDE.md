@@ -26,7 +26,7 @@ evidence for a conditional lesson does not make it universally true.
 
 ## Inputs and preconditions
 
-The packaged `admit_learning.py` accepts a UTF8 JSON request with exactly:
+The `am admission` command accepts a UTF8 JSON request with exactly:
 
 | Field | Meaning |
 | --- | --- |
@@ -82,11 +82,11 @@ A session MUST read relevant current memory and actual source evidence before st
 
 ## Plan
 
-With `SKILL_DIR` resolved, save inputs/results outside the canonical bank and
+With the installed `am` command available, save inputs/results outside the canonical bank and
 outside any sharing delta:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" capture --repo /path/to/repo \
+am capture --repo /path/to/repo \
   --request /private/path/capture-request.json > /private/path/captured.json
 ```
 
@@ -124,10 +124,10 @@ silently omit a route or drop an older lesson to make room.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" preview --repo /path/to/repo \
+am admission preview --repo /path/to/repo \
   --capture /private/path/captured.json --request /private/path/comparison-request.json \
   --proof /private/path/comparison-review.json > /private/path/admission.json
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" apply \
+am admission apply \
   --proposal /private/path/admission.json
 ```
 

@@ -1434,6 +1434,8 @@ pub struct Dispatch {
 /// Supplies only authenticated command-surface data. It never parses Python.
 pub trait CommandSurface: Send + Sync {
     fn dispatch(&self, script: &str, files: &Inventory) -> Result<Dispatch>;
+    /// Resolve a public command and its fixed helper prefix from the declaration.
+    fn command(&self, name: &str) -> Result<Option<(Dispatch, Vec<String>)>>;
 }
 static COMMAND_SURFACE: RwLock<(u64, Option<Arc<dyn CommandSurface>>)> = RwLock::new((0, None));
 type InventoryKey = Vec<(String, u32, [u8; 32])>;
@@ -1573,123 +1575,133 @@ fn check_dispatch(
     argv: &[String],
     files: &Inventory,
     surface: Option<&dyn CommandSurface>,
-    dispatches: &mut BTreeMap<String, Dispatch>,
+    dispatches: &mut BTreeMap<String, (Dispatch, Vec<String>)>,
 ) -> Result<Value> {
-    let mut argv = argv.to_vec();
-    if argv.starts_with(&["/bin/sh".into(), "$SKILL_DIR/hooks/python3.sh".into()]) {
-        require(
-            files.contains_key("hooks/python3.sh"),
-            "dispatch",
-            prose_path,
-            "Supported Python launcher is missing",
-        )?;
-        argv.splice(..2, ["python3".into(), "-I".into()]);
-    }
-    if argv.starts_with(&["python3".into(), "-B".into(), "-I".into()]) {
-        argv.remove(1);
-    }
     require(
-        matches!(
-            argv.as_slice(),
-            [program, isolated, script, ..]
-                if program == "python3"
-                    && isolated == "-I"
-                    && script.starts_with("$SKILL_DIR/scripts/")
-        ),
+        !argv.first().is_some_and(|program| {
+            program == "python3"
+                || program.ends_with("/python3")
+                || program.ends_with("/python3.sh")
+                || program.ends_with(".py")
+        }) && !argv.get(1).is_some_and(|arg| arg.ends_with("/python3.sh")),
         "dispatch",
         prose_path,
-        "Undeclared shell command form",
+        "Python helper invocations are not supported; document the am command",
     )?;
-    let Some(script) = argv.get(2).and_then(|v| v.strip_prefix("$SKILL_DIR/")) else {
-        return Err(Invalid::new(
-            "dispatch",
-            prose_path,
-            "Undeclared shell command form",
-        ));
-    };
     require(
-        files.contains_key(script),
+        argv.first()
+            .is_some_and(|program| matches!(program.as_str(), "am" | "agent-memory")),
         "dispatch",
         prose_path,
-        &format!("Documented helper is missing: {script}"),
+        "Undeclared shell command form; document am <command> [operands]",
     )?;
-    if !dispatches.contains_key(script) {
-        let provider = surface.ok_or_else(|| {
-            Invalid::new(
-                "command-surface-unregistered",
-                script,
-                "Signed command surface provider is not registered; command validation refuses",
-            )
-        })?;
-        dispatches.insert(script.into(), provider.dispatch(script, files)?);
+    let operands = argv.get(1..).unwrap_or_default();
+    let mut literal = false;
+    let operands = operands
+        .iter()
+        .filter(|arg| {
+            if arg.as_str() == "--" {
+                literal = true;
+            }
+            literal || arg.as_str() != "--json"
+        })
+        .collect::<Vec<_>>();
+    if operands.len() == 1
+        && operands
+            .first()
+            .is_some_and(|arg| matches!(arg.as_str(), "--help" | "-h"))
+    {
+        return Ok(object([
+            ("guide", string(prose_path)),
+            ("command", string("am")),
+            ("module", string("cli")),
+            ("operation", Value::Null),
+        ]));
     }
-    let declared = dispatches.get(script).ok_or_else(|| {
+    let name = operands
+        .first()
+        .map(|arg| arg.as_str())
+        .ok_or_else(|| Invalid::new("dispatch", prose_path, "Missing documented am command"))?;
+    let label = format!("am {name}");
+    let provider = surface.ok_or_else(|| {
         Invalid::new(
             "command-surface-unregistered",
-            script,
+            prose_path,
             "Signed command surface provider is not registered; command validation refuses",
         )
     })?;
-    let verb = argv.get(3).filter(|v| !v.starts_with('-'));
-    let operands = argv.get(3..).unwrap_or_default();
-    let help_only = operands == ["--help"] || operands == ["-h"];
-    require(
-        help_only
-            || if declared.commands.is_empty() {
-                verb.is_none()
-            } else {
-                verb.is_some_and(|v| declared.commands.contains(v))
-            },
-        "dispatch",
-        prose_path,
-        &format!("Unknown documented operation for {script}"),
-    )?;
-    let mut tail = operands.to_vec();
-    let mut flags = declared.flags.clone();
-    let mut module = declared.module.clone();
-    if let Some(route) = verb.and_then(|v| declared.routes.get(v)) {
-        let child = format!("scripts/{}", route.helper);
-        let provider = surface.ok_or_else(|| {
+    if !dispatches.contains_key(name) {
+        let command = provider.command(name)?.ok_or_else(|| {
             Invalid::new(
-                "command-surface-unregistered",
-                &child,
-                "Signed command surface provider is not registered; command validation refuses",
+                "dispatch",
+                prose_path,
+                format!("Command {label} is not declared by the command surface"),
             )
         })?;
-        let child = provider.dispatch(&child, files)?;
-        let mut delegated = route.prefix.clone();
-        delegated.extend_from_slice(argv.get(4..).unwrap_or_default());
-        let child_verb = delegated.first().filter(|v| !v.starts_with('-'));
-        let help = delegated == ["--help"] || delegated == ["-h"];
-        require(
-            help || if child.commands.is_empty() {
-                child_verb.is_none()
-            } else {
-                child_verb.is_some_and(|v| child.commands.contains(v))
-            },
+        dispatches.insert(name.to_owned(), command);
+    }
+    let (declared, prefix) = dispatches.get(name).ok_or_else(|| {
+        Invalid::new(
             "dispatch",
             prose_path,
-            &format!("Unknown documented delegated operation for {script}"),
+            format!("Missing declaration for {label}"),
+        )
+    })?;
+    let mut tail = prefix.clone();
+    tail.extend(operands.iter().skip(1).map(|arg| (*arg).clone()));
+    let mut current = declared;
+    let mut delegated;
+    let mut depth = 0;
+    loop {
+        let verb = tail.first().filter(|value| !value.starts_with('-'));
+        let help_only = tail == ["--help"] || tail == ["-h"];
+        require(
+            help_only
+                || if current.commands.is_empty() {
+                    verb.is_none()
+                } else {
+                    verb.is_some_and(|value| current.commands.contains(value))
+                },
+            "dispatch",
+            prose_path,
+            &format!("Unknown documented operation for {label}"),
         )?;
-        tail = delegated;
-        flags = child.flags;
-        flags.insert("--json".into());
-        module = child.module;
+        if let Some(route) = verb.and_then(|value| current.routes.get(value)) {
+            require(
+                depth < 8,
+                "dispatch",
+                prose_path,
+                &format!("Delegated command nesting exceeds its bound for {label}"),
+            )?;
+            let child = format!("scripts/{}", route.helper);
+            let mut child_tail = route.prefix.clone();
+            child_tail.extend(tail.into_iter().skip(1));
+            delegated = provider.dispatch(&child, files)?;
+            current = &delegated;
+            tail = child_tail;
+            depth += 1;
+            continue;
+        }
+        require(
+            tail.iter()
+                .filter(|value| value.starts_with("--"))
+                .all(|value| {
+                    let flag = value
+                        .split_once('=')
+                        .map_or(value.as_str(), |(flag, _)| flag);
+                    flag == "--json" || current.flags.contains(flag)
+                }),
+            "dispatch",
+            prose_path,
+            &format!("Unknown documented option for {label}"),
+        )?;
+        return Ok(object([
+            ("guide", string(prose_path)),
+            ("command", string(label)),
+            ("module", string(&current.module)),
+            ("operation", verb.map_or(Value::Null, string)),
+        ]));
     }
-    require(
-        tail.iter()
-            .filter(|v| v.starts_with("--"))
-            .all(|v| flags.contains(v.split_once('=').map_or(v.as_str(), |(flag, _)| flag))),
-        "dispatch",
-        prose_path,
-        &format!("Unknown documented option for {script}"),
-    )?;
-    Ok(object([
-        ("guide", string(prose_path)),
-        ("script", string(script)),
-        ("module", string(module)),
-        ("operation", verb.map_or(Value::Null, string)),
-    ]))
 }
 fn validate_inventory(files: &Inventory, surface: Option<&dyn CommandSurface>) -> Result<Value> {
     let skills = files

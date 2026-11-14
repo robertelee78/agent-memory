@@ -58,18 +58,18 @@ from a manual editor ignoring the protocol.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" inspect --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" preview --repo /path/to/repo \
+am writes inspect --repo /path/to/repo
+am writes preview --repo /path/to/repo \
   --path activeContext.md --content /private/path/reviewed.md > /private/path/proposal.json
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" apply --proposal /private/path/proposal.json
+am writes apply --proposal /private/path/proposal.json
 ```
 
 Adding/removing routes or records requires the recoverable multi-file protocol:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_transactions.py" preview --repo /path/to/repo \
+am transaction preview --repo /path/to/repo \
   --files /private/path/complete-reviewed-files.json --operation replace > /private/path/transaction.json
-python3 -I "$SKILL_DIR/scripts/bank_transactions.py" apply --proposal /private/path/transaction.json
+am transaction apply --proposal /private/path/transaction.json
 ```
 
 ## Read back
@@ -109,14 +109,14 @@ refresh/publication cursor or fresh projection source.
 A visible lock requires explicit lock recovery before bank resolution:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo > /private/path/unlock.json
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo \
+am writes recover --repo /path/to/repo > /private/path/unlock.json
+am writes recover --repo /path/to/repo \
   --proposal /private/path/unlock.json
 ```
 
 Unknown, live or foreign-host ownership MUST stop automatic cleanup; age is
 insufficient. An interrupted transaction additionally requires a reviewed
-finish/rollback proposal from `bank_transactions.py recover --repo ... --mode
+finish/rollback proposal from `am transaction recover --repo ... --mode
 finish` (or `rollback`) and apply with `recover --repo ... --proposal FILE`.
 Initialization finish MUST revalidate original source evidence; identity-change
 transactions MUST resume through their original binding bundle. A session MUST

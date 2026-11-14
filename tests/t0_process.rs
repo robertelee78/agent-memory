@@ -1508,8 +1508,11 @@ fn owned_process_uses_existing_three_slot_termination_registry() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let (receipt, _) =
-        agent_memory::fs::read_regular(&dir.0, Path::new("owned-capacity.completed"), 1024)
-            .unwrap();
+    let (receipt, _) = agent_memory::fs::read_regular(
+        &dir.0.canonicalize().unwrap(),
+        Path::new("owned-capacity.completed"),
+        1024,
+    )
+    .unwrap();
     assert_eq!(receipt, b"capacity/refusal/reuse verified\n");
 }

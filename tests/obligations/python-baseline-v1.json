@@ -3480,35 +3480,35 @@
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_history_boundary_excess_and_retry",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_persisted_corruption_and_interruption_remain_noncapacity",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_record_boundary_excess_and_retry",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_sealed_byte_boundary_excess_and_retry",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_structure_precedes_capacity_and_combined_dimension_precedence",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -3536,7 +3536,7 @@
   {
    "id": "tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_renewed_clarification_proof_replays_without_losing_prior_resolution",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 162,
+   "partial": 168,
    "ported": 128,
-   "unported": 1572
+   "unported": 1566
   }
  }
 }

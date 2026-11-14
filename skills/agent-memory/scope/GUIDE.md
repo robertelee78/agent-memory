@@ -44,11 +44,11 @@ The operation is a read-only decision. A session MUST plan a separate governed o
 
 ## Apply
 
-With `SKILL_DIR` resolved to the packaged skill directory:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/scope_policy.py" model
-python3 -I "$SKILL_DIR/scripts/scope_policy.py" decide --input /tmp/scope-request.json
+am scope-policy model
+am scope-policy decide --input /tmp/scope-request.json
 ```
 
 ## Read back

@@ -54,11 +54,11 @@ The session MUST plan only a read-only assessment of the supplied precise claim.
 
 ## Apply
 
-With `SKILL_DIR` resolved to the packaged skill directory:
+With the installed `am` command available:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/authority_policy.py" model
-python3 -I "$SKILL_DIR/scripts/authority_policy.py" assess --input /tmp/reviewed-assertions.json
+am authority-policy model
+am authority-policy assess --input /tmp/reviewed-assertions.json
 ```
 
 ## Read back
