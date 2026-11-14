@@ -4,12 +4,10 @@
 # and when every module a line waits for exists (then it must be wired).
 # Format: <module>::<register_fn> waits for <module>[, <module>...]
 #     or: <module>::<register_fn> blocked by <reason>   (an API gap, not a missing module)
-bank_contract::register_recovery_coverage waits for recovery_frontier
 bank_contract::register_route_table waits for layout_recovery
-bank_state::register_comparison_view waits for retrieval
+bank_state::register_comparison_view waits for retrieval, comparison, recall_catalog
 bank_transactions::register_transaction_validator waits for admission, consolidation, governance, initialization, memory_refresh
 bank_writes::register_checkpoint waits for checkpoint
-bank_writes::register_recovery_frontier waits for recovery_frontier
 bank_writes::register_recovery_transactions waits for recovery_transactions
 handoff::register_checkpoint waits for checkpoint
 omp_installation::register_activation waits for installation, omp_boundary, omp_projection, omp_stream, omp_transport, turn_sources
@@ -23,3 +21,4 @@ doctor_fix::register_diagnostics waits for diagnostics
 turn_sources::register_publication_gate waits for memory_publication, sharing_recovery
 omp_stream::register_omp_transport waits for omp_transport
 security::register_migration_audit waits for migration
+recovery_frontier::register_layout_resolution waits for layout_resolution

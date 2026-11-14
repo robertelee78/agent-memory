@@ -49,6 +49,7 @@ pub mod project_identity;
 pub mod purging;
 pub mod recall_catalog;
 pub mod records;
+pub mod recovery_frontier;
 #[cfg(feature = "dev-tools")]
 #[path = "bin/am_dev/release.rs"]
 pub mod release_builder;

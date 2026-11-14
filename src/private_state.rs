@@ -73,6 +73,17 @@ pub trait RecoveryQuiescence: Send + Sync {
         runtime_digest: &str,
         runtime_root: &Path,
     ) -> Result<Option<Value>>;
+    /// Baseline recovery_quiescence.validate; no caller boolean can bypass it.
+    fn validate(
+        &self,
+        repo: &Path,
+        value: &Value,
+        runtime_artifact_digest: Option<&str>,
+        required_routes: &[String],
+        publish: bool,
+        owner: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Value>;
 }
 static QUIESCENCE: RwLock<Option<Arc<dyn RecoveryQuiescence>>> = RwLock::new(None);
 pub fn register_recovery_quiescence(provider: Option<Arc<dyn RecoveryQuiescence>>) {

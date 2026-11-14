@@ -164,6 +164,16 @@ pub trait RecoveryTransactions: Send + Sync {
     fn apply_checkpoint(&self, proposal: &Value) -> Result<Value>;
     /// Baseline recovery_transactions.apply_transaction.
     fn apply_transaction(&self, proposal: &Value) -> Result<Value>;
+    /// Baseline recovery_transactions.recover_nested, with explicit executing runtime.
+    fn recover_nested(
+        &self,
+        repo: &Path,
+        operation_id: Option<&str>,
+        nested_id: Option<&str>,
+        mode: Option<&str>,
+        proposal: Option<&Value>,
+        runtime_root: &Path,
+    ) -> Result<Value>;
 }
 pub trait Security: Send + Sync {
     fn guarded_start(

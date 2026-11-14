@@ -74,6 +74,15 @@ pub fn register_layout_observation(provider: Option<Arc<dyn LayoutObservation>>)
         .map_err(|_| err("Project layout observation registry is poisoned"))? = provider;
     Ok(())
 }
+pub(crate) fn layout_observation_provider() -> Result<Arc<dyn LayoutObservation>> {
+    LAYOUT_OBSERVATION
+        .read()
+        .map_err(|_| err("Project layout observation registry is poisoned"))?
+        .clone()
+        .ok_or_else(|| ContractError::missing_provider(
+            "layout_recovery_observation provider is not registered; raw recovery observation wiring pending",
+        ))
+}
 
 pub type MigrationReader<'a> = &'a dyn Fn(&[u8]) -> Result<Option<Value>>;
 #[derive(Default, Clone, Copy)]
