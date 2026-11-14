@@ -387,7 +387,7 @@ pub fn validate(
             }
             set(&mut heads, key, next_head);
             state::replace(&heads_path, &heads, old.as_deref())?;
-            frontier.invalidate(&root)?;
+            crate::recovery_frontier::invalidate(&root, runtime.0)?;
         }
     }
     Ok(object([

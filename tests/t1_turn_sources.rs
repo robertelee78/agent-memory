@@ -648,10 +648,7 @@ fn in_repository(
         // These source-store cases use development metadata, never installed identity.
         let pack = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory");
         agent_memory::cli::use_development_pack(Some(pack.clone()));
-        body(
-            &root.join("repository"),
-            &pack,
-        )?;
+        body(&root.join("repository"), &pack)?;
         use std::io::Write;
         use std::os::unix::fs::OpenOptionsExt;
         let mut completed = std::fs::OpenOptions::new()

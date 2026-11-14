@@ -390,7 +390,9 @@ pub fn native_absence(root: &Path, base: &Path, authority: RuntimeAuthority<'_>)
         || private_bases.iter().any(|(repo, _)| repo == root_text)
         || crate::omp_boundary::has_native_source_state(base)?
         || (named(&base.join("turn-sources-v2"))?.is_some()
-            && crate::omp_boundary::shared_native_source_evidence_with_authority(root, base, authority)?)
+            && crate::omp_boundary::shared_native_source_evidence_with_authority(
+                root, base, authority,
+            )?)
     {
         return Err(refusal(
             "Retained source state lacks its required source barrier",
@@ -536,10 +538,9 @@ fn observe_bank(
         .ok_or_else(|| refusal("Private operations have no parent"))?;
     let mut capabilities = BTreeSet::new();
     if native_pin.is_none() {
-        capabilities.extend(crate::omp_boundary::required_source_capabilities_with_authority(
-            &root,
-            authority,
-        )?);
+        capabilities.extend(
+            crate::omp_boundary::required_source_capabilities_with_authority(&root, authority)?,
+        );
     }
     let frontier = bank_writes::recovery_frontier_provider()?;
     let token = frontier.observe_bank(&root, &bank, None, None, false, runtime_root)?;

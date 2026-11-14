@@ -2277,6 +2277,7 @@ fn completed_uninstall_recovery_needs_no_removed_runtime_or_backups() {
                 get(action, "before"),
             ));
             write(&transition_path, install::encoded(&transition).unwrap());
+            mode(&transition_path, 0o600);
         }
         // Remove the external development/acquisition source and both retained
         // copies of every removed owned runtime, not merely its active path.

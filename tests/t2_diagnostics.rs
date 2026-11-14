@@ -2349,14 +2349,23 @@ fn installed_setup_evidence_without_implicit_initialization() {
         "local-transaction-path-and-recovery-only",
     );
     assert_eq!(text(refresh, "remote_check"), "not-exercised");
-    assert_eq!(get(refresh, "remote_freshness_verified"), &Value::Bool(false));
-    assert_eq!(get(refresh, "canonical_writes_performed"), &Value::Bool(false));
-    let human = native_process(&world, &[
-        runtime.command.as_os_str().to_owned(),
-        "doctor".into(),
-        "--repo".into(),
-        repo.as_os_str().to_owned(),
-    ]);
+    assert_eq!(
+        get(refresh, "remote_freshness_verified"),
+        &Value::Bool(false)
+    );
+    assert_eq!(
+        get(refresh, "canonical_writes_performed"),
+        &Value::Bool(false)
+    );
+    let human = native_process(
+        &world,
+        &[
+            runtime.command.as_os_str().to_owned(),
+            "doctor".into(),
+            "--repo".into(),
+            repo.as_os_str().to_owned(),
+        ],
+    );
     assert_eq!(human.status, agent_memory::process::Status::Code(0));
     assert!(human.stderr.is_empty());
     let human = String::from_utf8(human.stdout).unwrap();

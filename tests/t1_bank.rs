@@ -1545,7 +1545,6 @@ fn real_observation_scans_exact_sources_readonly() {
     fixture.assert_no_temporary();
 }
 
-
 #[test]
 fn canonical_receipt_path_record_load_roundtrip_accepts_hardlinks() {
     use std::os::unix::fs::PermissionsExt;

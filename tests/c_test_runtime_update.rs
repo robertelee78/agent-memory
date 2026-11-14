@@ -59,7 +59,12 @@ fn discovered_and_explicit_banks_are_preserved_and_unknown_schema_refuses() {
         let repo = world.repository("another project", false).unwrap();
         let memory = bank(&world, &repo);
         if registered {
-            support::identity_fixtures::bind(&world, &repo).unwrap();
+            let command = agent_memory::installation::source_binary(get(
+                get(&installed, "receipt"),
+                "source",
+            ))
+            .unwrap();
+            support::identity_fixtures::bind_with_command(&world, &repo, &command).unwrap();
         }
         channel.publish(NEXT, &"b".repeat(40));
         let argument = format!("repo={}", repo.display());

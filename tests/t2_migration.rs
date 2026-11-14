@@ -141,7 +141,6 @@ fn component_runtime() -> DomainResult<(PathBuf, PathBuf)> {
     Ok((path("AM_MIGRATION_PACK")?, path("AM_MIGRATION_BINARY")?))
 }
 
-
 #[test]
 fn migration_worker() {
     let Ok(args) = std::env::var("AM_MIGRATION_ARGS") else {

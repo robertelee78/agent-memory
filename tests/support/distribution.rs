@@ -353,7 +353,10 @@ fn driver_entry() {
             .collect::<Vec<_>>();
         let outcome = agent_memory::updating::banks(
             &env,
-            (&channel.root.join("pack"), Path::new(env!("CARGO_BIN_EXE_am"))),
+            (
+                &channel.root.join("pack"),
+                Path::new(env!("CARGO_BIN_EXE_am")),
+            ),
             None,
             &repositories,
             &compatibility,

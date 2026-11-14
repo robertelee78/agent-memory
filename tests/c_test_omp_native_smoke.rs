@@ -44,7 +44,6 @@ fn shell_quote(value: &OsStr) -> String {
     format!("'{}'", value.to_str().unwrap().replace('\'', "'\\''"))
 }
 
-
 struct Fixture {
     root: PathBuf,
     repo: PathBuf,
@@ -56,9 +55,8 @@ struct Fixture {
 }
 impl Fixture {
     fn prepare(world: &mut World, with_bank: bool) {
-        let runtime = support::installed_runtime::install(&world.root, |argv| {
-            world.run(argv).unwrap()
-        });
+        let runtime =
+            support::installed_runtime::install(&world.root, |argv| world.run(argv).unwrap());
         world.env.insert(
             "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
             runtime.command.as_os_str().to_owned(),

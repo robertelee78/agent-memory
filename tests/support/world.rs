@@ -474,13 +474,10 @@ impl World {
         S: AsRef<OsStr>,
     {
         let args = helper_arguments(script, args)?;
-        let argv = [
-            self.am_executable(),
-            OsString::from("--json"),
-        ]
-        .into_iter()
-        .chain(args)
-        .collect();
+        let argv = [self.am_executable(), OsString::from("--json")]
+            .into_iter()
+            .chain(args)
+            .collect();
         self.command_argv(argv, RunOptions::default())?.run()
     }
 

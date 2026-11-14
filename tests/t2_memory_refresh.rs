@@ -69,9 +69,10 @@ fn git(w: &World, repo: &Path, args: &[&str]) -> TestResult<String> {
 }
 fn install_runtime(world: &mut World) {
     let runtime = support::installed_runtime::install(&world.root, |argv| world.run(argv).unwrap());
-    world
-        .env
-        .insert("AM_REFRESH_TEST_RUNTIME".into(), runtime.pack.into_os_string());
+    world.env.insert(
+        "AM_REFRESH_TEST_RUNTIME".into(),
+        runtime.pack.into_os_string(),
+    );
     world.env.insert(
         "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
         runtime.command.into_os_string(),
@@ -604,7 +605,15 @@ impl Fixture {
             fs::write(bank_path.join(path), text(body))?;
         }
         fs::write(repo.join("code.rs"), b"const VALUE: u32 = 1;\n")?;
-        support::identity_fixtures::bind(&w, &repo)?;
+        support::identity_fixtures::bind_with_command(
+            &w,
+            &repo,
+            Path::new(
+                w.env
+                    .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+                    .unwrap(),
+            ),
+        )?;
         git(&w, &repo, &["add", "."])?;
         git(&w, &repo, &["commit", "-m", "Fixture canonical memory"])?;
         git(&w, &repo, &["push", "origin", "HEAD:main"])?;
@@ -1564,7 +1573,16 @@ fn linked_worktree_import_preserves_original_and_sibling_feature_state() -> Test
         sibling.join("memory-bank/activeContext.md"),
         "# Current focus\n\nIndependent unpublished sibling learning.\n",
     )?;
-    support::identity_fixtures::bind(&f.world, &sibling)?;
+    support::identity_fixtures::bind_with_command(
+        &f.world,
+        &sibling,
+        Path::new(
+            f.world
+                .env
+                .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+                .unwrap(),
+        ),
+    )?;
     let (_, path) = f.imported(
         "landed",
         "# Landed\n\nA shared observation for separate sessions.\n",
@@ -2579,7 +2597,16 @@ fn current_refuses_unchanged_hidden_record_and_corrupt_hold_anchor() -> TestResu
                     "origin/main",
                 ],
             )?;
-            support::identity_fixtures::bind(&f.world, &sibling)?;
+            support::identity_fixtures::bind_with_command(
+                &f.world,
+                &sibling,
+                Path::new(
+                    f.world
+                        .env
+                        .get(OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND"))
+                        .unwrap(),
+                ),
+            )?;
             f.repo = sibling;
         } else {
             let path = f

@@ -10,10 +10,8 @@ use support::{RunOptions, World};
 fn cli(w: &World, args: &[OsString]) -> (i32, Value) {
     let output = w
         .run_with(
-            std::iter::once(
-                w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
-            )
-            .chain(args.iter().cloned()),
+            std::iter::once(w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone())
+                .chain(args.iter().cloned()),
             RunOptions {
                 check: false,
                 timeout: std::time::Duration::from_secs(120),

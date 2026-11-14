@@ -1898,4 +1898,3 @@ pub fn accumulated_coverage(
 fn value_proposal_has_admission(value: &Value) -> bool {
     value.get("admission_evidence").is_some()
 }
-

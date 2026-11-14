@@ -42,7 +42,9 @@ fn human_recovery_after_partial_activation_and_no_pending_transaction() {
 #[test]
 #[ignore = "ungate: fails since its awaited modules landed; fixed by the ungate lane"]
 fn human_signed_lifecycle_journey_under_native_temp_alias() {
-    let mut world = World::new().unwrap();
+    let world = World::new().unwrap();
+    #[cfg(target_os = "macos")]
+    let mut world = world;
     #[cfg(target_os = "macos")]
     {
         let tmp = world.paths["tmp"]

@@ -1039,7 +1039,6 @@ pub fn check(
     Ok(current)
 }
 
-
 pub fn verified_hold(
     repo: &Path,
     owner: Option<&[u8]>,
@@ -1096,11 +1095,8 @@ pub fn verified_hold_at_bank(
     let (manifest, proposal) = evidence(&directory, &current, row)?;
     let expected = get(get(&manifest, "identity"), "scope_context");
     let context = if get(row, "state").as_str() == Some("rolled-back") {
-        let (router, _) = crate::layout_recovery_observation::read_source(
-            bank,
-            "MEMORY.md",
-            SOURCE_BOUND,
-        )?;
+        let (router, _) =
+            crate::layout_recovery_observation::read_source(bank, "MEMORY.md", SOURCE_BOUND)?;
         let original = array(get(&manifest, "sources"))?
             .iter()
             .find(|source| get(source, "path").as_str() == Some("MEMORY.md"))
@@ -2247,11 +2243,8 @@ pub fn verified_child_transaction(
             "Child recovery identity evidence is missing or changed",
         ));
     }
-    let (router, _) = crate::layout_recovery_observation::read_source(
-        &bank,
-        "MEMORY.md",
-        SOURCE_BOUND,
-    )?;
+    let (router, _) =
+        crate::layout_recovery_observation::read_source(&bank, "MEMORY.md", SOURCE_BOUND)?;
     let identity = project_identity::RawIdentityEvidence::observe(
         &root,
         &router,

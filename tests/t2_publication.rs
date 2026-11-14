@@ -137,9 +137,10 @@ fn native_dispatch(w: &World, args: &[OsString], event: Option<&Value>) -> (i32,
     use agent_memory::process::{self, Input, Spec, Status, Target};
     let cwd = w.root.join("repo");
     support::require_world(&w.env, &cwd).unwrap();
-    let argv: Vec<_> = std::iter::once(w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone())
-        .chain(args.iter().cloned())
-        .collect();
+    let argv: Vec<_> =
+        std::iter::once(w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone())
+            .chain(args.iter().cloned())
+            .collect();
     let env: Vec<_> = w
         .env
         .iter()

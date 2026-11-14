@@ -52,9 +52,12 @@ fn call(w: &World, route: &str, operation: &str, repo: &Path, extra: &[OsString]
     .chain(extra.iter().cloned());
     let out = w
         .run_with(
-            [w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(), "--json".into()]
-                .into_iter()
-                .chain(args),
+            [
+                w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+                "--json".into(),
+            ]
+            .into_iter()
+            .chain(args),
             RunOptions {
                 check: false,
                 ..RunOptions::default()

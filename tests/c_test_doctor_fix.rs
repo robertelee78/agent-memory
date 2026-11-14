@@ -214,7 +214,8 @@ fn doctor_cleans_only_receipted_completed_bank_transaction() {
     for (name, body) in before.as_object().unwrap() {
         std::fs::write(memory.join(name), body.as_str().unwrap()).unwrap();
     }
-    support::identity_fixtures::bind(&world, &repo).unwrap();
+    let receipt = read(&state(&world).join("receipt.json"));
+    support::identity_fixtures::bind_with_command(&world, &repo, &command(&receipt)).unwrap();
     let input = world.root.join("files.json");
     save(&input, &after);
     let proposal = run(

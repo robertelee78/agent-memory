@@ -13,6 +13,7 @@ use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Duration;
 mod support;
 
@@ -519,7 +520,12 @@ impl World {
     }
     fn native(&self, args: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
         let mut argv = vec![
-            self.runtime.as_ref().unwrap().command.as_os_str().to_owned(),
+            self.runtime
+                .as_ref()
+                .unwrap()
+                .command
+                .as_os_str()
+                .to_owned(),
             "--json".into(),
         ];
         argv.extend_from_slice(args);
@@ -638,7 +644,10 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
         std::fs::create_dir(root.join("home")).unwrap();
         root
     };
-    let world = World { root, runtime: None };
+    let world = World {
+        root,
+        runtime: None,
+    };
     let output = world.command(
         &[
             std::env::current_exe().unwrap().into_os_string(),

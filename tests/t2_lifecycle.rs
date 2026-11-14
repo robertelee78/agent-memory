@@ -894,7 +894,10 @@ fn verified_receipt_pair_ignores_executable_locator_but_refuses_changed_bytes() 
     native_purge_worker(&world, "native-runtime-authority", &[]);
 }
 
-fn runtime_authority_scenario(world: &World, installed: &support::installed_runtime::NativeRuntime) {
+fn runtime_authority_scenario(
+    world: &World,
+    installed: &support::installed_runtime::NativeRuntime,
+) {
     agent_memory::cli::register_providers().unwrap();
     let env = world.env();
     let receipt = decode(&world.receipt_path());

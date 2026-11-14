@@ -1706,7 +1706,7 @@ fn complete_v2_refresh_preserves_feature_state_and_qualifies_last_source() {
                 object([("left", pair.first().unwrap().clone()), ("right", pair.get(1).unwrap().clone()), ("classification", string("related")), ("reason", string("Independent authored partition observations and their navigation preserve distinct sources."))])
             }).collect())),
             ("dependencies", object([] as [(&str, Value); 0])), ("consolidations", Value::Array(vec![])),
-            ("rationale", string("Bounded mechanical complete-delta control, not semantic truth verification.")), ("recorded_at", string(host::utc_now_isoformat().unwrap())),
+            ("rationale", string("Bounded mechanical complete-delta control, not semantic truth verification.")), ("recorded_at", string(agent_memory::host::utc_now_isoformat().unwrap())),
         ]);
             let reviewed = world.root.join("reviewed.json");
             good(

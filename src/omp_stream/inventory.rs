@@ -875,12 +875,10 @@ fn join_hints(
                     .ok_or_else(|| err("Native transport is unavailable"))?
                     .native_disposition_ids(repo, session)?
             }
-            InventoryAuthority::Runtime(runtime) => {
-                crate::omp_transport::native_disposition_ids(
-                    &crate::omp_transport::Site::with_authority(repo, runtime),
-                    session,
-                )?
-            }
+            InventoryAuthority::Runtime(runtime) => crate::omp_transport::native_disposition_ids(
+                &crate::omp_transport::Site::with_authority(repo, runtime),
+                session,
+            )?,
         };
         for native in &actual {
             turn_sources::bounded(&string(native), 512)?;

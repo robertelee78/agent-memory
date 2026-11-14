@@ -437,7 +437,6 @@ fn renewal_envelope_has_exact_attestation_and_independent_review_keys() {
     }
 }
 
-
 #[test]
 fn inventory_observation_is_readonly() {
     isolated("inventory_observation_is_readonly", |root| {

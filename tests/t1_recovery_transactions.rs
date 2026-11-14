@@ -515,8 +515,7 @@ impl Fixture {
         ]);
         // This explicitly measures the genuine fixture pair; native consumers
         // still verify their own installed executable identity.
-        let runtime =
-            agent_memory::artifact::inspect_runtime(&self.runtime, &self.binary).unwrap();
+        let runtime = agent_memory::artifact::inspect_runtime(&self.runtime, &self.binary).unwrap();
         let review_id = uuid();
         let attestation = obj([
             ("schema", s("agent-memory/layout-quiescence-attestation-v1")),

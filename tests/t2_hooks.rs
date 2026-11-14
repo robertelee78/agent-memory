@@ -1384,7 +1384,10 @@ fn actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session(
         world
             .run_with(
                 argv,
-                support::RunOptions { check: false, ..Default::default() },
+                support::RunOptions {
+                    check: false,
+                    ..Default::default()
+                },
             )
             .unwrap()
     });
@@ -1394,8 +1397,12 @@ fn actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session(
     );
     let repo = world.repository("repo", false).unwrap();
     let remote = world.repository("plugin-authority.git", true).unwrap();
-    world.git(["remote", "add", "origin", remote.to_str().unwrap()]).unwrap();
-    world.git(["config", "--local", "agent-memory.authorityBranch", "main"]).unwrap();
+    world
+        .git(["remote", "add", "origin", remote.to_str().unwrap()])
+        .unwrap();
+    world
+        .git(["config", "--local", "agent-memory.authorityBranch", "main"])
+        .unwrap();
     let proposal = decode(include_str!(
         "../skills/agent-memory/templates/router-proposal.example.json"
     ));
@@ -1408,7 +1415,9 @@ fn actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session(
     }
     support::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
     world.git(["add", "memory-bank"]).unwrap();
-    world.git(["commit", "-m", "Synchronized native plugin fixture"]).unwrap();
+    world
+        .git(["commit", "-m", "Synchronized native plugin fixture"])
+        .unwrap();
     world.git(["push", "origin", "HEAD:main"]).unwrap();
     let bank_before = tree(&bank);
     let head_before = world.git(["rev-parse", "HEAD"]).unwrap().stdout;
@@ -1471,8 +1480,14 @@ dispose();process.stdout.write(JSON.stringify({firstBacklog,ack,backlog,missing,
     assert_eq!(get(&value, "queues"), &decode("1"));
     assert!(get(&value, "bytes").as_int().unwrap().as_u64().unwrap() <= 2048);
     assert_eq!(tree(&bank), bank_before);
-    assert_eq!(world.git(["rev-parse", "HEAD"]).unwrap().stdout, head_before);
-    assert_eq!(world.git(["ls-files", "--stage", "-z"]).unwrap().stdout, index_before);
+    assert_eq!(
+        world.git(["rev-parse", "HEAD"]).unwrap().stdout,
+        head_before
+    );
+    assert_eq!(
+        world.git(["ls-files", "--stage", "-z"]).unwrap().stdout,
+        index_before
+    );
 }
 
 // ----- OpenCode queue (test_opencode_queue.py) -----

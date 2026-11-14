@@ -708,10 +708,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
         .ok_or_else(|| err("Recovery frontier lacks hold coverage"))?
         != &Value::Null
     {
-        return crate::recovery_transactions::apply_checkpoint(
-            proposal,
-            &crate::cli::pack_root()?,
-        );
+        return crate::recovery_transactions::apply_checkpoint(proposal, &crate::cli::pack_root()?);
     }
     if get(proposal, "scope_context") == &Value::Null {
         return Err(err(

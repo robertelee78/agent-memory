@@ -1037,8 +1037,6 @@ fn large_exact_ordinary_transaction_witness_preserves_frontier_without_recovery_
     );
 }
 
-
-
 #[test]
 fn private_reference_accepts_unbounded_positive_record_versions_without_coercion() {
     in_world(
@@ -1126,8 +1124,12 @@ fn ordinary_hold_adapters_require_the_executing_pair_before_observation() {
                         cwd: Some(root),
                         search_path: false,
                         stdin: agent_memory::process::Input::Null,
-                        stdout: agent_memory::process::Target::Capture { limit: 8 * 1024 * 1024 },
-                        stderr: agent_memory::process::Target::Capture { limit: 8 * 1024 * 1024 },
+                        stdout: agent_memory::process::Target::Capture {
+                            limit: 8 * 1024 * 1024,
+                        },
+                        stderr: agent_memory::process::Target::Capture {
+                            limit: 8 * 1024 * 1024,
+                        },
                         deadline: agent_memory::clock::Deadline::from_absolute_ns(u64::MAX),
                         new_session: false,
                         file_size_limit: None,
@@ -1201,4 +1203,3 @@ fn ordinary_hold_adapters_require_the_executing_pair_before_observation() {
         },
     );
 }
-
