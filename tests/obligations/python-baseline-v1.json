@@ -953,119 +953,119 @@
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_ambiguous_headings_oversized_input_and_substituted_body_or_target_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_ambiguous_nested_heading_or_wrong_level_reserved_name_refuse_preserving_original",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_checkpoint_captures_four_fields_with_provenance_and_preserves_every_other_file_and_unrelated_sections",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_copied_artifact_uses_common_identity_and_untrusted_existing_markdown_is_never_executed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_every_unknown_atx_heading_level_preserves_original_source_section_and_remains_idempotent",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_field_headings_are_explicitly_fenced_and_html_underline_examples_repeat_safely",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_interrupted_checkpoint_replays_after_owned_lock_recovery_without_duplicate_or_later_overwrite",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_missing_active_context_requires_a_separate_observed_route_transaction_then_only_active_is_checkpointed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_missing_context_preparation_refuses_identity_switch_during_resolution",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_multiline_fenced_list_items_remain_repeatably_checkpointable",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_multiline_underlines_and_raw_html_refuse_without_deleting_source_memory",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_non_markdown_control_separators_cannot_manufacture_root_sections",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_normalized_fields_cannot_create_new_root_sections_or_unclosed_fences",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_rendered_utf8_boundary_replaces_without_growth_and_refuses_one_extra_byte",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_stale_active_or_other_bank_edits_are_preserved_and_fresh_checkpoint_carries_manual_evidence",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_unsupported_setext_and_unicode_boundaries_stop_without_dropping_original_notes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_checkpoint.py::CheckpointContract.test_valid_atx_heading_forms_preserve_unknown_source_notes_and_replace_one_known_section",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -2661,49 +2661,49 @@
   {
    "id": "tests/contracts/test_inactive_guidance.py::InactiveGuidanceContract.test_compaction_drops_original_assertion_and_optional_noise_preserving_required_conditional_evidence",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_inactive_guidance.py::InactiveGuidanceContract.test_git_carried_tombstone_guards_rebuild_after_machine_state_loss_and_explicit_rebinding",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_inactive_guidance.py::InactiveGuidanceContract.test_later_invalidation_and_invented_new_ids_cannot_reuse_an_earlier_checked_body",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_inactive_guidance.py::InactiveGuidanceContract.test_rebuild_input_uses_only_canonical_active_version_and_discards_all_cached_payloads",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_inactive_guidance.py::InactiveGuidanceContract.test_scope_busy_bank_bad_input_and_required_audit_failure_preserve_canonical_state",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_inactive_guidance.py::InactiveGuidanceContract.test_tombstone_compaction_retains_exact_five_fields_and_no_deleted_body_or_hash",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_inactive_guidance.py::InactiveGuidanceContract.test_unsafe_required_metadata_refuses_without_echo_or_invented_replacement",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 349,
+   "partial": 373,
    "ported": 288,
-   "unported": 1225
+   "unported": 1201
   }
  }
 }

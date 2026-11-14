@@ -396,7 +396,7 @@ pub fn proposal_value(prepared: &Value) -> Result<&Value> {
         ));
     }
     if p.get("checkpoint_evidence").is_some() {
-        writes::checkpoint_provider()?.validate_write(p, false)?;
+        writes::checkpoint_provider()?.validate_preparation(p, false)?;
     }
     Ok(p)
 }
@@ -950,7 +950,7 @@ pub fn validate_outcome(
 ) -> Result<Value> {
     if admission_sources && same(desired, get(p, "files")) {
         if p.get("checkpoint_evidence").is_some() {
-            writes::checkpoint_provider()?.validate_write(p, true)?;
+            writes::checkpoint_provider()?.validate_preparation(p, true)?;
         }
         if [
             "admission_evidence",
@@ -1346,7 +1346,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
             validate_operation(p, owner)?;
         }
         if p.get("checkpoint_evidence").is_some() {
-            writes::checkpoint_provider()?.validate_write(p, !exists(&receipt_path)?)?;
+            writes::checkpoint_provider()?.validate_preparation(p, !exists(&receipt_path)?)?;
         }
         Ok(())
     };
@@ -1562,7 +1562,7 @@ pub fn recover_with_identity_and_environment(
     let known = receipt_value(&receipt_path, &p)?;
     admission_recovery(&p, mode, known.as_ref())?;
     if mode == "finish" && p.get("checkpoint_evidence").is_some() {
-        writes::checkpoint_provider()?.validate_write(&p, known.is_none())?;
+        writes::checkpoint_provider()?.validate_preparation(&p, known.is_none())?;
     }
     if mode == "finish" && text(&p, "operation")? == "initialize" {
         validator(&p)?.validate_transaction(&p, None)?;
@@ -1659,7 +1659,7 @@ pub fn recover(repo: &Path, mode: Option<&str>, prepared: Option<&Value>) -> Res
         {
             if p.get("checkpoint_evidence").is_some() {
                 writes::checkpoint_provider()?
-                    .validate_write(&p, receipt_value(&receipt_path, &p)?.is_none())?;
+                    .validate_preparation(&p, receipt_value(&receipt_path, &p)?.is_none())?;
             } else {
                 validator(&p)?.validate_transaction(&p, None)?;
             }

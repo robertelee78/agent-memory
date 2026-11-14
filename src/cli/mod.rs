@@ -371,6 +371,9 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     crate::sharing_recovery::register_sharing_boundary(Some(Arc::new(
         crate::sharing_boundary::SharingBoundary,
     )));
+    let checkpoint = Arc::new(crate::checkpoint::Checkpoint);
+    crate::bank_writes::register_checkpoint(Some(checkpoint.clone()));
+    crate::handoff::register_checkpoint(Some(checkpoint));
     Ok(())
 }
 
