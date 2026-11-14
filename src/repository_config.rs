@@ -9,6 +9,8 @@ pub const ROUTER_FIELDS: &[&str] = &["schema", "project-id", "router-updated", "
 /// The security tier supplies the same scan used by the Python lazy import.
 pub trait SecurityScan: Send + Sync {
     fn has_reasons(&self, value: &str) -> Result<bool>;
+    /// Baseline security.scan(body), including its content-free reasons.
+    fn scan(&self, body: &str) -> Result<crate::codec::json::Value>;
 }
 static SCANNER: RwLock<Option<Arc<dyn SecurityScan>>> = RwLock::new(None);
 pub fn register_security_scan(provider: Option<Arc<dyn SecurityScan>>) -> Result<()> {
@@ -16,6 +18,15 @@ pub fn register_security_scan(provider: Option<Arc<dyn SecurityScan>>) -> Result
         .write()
         .map_err(|_| ContractError::new("Security scan registry is poisoned"))? = provider;
     Ok(())
+}
+pub(crate) fn security_scan_provider() -> Result<Arc<dyn SecurityScan>> {
+    SCANNER
+        .read()
+        .map_err(|_| ContractError::new("Security scan registry is poisoned"))?
+        .clone()
+        .ok_or_else(|| {
+            ContractError::new("Repository boundary security scan provider is not registered")
+        })
 }
 pub fn safe_label(value: &str) -> Result<()> {
     let scanner = SCANNER

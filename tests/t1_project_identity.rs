@@ -87,6 +87,12 @@ impl repository_config::SecurityScan for LabelScan {
             || value.contains("PRIVATE KEY")
             || value.contains("token="))
     }
+    fn scan(&self, _body: &str) -> Result<agent_memory::codec::json::Value> {
+        // Body scanning belongs to the security module; this label fixture refuses it.
+        Err(agent_memory::error::ContractError::new(
+            "Security body scan is not available in this label fixture",
+        ))
+    }
 }
 struct World {
     root: PathBuf,

@@ -22,7 +22,7 @@
   {
    "id": "tests/contracts/test_admission.py::AdmissionContract.test_complete_receipt_schema_and_bindings_govern_cleanup_and_historical_replay",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -449,28 +449,28 @@
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_case_unicode_parent_and_existing_occupant_aliases_reject_preview_and_forged_apply_without_loss",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_crash_after_marker_removal_replays_known_outcome_and_purges_leftover_backup",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_every_interruption_boundary_refuses_normal_reads_and_converges_in_both_directions",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_exclusive_marker_creation_preserves_a_new_unknown_marker_and_readset_edit_at_write_boundary",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -484,21 +484,21 @@
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_external_unchanged_read_set_edit_blocks_finish_and_rollback_without_overwrite",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_impossible_projection_and_leaf_directory_conversions_refuse_before_journaling",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_late_alias_at_replacement_boundary_stops_and_recovery_preserves_foreign_occupant",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -512,14 +512,14 @@
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_missing_corrupt_or_changed_journal_is_not_guessed_or_reconstructed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bank_transactions.py::BankTransactionsContract.test_noncanonical_physical_blocker_arriving_after_preview_is_checked_before_journal",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -722,91 +722,91 @@
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_exact_owned_large_transaction_marker_and_mismatch",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_excess_count_source_redirect_stays_an_unsafe_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_oversized_source_or_parent_replaced_before_binding_recheck",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_owned_marker_replacement_during_read_is_refused",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_parent_replaced_by_symlink_is_not_followed",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_public_snapshot_refuses_real_aggregate_excess",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_reused_parent_replaced_after_leaf_open_refuses_and_closes",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_reused_parent_substitution_refuses_and_closes_descriptors",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_scan_closes_descriptors_on_success_and_count_capacity",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_stable_reported_size_descriptor_is_exact_and_preserved",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_stream_construction_failure_preserves_an_unrelated_descriptor",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_symlink_and_nonregular_markdown_are_noncapacity_refusals",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_bounded_bank_observation.py::BoundedBankObservation.test_unknown_markers_are_refused_without_opening",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -1499,7 +1499,7 @@
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_missing_git_still_reads_the_copied_portable_markdown_bank",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12638,14 +12638,14 @@
   {
    "id": "tests/contracts/test_tombstones.py::TombstonesContract.test_every_physical_history_occupant_is_checked_before_returning_stale_content",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_tombstones.py::TombstonesContract.test_exact_five_field_format_roundtrips_without_personal_prose_or_generated_state",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -12659,7 +12659,7 @@
   {
    "id": "tests/contracts/test_tombstones.py::TombstonesContract.test_sensitive_extra_fields_bodies_names_and_fingerprints_refuse_without_echo_or_mutation",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 102,
+   "partial": 129,
    "ported": 61,
-   "unported": 1699
+   "unported": 1672
   }
  }
 }

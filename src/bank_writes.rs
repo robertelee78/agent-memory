@@ -51,6 +51,18 @@ pub trait ScopeBinding: Send + Sync {
         expected: &Value,
         owned_lock: Option<&[u8]>,
     ) -> Result<Value>;
+    /// Baseline scope_binding.context_value(..., initialize=...).
+    fn context_value_for_initialization(&self, context: &Value, initialize: bool) -> Result<()>;
+    /// Baseline scope_binding.require with initialization and owned marker.
+    fn require_transaction(
+        &self,
+        repo: &Path,
+        project_id: &Value,
+        expected: Option<&Value>,
+        owned_lock: Option<&[u8]>,
+        owned_transaction: Option<&[u8]>,
+        initialize: bool,
+    ) -> Result<Value>;
 }
 pub trait Checkpoint: Send + Sync {
     fn validate_write(&self, proposal: &Value, sources: bool) -> Result<()>;
@@ -58,9 +70,35 @@ pub trait Checkpoint: Send + Sync {
 pub trait RecoveryFrontier: Send + Sync {
     fn capture_scope(&self, repo: &Path) -> Result<Value>;
     fn observe(&self, repo: &Path) -> Result<Value>;
+    /// Baseline recovery_frontier.observe(repo, owner, transaction).
+    fn observe_owned(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+    ) -> Result<Value>;
+    /// Baseline recovery_frontier.verified_hold(repo, owner), returning held.marker.
+    fn verified_hold(&self, repo: &Path, owner: Option<&[u8]>) -> Result<Vec<u8>>;
+    /// Baseline recovery_frontier.check(frontier, repo, owner, transaction).
+    fn check(
+        &self,
+        frontier: &Value,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+    ) -> Result<()>;
+    /// Baseline recovery_frontier.require_scope(repo, project, expected).
+    fn require_scope(
+        &self,
+        repo: &Path,
+        project: &Value,
+        expected: Option<&Value>,
+    ) -> Result<Value>;
 }
 pub trait RecoveryTransactions: Send + Sync {
     fn apply_checkpoint(&self, proposal: &Value) -> Result<Value>;
+    /// Baseline recovery_transactions.apply_transaction.
+    fn apply_transaction(&self, proposal: &Value) -> Result<Value>;
 }
 pub trait Security: Send + Sync {
     fn guarded_start(
@@ -82,6 +120,17 @@ pub trait Security: Send + Sync {
         source_kinds: &[&str],
         action: &str,
     ) -> Result<Value>;
+    /// Baseline security.guarded_start(..., complete_refresh=...).
+    fn guarded_start_transaction(
+        &self,
+        repo: &Path,
+        operation_id: &str,
+        context: &Value,
+        files: &Value,
+        source_kinds: &[&str],
+        action: &str,
+        complete_refresh: bool,
+    ) -> Result<()>;
 }
 /// The implementing guard releases its barrier on Drop, including refusal paths.
 pub trait CanonicalWriterBarrier: Send {
@@ -89,6 +138,12 @@ pub trait CanonicalWriterBarrier: Send {
 }
 pub trait TurnSources: Send + Sync {
     fn canonical_writer_barrier(&self, repo: &Path) -> Result<Box<dyn CanonicalWriterBarrier>>;
+    /// Baseline turn_sources.canonical_writer_barrier(..., ordinary_bank=...).
+    fn canonical_transaction_barrier(
+        &self,
+        repo: &Path,
+        ordinary_bank: Option<&Path>,
+    ) -> Result<Box<dyn CanonicalWriterBarrier>>;
 }
 static SCOPE: RwLock<Option<Arc<dyn ScopeBinding>>> = RwLock::new(None);
 static CHECKPOINT: RwLock<Option<Arc<dyn Checkpoint>>> = RwLock::new(None);
@@ -99,20 +154,38 @@ static TURN_SOURCES: RwLock<Option<Arc<dyn TurnSources>>> = RwLock::new(None);
 pub fn register_scope_binding(provider: Option<Arc<dyn ScopeBinding>>) {
     *SCOPE.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
+pub(crate) fn scope_binding_provider() -> Result<Arc<dyn ScopeBinding>> {
+    scope()
+}
 pub fn register_checkpoint(provider: Option<Arc<dyn Checkpoint>>) {
     *CHECKPOINT.write().unwrap_or_else(|e| e.into_inner()) = provider;
+}
+pub(crate) fn checkpoint_provider() -> Result<Arc<dyn Checkpoint>> {
+    checkpoint()
 }
 pub fn register_recovery_frontier(provider: Option<Arc<dyn RecoveryFrontier>>) {
     *FRONTIER.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
+pub(crate) fn recovery_frontier_provider() -> Result<Arc<dyn RecoveryFrontier>> {
+    frontier()
+}
 pub fn register_recovery_transactions(provider: Option<Arc<dyn RecoveryTransactions>>) {
     *RECOVERY.write().unwrap_or_else(|e| e.into_inner()) = provider;
+}
+pub(crate) fn recovery_transactions_provider() -> Result<Arc<dyn RecoveryTransactions>> {
+    recovery()
 }
 pub fn register_security(provider: Option<Arc<dyn Security>>) {
     *SECURITY.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
+pub(crate) fn security_provider() -> Result<Arc<dyn Security>> {
+    security()
+}
 pub fn register_turn_sources(provider: Option<Arc<dyn TurnSources>>) {
     *TURN_SOURCES.write().unwrap_or_else(|e| e.into_inner()) = provider;
+}
+pub(crate) fn turn_sources_provider() -> Result<Arc<dyn TurnSources>> {
+    turn_sources()
 }
 fn scope() -> Result<Arc<dyn ScopeBinding>> {
     SCOPE
@@ -500,7 +573,9 @@ pub fn fault(stage: &str) -> Result<()> {
                 std::env::var_os("AGENT_MEMORY_FAULT_DIR")
                     .ok_or_else(|| err("Fault rendezvous must stay in the disposable world"))?,
             );
-            let canonical = fs::canonical_path(&directory, true)?;
+            // Baseline `Path.resolve()` is non-strict: the rendezvous directory
+            // may not exist yet; it is created below after these checks.
+            let canonical = fs::canonical_path(&directory, false)?;
             if !directory.is_absolute()
                 || !canonical.starts_with(&actual)
                 || directory

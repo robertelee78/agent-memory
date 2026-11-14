@@ -43,13 +43,34 @@ impl Drop for Temporary<'_> {
 
 /// Replace only the bytes observed by the caller; synchronize file and parent.
 pub fn replace(registry: &Path, payload: &[u8], observed: Option<&str>) -> Result<()> {
-    replace_with_sources(registry, payload, observed, Sources::default())
+    replace_with_limit(registry, payload, observed, json_limit())
 }
 pub fn replace_with_sources(
     registry: &Path,
     payload: &[u8],
     observed: Option<&str>,
     sources: Sources,
+) -> Result<()> {
+    replace_with_sources_and_limit(registry, payload, observed, sources, json_limit())
+}
+
+/// Use the caller's named bound for the existing generation; publication and
+/// readback retain the ordinary replacement contract and payload-length bound.
+pub fn replace_with_limit(
+    registry: &Path,
+    payload: &[u8],
+    observed: Option<&str>,
+    limit: usize,
+) -> Result<()> {
+    replace_with_sources_and_limit(registry, payload, observed, Sources::default(), limit)
+}
+
+pub fn replace_with_sources_and_limit(
+    registry: &Path,
+    payload: &[u8],
+    observed: Option<&str>,
+    sources: Sources,
+    limit: usize,
 ) -> Result<()> {
     let parent = registry
         .parent()
@@ -96,7 +117,7 @@ pub fn replace_with_sources(
                         "Registry changed immediately before replacement; preserve the external edit",
                     ));
                 }
-                let raw = file.read_bounded(json_limit()).map_err(io_error)?;
+                let raw = file.read_bounded(limit).map_err(io_error)?;
                 if !dir
                     .stat_at(name)
                     .is_ok_and(|current| current.same_inode(identity) && !current.is_symlink())

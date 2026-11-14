@@ -64,6 +64,10 @@ pub trait BankObservation: Send + Sync {
         transaction: Option<&[u8]>,
     ) -> Result<Observation>;
     fn scan_hashes(&self, bank: &Path) -> Result<Value>;
+    /// Baseline scan(read_sources=True, require_router=False): physical map
+    /// (including runtime entries, path -> directory/file/other), observed hashes,
+    /// and exact canonical source bytes, with no router required.
+    fn scan_sources(&self, bank: &Path) -> Result<(Value, Value, BTreeMap<String, Vec<u8>>)>;
 }
 pub trait RecoveryCoverage: Send + Sync {
     fn public_coverage(&self, frontier: &Value) -> Result<Value>;
@@ -79,8 +83,22 @@ static ROUTES: RwLock<Option<Arc<dyn RouteTable>>> = RwLock::new(None);
 pub fn register_bank_observation(provider: Option<Arc<dyn BankObservation>>) {
     *OBSERVATION.write().unwrap_or_else(|e| e.into_inner()) = provider;
 }
+pub(crate) fn bank_observation_provider() -> Result<Arc<dyn BankObservation>> {
+    OBSERVATION
+        .read()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone()
+        .ok_or_else(|| err("bank_observation provider is not registered"))
+}
 pub fn register_recovery_coverage(provider: Option<Arc<dyn RecoveryCoverage>>) {
     *COVERAGE.write().unwrap_or_else(|e| e.into_inner()) = provider;
+}
+pub(crate) fn recovery_coverage_provider() -> Result<Arc<dyn RecoveryCoverage>> {
+    COVERAGE
+        .read()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone()
+        .ok_or_else(|| err("recovery_frontier coverage provider is not registered"))
 }
 pub fn register_route_table(provider: Option<Arc<dyn RouteTable>>) {
     *ROUTES.write().unwrap_or_else(|e| e.into_inner()) = provider;
@@ -90,20 +108,13 @@ pub fn observe(
     owner: Option<&[u8]>,
     transaction: Option<&[u8]>,
 ) -> Result<Observation> {
-    let provider = OBSERVATION
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| err("bank_observation provider is not registered"))?;
-    provider.observe(repo, owner, transaction)
+    bank_observation_provider()?.observe(repo, owner, transaction)
 }
 pub fn scan_hashes(bank: &Path) -> Result<Value> {
-    let provider = OBSERVATION
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| err("bank_observation provider is not registered"))?;
-    provider.scan_hashes(bank)
+    bank_observation_provider()?.scan_hashes(bank)
+}
+pub fn scan_sources(bank: &Path) -> Result<(Value, Value, BTreeMap<String, Vec<u8>>)> {
+    bank_observation_provider()?.scan_sources(bank)
 }
 pub fn recover_layout(arguments: &[String]) -> Result<crate::lifecycle::CommandResult> {
     let provider = ROUTES
@@ -715,7 +726,11 @@ pub fn bank_root(bank: &Path) -> Result<()> {
             err("Bank root parent inventory exceeds its bound; preserve the existing layout")
         })?
     {
-        let entry = crate::host::text(&entry, "bank root entry")?;
+        // A name that is not UTF-8 can never be a spelling alias of the
+        // UTF-8 bank name; the baseline compares and moves on.
+        let Some(entry) = entry.to_str() else {
+            continue;
+        };
         if portable_key(entry) == portable_key(name) && entry != name {
             return Err(err(
                 "Bank root has a case or Unicode spelling alias; explicit repair is required",
@@ -959,11 +974,7 @@ pub fn validate(
     owned_transaction: Option<&[u8]>,
 ) -> Result<Value> {
     let observed = observe(repo, owned_lock, owned_transaction)?;
-    let provider = COVERAGE
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-        .ok_or_else(|| err("recovery_frontier coverage provider is not registered"))?;
+    let provider = recovery_coverage_provider()?;
     let mut report = observed.checked;
     *report
         .get_mut("validation_scope")

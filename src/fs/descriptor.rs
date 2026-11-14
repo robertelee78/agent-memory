@@ -467,6 +467,46 @@ impl Descriptor {
         status(unsafe { libc::unlinkat(self.as_raw_fd(), child_name(name)?.as_ptr(), 0) })
     }
 
+    /// Remove only an empty, named directory relative to a pinned parent.
+    pub fn remove_directory_at(&self, name: &OsStr) -> io::Result<()> {
+        status(unsafe {
+            libc::unlinkat(
+                self.as_raw_fd(),
+                child_name(name)?.as_ptr(),
+                libc::AT_REMOVEDIR,
+            )
+        })
+    }
+
+    /// Exclusively create a new child directory with exact permission bits;
+    /// pins it, sets the mode on the held descriptor and verifies the binding.
+    /// Never changes an existing inode.
+    pub fn create_directory(&self, name: &OsStr, mode: u32) -> io::Result<Descriptor> {
+        if mode > 0o777 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Directory mode requires ordinary permission bits",
+            ));
+        }
+        status(unsafe {
+            libc::mkdirat(
+                self.as_raw_fd(),
+                child_name(name)?.as_ptr(),
+                mode as libc::mode_t,
+            )
+        })?;
+        let directory = self.open_directory_at(name)?;
+        let before = directory.stat()?;
+        if !before.same_inode(self.stat_at(name)?) || !before.is_directory() {
+            return Err(io::Error::other("New directory binding changed"));
+        }
+        status(unsafe { libc::fchmod(directory.as_raw_fd(), mode as libc::mode_t) })?;
+        if !directory.stat()?.same_inode(before) || !before.same_inode(self.stat_at(name)?) {
+            return Err(io::Error::other("New directory binding changed"));
+        }
+        Ok(directory)
+    }
+
     pub fn read_link_at(&self, name: &OsStr) -> io::Result<PathBuf> {
         let name = child_name(name)?;
         let mut buffer = vec![0u8; 4097];
@@ -554,22 +594,6 @@ impl Descriptor {
         }
         names.sort();
         Ok(Some(names))
-    }
-
-    /// Exclusively create a new child directory; never changes an existing inode.
-    pub fn create_directory(&self, name: &OsStr, mode: u32) -> io::Result<Self> {
-        let child = child_name(name)?;
-        status(unsafe { libc::mkdirat(self.as_raw_fd(), child.as_ptr(), mode as libc::mode_t) })?;
-        let directory = self.open_directory_at(name)?;
-        let opened = directory.stat()?;
-        if !opened.same_inode(self.stat_at(name)?) || !opened.is_directory() {
-            return Err(io::Error::other("New directory binding changed"));
-        }
-        status(unsafe { libc::fchmod(directory.as_raw_fd(), mode as libc::mode_t) })?;
-        if !directory.stat()?.same_inode(self.stat_at(name)?) {
-            return Err(io::Error::other("New directory binding changed"));
-        }
-        Ok(directory)
     }
 }
 
