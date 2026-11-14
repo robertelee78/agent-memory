@@ -271,6 +271,17 @@ fn existing_wrapped_prohibition_cannot_be_mapped_to_positive_force() {
 fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
     let world = World::new().unwrap();
     let runtime = support::installed_runtime::install(&world.root, |argv| world.run(argv).unwrap());
+    let inventory = agent_memory::pack_validation::inventory(&runtime.pack).unwrap();
+    let portable_pack = world.root.join("portable guide pack");
+    for (relative, (bytes, permissions)) in &inventory {
+        let path = portable_pack.join(relative);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, bytes).unwrap();
+        // Inventory preserves checkout modes; normalize only this separate
+        // portable input, leaving the installed source and receipt untouched.
+        let mode = if permissions & 0o111 != 0 { 0o755 } else { 0o644 };
+        support::lifecycle::mode(&path, mode);
+    }
     let value = call(
         &world,
         &[
@@ -278,7 +289,7 @@ fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
             "--am",
             runtime.binary.to_str().unwrap(),
             "--pack",
-            runtime.pack.to_str().unwrap(),
+            portable_pack.to_str().unwrap(),
         ],
         0,
     );
@@ -306,7 +317,6 @@ fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
         "Render input needs project-id, router-updated, contexts and omitted"
     );
     assert!(text(&examples[2], "observed_stderr").contains("unknown-operation"));
-    let inventory = agent_memory::pack_validation::inventory(&runtime.pack).unwrap();
     let artifact_files = get(&value, "artifact_files").as_object().unwrap();
     assert_eq!(
         artifact_files
@@ -320,7 +330,9 @@ fn guide_examples_are_actual_native_exit_results_bound_to_complete_pack() {
     );
     for (path, digest) in artifact_files {
         use sha2::{Digest, Sha256};
-        let actual: String = Sha256::digest(std::fs::read(runtime.pack.join(path)).unwrap())
+        let raw = std::fs::read(portable_pack.join(path)).unwrap();
+        assert_eq!(&raw, &inventory[path].0);
+        let actual: String = Sha256::digest(&raw)
             .iter()
             .map(|byte| format!("{byte:02x}"))
             .collect();
