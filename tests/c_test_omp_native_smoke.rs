@@ -694,13 +694,13 @@ fn controlled_native_protocol() {
 }
 
 #[test]
-#[ignore = "pack surface: refresh/boundary (Admission)"]
 fn test_unsupported_binary_refuses_before_native_launch_or_human_turns() {
     isolated(
         "test_unsupported_binary_refuses_before_native_launch_or_human_turns",
         false,
         |fixture| {
-            for version in ["18.14.0", "18.18.9", "18.19.1"] {
+            // The former targets and adjacent releases all refuse.
+            for version in ["18.16.0", "18.19.0", "18.20.0", "18.20.2"] {
                 let binary = fixture.binary(version, "disabled");
                 let report = fixture.smoke(&binary, 5, 1);
                 assert_eq!(get(&report, "native_version"), &s(format!("omp/{version}")));
@@ -769,7 +769,7 @@ fn test_both_exact_current_human_turns_and_persistent_session_are_required() {
         true,
         |fixture| {
             for mode in ["first-only", "wrong-text", "wrong-id", "missing-session"] {
-                fixture.smoke(&fixture.binary("18.16.0", mode), 5, 1);
+                fixture.smoke(&fixture.binary("18.20.1", mode), 5, 1);
             }
         },
     );
@@ -1089,10 +1089,9 @@ fn test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof() {
         true,
         |fixture| {
             for (version, mode) in [
-                ("18.16.0", "complete"),
-                ("18.19.0", "complete"),
-                ("18.19.0", "late-duplicate"),
-                ("18.19.0", "late-unsettled"),
+                ("18.20.1", "complete"),
+                ("18.20.1", "late-duplicate"),
+                ("18.20.1", "late-unsettled"),
             ] {
                 let report = fixture.smoke(
                     &fixture.binary(version, mode),

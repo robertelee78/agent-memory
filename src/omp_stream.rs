@@ -89,10 +89,11 @@ pub const REFUSAL_CODES: [&str; 12] = [
     "unsupported-view",
     "missing-payload",
 ];
-/// Exact upstream Linux arm64 images; see the v0.0.15 clock qualification contract.
+/// Exact upstream omp 18.20.1 Linux images (`omp-linux-arm64`, `omp-linux-x64`
+/// of tag commit b7fe8c7f); see the v0.0.15 clock qualification contract.
 pub const LINUX_MONOTONIC_IMAGES: [&str; 2] = [
-    "c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de",
-    "61826bf89c2c0512417fee05fa2f486e60ee11b23ea95a17257a6c49edb6b8d5",
+    "21305158dbdecfa771b72a62254831d60be6b96726245877c25324a4b9988f76",
+    "24bef5a44d6db0d8f6e8f677404b9a7f1dde3c5e500c435290a3be71bb4dec2a",
 ];
 pub const MAX_NATIVE_IMAGE_BYTES: u64 = 512 * 1024 * 1024;
 /// Named bound for every private namespace listing (the baseline listed

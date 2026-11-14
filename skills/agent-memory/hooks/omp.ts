@@ -228,7 +228,7 @@ export default function nativeMemory(pi: ExtensionAPI, binding?: Binding) {
     if (!diagnosed) { diagnosed = true; ctx.ui.notify('Agent Memory: ' + code + '; sources remain pending. Use am status/doctor and am omp-boundary --list-pending.', 'warning'); }
   };
   const eligible = (ctx: ExtensionContext) => ctx.agent.kind !== 'sub';
-  const supported = () => (pi.pi.VERSION === '18.16.0' || pi.pi.VERSION === '18.19.0') && binding?.rolloutAttested === true
+  const supported = () => pi.pi.VERSION === '18.20.1' && binding?.rolloutAttested === true
     && binding.readerCapability === 'omp-stored-source-v2' && /^[0-9a-f]{64}$/.test(binding.artifact)
     && typeof binding.executable === 'string' && isAbsolute(binding.executable)
     && typeof pi.pi.parseSessionContent === 'function' && pi.pi.CURRENT_SESSION_VERSION === 3
@@ -463,6 +463,13 @@ export default function nativeMemory(pi: ExtensionAPI, binding?: Binding) {
   pi.on('session_before_tree', (_event, ctx) => { capture(ctx, 'ingest'); });
   pi.on('session_tree', (_event, ctx) => { capture(ctx, 'ingest'); });
   pi.on('session_compact', (_event, ctx) => { capture(ctx, 'ingest'); });
+  // /clear keeps the session ID but drops stock's queued hidden turns, including
+  // a session-stop continuation (agent-session.ts resetSessionContext). Capture
+  // the stored reset boundary, then stop treating later work as own guidance.
+  pi.on('session_clear', (_event, ctx) => {
+    const current = capture(ctx, 'ingest'); if (!current) return;
+    cancel(current.state); current.state.request = undefined;
+  });
   pi.on('agent_start', (_event, ctx) => { const current = capture(ctx, 'ingest'); if (current) current.state.activeRun = !ctx.isIdle() || ctx.hasPendingMessages(); });
   pi.on('before_agent_start', async (_event, ctx) => {
     const deadline = process.hrtime.bigint() + 950000000n;

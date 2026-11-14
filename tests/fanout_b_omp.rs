@@ -4965,6 +4965,10 @@ fn no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status() {
                     "verified"
                 );
                 assert_eq!(
+                    get(get(&result, "omp"), "supported_version_targets"),
+                    &decode(r#"["18.20.1"]"#)
+                );
+                assert_eq!(
                     get(get(&result, "omp"), "answer_first"),
                     &decode(
                         r#"{"activation":"no_guidance","automation":"unqualified","native_loading":"not-observed"}"#

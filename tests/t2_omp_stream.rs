@@ -2488,6 +2488,28 @@ fn self_check_rejects_unsupported_clocks() {
     }
 }
 
+/// The Linux clock gate admits exactly the omp 18.20.1 `omp-linux-arm64` and
+/// `omp-linux-x64` release assets (release `SHA256SUMS.txt`); the former
+/// 18.16.0/18.19.0 targets and the 18.20.1 musl images are not admitted.
+#[test]
+fn linux_clock_gate_admits_exactly_the_18_20_1_release_images() {
+    let arm64 = "21305158dbdecfa771b72a62254831d60be6b96726245877c25324a4b9988f76";
+    let x64 = "24bef5a44d6db0d8f6e8f677404b9a7f1dde3c5e500c435290a3be71bb4dec2a";
+    assert_eq!(stream::qualified_images(), [arm64, x64]);
+    for refused in [
+        // 18.16.0 and 18.19.0 omp-linux-arm64, omp-linux-x64.
+        "c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de",
+        "6498ed785bab00d2926e0387e0ec02362d6d45f1c3d0d1b57c1618b7f95c9264",
+        "61826bf89c2c0512417fee05fa2f486e60ee11b23ea95a17257a6c49edb6b8d5",
+        "b44fda2ae5c9cce2bbe124d1672cba532a136d9e1eef68599b16efcd3bc5c626",
+        // 18.20.1 omp-linux-musl-arm64, omp-linux-musl-x64.
+        "eb356d673aabd3041db7a77a21e3574c96f6331a74d81035633a853860b2f68e",
+        "5260e06f07a594b25b8f7b6543a6bda296c704084700840d778e4ac494e6812e",
+    ] {
+        assert!(!stream::qualified_images().contains(&refused), "{refused}");
+    }
+}
+
 // obligation: tests/contracts/test_omp_finite_stream.py::LinuxImageControls.test_image_hash_size_type_and_changes_refuse
 #[test]
 fn image_hash_size_type_and_changes_refuse() {
