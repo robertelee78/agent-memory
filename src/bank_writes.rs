@@ -141,6 +141,24 @@ pub trait RecoveryFrontier: Send + Sync {
         owner: Option<&[u8]>,
         runtime_root: &Path,
     ) -> Result<Vec<u8>>;
+    /// Full verified hold observation at an independently located bank.
+    fn verified_enrollment_hold_at_bank(
+        &self,
+        root: &Path,
+        bank: &Path,
+        runtime_root: &Path,
+    ) -> Result<Option<crate::scope_binding::VerifiedEnrollmentHold>>;
+    /// Observe the private frontier, including removed holds and its private index.
+    fn observe_enrollment_bank(
+        &self,
+        root: &Path,
+        bank: &Path,
+        runtime_root: &Path,
+    ) -> Result<Value>;
+    /// Guarded source-marker reads; the guard restores prior state on Drop.
+    fn observe_source_markers(
+        &self,
+    ) -> Result<Box<dyn crate::scope_binding::SourceMarkerObservation>>;
 }
 pub trait RecoveryTransactions: Send + Sync {
     fn apply_checkpoint(&self, proposal: &Value) -> Result<Value>;
@@ -199,6 +217,8 @@ pub trait TurnSources: Send + Sync {
         existing_only: bool,
         runtime_root: &Path,
     ) -> Result<Box<dyn CanonicalWriterBarrier>>;
+    fn check_source_compatibility(&self, state_base: &Path) -> Result<()>;
+    fn source_barrier_held(&self, state_base: &Path) -> Result<bool>;
 }
 static SCOPE: RwLock<Option<Arc<dyn ScopeBinding>>> = RwLock::new(None);
 static CHECKPOINT: RwLock<Option<Arc<dyn Checkpoint>>> = RwLock::new(None);

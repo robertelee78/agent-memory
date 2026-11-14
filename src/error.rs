@@ -30,6 +30,10 @@ pub enum Kind {
     CanonicalWriterBusy,
     /// An unpublished canonical writer owner permits bounded retry without authority.
     CanonicalWriterInitializing,
+    /// Missing, conflicting or changed independently resolved identity.
+    IdentityUnresolved,
+    /// Canonical writer contention permits bounded rediscovery, never authority.
+    SourceTransportBusy { initializing: bool },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,6 +130,21 @@ impl ContractError {
 
     pub fn message(&self) -> &str {
         &self.message
+    }
+
+    pub(crate) fn identity_unresolved(message: impl Into<String>) -> Self {
+        Self {
+            kind: Kind::IdentityUnresolved,
+            message: message.into(),
+        }
+    }
+
+    pub(crate) fn source_transport_busy(initializing: bool) -> Self {
+        Self {
+            kind: Kind::SourceTransportBusy { initializing },
+            message: "Canonical writer unavailable; preserve pending source work and rediscover"
+                .into(),
+        }
     }
 }
 

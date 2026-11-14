@@ -294,6 +294,7 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     wired(crate::project_identity::register_bank_writes(Some(
         Arc::new(wiring::WriterOperations),
     )))?;
+    crate::bank_writes::register_scope_binding(Some(Arc::new(crate::scope_binding::ScopeBinding)));
     Ok(())
 }
 

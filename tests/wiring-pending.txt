@@ -11,7 +11,6 @@ bank_transactions::register_transaction_validator waits for admission, consolida
 bank_writes::register_checkpoint waits for checkpoint
 bank_writes::register_recovery_frontier waits for recovery_frontier
 bank_writes::register_recovery_transactions waits for recovery_transactions
-bank_writes::register_scope_binding waits for scope_binding
 bank_writes::register_security waits for security
 bank_writes::register_turn_sources waits for turn_sources
 cache_recovery::register_installation waits for installation
@@ -26,7 +25,7 @@ sharing_hold_mapping::register_hold_causes waits for sharing_holds
 sharing_hold_mapping::register_security_scan waits for security
 sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
 turn_check::register_memory_refresh waits for memory_refresh
-turn_check::register_scope_binding waits for scope_binding
+turn_check::register_scope_binding waits for scope_binding, installation
 turn_check::register_turn_sources waits for turn_sources
 private_state::register_private_state_hooks waits for installation, omp_boundary, admission
 private_state::register_recovery_quiescence waits for recovery_quiescence

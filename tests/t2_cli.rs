@@ -144,6 +144,24 @@ fn script_command(script: &str) -> String {
     format!("am {}", script.trim_end_matches(".py").replace('_', "-"))
 }
 
+fn declared_command_names() -> Vec<String> {
+    surface::declaration()
+        .get("commands")
+        .and_then(Value::as_array)
+        .unwrap()
+        .iter()
+        .map(|command| {
+            command
+                .get("route")
+                .unwrap_or(command)
+                .get("name")
+                .and_then(Value::as_str)
+                .unwrap()
+                .to_owned()
+        })
+        .collect()
+}
+
 // obligation: tests/contracts/test_public_cli.py::PublicCLIContract.test_default_help_version_flags_and_public_parser_names_are_read_only
 #[test]
 fn baseline_argparse_vectors_reproduce_exit_status_and_messages() {
@@ -189,32 +207,25 @@ fn baseline_argparse_vectors_reproduce_exit_status_and_messages() {
         let root = dir.0.to_str().unwrap();
         let stdout = text(&output.stdout).replace(root, "<ROOT>");
         let label = format!("row {:?} {args:?}", row.get("row"));
-        if !expected_stderr.contains("{developer,project") {
-            assert_eq!(text(&output.stderr), expected_stderr, "{label}");
-        } else {
-            // The full baseline root lists commands of unported modules; the
-            // registered subset is asserted with the same message shape.
-            let stderr = text(&output.stderr);
+        if expected_stderr.starts_with("usage: am [-h]\n") {
+            // Root alternatives evolve with the public command declaration;
+            // usage framing and the captured refusal protocol remain exact.
+            let names = declared_command_names();
             let last_expected = expected_stderr.lines().last().unwrap();
-            let message = last_expected.split(": error: ").next().unwrap();
-            assert!(stderr.starts_with("usage: am [-h]\n"), "{label}: {stderr}");
-            assert!(
-                stderr.contains(&format!("{message}: error: ")),
-                "{label}: {stderr}"
+            let error = match last_expected.split_once(" (choose from ") {
+                Some((message, _)) => format!("{message} (choose from {})\n", names.join(", ")),
+                None => format!("{last_expected}\n"),
+            };
+            assert_eq!(
+                text(&output.stderr),
+                format!(
+                    "usage: am [-h]\n          {{{}}} ...\n{error}",
+                    names.join(",")
+                ),
+                "{label}"
             );
-            if last_expected.contains("invalid choice") {
-                assert!(
-                    stderr.contains(
-                        "argument command: invalid choice: 'bogus' (choose from developer, "
-                    ),
-                    "{label}: {stderr}"
-                );
-            } else {
-                assert!(
-                    stderr.ends_with("am: error: the following arguments are required: command\n"),
-                    "{label}"
-                );
-            }
+        } else {
+            assert_eq!(text(&output.stderr), expected_stderr, "{label}");
         }
         assert_eq!(output.status.code(), Some(expected_exit as i32), "{label}");
         assert_eq!(
@@ -259,9 +270,15 @@ fn default_help_route_help_and_invalid_option_follow_the_public_contract() {
     assert_eq!(text(&alias.stdout), console::help_text("agent-memory"));
     let unknown = dir.run("am", &["no-such-command"]);
     assert_eq!(unknown.status.code(), Some(2));
-    assert!(text(&unknown.stderr).ends_with(
-        "am: error: argument command: invalid choice: 'no-such-command' (choose from developer, bank, writes, artifact, authority-policy, bank-layout, lifecycle-model, record-contract, scope-policy, validate-pack)\n"
-    ));
+    let names = declared_command_names();
+    assert_eq!(
+        text(&unknown.stderr),
+        format!(
+            "usage: am [-h]\n          {{{}}} ...\nam: error: argument command: invalid choice: 'no-such-command' (choose from {})\n",
+            names.join(","),
+            names.join(", ")
+        )
+    );
 }
 
 // obligation: tests/contracts/test_public_cli.py::PublicCLIContract.test_json_is_explicit_and_source_helpers_and_memory_results_remain_structured
