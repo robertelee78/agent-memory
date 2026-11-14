@@ -613,13 +613,13 @@ fn verify_rolled_back_targets(services: &Services, state: &Path, journal: &Value
     Ok(())
 }
 
-fn receipt_committed(state: &Path, journal: &Value) -> Result<bool> {
+pub(crate) fn receipt_committed(state: &Path, journal: &Value) -> Result<bool> {
     let identity = get(journal, "receipt_identity");
     Ok(*identity != Value::Null && same(&fingerprint(&state.join("receipt.json"))?, identity))
 }
 
 /// Baseline `_require_replannable_journal`.
-fn require_replannable_journal(env: &Environment, state: &Path) -> Result<()> {
+pub(crate) fn require_replannable_journal(env: &Environment, state: &Path) -> Result<()> {
     let Some(journal) = read_journal(env, state)? else {
         return Ok(());
     };

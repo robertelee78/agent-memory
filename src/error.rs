@@ -40,6 +40,13 @@ pub enum Kind {
     HoldFailure { code: String, repair: String },
     /// Published source completion requires the registered T2c authority gate.
     SourcePublicationUnavailable,
+    /// An incomplete bounded raw layout-recovery observation.
+    RawRecoveryCapacity {
+        dimension: String,
+        limit: usize,
+        measured: u64,
+        exact: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -187,6 +194,22 @@ impl ContractError {
                 initializing: false,
             },
             message: message.into(),
+        }
+    }
+    pub(crate) fn raw_recovery_capacity(
+        dimension: &str,
+        limit: usize,
+        measured: u64,
+        exact: bool,
+    ) -> Self {
+        Self {
+            kind: Kind::RawRecoveryCapacity {
+                dimension: dimension.to_owned(),
+                limit,
+                measured,
+                exact,
+            },
+            message: "pending-recovery-capacity".to_owned(),
         }
     }
 }

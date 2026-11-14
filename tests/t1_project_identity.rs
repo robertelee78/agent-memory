@@ -2018,7 +2018,6 @@ fn owned_lock_and_transaction_symlinks_keep_busy_refusal_without_mutation() {
 }
 
 #[test]
-#[ignore = "needs layout_recovery_observation registered"]
 fn nested_bank_roots_preserve_raw_recovery_identity() {
     in_world("nested_bank_roots_preserve_raw_recovery_identity", |w| {
         struct BankMarkers;
@@ -2033,6 +2032,10 @@ fn nested_bank_roots_preserve_raw_recovery_identity() {
             }
         }
         project::register_bank_observation(Some(Arc::new(BankMarkers))).unwrap();
+        project::register_layout_observation(Some(Arc::new(
+            agent_memory::layout_recovery_observation::LayoutObservation,
+        )))
+        .unwrap();
         for (name, relative) in [
             ("depth-two", "docs/shared memory"),
             ("depth-three", "docs/team/shared memory"),

@@ -13,7 +13,7 @@ mod lock;
 mod plan;
 mod providers;
 mod records;
-mod seams;
+pub(crate) mod seams;
 mod transaction;
 
 pub use adoption::{
@@ -418,3 +418,12 @@ pub fn source_binary(source: &Value) -> Result<PathBuf> {
         _ => Err(ContractError::new("Installed source kind has no Rust runtime binary").into()),
     }
 }
+
+// Internal lifecycle primitives shared with `updating`, `uninstallation`,
+// `purging` and `doctor_fix` (baseline cross-module `install.*` calls).
+pub(crate) use filesystem::{
+    is_directory, is_regular, lexists, named, native_rename, read_optional, replace_record,
+    sync_dir,
+};
+pub(crate) use plan::unchanged_parent;
+pub(crate) use transaction::{receipt_committed, require_replannable_journal};

@@ -317,6 +317,15 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     wired(crate::turn_check::register_turn_sources(Box::new(
         crate::turn_sources::TurnSources,
     )))?;
+    wired(
+        crate::installation::seams::register_updating(Some(Arc::new(
+            crate::updating::Runtime::process(),
+        )))
+        .map_err(|error| ContractError::new(error.to_string())),
+    )?;
+    wired(crate::project_identity::register_layout_observation(Some(
+        Arc::new(crate::layout_recovery_observation::LayoutObservation),
+    )))?;
     Ok(())
 }
 

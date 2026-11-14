@@ -38,6 +38,9 @@ pub static ENTRIES: &[Entry] = &[
     route("scope-policy", &helpers::scopes::HELPER),
     route("validate-pack", &helpers::pack_validation::HELPER),
     Entry::Native(helpers::installation::INSTALL_NATIVE),
+    Entry::Native(helpers::updating::UPDATE_NATIVE),
+    Entry::Native(helpers::uninstallation::UNINSTALL_NATIVE),
+    Entry::Native(helpers::purging::PURGE_NATIVE),
     Entry::Native(helpers::installation::RECOVER_NATIVE),
 ];
 
