@@ -1227,3 +1227,96 @@ fn developer_cli_has_its_providers_and_refuses_a_build_without_binaries() {
     assert!(!stderr.contains("CommandSurface"), "{stderr}");
     assert!(!p.scratch.path.join("output").exists());
 }
+
+#[test]
+fn portable_metadata_matches_literal_nonempty_lf_declarations_without_normalizing_cr() {
+    let p = Publisher::new();
+    for (index, (metadata, refusal)) in [
+        (
+            "metadata: {\"version\":\"0.0.15\"}\nmetadata: fields are described below\n",
+            None,
+        ),
+        ("metadata: {\"version\":\"0.0.15\"}\nmetadata: {}\n", None),
+        ("metadata: {\"version\":\"0.0.15\"}", None),
+        (
+            "metadata: {\"version\":\"0.0.15\"}\r\n",
+            Some("Release needs one version declaration"),
+        ),
+        (
+            "metadata: {}\n",
+            Some("Release needs one version declaration"),
+        ),
+        ("metadata: { }\n", Some("Invalid portable release version")),
+        (
+            "metadata: {\"version\":\"0.0.15\"} \n",
+            Some("Release needs one version declaration"),
+        ),
+        (
+            "metadata: {\"version\":\"0.0.15\"}\nmetadata: {broken}\n",
+            Some("Release needs one version declaration"),
+        ),
+        (
+            "metadata: {\"version\":\"0.0.15\"}\nmetadata: {\"version\":\"0.0.16\"}\n",
+            Some("Release needs one version declaration"),
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let mut files = pack_files();
+        files.insert("SKILL.md".into(), (metadata.as_bytes().to_vec(), 0o644));
+        let root = p.scratch.path.join(format!("metadata-{index}"));
+        write_pack(&root, &files);
+        let result = release::package_identity(&root);
+        match refusal {
+            Some(message) => assert_eq!(result.unwrap_err().to_string(), message, "{metadata:?}"),
+            None => assert_eq!(result.unwrap().0, "0.0.15", "{metadata:?}"),
+        }
+    }
+}
+
+#[test]
+fn terminal_download_failure_preserves_baseline_cli_details_insertion_order() {
+    let p = Publisher::new();
+    let error = release::download_with_environment(
+        "https://example.com/release-manifest.json",
+        1024,
+        Default::default(),
+        &transport_environment(&p, "missing"),
+        Duration::from_secs(30),
+    )
+    .unwrap_err();
+    // Public CLI receipts use this insertion-order, indent-2 encoder, not the
+    // sorted private diagnostic codec. Timing/path values are intentionally not golden.
+    let raw =
+        agent_memory::codec::json::encode(&error.details, agent_memory::codec::json::INDENT2_ASCII)
+            .unwrap();
+    assert!(
+        raw.starts_with(concat!(
+            "{\n",
+            "  \"schema\": \"agent-memory/download-failure-v1\",\n",
+            "  \"stage\": \"release manifest\",\n",
+            "  \"host\": \"example.com\",\n",
+            "  \"attempts\": [\n",
+            "    {\n",
+            "      \"attempt\": 1,\n",
+            "      \"curl_exit\": 22,\n",
+            "      \"http_status\": 404,\n",
+            "      \"reason\": \"transport\",\n",
+            "      \"detail\": \"receive error\",\n",
+            "      \"received_bytes\": 8,\n",
+            "      \"seconds\": "
+        )),
+        "{raw}"
+    );
+    assert!(
+        raw.contains("    }\n  ],\n  \"attempt_count\": 1,\n  \"elapsed_seconds\": "),
+        "{raw}"
+    );
+    assert!(raw.contains("\"reason\": \"HTTP rejection\""), "{raw}");
+    assert_eq!(
+        release::regular(&p.scratch.path.join("count"), 16).unwrap(),
+        b"1\n"
+    );
+    remove_report(&error);
+}

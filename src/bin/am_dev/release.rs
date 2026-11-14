@@ -24,6 +24,13 @@ fn text<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
 }
 const RAW_DEFAULT: &str =
     "https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh";
+// Bound the projected response, not unused release notes or comparison patches.
+const MAX_GH_RESPONSE: usize = release::MAX_METADATA;
+const RELEASE_FIELDS: &str =
+    "{tag_name,draft,prerelease,target_commitish,html_url,assets:(.assets | map({name,size}))}";
+const BRANCH_FIELDS: &str = "{protected,commit:{sha:.commit.sha}}";
+const TREE_FIELDS: &str = "{truncated,tree:(.tree | map({path,type,mode,sha}))}";
+const TAG_FIELDS: &str = "{object:{type:.object.type,sha:.object.sha}}";
 pub struct BuildInputs {
     pub root: PathBuf,
     pub key: PathBuf,
@@ -86,12 +93,12 @@ pub fn preflight(
 }
 fn command(root: &Path, argv: &[&str]) -> Result<crate::process::Output> {
     let short_lookup = matches!(argv, ["gh", "release", "view", ..])
-        || matches!(argv, ["gh","api",path] if path.contains("/git/ref/tags/"));
+        || matches!(argv, ["gh","api",path,..] if path.contains("/git/ref/tags/"));
     let timeout = Duration::from_secs(if short_lookup { 60 } else { 180 });
     let maximum = if matches!(argv, ["git", "cat-file", "blob", _]) {
         release::MAX_FILE
     } else if argv.first() == Some(&"gh") {
-        release::MAX_METADATA
+        MAX_GH_RESPONSE
     } else {
         release::MAX_TAR
     };
@@ -123,14 +130,28 @@ fn git(root: &Path, args: &[&str]) -> Result<String> {
     argv.extend_from_slice(args);
     Ok(utf8(run(root, &argv)?)?.trim().into())
 }
-fn api(root: &Path, path: &str) -> Result<Value> {
-    release::parse(&run(root, &["gh", "api", path])?)
+fn api(root: &Path, path: &str, fields: &str) -> Result<Value> {
+    release::parse(&run(root, &["gh", "api", path, "--jq", fields])?)
 }
 fn path_text(path: &Path) -> Result<&str> {
     Ok(crate::host::text(path.as_os_str(), "release path")?)
 }
-fn signing_key(inputs: &BuildInputs, output: &Path) -> Result<PathBuf> {
+fn signing_key(inputs: &BuildInputs, output: &Path, signers: &str) -> Result<PathBuf> {
     let key = crate::host::expanduser(&inputs.key)?;
+    // Anchor lexically before trust inspection; resolving here would hide a final symlink.
+    let key = if key.is_absolute() {
+        key
+    } else {
+        std::env::current_dir()?.join(key)
+    };
+    let key = key.components().fold(PathBuf::new(), |mut path, part| {
+        if part == std::path::Component::ParentDir {
+            path.pop();
+        } else {
+            path.push(part.as_os_str());
+        }
+        path
+    });
     crate::fs::trust::record(&key)?;
     crate::fs::trust::state(
         key.parent()
@@ -164,7 +185,7 @@ fn signing_key(inputs: &BuildInputs, output: &Path) -> Result<PathBuf> {
         .take(2)
         .collect::<Vec<_>>()
         .join(" ");
-    let pinned = release::ALLOWED_SIGNERS
+    let pinned = signers
         .split_whitespace()
         .skip(2)
         .take(2)
@@ -176,7 +197,14 @@ fn signing_key(inputs: &BuildInputs, output: &Path) -> Result<PathBuf> {
     )?;
     Ok(key)
 }
-fn sign(root: &Path, key: &Path, output: &Path, name: &str, namespace: &str) -> Result<()> {
+fn sign(
+    root: &Path,
+    key: &Path,
+    output: &Path,
+    name: &str,
+    namespace: &str,
+    signers: &str,
+) -> Result<()> {
     let path = output.join(name);
     run(
         root,
@@ -203,7 +231,7 @@ fn sign(root: &Path, key: &Path, output: &Path, name: &str, namespace: &str) -> 
         &release::regular(&path, maximum)?,
         &signature,
         namespace,
-        release::ALLOWED_SIGNERS,
+        signers,
     )
 }
 pub fn build(
@@ -213,10 +241,28 @@ pub fn build(
     migration: &dyn crate::artifact::MigrationContract,
     command_surface: &Value,
 ) -> Result<ReleaseManifest> {
+    build_trusted(
+        inputs,
+        output,
+        surface,
+        migration,
+        command_surface,
+        release::ALLOWED_SIGNERS,
+    )
+}
+// Explicit authority stays private: production entrypoints always use the compiled pin.
+fn build_trusted(
+    inputs: &BuildInputs,
+    output: &Path,
+    surface: &dyn crate::pack_validation::CommandSurface,
+    migration: &dyn crate::artifact::MigrationContract,
+    command_surface: &Value,
+    signers: &str,
+) -> Result<ReleaseManifest> {
     let root = crate::fs::canonical_path(&inputs.root, true)?;
     let output = crate::fs::canonical_path(output, false)?;
     let output = output.as_path();
-    let key = signing_key(inputs, output)?;
+    let key = signing_key(inputs, output, signers)?;
     require(
         git(&root, &["status", "--porcelain", "--untracked-files=all"])?.is_empty(),
         "Release source must be clean",
@@ -335,7 +381,14 @@ pub fn build(
         );
         let name = format!("am-{triple}");
         release::write_new(&output.join(&name), &raw, 0o755)?;
-        sign(&root, &key, output, &name, release::BINARY_NAMESPACE)?;
+        sign(
+            &root,
+            &key,
+            output,
+            &name,
+            release::BINARY_NAMESPACE,
+            signers,
+        )?;
     }
     let manifest = ReleaseManifest {
         tag: format!("v{version}"),
@@ -350,11 +403,19 @@ pub fn build(
     let manifest_raw = manifest.encoded()?;
     ReleaseManifest::from_value(&manifest.value(), None)?;
     release::write_new(&output.join(release::MANIFEST), &manifest_raw, 0o644)?;
-    sign(&root, &key, output, release::MANIFEST, release::NAMESPACE)?;
-    let verified = release::verify_manifest(
+    sign(
+        &root,
+        &key,
+        output,
+        release::MANIFEST,
+        release::NAMESPACE,
+        signers,
+    )?;
+    let verified = release::verify_manifest_with(
         &manifest_raw,
         &release::regular(&output.join(release::SIGNATURE), 4096)?,
         Some(&manifest.tag),
+        signers,
     )?;
     release::extract(&archive, &scratch.path.join("verified"), &verified)?;
     let bootstrap = run(&root, &["git", "show", &format!("{source}:install.sh")])?;
@@ -364,7 +425,7 @@ pub fn build(
             && git(&root, &["status", "--porcelain", "--untracked-files=all"])?.is_empty(),
         "Source changed during release packaging",
     )?;
-    Ok(manifest)
+    Ok(verified)
 }
 fn release_record(root: &Path, tag: &str) -> Result<Option<Value>> {
     let result = command(
@@ -401,7 +462,7 @@ fn release_record(root: &Path, tag: &str) -> Result<Option<Value>> {
             .is_some_and(|v| !v.is_empty() && v.bytes().all(|b| b.is_ascii_digit())),
         "Wrong release authority",
     )?;
-    Ok(Some(api(root, url)?))
+    Ok(Some(api(root, url, RELEASE_FIELDS)?))
 }
 fn tag_commit(root: &Path, tag: &str, required: bool) -> Result<Option<String>> {
     let result = command(
@@ -410,6 +471,8 @@ fn tag_commit(root: &Path, tag: &str, required: bool) -> Result<Option<String>> 
             "gh",
             "api",
             &format!("repos/{}/git/ref/tags/{tag}", release::REPOSITORY),
+            "--jq",
+            TAG_FIELDS,
         ],
     )?;
     if result.status != Status::Code(0) {
@@ -440,6 +503,7 @@ fn tag_commit(root: &Path, tag: &str, required: bool) -> Result<Option<String>> 
             &api(
                 root,
                 &format!("repos/{}/git/tags/{sha}", release::REPOSITORY),
+                TAG_FIELDS,
             )?,
             "object",
         )
@@ -463,20 +527,26 @@ fn output_files(path: &Path) -> Result<BTreeMap<String, Vec<u8>>> {
         .collect()
 }
 fn compare_status(root: &Path, source: &str) -> Result<String> {
-    Ok(text(
-        &api(
-            root,
+    Ok(utf8(run(
+        root,
+        &[
+            "gh",
+            "api",
             &format!("repos/{}/compare/main...{source}", release::REPOSITORY),
-        )?,
-        "status",
-    )
-    .unwrap_or("")
+            "--jq",
+            ".status",
+        ],
+    )?)?
+    .trim()
     .into())
 }
 fn verify_default(root: &Path, source: &str) -> Result<String> {
     let prefix = format!("repos/{}", release::REPOSITORY);
     let main = text(
-        get(&api(root, &format!("{prefix}/branches/main"))?, "commit"),
+        get(
+            &api(root, &format!("{prefix}/branches/main"), BRANCH_FIELDS)?,
+            "commit",
+        ),
         "sha",
     )
     .unwrap_or("")
@@ -488,7 +558,7 @@ fn verify_default(root: &Path, source: &str) -> Result<String> {
                 .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)),
         "Invalid main identity",
     )?;
-    let tree = api(root, &format!("{prefix}/git/trees/{main}"))?;
+    let tree = api(root, &format!("{prefix}/git/trees/{main}"), TREE_FIELDS)?;
     require(
         get(&tree, "truncated") == &Value::Bool(false),
         "Default source tree is incomplete",
@@ -527,6 +597,7 @@ fn verify_default(root: &Path, source: &str) -> Result<String> {
     let packages = api(
         root,
         &format!("{prefix}/git/trees/{}", text(skills, "sha").unwrap_or("")),
+        TREE_FIELDS,
     )?;
     let portable: Vec<_> = get(&packages, "tree")
         .as_array()
@@ -558,7 +629,10 @@ fn verify_default(root: &Path, source: &str) -> Result<String> {
     )?;
     require(
         text(
-            get(&api(root, &format!("{prefix}/branches/main"))?, "commit"),
+            get(
+                &api(root, &format!("{prefix}/branches/main"), BRANCH_FIELDS)?,
+                "commit",
+            ),
             "sha",
         ) == Some(main.as_str()),
         "Main changed during default readback; retry without forcing any ref",
@@ -572,6 +646,25 @@ pub fn publish(
     surface: &dyn crate::pack_validation::CommandSurface,
     migration: &dyn crate::artifact::MigrationContract,
     command_surface: &Value,
+) -> Result<Value> {
+    publish_trusted(
+        inputs,
+        notes,
+        integration_branch,
+        surface,
+        migration,
+        command_surface,
+        release::ALLOWED_SIGNERS,
+    )
+}
+fn publish_trusted(
+    inputs: &BuildInputs,
+    notes: &Path,
+    integration_branch: &str,
+    surface: &dyn crate::pack_validation::CommandSurface,
+    migration: &dyn crate::artifact::MigrationContract,
+    command_surface: &Value,
+    signers: &str,
 ) -> Result<Value> {
     let root = &inputs.root;
     require(
@@ -587,20 +680,28 @@ pub fn publish(
     let branch = api(
         root,
         &format!("repos/{}/branches/main", release::REPOSITORY),
+        BRANCH_FIELDS,
     )?;
     let rules = api(
         root,
         &format!("repos/{}/rules/branches/main", release::REPOSITORY),
+        "if type == \"array\" then length == 0 else false end",
     )?;
     require(
-        get(&branch, "protected") == &Value::Bool(false)
-            && rules.as_array().is_some_and(|v| v.is_empty()),
+        get(&branch, "protected") == &Value::Bool(false) && rules == Value::Bool(true),
         "Main promotion policy changed; review it before publishing this release",
     )?;
     release::regular(notes, release::MAX_FILE)?;
     let scratch = release::Scratch::new("am-release-")?;
     let output = scratch.path.join("assets");
-    let manifest = build(inputs, &output, surface, migration, command_surface)?;
+    let manifest = build_trusted(
+        inputs,
+        &output,
+        surface,
+        migration,
+        command_surface,
+        signers,
+    )?;
     let tag = &manifest.tag;
     let source = &manifest.source_commit;
     let mut existing = release_record(root, tag)?;
@@ -788,6 +889,7 @@ pub fn publish(
     let actual = api(
         root,
         &format!("repos/{}/releases/latest", release::REPOSITORY),
+        RELEASE_FIELDS,
     )?;
     require(
         text(&actual, "tag_name") == Some(tag)
@@ -796,8 +898,22 @@ pub fn publish(
         "Published stable release readback differs",
     )?;
     let public = release::Scratch::new("am-public-readback-")?;
+    let observed = release::probe_with(
+        &format!(
+            "https://github.com/{}/releases/latest/download/{}",
+            release::REPOSITORY,
+            release::MANIFEST
+        ),
+        release::ASSETS,
+        release::DownloadOptions::default(),
+        signers,
+    )?;
     require(
-        release::acquire(&public.path.join("source"), None)? == manifest,
+        release::acquire_with(
+            &public.path.join("source"),
+            &observed,
+            release::DownloadOptions::default(),
+        )? == manifest,
         "Public release differs from signed publication",
     )?;
     require(
@@ -852,4 +968,549 @@ pub fn publish(
         ("default_activation_performed", Value::Bool(true)),
         ("verified_main_commit", string(main)),
     ]))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::process::{Input, Spec, Target};
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    // Real Git object reads and real, namespaced SSH signatures. Only remote
+    // Git, gh and curl are simulated; fixture authority never impersonates the pin.
+    const GH: &[u8] = br#"#!/bin/sh
+set -eu
+s=$DELIVERY_ROOT/service
+. "$s/identities"
+release_json() {
+  printf '{\n"body":"'; cat "$s/padding"; printf '",\n'
+  printf '"tag_name":"v0.0.15","draft":'
+  if [ -f "$s/published" ]; then printf false; else printf true; fi
+  printf ',"prerelease":false,"target_commitish":"%s","html_url":"' "$DELIVERY_SOURCE"
+  if [ "$DELIVERY_MODE" = release-bound ]; then cat "$s/padding"; else printf 'https://github.com/robertelee78/agent-memory/releases/tag/v0.0.15'; fi
+  printf '","assets":['
+  separator=
+  for asset in "$s/assets/"*; do
+    [ -f "$asset" ] || continue
+    size=$(wc -c < "$asset" | tr -d ' ')
+    printf '%s{"name":"%s","size":%s}' "$separator" "${asset##*/}" "$size"
+    separator=,
+  done
+  printf ']}\n'
+}
+case "$1 $2" in
+  'release view')
+    if [ ! -f "$s/created" ]; then echo 'release not found' >&2; exit 1; fi
+    printf '{"apiUrl":"https://api.github.com/repos/robertelee78/agent-memory/releases/1"}\n' ;;
+  'release create')
+    [ ! -f "$s/created" ]; : > "$s/created"; echo create >> "$s/events" ;;
+  'release upload')
+    if [ "$DELIVERY_MODE" = partial ] && [ -f "$s/uploaded" ] && [ ! -f "$s/interrupted" ]; then
+      : > "$s/interrupted"; exit 1
+    fi
+    cp "$4" "$s/assets/${4##*/}"
+    : > "$s/uploaded"; echo upload >> "$s/events" ;;
+  'release download')
+    shift 3
+    pattern=
+    destination=
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        --repo) shift 2 ;;
+        --dir) destination=$2; shift 2 ;;
+        --pattern) pattern=$2; shift 2 ;;
+        *) exit 90 ;;
+      esac
+    done
+    [ -n "$destination" ]
+    if [ -n "$pattern" ]; then cp "$s/assets/$pattern" "$destination/$pattern"
+    else for asset in "$s/assets/"*; do [ -f "$asset" ] || continue; cp "$asset" "$destination/${asset##*/}"; done
+    fi ;;
+  'release edit')
+    [ -f "$s/created" ]; [ ! -f "$s/published" ]
+    : > "$s/published"; echo publish >> "$s/events" ;;
+  api*)
+    endpoint=$2
+    selector=
+    if [ "$#" -eq 4 ] && [ "$3" = --jq ]; then selector=$4; elif [ "$#" -ne 2 ]; then exit 90; fi
+    case "$endpoint" in
+      */compare/main...*)
+        if [ "$DELIVERY_MODE" = compare-bound ]; then record=$s/compare-excessive
+        elif [ -f "$s/promoted" ]; then record=$s/compare-identical
+        else record=$s/compare-ahead; fi
+        if [ "$selector" = .status ]; then cut -d '"' -f 4 "$record"
+        elif [ -z "$selector" ]; then cat "$record"; else exit 90; fi ;;
+      */releases/1|*/releases/latest)
+        case "$selector" in
+          '{tag_name,draft,prerelease,target_commitish,html_url,assets:(.assets | map({name,size}))}')
+            release_json | awk '!/^"body":/' ;;
+          '') release_json ;;
+          *) exit 90 ;;
+        esac ;;
+      repos/robertelee78/agent-memory/branches/main) printf '{"protected":false,"commit":{"sha":"%s"}}\n' "$DELIVERY_SOURCE" ;;
+      */rules/branches/main)
+        [ "$selector" = 'if type == "array" then length == 0 else false end' ]
+        printf 'true\n' ;;
+      */commits/*) [ "$selector" = .sha ]; printf '%s\n' "$DELIVERY_SOURCE" ;;
+      */git/ref/tags/v0.0.15)
+        if [ ! -f "$s/published" ]; then echo 404 >&2; exit 1; fi
+        printf '{"object":{"type":"commit","sha":"%s"}}\n' "$DELIVERY_SOURCE" ;;
+      */git/trees/*)
+        case "$endpoint" in
+          */"$DELIVERY_SOURCE") cat "$s/root-tree" ;;
+          */"$DELIVERY_SKILLS") cat "$s/skills-tree" ;;
+          *) exit 90 ;;
+        esac ;;
+      *) echo "Unrecorded API: $endpoint" >&2; exit 90 ;;
+    esac ;;
+  *) echo 'Unrecorded gh operation' >&2; exit 90 ;;
+esac
+"#;
+    const GIT: &[u8] = br#"#!/bin/sh
+set -eu
+[ ! -f "$DELIVERY_ROOT/service/identities" ] || . "$DELIVERY_ROOT/service/identities"
+case "$1" in
+  ls-remote) exit 0 ;;
+  -c)
+    [ "$1" = -c ] && [ "$2" = credential.helper= ] &&
+    [ "$3" = -c ] && [ "$4" = 'credential.helper=!gh auth git-credential' ] &&
+    [ "$5" = push ] && [ "$6" = origin ] &&
+    [ "$7" = "$DELIVERY_SOURCE:refs/heads/main" ] || exit 90
+    : > "$DELIVERY_ROOT/service/promoted"
+    echo push >> "$DELIVERY_ROOT/service/events" ;;
+  *) exec "$REAL_GIT" "$@" ;;
+esac
+"#;
+    const CURL: &[u8] = br#"#!/bin/sh
+set -eu
+output=
+url=
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --output) output=$2; shift 2 ;;
+    --) shift; url=$1; shift ;;
+    *) shift ;;
+  esac
+done
+case "$url" in
+  https://github.com/robertelee78/agent-memory/releases/latest/download/release-manifest.json)
+    source=$DELIVERY_ROOT/service/assets/release-manifest.json ;;
+  https://github.com/robertelee78/agent-memory/releases/download/v0.0.15/*)
+    source=$DELIVERY_ROOT/service/assets/${url##*/} ;;
+  https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh)
+    source=$DELIVERY_ROOT/checkout/install.sh ;;
+  *) echo 'Unrecorded download' >&2; exit 90 ;;
+esac
+cat "$source" > "$output"
+printf 200
+"#;
+
+    fn isolated(name: &str, modes: &[&str]) -> bool {
+        if std::env::var_os("DELIVERY_ROOT").is_some() {
+            return true;
+        }
+        let real_git = std::env::split_paths(&std::env::var_os("PATH").unwrap())
+            .map(|p| p.join("git"))
+            .find(|p| p.is_file())
+            .expect("Git is required by delivery tests");
+        for mode in modes {
+            let scratch = release::Scratch::new("am-publisher-test-").unwrap();
+            for directory in ["tools", "home", "tmp", "cwd", "service/assets"] {
+                crate::fs::private_mkdir(&scratch.path.join(directory)).unwrap();
+            }
+            for (name, script) in [("gh", GH), ("git", GIT), ("curl", CURL)] {
+                release::write_new(&scratch.path.join("tools").join(name), script, 0o755).unwrap();
+            }
+            let env = [
+                (
+                    "PATH".into(),
+                    format!(
+                        "{}:/usr/bin:/bin:/usr/local/bin",
+                        scratch.path.join("tools").display()
+                    )
+                    .into(),
+                ),
+                ("HOME".into(), scratch.path.join("home").into_os_string()),
+                ("TMPDIR".into(), scratch.path.join("tmp").into_os_string()),
+                ("GIT_CONFIG_NOSYSTEM".into(), "1".into()),
+                ("GIT_CONFIG_GLOBAL".into(), "/dev/null".into()),
+                ("GIT_CONFIG_SYSTEM".into(), "/dev/null".into()),
+                ("GIT_AUTHOR_DATE".into(), "2026-11-13T00:00:00+00:00".into()),
+                (
+                    "GIT_COMMITTER_DATE".into(),
+                    "2026-11-13T00:00:00+00:00".into(),
+                ),
+                ("LC_ALL".into(), "C".into()),
+                ("REAL_GIT".into(), real_git.clone().into_os_string()),
+                (
+                    "DELIVERY_ROOT".into(),
+                    scratch.path.clone().into_os_string(),
+                ),
+                ("DELIVERY_MODE".into(), (*mode).into()),
+            ];
+            let test_name = format!("{}::{name}", module_path!().split_once("::").unwrap().1);
+            let argv = [
+                std::env::current_exe().unwrap().into_os_string(),
+                "--exact".into(),
+                test_name.into(),
+                "--nocapture".into(),
+                "--test-threads=1".into(),
+            ];
+            let result = crate::process::run(&Spec {
+                argv: &argv,
+                search_path: false,
+                env: &env,
+                cwd: Some(&scratch.path.join("cwd")),
+                stdin: Input::Null,
+                stdout: Target::Capture { limit: 16384 },
+                stderr: Target::Capture { limit: 16384 },
+                deadline: crate::clock::Deadline::after(Duration::from_secs(120)).unwrap(),
+                new_session: false,
+                file_size_limit: None,
+                umask: Some(0o077),
+                pass_fds: &[],
+            })
+            .unwrap();
+            assert_eq!(
+                result.status,
+                Status::Code(0),
+                "{mode}: {}\n{}",
+                String::from_utf8_lossy(&result.stdout),
+                String::from_utf8_lossy(&result.stderr)
+            );
+            assert!(
+                String::from_utf8_lossy(&result.stdout).contains("1 passed"),
+                "worker did not execute"
+            );
+        }
+        false
+    }
+
+    struct NoExecutableSurface;
+    impl crate::pack_validation::CommandSurface for NoExecutableSurface {
+        fn dispatch(
+            &self,
+            script: &str,
+            _: &crate::pack_validation::Inventory,
+        ) -> crate::pack_validation::Result<crate::pack_validation::Dispatch> {
+            Err(crate::pack_validation::Invalid::new(
+                "dispatch",
+                script,
+                "Fixture has no executable routes",
+            ))
+        }
+    }
+    struct Fixture {
+        root: PathBuf,
+        inputs: BuildInputs,
+        signers: String,
+        surface: Value,
+    }
+    impl Fixture {
+        fn new() -> Self {
+            let root = PathBuf::from(std::env::var_os("DELIVERY_ROOT").unwrap());
+            let checkout = root.join("checkout");
+            crate::fs::private_mkdir(&checkout).unwrap();
+            run(
+                &root,
+                &[
+                    "ssh-keygen",
+                    "-q",
+                    "-t",
+                    "ed25519",
+                    "-N",
+                    "",
+                    "-f",
+                    path_text(&root.join("key")).unwrap(),
+                ],
+            )
+            .unwrap();
+            let public = utf8(release::regular(&root.join("key.pub"), 4096).unwrap()).unwrap();
+            let key = public
+                .split_whitespace()
+                .take(2)
+                .collect::<Vec<_>>()
+                .join(" ");
+            let signers = format!(
+                "{} namespaces=\"{},{}\" {key}\n",
+                release::PRINCIPAL,
+                release::NAMESPACE,
+                release::BINARY_NAMESPACE
+            );
+            let pack = checkout.join("skills/agent-memory");
+            crate::fs::private_mkdir(&pack).unwrap();
+            let mut files = BTreeMap::from([
+                ("SKILL.md", "---\nname: agent-memory\ndescription: Portable publication fixture\nmetadata: {\"version\":\"0.0.15\"}\n---\n\n## Route\n| Inspect | [bank](bank/GUIDE.md) | [inspect](inspect/GUIDE.md) |\n".to_owned()),
+                ("bank/GUIDE.md", "---\nkind: domain\n---\n\n[Inspect](../inspect/GUIDE.md).\n".to_owned()),
+                ("schemas/runtime-compatibility.json", r#"{"schema":"agent-memory/runtime-compatibility-v1","python_minimum":"3.11","readable_bank_schemas":["agent-memory/v1"],"migrator_source_schemas":[],"git_required_for":["sharing"],"optional_adapters":[],"required_python_packages":[],"required_agent_clients":[]}"#.to_owned()),
+                ("schemas/bank-router.json", r#"{"properties":{"schema":{"const":"agent-memory/v1"}}}"#.to_owned()),
+                ("keys/allowed-signers", release::ALLOWED_SIGNERS.to_owned()),
+            ]);
+            let mut operation =
+                "---\nkind: operation\ndomain: bank\nfile-operations: [\"inspect\"]\n---\n\n"
+                    .to_owned();
+            for section in crate::pack_validation::SECTIONS {
+                operation.push_str(&format!("## {section}\n\n"));
+                operation.push_str(if section == "Required context" {
+                    "A session MUST first load and follow the [bank domain](../bank/GUIDE.md).\n\n"
+                } else {
+                    "Explicit operation context.\n\n"
+                });
+            }
+            files.insert("inspect/GUIDE.md", operation);
+            for (name, raw) in files {
+                release::portable_directory(&pack, Path::new(name).parent().unwrap()).unwrap();
+                release::write_new(&pack.join(name), raw.as_bytes(), 0o644).unwrap();
+            }
+            release::write_new(&checkout.join("install.sh"), b"#!/bin/sh\nexit 0\n", 0o755)
+                .unwrap();
+            git(&checkout, &["init", "-b", "integrate/delivery"]).unwrap();
+            git(&checkout, &["config", "user.name", "Delivery Fixture"]).unwrap();
+            git(
+                &checkout,
+                &["config", "user.email", "delivery@example.invalid"],
+            )
+            .unwrap();
+            git(&checkout, &["config", "commit.gpgsign", "false"]).unwrap();
+            git(&checkout, &["add", "."]).unwrap();
+            git(
+                &checkout,
+                &["commit", "-m", "Recorded portable publication fixture"],
+            )
+            .unwrap();
+            git(
+                &checkout,
+                &[
+                    "remote",
+                    "add",
+                    "origin",
+                    &format!("https://github.com/{}.git", release::REPOSITORY),
+                ],
+            )
+            .unwrap();
+            let source = git(&checkout, &["rev-parse", "HEAD"]).unwrap();
+            let skills = git(&checkout, &["rev-parse", "HEAD:skills"]).unwrap();
+            let bootstrap = git(&checkout, &["rev-parse", "HEAD:install.sh"]).unwrap();
+            let portable = git(&checkout, &["rev-parse", "HEAD:skills/agent-memory"]).unwrap();
+            // gh's shell fixture loads recorded identities instead of modifying this process's env.
+            release::write_new(
+                &root.join("service/identities"),
+                format!("DELIVERY_SOURCE={source}\nDELIVERY_SKILLS={skills}\n").as_bytes(),
+                0o600,
+            )
+            .unwrap();
+            release::write_new(&root.join("service/root-tree"), format!(r#"{{"truncated":false,"tree":[{{"path":"install.sh","type":"blob","mode":"100755","sha":"{bootstrap}"}},{{"path":"skills","type":"tree","sha":"{skills}"}}]}}"#).as_bytes(), 0o600).unwrap();
+            release::write_new(&root.join("service/skills-tree"), format!(r#"{{"truncated":false,"tree":[{{"path":"agent-memory","type":"tree","sha":"{portable}"}}]}}"#).as_bytes(), 0o600).unwrap();
+            let padding = "x".repeat(release::MAX_METADATA + 1);
+            release::write_new(&root.join("service/padding"), padding.as_bytes(), 0o600).unwrap();
+            for (name, status, body) in [
+                ("compare-ahead", "ahead", padding.as_str()),
+                ("compare-identical", "identical", padding.as_str()),
+                ("compare-excessive", padding.as_str(), ""),
+            ] {
+                release::write_new(
+                    &root.join("service").join(name),
+                    format!(r#"{{"status":"{status}","patch":"{body}"}}"#).as_bytes(),
+                    0o600,
+                )
+                .unwrap();
+            }
+            let mut binaries = BTreeMap::new();
+            for triple in release::TARGETS {
+                let path = root.join(format!("am-{triple}"));
+                release::write_new(&path, triple.as_bytes(), 0o755).unwrap();
+                binaries.insert(triple.to_owned(), path);
+            }
+            release::write_new(&root.join("notes"), padding.as_bytes(), 0o600).unwrap();
+            Self {
+                root,
+                inputs: BuildInputs {
+                    root: checkout,
+                    key: "../key".into(),
+                    binaries,
+                },
+                signers,
+                surface: object([
+                    (
+                        "z",
+                        object([("z_nested", string("last")), ("a_nested", string("first"))]),
+                    ),
+                    (
+                        "a",
+                        Value::Array(vec![object([
+                            ("z_entry", string("last")),
+                            ("a_entry", string("first")),
+                        ])]),
+                    ),
+                ]),
+            }
+        }
+        fn publish(&self) -> Result<Value> {
+            publish_trusted(
+                &self.inputs,
+                &self.root.join("notes"),
+                "integrate/delivery",
+                &NoExecutableSurface,
+                &crate::migration_contract::Bundled,
+                &self.surface,
+                &self.signers,
+            )
+        }
+        fn events(&self) -> String {
+            utf8(release::regular(&self.root.join("service/events"), 4096).unwrap()).unwrap()
+        }
+    }
+
+    #[test]
+    fn publication_completion_and_resume_canonicalize_nested_surface_and_project_large_responses() {
+        if !isolated(
+            "publication_completion_and_resume_canonicalize_nested_surface_and_project_large_responses",
+            &["normal", "partial"],
+        ) {
+            return;
+        }
+        let fixture = Fixture::new();
+        let built = build_trusted(
+            &fixture.inputs,
+            &fixture.root.join("built"),
+            &NoExecutableSurface,
+            &crate::migration_contract::Bundled,
+            &fixture.surface,
+            &fixture.signers,
+        )
+        .unwrap();
+        let reparsed = release::verify_manifest_with(
+            &release::regular(
+                &fixture.root.join("built").join(release::MANIFEST),
+                release::MAX_METADATA,
+            )
+            .unwrap(),
+            &release::regular(&fixture.root.join("built").join(release::SIGNATURE), 4096).unwrap(),
+            Some("v0.0.15"),
+            &fixture.signers,
+        )
+        .unwrap();
+        assert_eq!(built, reparsed);
+        assert_ne!(built.command_surface, fixture.surface);
+        let raw_compare = run(
+            &fixture.inputs.root,
+            &[
+                "gh",
+                "api",
+                "repos/robertelee78/agent-memory/compare/main...recorded",
+            ],
+        );
+        assert!(
+            matches!(&raw_compare, Err(release::Error::Process(e)) if matches!(e.reason, crate::process::Refusal::CaptureLimit { .. }))
+        );
+        if std::env::var("DELIVERY_MODE").unwrap() == "partial" {
+            assert!(fixture.publish().is_err());
+            assert_eq!(fixture.events(), "create\nupload\n");
+            assert!(!fixture.root.join("service/published").exists());
+        }
+        let result = fixture.publish().unwrap();
+        assert_eq!(get(&result, "published"), &Value::Bool(true));
+        assert_eq!(
+            get(&result, "default_activation_performed"),
+            &Value::Bool(true)
+        );
+        assert_eq!(
+            text(&result, "verified_main_commit"),
+            Some(built.source_commit.as_str())
+        );
+        let events = fixture.events();
+        assert_eq!(events.lines().filter(|v| *v == "create").count(), 1);
+        assert_eq!(events.lines().filter(|v| *v == "publish").count(), 1);
+        assert_eq!(events.lines().filter(|v| *v == "push").count(), 1);
+        assert_eq!(events.lines().filter(|v| *v == "upload").count(), 12);
+        let raw_release = run(
+            &fixture.inputs.root,
+            &[
+                "gh",
+                "api",
+                "repos/robertelee78/agent-memory/releases/latest",
+            ],
+        );
+        assert!(
+            matches!(&raw_release, Err(release::Error::Process(e)) if matches!(e.reason, crate::process::Refusal::CaptureLimit { .. }))
+        );
+        assert_eq!(fixture.publish().unwrap(), result);
+        assert_eq!(
+            fixture.events(),
+            events,
+            "resume must not mutate published assets or main"
+        );
+    }
+
+    #[test]
+    fn publication_refuses_excessive_projected_compare_and_release_before_activation() {
+        if !isolated(
+            "publication_refuses_excessive_projected_compare_and_release_before_activation",
+            &["compare-bound", "release-bound"],
+        ) {
+            return;
+        }
+        let fixture = Fixture::new();
+        let error = fixture.publish().unwrap_err();
+        assert!(
+            matches!(&error, release::Error::Process(e) if matches!(e.reason, crate::process::Refusal::CaptureLimit { .. })),
+            "{error}"
+        );
+        assert!(!fixture.root.join("service/published").exists());
+        assert!(!fixture.root.join("service/promoted").exists());
+        if std::env::var("DELIVERY_MODE").unwrap() == "release-bound" {
+            assert_eq!(fixture.events(), "create\n");
+        } else {
+            assert!(!fixture.root.join("service/created").exists());
+        }
+    }
+
+    #[test]
+    fn relative_signing_key_is_anchored_lexically_and_retains_custody_refusals() {
+        if !isolated(
+            "relative_signing_key_is_anchored_lexically_and_retains_custody_refusals",
+            &["key"],
+        ) {
+            return;
+        }
+        let mut fixture = Fixture::new();
+        let output = fixture.root.join("output");
+        assert_eq!(
+            signing_key(&fixture.inputs, &output, &fixture.signers).unwrap(),
+            fixture.root.join("key")
+        );
+        symlink("key", fixture.root.join("linked-key")).unwrap();
+        fixture.inputs.key = "../linked-key".into();
+        let error = build_trusted(
+            &fixture.inputs,
+            &output,
+            &NoExecutableSurface,
+            &crate::migration_contract::Bundled,
+            &fixture.surface,
+            &fixture.signers,
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("symlink"), "{error}");
+        assert!(!output.exists());
+        fixture.inputs.key = "../key".into();
+        // The exact same valid relative fixture key is not the production key.
+        assert_eq!(
+            signing_key(&fixture.inputs, &output, release::ALLOWED_SIGNERS)
+                .unwrap_err()
+                .to_string(),
+            "Private key does not match the pinned AM key"
+        );
+        std::fs::set_permissions(
+            fixture.root.join("key"),
+            std::fs::Permissions::from_mode(0o644),
+        )
+        .unwrap();
+        assert_eq!(
+            signing_key(&fixture.inputs, &output, &fixture.signers)
+                .unwrap_err()
+                .to_string(),
+            "Signing key must be owner-readable and owner-only"
+        );
+        assert!(!output.exists());
+    }
 }
