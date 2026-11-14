@@ -144,3 +144,21 @@ pub(crate) fn require_hook(previous: &Value, client: &str, path: &Path, old: &Va
         ),
     )
 }
+
+/// OpenCode's prior entry is the exact installer-owned plugin link.
+pub(crate) fn require_hook_link(previous: &Value, path: &Path, old: &Value) -> Result<()> {
+    let expected = object([
+        ("kind", string("link")),
+        (
+            "target",
+            string(path_text(&old_pack(old)?.join("hooks/opencode.js"))?),
+        ),
+    ]);
+    require(
+        same(get(previous, "identity"), &expected),
+        format!(
+            "Python-era OpenCode hook link is not the exact installer entry; preserve: {}",
+            path.display()
+        ),
+    )
+}

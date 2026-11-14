@@ -2,7 +2,7 @@
 //! complete per-target action list (baseline `configuration`, `presets`,
 //! `preflight_path`, `preflight_layout`, `lifecycle_paths`, `source_info`,
 //! `prepare`, `public_plan`).
-use super::adoption::{python_era_kind, require_hook, require_wrapper};
+use super::adoption::{python_era_kind, require_hook, require_hook_link, require_wrapper};
 use super::filesystem::{
     canonical, fingerprint, is_directory, is_regular, lexists, named, read_optional, relative_to,
     same,
@@ -1102,6 +1102,8 @@ impl Builder<'_> {
                 if let (Some(previous), Some(old)) = (&previous, self.old) {
                     if text(previous, "kind") == Some("wrapper") {
                         require_wrapper(previous, &path, old)?;
+                    } else if text(previous, "kind") == Some("hook-link") {
+                        require_hook_link(previous, &path, old)?;
                     }
                 }
             }

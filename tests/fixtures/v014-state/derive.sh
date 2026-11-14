@@ -5,7 +5,7 @@
 # Usage: tests/fixtures/v014-state/derive.sh CAPTURES_DIR
 #   CAPTURES_DIR is .../research/rust-cutover/v014-state/captures
 #
-# Requires: POSIX sh, tar, gzip, jq, sed, find. Executes nothing from the capture.
+# Requires: POSIX sh, tar, gzip, jq, sed, find, cmp. Executes nothing from the capture.
 # For each scenario it keeps ONLY lifecycle state files (receipt, journal,
 # owner, lock, the two command wrappers, client hook configuration and
 # activation Markdown) with the capture's world root replaced by @WORLD@, and
@@ -15,6 +15,7 @@
 #   trees.txt  "<kind> <relative path>" for owned copy/source directories,
 #              which the tests materialize as opaque bytes and whose receipt
 #              identities they recompute (design "Python-era adoption").
+#   identities.json  genuine captured identities of files unchanged by relocation
 # The pack, the managed source clone and every .py file stay outside the repository.
 set -eu
 captures=${1:?usage: derive.sh CAPTURES_DIR}
@@ -34,6 +35,7 @@ for scenario in all-copy all-link claude-opencode-copy codex-copy-pending-source
   : > "$out/modes.txt"
   : > "$out/links.txt"
   : > "$out/trees.txt"
+  printf '{}\n' > "$out/identities.json"
   for relative in \
       state/agent-memory/install/receipt.json \
       state/agent-memory/install/journal.json \
@@ -51,6 +53,15 @@ for scenario in all-copy all-link claude-opencode-copy codex-copy-pending-source
       sed "s#$root#@WORLD@#g" "$world/$relative" > "$out/$relative"
       mode=$(jq -r --arg p "$relative" '.entries[] | select(.path == $p) | .mode' "$capture/manifest.json")
       printf '%s %s\n' "$mode" "$relative" >> "$out/modes.txt"
+      # Preserve the genuine Python identity whenever relocation changed no bytes.
+      if cmp -s "$world/$relative" "$out/$relative"; then
+        jq -S --arg path "$root/$relative" --arg relative "$relative" \
+          --slurpfile identities "$out/identities.json" \
+          '$identities[0] + ([.targets[] | select(.path == $path) |
+            {($relative): .identity}] | add // {})' \
+          "$world/state/agent-memory/install/receipt.json" > "$scratch/identities.json"
+        mv "$scratch/identities.json" "$out/identities.json"
+      fi
     fi
   done
   receipt="$world/state/agent-memory/install/receipt.json"

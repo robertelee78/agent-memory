@@ -208,9 +208,13 @@ pub fn verify_targets(
             )?;
         }
         let rust_era = source.is_some_and(|source| text(source, "target").is_some());
-        if *identity != Value::Null && matches!(kind, "copy" | "link") && rust_era {
-            let binary = source_binary(source.unwrap_or(&Value::Null))?;
-            let inspected = services.artifacts.inspect_runtime(&path, &binary)?;
+        if *identity != Value::Null && matches!(kind, "copy" | "link") {
+            let inspected = if rust_era {
+                let binary = source_binary(source.unwrap_or(&Value::Null))?;
+                services.artifacts.inspect_runtime(&path, &binary)?
+            } else {
+                services.artifacts.inspect(&path)?
+            };
             require(
                 get(&inspected, "artifact_digest") == get(target, "artifact_digest"),
                 format!(
@@ -494,11 +498,10 @@ fn rollback_now(
             conflicts.push(path_text(&path)?.to_owned());
             continue;
         }
-        if EXECUTABLE_KINDS
-            .iter()
-            .take(4)
-            .any(|kind| text(action, "kind") == Some(kind))
-            && *before != Value::Null
+        if matches!(
+            text(action, "kind"),
+            Some("source" | "copy" | "link" | "wrapper" | "command-link")
+        ) && *before != Value::Null
         {
             rollback_compatibility(env, services, state, journal)?;
         }
@@ -1613,6 +1616,10 @@ fn install_value(
     let locations = locations(env)?;
     let state = locations.state.clone();
     let old = read_receipt(env, &state)?;
+    require(
+        request.remote.is_none() && request.reference.is_none(),
+        super::MANAGED_GUIDANCE,
+    )?;
     preflight_layout(
         env,
         services,
@@ -1622,8 +1629,16 @@ fn install_value(
         old.as_ref(),
     )?;
     // Prove the signed release prerequisite before creating lock/owner records.
-    let staged = match (&request.bootstrap_binary, &request.development_source) {
-        (Some(binary), None) => Some(stage_release(services, &absolute(env, binary)?)?),
+    let development = old.as_ref().is_some_and(|receipt| {
+        !super::python_era_kind(receipt)
+            && text(get(receipt, "source"), "kind") == Some("development")
+    });
+    let staged = match (
+        &request.bootstrap_binary,
+        &request.development_source,
+        development,
+    ) {
+        (Some(binary), None, false) => Some(stage_release(services, &absolute(env, binary)?)?),
         _ => None,
     };
     let bootstrap_root = staged.as_ref().map(|(_, root)| root.clone());

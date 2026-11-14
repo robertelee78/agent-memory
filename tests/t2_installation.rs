@@ -8,6 +8,7 @@ use agent_memory::installation::{
     self as install, ArtifactInspection, Environment, InstallRequest, Mode, PrivateState,
     ReleaseAccess, Services, Updating,
 };
+use agent_memory::release_distribution::{self as release, BinaryIdentity, ReleaseManifest};
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
@@ -352,6 +353,387 @@ fn error_text(value: &Value) -> String {
     text(value, "error").to_owned()
 }
 
+/// Publish a complete release-v2 fixture using a throwaway signing key. Only
+/// file:// transport is enabled; no released key, network or executable is used.
+fn signed_release(world: &World, name: &str, binary: &[u8]) -> PathBuf {
+    let root = development_source(world, name);
+    let pack = root.join(install::RELEASE_PACK);
+    write(&pack.join("keys/allowed-signers"), release::ALLOWED_SIGNERS);
+    mode(&pack.join("keys"), 0o755);
+    mode(&pack.join("keys/allowed-signers"), 0o644);
+    let files: release::Inventory = walk(&pack)
+        .into_iter()
+        .filter(|path| path.is_file())
+        .map(|path| {
+            (
+                path.strip_prefix(&pack)
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_owned(),
+                (std::fs::read(&path).unwrap(), 0o644),
+            )
+        })
+        .collect();
+    let archive = release::encode_archive(
+        &files
+            .iter()
+            .map(|(name, value)| (format!("{}{name}", release::PREFIX), value.clone()))
+            .collect(),
+    )
+    .unwrap();
+    let inventory = release::inventory_value(&files);
+    let sha256 = release::digest(binary);
+    let identity = BinaryIdentity {
+        size: binary.len(),
+        artifact_digest: agent_memory::artifact::runtime_digest(&inventory, &sha256, 0o755)
+            .unwrap()
+            .1,
+        sha256,
+    };
+    let manifest = ReleaseManifest {
+        version: env!("CARGO_PKG_VERSION").into(),
+        tag: format!("v{}", env!("CARGO_PKG_VERSION")),
+        source_commit: "a".repeat(40),
+        archive_size: archive.len(),
+        archive_sha256: release::digest(&archive),
+        artifact_digest: release::inventory_digest(&inventory).unwrap(),
+        targets: release::TARGETS
+            .into_iter()
+            .map(|target| (target.into(), identity.clone()))
+            .collect(),
+        command_surface: Value::Object(vec![(
+            "commands".into(),
+            Value::Array(vec![
+                Value::String("install".into()),
+                Value::String("update".into()),
+            ]),
+        )]),
+    };
+    let key = root.join("key");
+    let command = |args: &[OsString], input: &[u8]| {
+        let output = release::run_command(
+            args,
+            input,
+            release::MAX_METADATA,
+            None,
+            std::time::Duration::from_secs(20),
+        )
+        .unwrap();
+        assert_eq!(
+            output.status,
+            agent_memory::process::Status::Code(0),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        output.stdout
+    };
+    command(
+        &[
+            "ssh-keygen".into(),
+            "-q".into(),
+            "-t".into(),
+            "ed25519".into(),
+            "-N".into(),
+            "".into(),
+            "-f".into(),
+            key.as_os_str().to_owned(),
+        ],
+        b"",
+    );
+    let public = std::fs::read_to_string(key.with_extension("pub")).unwrap();
+    let fields = public
+        .split_whitespace()
+        .take(2)
+        .collect::<Vec<_>>()
+        .join(" ");
+    write(
+        &root.join("signers"),
+        format!(
+            "{} namespaces=\"{}\" {}\n",
+            release::PRINCIPAL,
+            release::NAMESPACE,
+            fields,
+        ),
+    );
+    let raw = manifest.encoded().unwrap();
+    let signature = command(
+        &[
+            "ssh-keygen".into(),
+            "-Y".into(),
+            "sign".into(),
+            "-n".into(),
+            release::NAMESPACE.into(),
+            "-f".into(),
+            key.as_os_str().to_owned(),
+        ],
+        &raw,
+    );
+    let tag = root.join(format!("assets/v{}", env!("CARGO_PKG_VERSION")));
+    write(&tag.join(release::MANIFEST), raw);
+    write(&tag.join(release::SIGNATURE), signature);
+    write(&tag.join(release::ARCHIVE), archive);
+    write(&root.join("bootstrap"), binary);
+    mode(&root.join("bootstrap"), 0o755);
+    root
+}
+
+fn release_services(root: &Path) -> Services {
+    let mut services = services();
+    let url_root = root.to_str().unwrap().replace(' ', "%20");
+    services.release = ReleaseAccess {
+        first_manifest_url: format!(
+            "file://{}/assets/v{}/{}",
+            url_root,
+            env!("CARGO_PKG_VERSION"),
+            release::MANIFEST
+        ),
+        assets: format!("file://{}/assets", url_root),
+        options: release::DownloadOptions {
+            allow_file: true,
+            json_response: false,
+        },
+        signers: std::fs::read_to_string(root.join("signers")).unwrap(),
+        version: env!("CARGO_PKG_VERSION").into(),
+    };
+    services
+}
+
+fn release_request(root: &Path) -> InstallRequest {
+    InstallRequest {
+        bootstrap_binary: Some(root.join("bootstrap")),
+        ..Default::default()
+    }
+}
+
+fn release_ok(world: &World, root: &Path, request: &InstallRequest) -> Value {
+    let result = install::install_command(&world.env(), &release_services(root), request);
+    assert_eq!(result.exit_code, 0, "{}", result.stdout);
+    result.value.unwrap()
+}
+
+fn release_recover(world: &World, root: &Path) -> Value {
+    let result = install::recover_command(&world.env(), &release_services(root));
+    assert_eq!(result.exit_code, 0, "{}", result.stdout);
+    result.value.unwrap()
+}
+
+/// Compare actual target nodes, modes and bytes across relocated Worlds, not
+/// merely the identities claimed by their receipts.
+fn physical_targets(world: &World, receipt: &Value) -> Vec<Value> {
+    targets(receipt)
+        .iter()
+        .map(|target| {
+            let path = PathBuf::from(text(target, "path"));
+            let nodes = if path.symlink_metadata().is_ok() {
+                walk(&path)
+            } else {
+                vec![]
+            };
+            Value::Array(
+                nodes
+                    .iter()
+                    .map(|node| {
+                        let relative = node.strip_prefix(&world.root).unwrap().to_str().unwrap();
+                        let meta = node.symlink_metadata().unwrap();
+                        let identity = if meta.file_type().is_symlink() {
+                            format!("link {}", std::fs::read_link(node).unwrap().display())
+                        } else if meta.is_dir() {
+                            format!("directory {:o}", meta.mode() & 0o7777)
+                        } else {
+                            let raw = std::fs::read(node).unwrap();
+                            let normalized = String::from_utf8_lossy(&raw)
+                                .replace(world.root.to_str().unwrap(), "<W>");
+                            format!(
+                                "file {:o} {}",
+                                meta.mode() & 0o7777,
+                                release::digest(normalized.as_bytes())
+                            )
+                        };
+                        Value::Array(vec![
+                            Value::String(relative.into()),
+                            Value::String(identity.replace(world.root.to_str().unwrap(), "<W>")),
+                        ])
+                    })
+                    .collect(),
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn bootstrap_manifest_and_following_assets_are_version_pinned() {
+    let access = ReleaseAccess::default();
+    assert_eq!(
+        access.first_manifest_url,
+        format!(
+            "{}/v{}/{}",
+            release::ASSETS,
+            env!("CARGO_PKG_VERSION"),
+            release::MANIFEST,
+        )
+    );
+    assert!(!access.first_manifest_url.contains("/latest/"));
+    let world = World::new();
+    let root = signed_release(&world, "release", STAND_IN);
+    let access = release_services(&root).release;
+    let observed = release::probe_with(
+        &access.first_manifest_url,
+        &access.assets,
+        access.options,
+        &access.signers,
+    )
+    .unwrap();
+    assert_eq!(
+        observed.base,
+        format!("{}/v{}/", access.assets, env!("CARGO_PKG_VERSION"))
+    );
+}
+
+#[test]
+fn signed_bootstrap_installs_bound_bytes_and_exchanges_the_runtime_root() {
+    for mode in [Mode::Copy, Mode::Link] {
+        let world = World::new();
+        let first = signed_release(&world, "release one", STAND_IN);
+        let request = InstallRequest {
+            mode: Some(mode),
+            presets: Some("codex".into()),
+            ..release_request(&first)
+        };
+        let installed = release_ok(&world, &first, &request);
+        let receipt = get(&installed, "receipt");
+        let runtime = world.path("data/agent-memory/runtime");
+        assert_eq!(std::fs::read(runtime.join("bin/am")).unwrap(), STAND_IN);
+        assert_eq!(text(get(receipt, "source"), "kind"), "release");
+        assert_eq!(text(get(receipt, "source"), "target"), install::TARGET);
+        assert_eq!(
+            text(get(get(receipt, "artifact_files"), "bin/am"), "sha256"),
+            release::digest(STAND_IN)
+        );
+        let original = install::fingerprint(&runtime).unwrap();
+        let replacement = [STAND_IN, b"# replacement\n"].concat();
+        let second = signed_release(&world, "release two", &replacement);
+        let replaced = release_ok(&world, &second, &release_request(&second));
+        assert_eq!(get(&replaced, "changed"), &Value::Bool(true));
+        assert_eq!(std::fs::read(runtime.join("bin/am")).unwrap(), replacement);
+        let journal = decode(&world.state().join("journal.json"));
+        let source = get(&journal, "actions")
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|action| text(action, "kind") == "source")
+            .unwrap();
+        assert!(install::same(get(source, "before"), &original));
+        assert!(install::same(
+            &install::fingerprint(Path::new(text(source, "stage"))).unwrap(),
+            &original
+        ));
+        assert!(install::same(
+            &install::fingerprint(Path::new(text(source, "backup"))).unwrap(),
+            &original
+        ));
+    }
+}
+
+#[test]
+fn bootstrap_manifest_binding_refuses_version_digest_and_size_before_writes() {
+    for case in ["version", "sha256", "size"] {
+        let world = World::new();
+        let root = signed_release(&world, "release", STAND_IN);
+        let mut services = release_services(&root);
+        match case {
+            "version" => services.release.version = "0.0.16".into(),
+            "sha256" => {
+                let mut raw = STAND_IN.to_vec();
+                raw[0] = b'X';
+                std::fs::write(root.join("bootstrap"), raw).unwrap();
+            }
+            "size" => write(&root.join("bootstrap"), [STAND_IN, b"extra"].concat()),
+            _ => unreachable!(),
+        }
+        let before = snapshot(&world.root);
+        let result = install::install_command(&world.env(), &services, &release_request(&root));
+        assert_eq!(result.exit_code, 1, "{case}: {}", result.stdout);
+        assert!(
+            error_text(result.value.as_ref().unwrap()).contains("Bootstrap binary"),
+            "{case}"
+        );
+        assert_eq!(snapshot(&world.root), before, "{case}");
+    }
+}
+
+#[test]
+fn staged_release_is_reverified_under_the_lifecycle_lock() {
+    for case in ["binary", "manifest", "signature"] {
+        let world = World::new();
+        let root = signed_release(&world, "release", STAND_IN);
+        let services = release_services(&root);
+        let (_scratch, staged) =
+            install::stage_release(&services, &root.join("bootstrap")).unwrap();
+        let tampered = match case {
+            "binary" => staged.join("bin/am"),
+            "manifest" => staged.join(release::MANIFEST),
+            _ => staged.join(release::SIGNATURE),
+        };
+        std::fs::write(tampered, b"tampered staged bytes\n").unwrap();
+        let env = world.env();
+        let locations = install::locations(&env).unwrap();
+        let result = install::locked(&env, &locations.state, || {
+            install::prepare(
+                &env,
+                &services,
+                &release_request(&root),
+                &locations,
+                None,
+                install::PrepareOptions {
+                    bootstrap_root: Some(&staged),
+                    ..Default::default()
+                },
+            )
+        });
+        assert!(result.is_err(), "{case}");
+        assert!(!world.path("data/agent-memory/runtime").exists());
+        assert!(!world.state().join("receipt.json").exists());
+    }
+}
+
+#[test]
+fn managed_channel_options_refuse_before_bootstrap_downloads() {
+    for (remote, reference) in [
+        (Some("https://example.invalid/repo"), None),
+        (None, Some("main")),
+        (Some("https://example.invalid/repo"), Some("main")),
+    ] {
+        for legacy in [false, true] {
+            let world = World::new();
+            if legacy {
+                materialize(&world, "all-copy");
+            }
+            let binary = world.path("bootstrap");
+            write(&binary, STAND_IN);
+            let before = snapshot(&world.root);
+            let mut services = services();
+            services.release.first_manifest_url = "file:///nonexistent/manifest".into();
+            let result = install::install_command(
+                &world.env(),
+                &services,
+                &InstallRequest {
+                    bootstrap_binary: Some(binary),
+                    remote: remote.map(str::to_owned),
+                    reference: reference.map(str::to_owned),
+                    ..Default::default()
+                },
+            );
+            assert_eq!(result.exit_code, 1);
+            assert_eq!(
+                error_text(result.value.as_ref().unwrap()),
+                install::MANAGED_GUIDANCE
+            );
+            assert_eq!(snapshot(&world.root), before);
+        }
+    }
+}
+
 // ----- child-process harness for environment-driven fault injection -----
 
 /// Child entry: runs one lifecycle command in the World named by the
@@ -364,11 +746,19 @@ fn child_entry() {
     let root = PathBuf::from(std::env::var("AGENT_MEMORY_TEST_ROOT").unwrap());
     let token = std::env::var("AGENT_MEMORY_TEST_TOKEN").unwrap();
     let world = World::reopen(&root, &token);
+    let release_root = std::env::var_os("AM_T2_RELEASE").map(PathBuf::from);
+    let services = release_root
+        .as_deref()
+        .map(release_services)
+        .unwrap_or_else(services);
     let result = if command == "recover" {
-        install::recover_command(&world.env(), &services())
+        install::recover_command(&world.env(), &services)
     } else {
-        let source = PathBuf::from(std::env::var("AM_T2_SOURCE").unwrap());
-        let mut request = request(&source);
+        let mut request = if let Some(root) = &release_root {
+            release_request(root)
+        } else {
+            request(&PathBuf::from(std::env::var("AM_T2_SOURCE").unwrap()))
+        };
         if let Ok(value) = std::env::var("AM_T2_MODE") {
             request.mode = Some(Mode::parse(&value).unwrap());
         }
@@ -378,7 +768,7 @@ fn child_entry() {
         if let Ok(value) = std::env::var("AM_T2_BIN_DIR") {
             request.bin_dir = Some(PathBuf::from(value));
         }
-        install::install_command(&world.env(), &services(), &request)
+        install::install_command(&world.env(), &services, &request)
     };
     let value = result.value.unwrap_or(Value::Null);
     println!(
@@ -1349,6 +1739,9 @@ fn managed_remote_channels_and_release_without_bootstrap_refuse_with_guidance() 
 
 fn child_install(world: &World, source: &Path, extra: &[(&str, String)]) -> Child {
     let mut all = vec![("AM_T2_SOURCE", source.to_string_lossy().into_owned())];
+    if source.join("signers").is_file() {
+        all.push(("AM_T2_RELEASE", source.to_string_lossy().into_owned()));
+    }
     all.extend(extra.iter().cloned());
     child(world, "install", &all)
 }
@@ -1599,7 +1992,7 @@ fn completed_recovery_checks_the_actual_receipt_and_owned_targets() {
 /// interrupted, recovered and retried to the clean semantics.
 fn replay_install(install_mode: &str, phase: &str) {
     let world = World::new();
-    let source = development_source(&world, "fault channel with spaces");
+    let source = signed_release(&world, "fault channel with spaces", STAND_IN);
     write(
         &world.path("codex/AGENTS.md"),
         "Keep original developer instructions.\n",
@@ -1643,10 +2036,9 @@ fn replay_install(install_mode: &str, phase: &str) {
     ] {
         assert!(kinds.contains(kind), "{kind}: {kinds:?}");
     }
-    if install_mode == "copy" {
-        assert!(kinds.contains("payload-snapshot"));
-    }
+    assert!(kinds.contains("payload-snapshot"));
     let expected = decode(&world.state().join("receipt.json"));
+    let expected_files = physical_targets(&world, &expected);
     let semantics = |receipt: &Value| -> Value {
         let mut source = get(receipt, "source").clone();
         if let Value::Object(fields) = &mut source {
@@ -1685,7 +2077,6 @@ fn replay_install(install_mode: &str, phase: &str) {
     for row in selected.iter().copied() {
         let point = text(row, "point").to_owned();
         let interrupted = World::new();
-        let source = development_source(&interrupted, "fault channel with spaces");
         write(
             &interrupted.path("codex/AGENTS.md"),
             "Keep original developer instructions.\n",
@@ -1707,18 +2098,57 @@ fn replay_install(install_mode: &str, phase: &str) {
         );
         assert_eq!(exited.code, Some(86), "{point}");
         assert_eq!(text(trace_rows(&actual).last().unwrap(), "point"), point);
-        let (code, recovered) = recover(&interrupted);
-        assert_eq!(code, 0, "{point}: {recovered:?}");
-        let retried = ok(
+        let recovered = release_recover(&interrupted, &source);
+        if text(&recovered, "status") == "complete" {
+            let receipt = decode(&interrupted.state().join("receipt.json"));
+            assert_eq!(
+                physical_targets(&interrupted, &receipt),
+                expected_files,
+                "{point}"
+            );
+        } else {
+            assert!(
+                !interrupted.path("data/agent-memory/runtime").exists(),
+                "{point}"
+            );
+            assert!(
+                !interrupted.path("codex/skills/agent-memory").exists(),
+                "{point}"
+            );
+            assert_eq!(
+                std::fs::read_to_string(interrupted.path("codex/AGENTS.md")).unwrap(),
+                "Keep original developer instructions.\n",
+                "{point}"
+            );
+            assert!(
+                interrupted.bin().join("am").symlink_metadata().is_err(),
+                "{point}"
+            );
+            assert!(
+                interrupted
+                    .bin()
+                    .join("agent-memory")
+                    .symlink_metadata()
+                    .is_err(),
+                "{point}"
+            );
+        }
+        let retried = release_ok(
             &interrupted,
+            &source,
             &InstallRequest {
                 mode: Some(Mode::parse(install_mode).unwrap()),
                 presets: Some("codex".into()),
-                ..request(&source)
+                ..release_request(&source)
             },
         );
         assert_eq!(get(&retried, "verified"), &Value::Bool(true));
         let current = decode(&interrupted.state().join("receipt.json"));
+        assert_eq!(
+            physical_targets(&interrupted, &current),
+            expected_files,
+            "{point}"
+        );
         let relocate = |value: &Value| {
             json::encode(&semantics(value), json::SORTED_COMPACT_UTF8)
                 .unwrap()
@@ -1728,7 +2158,10 @@ fn replay_install(install_mode: &str, phase: &str) {
         assert_eq!(relocate(&current), relocate(&expected), "{point}");
         let stable = std::fs::read(interrupted.state().join("receipt.json")).unwrap();
         assert_eq!(
-            get(&ok(&interrupted, &InstallRequest::default()), "changed"),
+            get(
+                &release_ok(&interrupted, &source, &InstallRequest::default()),
+                "changed"
+            ),
             &Value::Bool(false)
         );
         assert_eq!(
@@ -1891,17 +2324,22 @@ fn bootstrap_rewrites_to_update_only_for_rust_era_receipts() {
         (
             Ok(Some(receipt("agent-memory/install-receipt-v3", "release"))),
             &[],
-            vec!["update".into()],
+            vec!["update".into(), "--bootstrap-binary".into(), "/x/am".into()],
         ),
         (
             Ok(Some(receipt("agent-memory/install-receipt-v3", "release"))),
             &["--check"],
-            vec!["update".into(), "--check".into()],
+            vec![
+                "update".into(),
+                "--bootstrap-binary".into(),
+                "/x/am".into(),
+                "--check".into(),
+            ],
         ),
         (
             Ok(Some(receipt("agent-memory/install-receipt-v3", "managed"))),
             &[],
-            vec!["update".into()],
+            vec!["update".into(), "--bootstrap-binary".into(), "/x/am".into()],
         ),
         (
             Ok(Some(receipt("agent-memory/install-receipt-v9", "release"))),
@@ -1949,8 +2387,8 @@ fn relocate(world: &World, text: &str) -> String {
 }
 
 /// Materialize a derived capture in `world`: state files with their recorded
-/// modes, owned links, opaque owned trees, then recompute every recorded
-/// target identity (and the committed journal's receipt identity).
+/// modes, owned links, opaque owned trees. Genuine captured identities are kept
+/// for unchanged files; only relocated bytes/links and opaque trees are rebound.
 fn materialize(world: &World, scenario: &str) -> Value {
     let base = fixture_root(scenario);
     let modes = std::fs::read_to_string(base.join("modes.txt")).unwrap();
@@ -1985,10 +2423,20 @@ fn materialize(world: &World, scenario: &str) -> Value {
     }
     let receipt_path = world.state().join("receipt.json");
     let mut receipt = decode(&receipt_path);
+    let captured = decode(&base.join("identities.json"));
     if let Some(Value::Array(targets)) = receipt.get_mut("targets") {
         for target in targets.iter_mut() {
             let path = PathBuf::from(text(target, "path"));
             let identity = install::fingerprint(&path).unwrap();
+            let relative = path.strip_prefix(&world.root).unwrap().to_str().unwrap();
+            if let Some(captured) = captured.get(relative) {
+                assert!(install::same(&identity, captured), "{scenario}: {relative}");
+                assert!(
+                    install::same(get(target, "identity"), captured),
+                    "{scenario}: {relative}"
+                );
+                continue;
+            }
             if let Value::Object(fields) = target {
                 for (key, value) in fields.iter_mut() {
                     if key == "identity" {
@@ -2527,7 +2975,7 @@ fn adoption_refuses_an_in_flight_journal_with_unknown_step_kinds() {
 fn interrupted_adoption_rolls_back_before_commit_and_never_after() {
     let world = World::new();
     materialize(&world, "all-copy");
-    let source = development_source(&world, "dev");
+    let source = signed_release(&world, "release", STAND_IN);
     let python = without_lock(snapshot(&world.root));
     let failed = child_install(
         &world,
@@ -2538,15 +2986,11 @@ fn interrupted_adoption_rolls_back_before_commit_and_never_after() {
         ],
     );
     assert_eq!(failed.code, Some(86));
-    let (code, value) = recover(&world);
-    assert_eq!(code, 0, "{}", error_text(&value));
+    let value = release_recover(&world, &source);
     assert_eq!(text(&value, "status"), "rolled-back");
+    assert!(!world.path("data/agent-memory/runtime").exists());
     let mut restored = without_lock(snapshot(&world.root));
-    restored.retain(|k, _| {
-        !k.contains(".agent-memory-")
-            && !k.starts_with("state/")
-            && !k.starts_with("data/agent-memory/runtime")
-    });
+    restored.retain(|k, _| !k.contains(".agent-memory-") && !k.starts_with("state/"));
     let mut expected = python.clone();
     expected.retain(|k, _| !k.starts_with("state/"));
     assert_eq!(restored, expected);
@@ -2564,14 +3008,17 @@ fn interrupted_adoption_rolls_back_before_commit_and_never_after() {
         ],
     );
     assert_eq!(committed.code, Some(86));
-    let (code, value) = recover(&world);
-    assert_eq!(code, 0, "{}", error_text(&value));
+    let value = release_recover(&world, &source);
     assert_eq!(text(&value, "status"), "complete");
     assert_eq!(
         text(&decode(&world.state().join("receipt.json")), "schema"),
         "agent-memory/install-receipt-v3"
     );
     assert!(std::fs::read_link(world.bin().join("am")).is_ok());
+    assert_eq!(
+        std::fs::read(world.path("data/agent-memory/runtime/bin/am")).unwrap(),
+        STAND_IN
+    );
 }
 
 #[test]
@@ -2590,10 +3037,7 @@ fn python_era_receipt_without_a_verified_runtime_source_refuses_with_bootstrap_g
             ..InstallRequest::default()
         },
     );
-    assert_eq!(
-        error_text(&value),
-        "Managed channel differs from ownership receipt"
-    );
+    assert_eq!(error_text(&value), install::MANAGED_GUIDANCE);
     assert_eq!(without_lock(snapshot(&world.root)), before);
 }
 
@@ -2860,4 +3304,340 @@ fn bank_state_overlap_is_refused_before_any_bank_or_runtime_write() {
     let recovered = install::recover_command(&env, &services());
     assert_eq!(recovered.exit_code, 1);
     assert_eq!(snapshot(&world.root), before);
+}
+
+fn set(value: &mut Value, key: &str, replacement: Value) {
+    let fields = match value {
+        Value::Object(fields) => fields,
+        _ => panic!("test object required"),
+    };
+    if let Some((_, value)) = fields.iter_mut().find(|(name, _)| name == key) {
+        *value = replacement;
+    } else {
+        fields.push((key.into(), replacement));
+    }
+}
+
+/// A captured Python journal shape with several activated node kinds, not just
+/// an activation-file step. The prior receipt remains byte-for-byte committed.
+fn in_flight_nodes(world: &World, kinds: &[&str]) -> Vec<(PathBuf, Value)> {
+    let receipt = decode(&world.state().join("receipt.json"));
+    let transaction = "0123456789abcdef0123456789abcdef";
+    let mut actions = Vec::new();
+    let mut originals = Vec::new();
+    for (index, kind) in kinds.iter().enumerate() {
+        let target_kind = if *kind == "command-link" {
+            "wrapper"
+        } else {
+            kind
+        };
+        let target = targets(&receipt)
+            .into_iter()
+            .find(|target| text(target, "kind") == target_kind)
+            .unwrap();
+        let path = PathBuf::from(text(&target, "path"));
+        let before = install::fingerprint(&path).unwrap();
+        let stage = path
+            .parent()
+            .unwrap()
+            .join(format!(".agent-memory-{transaction}-{index}"));
+        std::fs::rename(&path, &stage).unwrap();
+        if *kind == "command-link" {
+            symlink(world.path("future-runtime/bin/am"), &path).unwrap();
+        } else if text(&before, "kind") == "directory" {
+            std::fs::create_dir(&path).unwrap();
+            write(&path.join("interrupted"), "Interrupted Python update.\n");
+            mode(
+                &path,
+                get(&before, "mode").as_int().unwrap().as_u64().unwrap() as u32,
+            );
+        } else {
+            let original = std::fs::read(&stage).unwrap();
+            write(
+                &path,
+                [original.as_slice(), b"Interrupted Python update.\n"].concat(),
+            );
+            mode(
+                &path,
+                get(&before, "mode").as_int().unwrap().as_u64().unwrap() as u32,
+            );
+        }
+        actions.push(Value::Object(vec![
+            ("path".into(), Value::String(path.to_str().unwrap().into())),
+            (
+                "stage".into(),
+                Value::String(stage.to_str().unwrap().into()),
+            ),
+            ("kind".into(), Value::String((*kind).into())),
+            ("before".into(), before.clone()),
+            ("after".into(), install::fingerprint(&path).unwrap()),
+            ("backup".into(), Value::Null),
+        ]));
+        originals.push((path, before));
+    }
+    let mut journal = decode(&world.state().join("journal.json"));
+    set(&mut journal, "status", Value::String("activating".into()));
+    set(
+        &mut journal,
+        "transaction",
+        Value::String(transaction.into()),
+    );
+    set(&mut journal, "receipt_identity", Value::Null);
+    set(&mut journal, "activated", Value::Int(kinds.len().into()));
+    set(&mut journal, "actions", Value::Array(actions));
+    write(
+        &world.state().join("journal.json"),
+        install::encoded(&journal).unwrap(),
+    );
+    originals
+}
+
+#[test]
+fn in_flight_python_journal_restores_source_copy_wrapper_and_activation_before_adoption() {
+    let world = World::new();
+    materialize(&world, "all-copy");
+    let receipt = std::fs::read(world.state().join("receipt.json")).unwrap();
+    let originals = in_flight_nodes(&world, &["source", "copy", "wrapper", "activation"]);
+    let (code, result) = recover(&world);
+    assert_eq!(code, 0, "{result:?}");
+    assert_eq!(text(&result, "status"), "rolled-back");
+    for (path, identity) in originals {
+        assert!(
+            install::same(&install::fingerprint(&path).unwrap(), &identity),
+            "{}",
+            path.display()
+        );
+    }
+    assert_eq!(
+        std::fs::read(world.state().join("receipt.json")).unwrap(),
+        receipt
+    );
+    let source = development_source(&world, "dev");
+    let result = ok(&world, &request(&source));
+    assert_eq!(
+        text(get(&result, "receipt"), "schema"),
+        install::RECEIPT_SCHEMA
+    );
+}
+
+struct RecheckingUpdating(std::sync::atomic::AtomicUsize);
+impl Updating for RecheckingUpdating {
+    fn banks(
+        &self,
+        repositories: &[String],
+        compatibility: &Value,
+        readable: bool,
+    ) -> install::Result<Value> {
+        if readable && self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst) == 1 {
+            return Err(
+                agent_memory::error::ContractError::new("Concurrent bank migration").into(),
+            );
+        }
+        FixtureUpdating.banks(repositories, compatibility, readable)
+    }
+    fn qualified_current(
+        &self,
+        state: &Path,
+        code: &Path,
+    ) -> install::Result<Option<Qualification>> {
+        FixtureUpdating.qualified_current(state, code)
+    }
+    fn current(
+        &self,
+        state: &Path,
+        code: &Path,
+        cache: Option<&Qualification>,
+    ) -> install::Result<()> {
+        FixtureUpdating.current(state, code, cache)
+    }
+    fn release_transition(&self, old: &Value, new: &Value, root: &Path) -> install::Result<()> {
+        FixtureUpdating.release_transition(old, new, root)
+    }
+    fn compatible_surface(
+        &self,
+        old: &Value,
+        new: &Value,
+        cache: Option<&Qualification>,
+    ) -> install::Result<()> {
+        FixtureUpdating.compatible_surface(old, new, cache)
+    }
+}
+
+#[test]
+fn command_link_rollback_rechecks_bank_compatibility_before_restoring_python() {
+    let world = World::new();
+    materialize(&world, "all-copy");
+    in_flight_nodes(&world, &["command-link"]);
+    let active = install::fingerprint(&world.bin().join("am")).unwrap();
+    let updating = Arc::new(RecheckingUpdating(std::sync::atomic::AtomicUsize::new(0)));
+    let mut services = services();
+    services.updating = Some(updating.clone());
+    let result = install::recover_command(&world.env(), &services);
+    assert_eq!(result.exit_code, 1, "{}", result.stdout);
+    assert!(error_text(result.value.as_ref().unwrap()).contains("Concurrent bank migration"));
+    assert_eq!(updating.0.load(std::sync::atomic::Ordering::SeqCst), 2);
+    assert!(install::same(
+        &install::fingerprint(&world.bin().join("am")).unwrap(),
+        &active
+    ));
+}
+
+#[test]
+fn adoption_refuses_an_opencode_hook_link_near_miss_even_when_receipted() {
+    let world = World::new();
+    let mut receipt = materialize(&world, "claude-opencode-copy");
+    let path = world.path("config/opencode/plugins/agent-memory.js");
+    std::fs::remove_file(&path).unwrap();
+    symlink(
+        old_pack(&receipt).join("hooks/opencode-near-miss.js"),
+        &path,
+    )
+    .unwrap();
+    if let Some(Value::Array(targets)) = receipt.get_mut("targets") {
+        let target = targets
+            .iter_mut()
+            .find(|target| text(target, "kind") == "hook-link")
+            .unwrap();
+        set(target, "identity", install::fingerprint(&path).unwrap());
+    }
+    store_receipt(&world, &receipt);
+    let source = development_source(&world, "dev");
+    refuses_without_mutation(&world, &source, "Python-era OpenCode hook link");
+}
+
+#[test]
+fn captured_python_state_with_release_source_is_adopted_by_the_signed_bootstrap() {
+    let world = World::new();
+    // No genuine release-kind capture exists in the capture corpus. Vary only
+    // the channel metadata on a genuine all-copy state capture; owned targets,
+    // commands and unchanged activation identities remain captured v0.0.14 data.
+    let mut receipt = materialize(&world, "all-copy");
+    let source = receipt.get_mut("source").unwrap();
+    set(source, "kind", Value::String("release".into()));
+    set(
+        source,
+        "remote",
+        Value::String(install::DEFAULT_REMOTE.into()),
+    );
+    set(source, "ref", Value::String("releases/latest".into()));
+    set(
+        source,
+        "release_manifest_sha256",
+        Value::String("a".repeat(64)),
+    );
+    set(
+        source,
+        "signature_namespace",
+        Value::String(release::NAMESPACE.into()),
+    );
+    set(
+        source,
+        "signature_principal",
+        Value::String(release::PRINCIPAL.into()),
+    );
+    store_receipt(&world, &receipt);
+    let legacy = snapshot(&world.path("data/agent-memory/source"));
+    let root = signed_release(&world, "release", STAND_IN);
+    let result = release_ok(&world, &root, &release_request(&root));
+    assert_eq!(
+        text(get(&result, "receipt"), "schema"),
+        install::RECEIPT_SCHEMA
+    );
+    assert_eq!(
+        text(get(get(&result, "receipt"), "source"), "kind"),
+        "release"
+    );
+    assert_eq!(snapshot(&world.path("data/agent-memory/source")), legacy);
+}
+
+#[test]
+fn python_development_artifact_readback_refuses_a_drifted_link_pack() {
+    for status in ["complete", "activating"] {
+        let world = World::new();
+        let root = development_source(&world, "python development");
+        let pack = root.join(install::RELEASE_PACK);
+        let link = world.path("codex/skills/agent-memory");
+        std::fs::create_dir_all(link.parent().unwrap()).unwrap();
+        symlink(&pack, &link).unwrap();
+        let mut receipt = materialize(&world, "claude-opencode-copy");
+        let digest = get(&FixtureArtifacts.inspect(&pack).unwrap(), "artifact_digest").clone();
+        set(
+            &mut receipt,
+            "source",
+            Value::Object(vec![
+                ("kind".into(), Value::String("development".into())),
+                ("path".into(), Value::String(root.to_str().unwrap().into())),
+                ("pack".into(), Value::String(pack.to_str().unwrap().into())),
+            ]),
+        );
+        set(
+            &mut receipt,
+            "targets",
+            Value::Array(vec![Value::Object(vec![
+                ("kind".into(), Value::String("link".into())),
+                ("path".into(), Value::String(link.to_str().unwrap().into())),
+                ("identity".into(), install::fingerprint(&link).unwrap()),
+                ("artifact_digest".into(), digest),
+            ])]),
+        );
+        store_receipt(&world, &receipt);
+        let mut journal = decode(&world.state().join("journal.json"));
+        set(&mut journal, "status", Value::String(status.into()));
+        // Use no stale captured actions: this is a committed recovery readback.
+        set(&mut journal, "actions", Value::Array(vec![]));
+        write(
+            &world.state().join("journal.json"),
+            install::encoded(&journal).unwrap(),
+        );
+        let result =
+            install::recover(&world.env(), &services(), &world.state(), false, false).unwrap();
+        assert_eq!(text(&result, "status"), "complete");
+        set(&mut journal, "status", Value::String(status.into()));
+        write(
+            &world.state().join("journal.json"),
+            install::encoded(&journal).unwrap(),
+        );
+        write(
+            &pack.join("templates/drift.txt"),
+            "Drifted unowned development source.\n",
+        );
+        mode(&pack.join("templates/drift.txt"), 0o644);
+        let before = snapshot(&world.root);
+        let error =
+            install::recover(&world.env(), &services(), &world.state(), false, false).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("Client-visible artifact readback failed"),
+            "{error}"
+        );
+        assert_eq!(snapshot(&world.root), before);
+    }
+}
+
+#[test]
+fn repeated_development_bootstrap_does_not_stage_an_ignored_release() {
+    let world = World::new();
+    let source = development_source(&world, "development");
+    let installed = ok(&world, &request(&source));
+    let receipt = get(&installed, "receipt").clone();
+    let mut services = services();
+    services.release.first_manifest_url = "file:///nonexistent/manifest".into();
+    let result = install::install_command(
+        &world.env(),
+        &services,
+        &InstallRequest {
+            bootstrap_binary: Some(world.path("missing-bootstrap")),
+            ..Default::default()
+        },
+    );
+    assert_eq!(result.exit_code, 0, "{}", result.stdout);
+    assert_eq!(
+        get(result.value.as_ref().unwrap(), "changed"),
+        &Value::Bool(false)
+    );
+    assert!(install::same(
+        get(result.value.as_ref().unwrap(), "receipt"),
+        &receipt
+    ));
 }

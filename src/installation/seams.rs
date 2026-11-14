@@ -110,8 +110,9 @@ impl Default for ReleaseAccess {
     fn default() -> Self {
         Self {
             first_manifest_url: format!(
-                "https://github.com/{}/releases/latest/download/{}",
-                release::REPOSITORY,
+                "{}/v{}/{}",
+                release::ASSETS,
+                env!("CARGO_PKG_VERSION"),
                 release::MANIFEST
             ),
             assets: release::ASSETS.to_owned(),

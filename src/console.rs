@@ -267,12 +267,14 @@ pub fn bootstrap_command(args: Vec<String>) -> Result<Vec<String>> {
     }
     let tail = args.get(1..).unwrap_or(&[]);
     let mut overrides: Vec<(&str, &str)> = Vec::new();
+    let mut bootstrap_binary = None;
     let mut index = 0;
     while let Some(arg) = tail.get(index) {
         let next = tail.get(index + 1);
         if arg == "--check" || arg == "--dry-run" {
             index += 1;
         } else if arg == "--bootstrap-binary" && next.is_some() {
+            bootstrap_binary = next.cloned();
             index += 2;
         } else if (arg == "--remote" || arg == "--ref") && next.is_some() {
             let key = arg.trim_start_matches('-');
@@ -326,6 +328,9 @@ pub fn bootstrap_command(args: Vec<String>) -> Result<Vec<String>> {
     if rust_era && channel && same {
         let check = tail.iter().any(|v| v == "--check" || v == "--dry-run");
         let mut update = vec!["update".to_owned()];
+        if let Some(binary) = bootstrap_binary {
+            update.extend(["--bootstrap-binary".to_owned(), binary]);
+        }
         if check {
             update.push("--check".to_owned());
         }

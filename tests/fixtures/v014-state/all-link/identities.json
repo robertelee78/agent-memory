@@ -1,0 +1,17 @@
+{
+  "claude/CLAUDE.md": {
+    "hash": "c5a56cfefab805986c1d0dca0738590c5a97f9f8cabf1dbf580f1ed8c7542f2b",
+    "kind": "file",
+    "mode": 420
+  },
+  "codex/AGENTS.md": {
+    "hash": "c5a56cfefab805986c1d0dca0738590c5a97f9f8cabf1dbf580f1ed8c7542f2b",
+    "kind": "file",
+    "mode": 420
+  },
+  "config/opencode/AGENTS.md": {
+    "hash": "c5a56cfefab805986c1d0dca0738590c5a97f9f8cabf1dbf580f1ed8c7542f2b",
+    "kind": "file",
+    "mode": 420
+  }
+}
