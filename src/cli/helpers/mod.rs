@@ -9,6 +9,7 @@ pub mod developer_identity;
 pub mod installation;
 pub mod lifecycle;
 pub mod pack_validation;
+pub mod private_workspace;
 pub mod records;
 pub mod scope_binding;
 pub mod scopes;

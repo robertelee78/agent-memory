@@ -28,6 +28,7 @@ pub static ENTRIES: &[Entry] = &[
     route("developer", &helpers::developer_identity::HELPER),
     route("identity", &helpers::scope_binding::HELPER),
     route("bank", &helpers::bank_contract::HELPER),
+    route("private", &helpers::private_workspace::HELPER),
     route("writes", &helpers::bank_writes::HELPER),
     route("artifact", &helpers::artifact::HELPER),
     route("authority-policy", &helpers::authority::HELPER),
