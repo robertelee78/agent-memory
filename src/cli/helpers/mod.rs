@@ -8,6 +8,7 @@ pub mod bank_writes;
 pub mod developer_identity;
 pub mod lifecycle;
 pub mod pack_validation;
+pub mod private_workspace;
 pub mod records;
 pub mod scope_binding;
 pub mod scopes;

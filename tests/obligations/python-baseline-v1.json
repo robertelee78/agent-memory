@@ -9950,7 +9950,7 @@
   {
    "id": "tests/contracts/test_private_workspace.py::PrivateWorkspaceContract.test_explicit_private_input_and_refusals",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 153,
+   "partial": 154,
    "ported": 76,
-   "unported": 1633
+   "unported": 1632
   }
  }
 }
