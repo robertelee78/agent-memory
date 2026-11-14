@@ -1396,3 +1396,120 @@ fn group_refuses_an_exit_first_observed_after_its_interval_deadline() {
     assert_gone_and_reaped(pid);
     group.finish().unwrap();
 }
+
+#[test]
+fn owned_process_retains_only_required_launch_data_and_pending_input() {
+    let dir = PrivateDir::new();
+    let expected: Vec<u8> = (0..1024 * 1024 + 37).map(|n| (n % 251) as u8).collect();
+    let child = {
+        let args = argv(&["/bin/cat"]);
+        let cwd = dir.0.clone();
+        let payload = expected.clone();
+        let env = vec![(
+            OsString::from("PRIVATE_LAUNCH_VALUE"),
+            OsString::from("discarded"),
+        )];
+        let mut request = spec(&args, &cwd);
+        request.env = &env;
+        request.stdin = Input::Bytes(&payload);
+        process::spawn_owned(&request).unwrap()
+    };
+    let output = child
+        .finish(Deadline::after(Duration::from_secs(10)).unwrap())
+        .unwrap();
+    assert_eq!(output.status, Status::Code(0));
+    assert_eq!(output.stdout, expected);
+    assert!(output.stderr.is_empty());
+    assert_gone_and_reaped(output.pid);
+}
+
+#[test]
+fn owned_process_deadline_cannot_be_widened_and_retains_reaped_evidence() {
+    let dir = PrivateDir::new();
+    let args = argv(&["/bin/sleep", "30"]);
+    let mut request = spec(&args, &dir.0);
+    request.deadline = Deadline::after(Duration::from_millis(100)).unwrap();
+    let child = process::spawn_owned(&request).unwrap();
+    let error = child
+        .finish(Deadline::after(Duration::from_secs(20)).unwrap())
+        .unwrap_err();
+    assert_eq!(error.reason, Refusal::Deadline);
+    let evidence = error.evidence.unwrap();
+    assert!(evidence.killed && evidence.reaped);
+    assert!(evidence.elapsed_ns < 5_000_000_000);
+    assert_gone_and_reaped(evidence.pid);
+}
+
+#[test]
+fn owned_process_explicit_close_is_idempotent() {
+    let dir = PrivateDir::new();
+    let args = argv(&["/bin/sleep", "30"]);
+    let mut child = process::spawn_owned(&spec(&args, &dir.0)).unwrap();
+    child.close().unwrap();
+    child.close().unwrap();
+    let error = child
+        .finish(Deadline::after(Duration::from_secs(1)).unwrap())
+        .unwrap_err();
+    assert_eq!(error.reason, Refusal::InvalidInput);
+}
+
+#[test]
+fn owned_process_capacity_worker() {
+    if std::env::var_os("AM_OWNED_CAPACITY_WORKER").is_none() {
+        return;
+    }
+    process::install_termination_handler().unwrap();
+    let dir = PrivateDir::new();
+    let args = argv(&["/bin/sleep", "30"]);
+    let mut children = Vec::new();
+    for _ in 0..3 {
+        children.push(process::spawn_owned(&spec(&args, &dir.0)).unwrap());
+    }
+    let error = match process::spawn_owned(&spec(&args, &dir.0)) {
+        Ok(_) => panic!("fourth registered owned child was launched"),
+        Err(error) => error,
+    };
+    assert_eq!(error.reason, Refusal::OwnedCapacity);
+    assert!(error.evidence.is_none());
+    children.pop().unwrap().close().unwrap();
+    let mut replacement = process::spawn_owned(&spec(&args, &dir.0)).unwrap();
+    replacement.close().unwrap();
+    for mut child in children {
+        child.close().unwrap();
+    }
+    fs::write(
+        std::env::current_dir()
+            .unwrap()
+            .join("owned-capacity.completed"),
+        b"capacity/refusal/reuse verified\n",
+    )
+    .unwrap();
+}
+
+#[test]
+fn owned_process_uses_existing_three_slot_termination_registry() {
+    let dir = PrivateDir::new();
+    let args = vec![
+        std::env::current_exe().unwrap().into_os_string(),
+        "--exact".into(),
+        "owned_process_capacity_worker".into(),
+        "--nocapture".into(),
+    ];
+    let env = [(
+        OsString::from("AM_OWNED_CAPACITY_WORKER"),
+        OsString::from("1"),
+    )];
+    let mut request = spec(&args, &dir.0);
+    request.env = &env;
+    let output = process::run(&request).unwrap();
+    assert_eq!(
+        output.status,
+        Status::Code(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let (receipt, _) =
+        agent_memory::fs::read_regular(&dir.0, Path::new("owned-capacity.completed"), 1024)
+            .unwrap();
+    assert_eq!(receipt, b"capacity/refusal/reuse verified\n");
+}
