@@ -272,15 +272,9 @@ pub fn text<'a>(value: &'a OsStr, what: &str) -> Result<&'a str> {
 
 /// Thirty-two unmodified kernel-random bytes for private authentication keys.
 pub fn random_32() -> Result<[u8; 32]> {
-    let mut first = [0u8; 16];
-    let mut second = [0u8; 16];
-    entropy(&mut first)
-        .and_then(|()| entropy(&mut second))
-        .map_err(|_| ContractError::new("OS authentication-key entropy unavailable"))?;
     let mut result = [0u8; 32];
-    for (target, source) in result.iter_mut().zip(first.into_iter().chain(second)) {
-        *target = source;
-    }
+    random_bytes(&mut result)
+        .map_err(|_| ContractError::new("OS authentication-key entropy unavailable"))?;
     Ok(result)
 }
 
@@ -291,4 +285,22 @@ pub fn time_ns() -> Result<u128> {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .map_err(|_| ContractError::new("UTC clock precedes the Unix epoch"))
+}
+
+/// Current effective GID for inherited-group expectations; kept inside the OS boundary.
+pub fn effective_gid() -> u32 {
+    unsafe { libc::getegid() }
+}
+
+/// Fill `buffer` from the kernel entropy call, sixteen bytes at a time.
+pub fn random_bytes(buffer: &mut [u8]) -> Result<()> {
+    for part in buffer.chunks_mut(16) {
+        let mut block = [0u8; 16];
+        entropy(&mut block)
+            .map_err(|error| ContractError::new(format!("OS entropy unavailable: {error}")))?;
+        let count = part.len();
+        // `chunks_mut(16)` yields at most sixteen bytes, the size of `block`.
+        part.copy_from_slice(&block[..count]);
+    }
+    Ok(())
 }

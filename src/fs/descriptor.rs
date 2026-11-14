@@ -1032,3 +1032,23 @@ pub fn read_regular(
     )?;
     Ok((observation.bytes, observation.identity.mode & 0o777))
 }
+
+impl Descriptor {
+    /// Raw `mkdirat` relative to a held parent: the process umask applies and
+    /// the new inode is never chmodded (baseline `os.mkdir(name, mode, dir_fd=…)`).
+    pub fn make_directory_at(&self, name: &OsStr, mode: u32) -> io::Result<()> {
+        if mode > 0o7777 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Directory mode must contain permission bits only",
+            ));
+        }
+        status(unsafe {
+            libc::mkdirat(
+                self.as_raw_fd(),
+                child_name(name)?.as_ptr(),
+                mode as libc::mode_t,
+            )
+        })
+    }
+}

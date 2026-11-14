@@ -49,6 +49,8 @@ pub enum Kind {
     },
     /// The optional derived recall catalog cannot qualify a reusable witness.
     RecallCatalogMiss,
+    /// Baseline layout_recovery_temps.ProbeOwnershipError: an unproven metadata probe.
+    ProbeOwnership { path: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -219,6 +221,13 @@ impl ContractError {
         Self {
             kind: Kind::RecallCatalogMiss,
             message: message.into(),
+        }
+    }
+
+    pub(crate) fn probe_ownership(path: impl Into<String>) -> Self {
+        Self {
+            kind: Kind::ProbeOwnership { path: path.into() },
+            message: "pending-ambiguous-probe-ownership".to_owned(),
         }
     }
 }

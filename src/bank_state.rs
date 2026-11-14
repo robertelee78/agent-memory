@@ -21,6 +21,8 @@ pub const GIT_CONTEXT_TIMEOUT: Duration = Duration::from_secs(10);
 pub trait ComparisonView: Send + Sync {
     /// Baseline retrieval.observed_context(root, request).
     fn observed_context(&self, root: &Path, request: &Value) -> Result<(Value, Value)>;
+    fn invalidate_frontier_transition(&self, repo: &Path) -> Result<String>;
+    fn safe_text(&self, value: &Value, maximum: usize) -> Result<()>;
 }
 static COMPARISON: RwLock<Option<Arc<dyn ComparisonView>>> = RwLock::new(None);
 pub fn register_comparison_view(provider: Option<Arc<dyn ComparisonView>>) {
@@ -28,7 +30,7 @@ pub fn register_comparison_view(provider: Option<Arc<dyn ComparisonView>>) {
         .write()
         .unwrap_or_else(|error| error.into_inner()) = provider;
 }
-fn comparison_view() -> Result<Arc<dyn ComparisonView>> {
+pub(crate) fn comparison_view_provider() -> Result<Arc<dyn ComparisonView>> {
     COMPARISON
         .read()
         .unwrap_or_else(|error| error.into_inner())
@@ -333,7 +335,7 @@ pub fn inspect_context(
         ));
     }
     let scope = provider.require_scope(root, get(checked, "project_id"), None)?;
-    let comparison = comparison_view()?;
+    let comparison = comparison_view_provider()?;
     let request = Value::Object(Vec::new());
     let (context, _) = comparison.observed_context(root, &request)?;
     let raw = crate::bank_observation::read_source(bank, path, crate::sharing_limits::MAX_FILE)

@@ -4843,28 +4843,28 @@
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_attempt_journal_error",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_attempt_journal_exit",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_before_pin_directory_error_cleans_owned_probe",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_before_pin_file_error_cleans_owned_probe",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4878,7 +4878,7 @@
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_changed_nonce_after_pin_remains_pending",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4893,7 +4893,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_created_0_error",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4901,7 +4901,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_created_0_exit",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4909,7 +4909,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_created_1_error",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4917,7 +4917,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_created_1_exit",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4925,7 +4925,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_created_2_error",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4933,7 +4933,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_created_2_exit",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4941,7 +4941,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_created_3_error",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -4949,28 +4949,28 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_created_3_exit",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_directories_removed_error",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_directories_removed_exit",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_foreign_replacement_after_pin_remains_pending",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5034,7 +5034,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_0_error",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5042,7 +5042,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_0_exit",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5050,7 +5050,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_1_error",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5058,7 +5058,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_1_exit",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5066,7 +5066,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_2_error",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5074,7 +5074,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_2_exit",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5082,7 +5082,7 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_3_error",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5090,35 +5090,35 @@
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_removed_3_exit",
    "registered": true,
    "generated": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_unpinned_directory_remains_pending_until_operator_removes_it",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_faults.py::LayoutMetadataProbeFaults.test_unpinned_file_remains_pending_until_operator_removes_it",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_retention.py::LayoutMetadataProbeRetention.test_changed_attempt_plan_refuses_without_deletion",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_metadata_probe_retention.py::LayoutMetadataProbeRetention.test_foreign_probe_at_completed_path_refuses_without_deletion",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5139,7 +5139,7 @@
   {
    "id": "tests/contracts/test_layout_metadata_probe_retention.py::LayoutMetadataProbeRetention.test_unknown_pin_refuses_without_deletion",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -7380,7 +7380,7 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_protected_private_root_cannot_silently_move_or_lose_binding",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -13201,9 +13201,9 @@
   "registered": 1829,
   "unregistered": 33,
   "by_status": {
-   "partial": 236,
+   "partial": 266,
    "ported": 262,
-   "unported": 1364
+   "unported": 1334
   }
  }
 }

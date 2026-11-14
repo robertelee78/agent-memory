@@ -577,7 +577,11 @@ fn rollback_now(
 }
 
 /// Baseline `_verify_rolled_back_targets`.
-fn verify_rolled_back_targets(services: &Services, state: &Path, journal: &Value) -> Result<()> {
+pub(crate) fn verify_rolled_back_targets(
+    services: &Services,
+    state: &Path,
+    journal: &Value,
+) -> Result<()> {
     require(
         text(journal, "status") == Some("rolled-back"),
         "Runtime rollback is not complete",
@@ -873,18 +877,18 @@ pub fn install(
         }
         _ => Some(plan.source.clone()),
     };
-    let plan_value = plan.value()?;
-    let omp_transition = plan
-        .uninstall
-        .as_ref()
-        .is_some_and(|fields| fields.omp_transition);
+    let mut plan_value = plan.value()?;
+    let omp_transition = plan.omp_transition;
     let binding = plan.omp_binding.is_some();
     let operation = plan.operation.clone();
+    // Baseline transition mutates the one plan; body applies the same mutation.
+    let transitioned: std::cell::RefCell<Option<Value>> = std::cell::RefCell::new(None);
     let mut transition = || -> Result<Option<Value>> {
         if omp_transition {
             services
                 .omp_boundary()?
-                .native_transition(&plan_value, false)?;
+                .native_transition(&mut plan_value, false)?;
+            *transitioned.borrow_mut() = Some(plan_value.clone());
         }
         let prepared = services
             .private_state()?
@@ -892,13 +896,16 @@ pub fn install(
         if binding {
             services
                 .omp_boundary()?
-                .native_activation(&plan_value, false)?;
+                .native_activation(&mut plan_value, false)?;
         }
         Ok(selected.is_some().then_some(prepared))
     };
     let state = plan.state.clone();
     let mut hooks = hooks;
     let mut body = |proof: &Value| -> Result<Value> {
+        if let Some(mutated) = transitioned.borrow_mut().take() {
+            apply_native_transition(plan, &mutated)?;
+        }
         plan.private_state_evidence = Some(proof.clone());
         install_now(env, services, plan, &mut hooks)
     };
@@ -910,6 +917,29 @@ pub fn install(
         &mut body,
     )?;
     finish_stored_source_activation(env, services, &state, result)
+}
+
+/// Baseline `omp_boundary.native_transition` plan mutation, applied to the typed
+/// plan: the disabled extension action becomes absent-before (or is dropped
+/// when it has no after), and the disabled backup is recorded.
+fn apply_native_transition(plan: &mut Plan, mutated: &Value) -> Result<()> {
+    let backup = get(mutated, "omp_disabled_backup");
+    if *backup == Value::Null {
+        return Ok(());
+    }
+    let target = path_of(backup, "original_path");
+    plan.actions
+        .retain(|action| !(action.path == target && action.after == Value::Null));
+    for action in plan
+        .actions
+        .iter_mut()
+        .filter(|action| action.path == target)
+    {
+        action.before = Value::Null;
+        action.changed = true;
+    }
+    plan.omp_disabled_backup = Some(backup.clone());
+    Ok(())
 }
 
 fn target_record(plan: &Plan, action: &super::Action) -> Result<Value> {
@@ -1127,10 +1157,10 @@ fn install_now(
     if let Some(binding) = &native_binding {
         set(&mut receipt, "omp_binding", binding.clone());
     }
+    if let Some(backup) = &plan.omp_disabled_backup {
+        push(&mut receipt, "backups", backup.clone());
+    }
     if let Some(fields) = &plan.uninstall {
-        if let Some(backup) = &fields.omp_disabled_backup {
-            push(&mut receipt, "backups", backup.clone());
-        }
         if operation == "uninstall" {
             set(&mut receipt, "uninstalled", Value::Bool(true));
             set(&mut receipt, "uninstalled_at", string(&installed_at));
@@ -1467,11 +1497,7 @@ fn activate(
     set(journal, "status", string("complete"));
     replace_record(&journal_path, journal)?;
     let plan_value = plan.value()?;
-    let omp_transition = plan
-        .uninstall
-        .as_ref()
-        .is_some_and(|fields| fields.omp_transition);
-    if omp_transition || plan.omp_binding.is_some() {
+    if plan.omp_transition || plan.omp_binding.is_some() {
         services
             .omp_boundary()?
             .finish_native_transition(&plan_value)?;
@@ -1657,11 +1683,11 @@ fn install_value(
             },
         )?;
         let mut result = public_plan(&plan)?;
-        let plan_value = plan.value()?;
+        let mut plan_value = plan.value()?;
         if plan.omp_binding.is_some() {
             let activation = services
                 .omp_boundary()?
-                .native_activation(&plan_value, true)?;
+                .native_activation(&mut plan_value, true)?;
             set(&mut result, "omp_layout_activation", activation);
         }
         let compatibility =

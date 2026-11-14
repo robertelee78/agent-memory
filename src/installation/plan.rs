@@ -94,8 +94,6 @@ pub struct UninstallFields {
     pub preserved: Value,
     pub reinstall: Value,
     pub preserved_private_state_reader: Option<Value>,
-    pub omp_transition: bool,
-    pub omp_disabled_backup: Option<Value>,
 }
 
 /// Baseline `prepare` result.
@@ -125,6 +123,11 @@ pub struct Plan {
     /// Python-era adoption evidence (prior schema and receipt digest).
     pub adoption: Option<Value>,
     pub uninstall: Option<UninstallFields>,
+    /// Baseline `plan['omp_transition'] = {'writers_quiesced': True}` (update
+    /// and uninstall with explicit `--omp-writers-quiesced`).
+    pub omp_transition: bool,
+    /// Baseline `plan['omp_disabled_backup']`, set by the native transition.
+    pub omp_disabled_backup: Option<Value>,
 }
 
 fn strings(values: &[String]) -> Value {
@@ -203,6 +206,15 @@ impl Plan {
         ];
         if let Some(adoption) = &self.adoption {
             fields.push(("adoption".into(), adoption.clone()));
+        }
+        if self.omp_transition {
+            fields.push((
+                "omp_transition".into(),
+                Value::Object(vec![("writers_quiesced".into(), Value::Bool(true))]),
+            ));
+        }
+        if let Some(backup) = &self.omp_disabled_backup {
+            fields.push(("omp_disabled_backup".into(), backup.clone()));
         }
         Ok(Value::Object(fields))
     }
@@ -1593,6 +1605,8 @@ pub fn prepare(
         private_state_evidence: None,
         adoption,
         uninstall: None,
+        omp_transition: false,
+        omp_disabled_backup: None,
     })
 }
 

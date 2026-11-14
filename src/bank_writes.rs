@@ -159,7 +159,79 @@ pub trait RecoveryFrontier: Send + Sync {
     fn observe_source_markers(
         &self,
     ) -> Result<Box<dyn crate::scope_binding::SourceMarkerObservation>>;
+    /// Baseline require_scope with the caller's held writer and transaction marker.
+    fn require_scope_owned(
+        &self,
+        repo: &Path,
+        project: &Value,
+        expected: Option<&Value>,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+    ) -> Result<Value>;
+    /// Baseline recovery_frontier.marker_bytes(bank, name, expected=...).
+    fn marker_bytes(
+        &self,
+        bank: &Path,
+        name: &str,
+        expected: Option<&[u8]>,
+    ) -> Result<Option<Vec<u8>>>;
+    /// Baseline recovery_frontier.marker_value(raw): one exact typed marker.
+    fn marker_value(&self, raw: &[u8]) -> Result<Value>;
+    /// Baseline recovery_frontier.invalidate(repo): derived-cache status text.
+    fn invalidate(&self, repo: &Path) -> Result<String>;
+    /// Baseline recovery_frontier.range_value(value).
+    fn range_value(&self, value: &Value) -> Result<()>;
+    /// Baseline recovery_frontier.verified_hold(repo, owner, transaction): the full hold.
+    fn verified_hold_value(
+        &self,
+        repo: &Path,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Option<crate::scope_binding::VerifiedEnrollmentHold>>;
+    /// Baseline recovery_frontier.pending_rows(repo, token, owner, transaction).
+    fn pending_rows(
+        &self,
+        repo: &Path,
+        token: &Value,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Vec<Value>>;
+    /// Baseline recovery_frontier.successor_token(token, ids, operation_id=, generation_change=).
+    fn successor_token(
+        &self,
+        token: &Value,
+        pending_unit_ids: &[String],
+        operation_id: &str,
+        generation_change: bool,
+    ) -> Result<Value>;
+    /// Baseline recovery_frontier.reservation(files, pending, token).
+    fn reservation(&self, files: &Value, pending: &[Value], token: &Value) -> Result<Value>;
+    /// Baseline recovery_frontier.claim_value(claim, row).
+    fn claim_value(&self, claim: &Value, row: &Value) -> Result<()>;
+    /// Baseline recovery_frontier.resolve_reference(repo, reference).
+    fn resolve_reference(
+        &self,
+        repo: &Path,
+        reference: &Value,
+        runtime_root: &Path,
+    ) -> Result<Value>;
+    /// Baseline recovery_frontier.validate_comparison_review(repo, proof, owner, transaction=).
+    fn validate_comparison_review(
+        &self,
+        repo: &Path,
+        proof: &Value,
+        owner: Option<&[u8]>,
+        transaction: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Option<Value>>;
 }
+/// Baseline recovery_frontier marker schemas; recovery_frontier reuses these.
+pub const HOLD: &str = "agent-memory/layout-frontier-hold-v1";
+pub const NESTED: &str = "agent-memory/layout-frontier-transaction-v1";
+pub const TRANSACTION: &str = "agent-memory/layout-recovery-transaction-v1";
+pub const SENTINEL: &str = "agent-memory/layout-recovery-sentinel-v1";
 pub trait RecoveryTransactions: Send + Sync {
     fn apply_checkpoint(&self, proposal: &Value) -> Result<Value>;
     /// Baseline recovery_transactions.apply_transaction.

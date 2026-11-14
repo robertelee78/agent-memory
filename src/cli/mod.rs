@@ -339,6 +339,22 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
                 .map_err(|error| error.to_string())
         });
     wired((*SECURITY_SCAN).clone().map_err(ContractError::new))?;
+    wired(
+        crate::installation::seams::register_private_state(Some(Arc::new(
+            wiring::LifecyclePrivateState,
+        )))
+        .map_err(|error| ContractError::new(error.to_string())),
+    )?;
+    wired(
+        crate::installation::seams::register_omp_boundary(Some(Arc::new(
+            crate::omp_boundary::InstallationBoundary,
+        )))
+        .map_err(|error| ContractError::new(error.to_string())),
+    )?;
+    crate::omp_boundary::register_omp_stream(Some(Arc::new(crate::omp_boundary::InstalledStream)));
+    crate::private_state::register_recovery_quiescence(Some(Arc::new(
+        crate::recovery_quiescence::RecoveryQuiescence,
+    )));
     Ok(())
 }
 

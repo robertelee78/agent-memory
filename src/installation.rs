@@ -427,3 +427,6 @@ pub(crate) use filesystem::{
 };
 pub(crate) use plan::unchanged_parent;
 pub(crate) use transaction::{receipt_committed, require_replannable_journal};
+
+// omp_boundary (baseline `install._verify_rolled_back_targets`).
+pub(crate) use transaction::verify_rolled_back_targets;

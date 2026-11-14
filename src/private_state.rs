@@ -73,6 +73,16 @@ pub trait RecoveryQuiescence: Send + Sync {
         runtime_digest: &str,
         runtime_root: &Path,
     ) -> Result<Option<Value>>;
+    fn validate(
+        &self,
+        repo: &Path,
+        value: &Value,
+        runtime_digest: Option<&str>,
+        required_routes: &[String],
+        publish: bool,
+        owner: Option<&[u8]>,
+        runtime_root: &Path,
+    ) -> Result<Value>;
 }
 static QUIESCENCE: RwLock<Option<Arc<dyn RecoveryQuiescence>>> = RwLock::new(None);
 pub fn register_recovery_quiescence(provider: Option<Arc<dyn RecoveryQuiescence>>) {
@@ -880,15 +890,19 @@ pub fn require_compatible(
 /// Holds all source barriers through transition, activation and exact readback.
 /// Nested calls reuse the outer context; Drop restores context and unlocks on
 /// every refusal or unwind. No post-body check replaces a panic/fatal exit.
-pub fn activation_guard<T>(
+/// A transition returning `Some(target)` replaces the target artifact in place
+/// (baseline `target.clear(); target.update(prepare_lifecycle(plan))`): both
+/// compatibility proofs then use the replacement. The caller's error type is
+/// preserved through the transition and body.
+pub fn activation_guard<T, E: From<ContractError>>(
     installation: Option<&Value>,
     target_artifact: Option<&Value>,
     operation: &str,
     current_repo: &Path,
     runtime_root: &Path,
-    transition: Option<&mut dyn FnMut() -> Result<()>>,
-    body: impl FnOnce(&Value) -> Result<T>,
-) -> Result<T> {
+    transition: Option<&mut dyn FnMut() -> std::result::Result<Option<Value>, E>>,
+    body: impl FnOnce(&Value) -> std::result::Result<T, E>,
+) -> std::result::Result<T, E> {
     let nested = BARRIERS.with(|held| held.borrow().is_some());
     let mut guards = vec![];
     let _restore;
@@ -897,13 +911,15 @@ pub fn activation_guard<T>(
         if !inventory.unknown.is_empty() {
             return Err(refusal(
                 "Private-state bank inventory is unavailable; preserve the active runtime",
-            ));
+            )
+            .into());
         }
         for root in &inventory.roots {
             if !ordinary_directory(root)? {
                 return Err(refusal(
                     "Required private-state repository is unavailable; preserve the active runtime",
-                ));
+                )
+                .into());
             }
             let settings = repository_config::recovery_settings(root)?;
             if named(&root.join(settings.bank_root))?.is_some_and(|info| info.is_directory()) {
@@ -920,9 +936,11 @@ pub fn activation_guard<T>(
     } else {
         _restore = None;
     }
-    if let Some(transition) = transition {
-        transition()?;
-    }
+    let replacement = match transition {
+        Some(transition) => transition()?,
+        None => None,
+    };
+    let target_artifact = replacement.as_ref().or(target_artifact);
     let proof = require_compatible(
         installation,
         target_artifact,
@@ -1112,4 +1130,121 @@ pub fn prepare_lifecycle(plan: &Value, check: bool, runtime_root: &Path) -> Resu
         put(&mut target, "layout_quiescence_overrides", overrides)?;
     }
     Ok(Some(target))
+}
+
+#[cfg(test)]
+mod activation_rebinding_tests {
+    use super::*;
+    use std::os::unix::fs::DirBuilderExt;
+
+    const UNKNOWN: &str = "Target runtime has an unknown private-state compatibility declaration";
+    const LOOP: &str = "Symlink loop or excessive name resolution";
+
+    #[derive(Debug)]
+    enum Caller {
+        Contract(ContractError),
+        Transition,
+    }
+    impl From<ContractError> for Caller {
+        fn from(error: ContractError) -> Self {
+            Self::Contract(error)
+        }
+    }
+
+    struct Root(PathBuf);
+    impl Drop for Root {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+    /// A private root whose `repo` resolves to a symlink loop: once a target
+    /// passes the compatibility declaration check, repository discovery
+    /// refuses deterministically without HOME, Git or registered hooks.
+    fn looping_repo() -> (Root, PathBuf) {
+        let path = std::env::temp_dir().join(format!("am-rebind-{}", host::uuid4().unwrap()));
+        std::fs::DirBuilder::new()
+            .mode(0o700)
+            .create(&path)
+            .unwrap();
+        let root = Root(std::fs::canonicalize(&path).unwrap());
+        let repo = root.0.join("repo");
+        std::os::unix::fs::symlink(&repo, &repo).unwrap();
+        (root, repo)
+    }
+    fn declared(tokens: &[&str]) -> Value {
+        object([(
+            "compatibility",
+            object([(
+                "private_state_capabilities",
+                Value::Array(tokens.iter().copied().map(string).collect()),
+            )]),
+        )])
+    }
+    /// The guard runs nested under an outer context on this thread, so its
+    /// first observable step after the transition is the target proof.
+    fn guarded(
+        target: &Value,
+        transition: Option<&mut dyn FnMut() -> std::result::Result<Option<Value>, Caller>>,
+        repo: &Path,
+    ) -> (std::result::Result<(), Caller>, bool) {
+        let previous = BARRIERS.with(|held| held.replace(Some(BTreeSet::new())));
+        let _restore = RestoreBarriers(previous);
+        let mut entered = false;
+        let result = activation_guard(
+            None,
+            Some(target),
+            "install",
+            repo,
+            repo,
+            transition,
+            |_| {
+                entered = true;
+                Ok(())
+            },
+        );
+        (result, entered)
+    }
+    fn message(result: std::result::Result<(), Caller>) -> String {
+        match result {
+            Err(Caller::Contract(error)) => error.message().to_owned(),
+            other => panic!("expected a contract refusal, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn transition_replacement_is_the_target_of_the_compatibility_proof() {
+        let (_root, repo) = looping_repo();
+        let valid = declared(&[]);
+        let unknown = declared(&["not-a-private-state-capability"]);
+        let (result, entered) = guarded(&valid, None, &repo);
+        assert_eq!(message(result), LOOP);
+        assert!(!entered);
+        let (result, entered) = guarded(&unknown, None, &repo);
+        assert_eq!(message(result), UNKNOWN);
+        assert!(!entered);
+        let mut kept = || Ok(None);
+        let (result, entered) = guarded(&unknown, Some(&mut kept), &repo);
+        assert_eq!(message(result), UNKNOWN);
+        assert!(!entered);
+        let mut replacement = Some(valid.clone());
+        let mut rebind_valid = || Ok(replacement.take());
+        let (result, entered) = guarded(&unknown, Some(&mut rebind_valid), &repo);
+        assert_eq!(message(result), LOOP);
+        assert!(!entered);
+        let mut replacement = Some(unknown.clone());
+        let mut rebind_unknown = || Ok(replacement.take());
+        let (result, entered) = guarded(&valid, Some(&mut rebind_unknown), &repo);
+        assert_eq!(message(result), UNKNOWN);
+        assert!(!entered);
+    }
+
+    #[test]
+    fn transition_refusal_keeps_the_caller_error_and_skips_the_body() {
+        let (_root, repo) = looping_repo();
+        let mut failing = || Err(Caller::Transition);
+        let (result, entered) = guarded(&declared(&[]), Some(&mut failing), &repo);
+        assert!(matches!(result, Err(Caller::Transition)));
+        assert!(!entered);
+        assert!(BARRIERS.with(|held| held.borrow().is_none()));
+    }
 }

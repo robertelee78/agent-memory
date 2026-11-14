@@ -409,9 +409,9 @@ pub fn prepare(env: &Environment, old: &Value, locations: &Locations) -> Result<
             preserved: Value::Array(planner.preserved),
             reinstall: reinstall(old),
             preserved_private_state_reader: None,
-            omp_transition: false,
-            omp_disabled_backup: None,
         }),
+        omp_transition: false,
+        omp_disabled_backup: None,
     })
 }
 
@@ -548,16 +548,16 @@ fn work(
         None => None,
     };
     if let Some(fields) = plan.uninstall.as_mut() {
-        fields.omp_transition = request.omp_writers_quiesced;
         fields.preserved_private_state_reader = selected;
     }
+    plan.omp_transition = request.omp_writers_quiesced;
     plan.layout_quiescence = request.layout_quiescence.clone();
-    let omp_transition = request.omp_writers_quiesced;
-    let plan_value = uninstall_value(&plan)?;
+    let omp_transition = plan.omp_transition;
+    let mut plan_value = uninstall_value(&plan)?;
     if omp_transition && request.check && !native_preflight {
         services
             .omp_boundary()?
-            .native_transition(&plan_value, true)?;
+            .native_transition(&mut plan_value, true)?;
     }
     let private = services.private_state()?;
     let target = private.prepare_lifecycle(&plan_value, true)?;
@@ -640,12 +640,6 @@ fn uninstall_value(plan: &Plan) -> Result<Value> {
         ];
         if let Some(reader) = &fields.preserved_private_state_reader {
             extra.push(("preserved_private_state_reader".to_owned(), reader.clone()));
-        }
-        if fields.omp_transition {
-            extra.push((
-                "omp_transition".to_owned(),
-                object([("writers_quiesced", Value::Bool(true))]),
-            ));
         }
         value = merged(value, Value::Object(extra));
     }

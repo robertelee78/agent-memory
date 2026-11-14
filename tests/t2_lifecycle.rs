@@ -2452,3 +2452,88 @@ fn healthy_installation_needs_no_doctor_repair() {
     assert_eq!(get(&value, "restart_clients"), &Value::Array(vec![]));
     assert_eq!(snapshot(&installed.world.root), before);
 }
+
+/// Records each plan the lifecycle hands to the native boundary seam.
+#[derive(Default)]
+struct RecordingOmp(std::sync::Mutex<Vec<(Value, bool)>>);
+fn planned_transition() -> Value {
+    json::decode(
+        r#"{"binding_disable_planned": true, "drains": [], "installation_writes_performed": false, "canonical_writes_performed": false}"#,
+        json::DecodePolicy::default(),
+    )
+    .unwrap()
+}
+impl install::OmpBoundary for RecordingOmp {
+    fn capability(&self) -> &str {
+        agent_memory::omp_boundary::CAPABILITY
+    }
+    fn native_transition(&self, plan: &mut Value, check: bool) -> install::Result<Value> {
+        self.0.lock().unwrap().push((plan.clone(), check));
+        Ok(planned_transition())
+    }
+    fn native_activation(&self, _: &mut Value, _: bool) -> install::Result<Value> {
+        Ok(Value::Array(vec![]))
+    }
+    fn finish_native_transition(&self, _: &Value) -> install::Result<()> {
+        Ok(())
+    }
+    fn recover_native_binding(&self, _: &Path) -> install::Result<()> {
+        Ok(())
+    }
+    fn native_recovery_expected(&self, _: &Path, _: &str) -> install::Result<Option<Value>> {
+        Ok(None)
+    }
+    fn complete_stored_source_activation(&self, _: &Path) -> install::Result<Value> {
+        Ok(Value::Object(vec![]))
+    }
+}
+
+/// `--omp-writers-quiesced` is the plan's own `omp_transition`; update check
+/// records the native transition's result, uninstall check passes the plan.
+#[test]
+fn writers_quiesced_checks_hand_the_plan_transition_to_the_native_boundary() {
+    let installed = Installed::new(Mode::Copy);
+    let omp = Arc::new(RecordingOmp::default());
+    let mut services = installed.services();
+    services.omp_boundary = Some(omp.clone());
+    let before = snapshot(&installed.world.root);
+    let request = UpdateRequest {
+        check: true,
+        omp_writers_quiesced: true,
+        ..UpdateRequest::default()
+    };
+    let result = updating::update_command(&installed.world.env(), &services, &request);
+    let value = result.value.unwrap();
+    assert_eq!(result.exit_code, 0, "{value:?}");
+    assert_eq!(get(&value, "native_transition"), &planned_transition());
+    let quiesced = json::decode(
+        r#"{"writers_quiesced": true}"#,
+        json::DecodePolicy::default(),
+    )
+    .unwrap();
+    {
+        let calls = omp.0.lock().unwrap();
+        assert_eq!(calls.len(), 1);
+        let (plan, check) = &calls[0];
+        assert!(*check);
+        assert_eq!(get(plan, "omp_transition"), &quiesced);
+        assert_eq!(text(plan, "operation"), "update");
+        assert!(plan.get("preserved").is_none() && plan.get("reinstall").is_none());
+    }
+    let request = UninstallRequest {
+        check: true,
+        omp_writers_quiesced: true,
+        ..UninstallRequest::default()
+    };
+    let result = uninstallation::uninstall_command(&installed.world.env(), &services, &request);
+    let value = result.value.unwrap();
+    assert_eq!(result.exit_code, 0, "{value:?}");
+    let calls = omp.0.lock().unwrap();
+    assert_eq!(calls.len(), 2);
+    let (plan, check) = &calls[1];
+    assert!(*check);
+    assert_eq!(get(plan, "omp_transition"), &quiesced);
+    assert_eq!(text(plan, "operation"), "uninstall");
+    assert!(plan.get("preserved").is_some());
+    assert_eq!(snapshot(&installed.world.root), before);
+}

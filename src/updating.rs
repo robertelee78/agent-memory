@@ -16,8 +16,7 @@ use crate::fs;
 use crate::installation::{
     self as install, ADOPTION_GUIDANCE, ATOMICITY, ActivationHooks, ArtifactInspection, Command,
     Environment, Error, InstallRequest, MANAGED_GUIDANCE, PrepareOptions, RELEASE_BINARY,
-    RELEASE_PACK, RegisteredArtifacts, ReleaseAccess, Result, Services, TARGET, UninstallFields,
-    require,
+    RELEASE_PACK, RegisteredArtifacts, ReleaseAccess, Result, Services, TARGET, require,
 };
 use crate::lifecycle::{CommandResult, get, object, string, text};
 use crate::release_distribution::{self as release, ReleaseObservation, Scratch};
@@ -853,16 +852,8 @@ fn work(
     plan.operation = "update".to_owned();
     plan.omp_layout_quiescence = request.omp_layout_quiescence.clone().unwrap_or_default();
     plan.layout_quiescence = request.layout_quiescence.clone();
-    let omp_transition = request.omp_writers_quiesced;
-    if omp_transition {
-        plan.uninstall = Some(UninstallFields {
-            preserved: Value::Null,
-            reinstall: Value::Null,
-            preserved_private_state_reader: None,
-            omp_transition: true,
-            omp_disabled_backup: None,
-        });
-    }
+    plan.omp_transition = request.omp_writers_quiesced;
+    let omp_transition = plan.omp_transition;
     let recorded = targets(&old);
     // With no candidate or target changes there are no bank writes to
     // qualify. Still verify ownership and public command dispatch.
@@ -920,16 +911,17 @@ fn work(
     set(&mut summary, "compatibility", compatibility.clone());
     plan.rollback_repositories = observed_repositories(&compatibility);
     if request.check {
-        let plan_value = plan.value()?;
+        let mut plan_value = plan.value()?;
         if omp_transition {
-            services
+            let transition = services
                 .omp_boundary()?
-                .native_transition(&plan_value, true)?;
+                .native_transition(&mut plan_value, true)?;
+            set(&mut summary, "native_transition", transition);
         }
         if plan.omp_binding.is_some() {
             let activation = services
                 .omp_boundary()?
-                .native_activation(&plan_value, true)?;
+                .native_activation(&mut plan_value, true)?;
             set(&mut summary, "native_activation", activation);
         }
         let private = services.private_state()?;

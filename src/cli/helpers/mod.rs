@@ -8,6 +8,7 @@ pub mod bank_writes;
 pub mod developer_identity;
 pub mod installation;
 pub mod lifecycle;
+pub mod omp_boundary;
 pub mod pack_validation;
 pub mod private_workspace;
 pub mod purging;

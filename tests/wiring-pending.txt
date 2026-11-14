@@ -16,10 +16,9 @@ omp_installation::register_activation waits for installation, omp_boundary, omp_
 sharing_hold_mapping::register_semantic_sharing waits for semantic_sharing
 turn_check::register_memory_refresh waits for memory_refresh
 private_state::register_private_state_hooks waits for installation, omp_boundary, admission
-private_state::register_recovery_quiescence waits for recovery_quiescence
-installation::seams::register_omp_boundary waits for omp_boundary
-installation::seams::register_private_state blocked by private_state::activation_guard not rebinding the target in place (baseline prepare_lifecycle(plan)); see installation-report.md
 doctor_fix::register_diagnostics waits for diagnostics
 turn_sources::register_publication_gate waits for memory_publication, sharing_recovery
 omp_stream::register_omp_transport waits for omp_transport
 security::register_migration_audit waits for migration
+omp_boundary::register_omp_transport waits for omp_transport
+layout_restore::register_layout_recovery waits for layout_recovery

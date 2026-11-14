@@ -67,8 +67,10 @@ pub trait PrivateState: Send + Sync {
 pub trait OmpBoundary: Send + Sync {
     /// `omp_boundary.CAPABILITY`.
     fn capability(&self) -> &str;
-    fn native_transition(&self, plan: &Value, check: bool) -> Result<()>;
-    fn native_activation(&self, plan: &Value, check: bool) -> Result<Value>;
+    /// Baseline mutates `plan` in place: `actions` rewrite and `omp_disabled_backup`.
+    fn native_transition(&self, plan: &mut Value, check: bool) -> Result<Value>;
+    /// With `check`, baseline records `native_layout_quiescence_overrides` in `plan`.
+    fn native_activation(&self, plan: &mut Value, check: bool) -> Result<Value>;
     fn finish_native_transition(&self, plan: &Value) -> Result<()>;
     fn recover_native_binding(&self, state: &Path) -> Result<()>;
     fn native_recovery_expected(&self, state: &Path, path: &str) -> Result<Option<Value>>;

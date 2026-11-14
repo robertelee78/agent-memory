@@ -3048,10 +3048,10 @@ impl install::OmpBoundary for FixtureOmp {
     fn capability(&self) -> &str {
         agent_memory::omp_installation::READER_CAPABILITY
     }
-    fn native_transition(&self, _: &Value, _: bool) -> install::Result<()> {
-        Ok(())
+    fn native_transition(&self, _: &mut Value, _: bool) -> install::Result<Value> {
+        Ok(Value::Object(Vec::new()))
     }
-    fn native_activation(&self, _: &Value, _: bool) -> install::Result<Value> {
+    fn native_activation(&self, _: &mut Value, _: bool) -> install::Result<Value> {
         Ok(Value::Object(Vec::new()))
     }
     fn finish_native_transition(&self, _: &Value) -> install::Result<()> {

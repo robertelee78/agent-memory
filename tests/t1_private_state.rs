@@ -650,7 +650,7 @@ fn saved_missing_repository_and_bank_remain_required_and_block_activation() {
                     assert_eq!(g(&proof, "decision"), &s("pending"));
                     let mut activated = false;
                     assert!(
-                        private::activation_guard(
+                        private::activation_guard::<_, ContractError>(
                             Some(&installation),
                             Some(&target()),
                             "activate",
@@ -683,7 +683,7 @@ fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
             let runtime = root.join("runtime");
             let before = snapshot(root);
             let mut transitions = 0;
-            private::activation_guard(
+            private::activation_guard::<_, ContractError>(
                 None,
                 Some(&target()),
                 "install",
@@ -693,9 +693,9 @@ fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
                 |_| {
                     let mut transition = || {
                         transitions += 1;
-                        Ok(())
+                        Ok(None)
                     };
-                    private::activation_guard(
+                    private::activation_guard::<_, ContractError>(
                         None,
                         Some(&target()),
                         "install",
@@ -727,7 +727,7 @@ fn nested_activation_restores_context_after_unwind_and_exact_rechecks() {
                 .downcast::<std::sync::Arc<&str>>()
                 .unwrap();
             assert!(std::sync::Arc::ptr_eq(&caught, &original));
-            private::activation_guard(
+            private::activation_guard::<_, ContractError>(
                 None,
                 Some(&target()),
                 "install",
