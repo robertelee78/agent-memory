@@ -1,36 +1,37 @@
-# systemPatterns
+# System patterns
 
-## Planning sources; approval and current applicability require review
+## The bank
 
-- [docs/adr/0013-public-cli-and-corrective-releases.md](../docs/adr/0013-public-cli-and-corrective-releases.md)
-- [docs/adr/0010-memory-bank-file-contract.md](../docs/adr/0010-memory-bank-file-contract.md)
-- [docs/adr/0012-git-shared-memory.md](../docs/adr/0012-git-shared-memory.md)
-- [docs/adr/0001-local-first-authority-boundaries.md](../docs/adr/0001-local-first-authority-boundaries.md)
-- [docs/adr/0004-client-independent-integration.md](../docs/adr/0004-client-independent-integration.md)
-- [docs/adr/0003-progressive-disclosure.md](../docs/adr/0003-progressive-disclosure.md)
-- [docs/adr/0005-admission-consolidation-retrieval.md](../docs/adr/0005-admission-consolidation-retrieval.md)
-- [docs/adr/0007-portable-pack-and-lifecycle.md](../docs/adr/0007-portable-pack-and-lifecycle.md)
+`memory-bank/MEMORY.md` is the route map (one table row per file: purpose,
+scope, lifecycle, read-when). Six context files answer different questions;
+the bank grows with the project, so missing ones are fine. Lessons are notes in
+`topics/<id>.md` with record frontmatter ([schema](../skills/agent-memory/schemas/record.json)),
+linked from `MEMORY.md`. A superseded lesson keeps its file with
+`status: "superseded"` and loses its route.
 
-## Reviewed intent: bounded-bank-map
+## Agent workflow
 
-The root memory-bank/MEMORY.md is a bounded router; useful context files link to stronger sources. Detailed memory loads only when relevant. Derived search indexes and caches are rebuildable; canonical Markdown routers and topic indexes remain shared sources.
+- **Session start:** the hook (Claude, Codex, omp) injects the project summary
+  and how to use `am recall`/`am remember`. Nothing runs on each turn.
+- **Milestones:** when a fix is confirmed, a decision is made, the user
+  corrects the agent or a task is done, the agent proposes one short memory and
+  asks "Save this to project memory?". Only a separate explicit yes leads to
+  `am remember`. Agreeing a decision is not permission to save.
 
-Applicability: `{"conditions": {}, "scope": "repository"}`.
-Reviewed value: `"Progressive disclosure over canonical Markdown"`.
-Evidence: [docs/adr/0003-progressive-disclosure.md](../docs/adr/0003-progressive-disclosure.md), [docs/adr/0010-memory-bank-file-contract.md](../docs/adr/0010-memory-bank-file-contract.md).
+## Sharing
 
-## Reviewed intent: memory-only-exchange
+`am share` commits only `memory-bank/` on top of the shared branch (a temporary
+index; code, HEAD and other index entries untouched) and pushes; a protected
+branch gets a memory branch and a pull request. `am refresh` merges others'
+memory into the working tree (MEMORY.md row by row, other files with
+`git merge-file`) and stages the shared bank so a plain `git pull` works. Both
+refuse rather than lose data: links inside the bank, memory staged only in the
+index, unresolved conflict markers.
 
-Eligible memory lands through the repository’s existing Git rules independently of feature code. Turn-boundary refresh reconciles memory while preserving unpublished learning, code, index and feature ancestry.
+## Install
 
-Applicability: `{"conditions": {}, "scope": "repository"}`.
-Reviewed value: `"Memory-only publication and refresh"`.
-Evidence: [docs/adr/0012-git-shared-memory.md](../docs/adr/0012-git-shared-memory.md).
-
-## Reviewed intent: comparison-and-contradictions
-
-Capture reads existing plausible matches first; consolidation retains distinct conditions, evidence and provenance. Overlapping contradictions go to the detecting developer; landing order does not determine truth.
-
-Applicability: `{"conditions": {}, "scope": "repository"}`.
-Reviewed value: `"Read/compare before writing; clarify contradictory meaning"`.
-Evidence: [docs/adr/0005-admission-consolidation-retrieval.md](../docs/adr/0005-admission-consolidation-retrieval.md), [docs/adr/0012-git-shared-memory.md](../docs/adr/0012-git-shared-memory.md).
+Signed release (install.sh verifies the binary with `ssh-keygen`; `am` verifies
+the release-v2 manifest and pack). A receipt records every owned file; files are
+replaced only while unchanged, whole files deleted only if am created them and
+nothing else is left. A small leftovers record (with hashes) lets a killed run
+be finished safely. A v0.0.14 install is taken over the same way.

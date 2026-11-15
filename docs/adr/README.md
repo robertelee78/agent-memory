@@ -1,5 +1,16 @@
 # Architecture decision records
 
+> **Authority, 2026-11-15.** The operator's lean design,
+> [docs/design/v0.0.15-lean.md](../design/v0.0.15-lean.md), is authoritative for
+> the product. The approved base is [docs/mission.md](../mission.md) plus
+> ADR-0001–0012. Any requirement in a later ADR or issue that conflicts with the
+> lean design is withdrawn, in particular per-turn seals and sources, authority
+> proofs, frontier/holds, layout recovery, repeated re-verification, and
+> unit/contract test suites. ADR-0009 (contract tests and fault injection) and
+> the ADR-0010 layout-recovery amendment are superseded. The v0.0.16 ADRs (guided
+> recall, graph) remain proposals for their own milestone. Agent-written issue
+> or ADR text is not operator approval.
+
 These ADRs were derived from the
 [state-of-the-art review](../research/2026-10-21-agent-memory-state-of-the-art.md).
 The operator accepted their v0.0.1 scope in the

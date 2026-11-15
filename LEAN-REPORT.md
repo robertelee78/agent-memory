@@ -345,5 +345,8 @@ suggested, because a temporary's content cannot prove it is ours.
   old receipts are left in place, neither restored nor deleted.
 - **Rust receipt-v3** (pre-lean development installs) is read by the same
   takeover code but was not exercised.
-- **Superseded docs** (`docs/contracts/`, ADR-0013 and later, `docs/research/`,
-  older release notes) are kept as history; the lean spec replaces them.
+- **Superseded docs.** `docs/contracts/` and the design docs for cut v0.0.15
+  machinery were deleted (2026-11-15 docs pass). ADRs stay, with an authority
+  notice in `docs/adr/README.md` and "superseded" notes on ADR-0009, 0020, 0021,
+  0026 and the ADR-0010 layout-recovery amendment; `docs/research/` and older
+  release notes remain as history.

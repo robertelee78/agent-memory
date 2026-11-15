@@ -117,15 +117,15 @@ peer-harness, lifecycle, permission and macOS/Linux acceptance. Detailed capture
 transport and recovery changes still require independent engineering review and
 actual stock-client qualification.
 
-The task-specific [native delivery-window contract](../design/v0.0.15-omp-integration.md#helper-actions-acknowledgement-and-bounded-wakes)
+The task-specific native delivery-window contract (design doc removed with the cut machinery, 2026-11-15)
 defines the reviewed Linux same-monotonic profile and atomic reservation-start
 transition. Source review does not substitute for the original native matrix.
 
 For #249's queued-guidance batch control only, the original same-prompt-batch
 requirement across all three previously undefined skipped/failed/deferred paths
 is replaced by the source-bound positive and negative controls in the
-[task design](../design/v0.0.15-omp-integration.md#diagnostics-dependencies-and-acceptance)
-and [native qualification matrix](../testing/omp-native-qualification.md#full-independent-native-release-matrix).
+task design and native qualification matrix (both removed with the cut
+machinery, 2026-11-15).
 They distinguish actual delivered guidance from loss and preserved pending work;
 a pending reference is not delivered guidance. Stock-source limitations are not
 runtime passes. This amendment changes no other #249 acceptance, permissions,
@@ -170,7 +170,7 @@ the frame was written or received. Diagnostics MUST NOT become source,
 assessment, delivery or completion authority, alter source or drain inventories,
 rewrite historical evidence, or change callback deadlines.
 An offered continuation is not observed delivery. The
-[task design](../design/v0.0.15-omp-integration.md#foreground-answer-and-governed-maintenance)
+task design (removed with the cut machinery, 2026-11-15)
 specifies the activation, private diagnostic and native acceptance contract.
 
 
@@ -203,7 +203,7 @@ Classification itself SHALL create no new shared observation or wake; existing
 control policy MAY still enroll substantive or ambiguous intervals containing a
 manual read. The exact carrier, closed annotation, retry and qualification design
 is specified in the
-[task-specific execution addendum](../design/v0.0.15-omp-instruction-context.md).
+task-specific execution addendum (removed with the cut machinery, 2026-11-15).
 Actual copied and linked native reads, adversarial nonqualification, old-gap
 preservation, crash retry and historical readback MUST be qualified before
 claiming this behavior supported. This clarification MUST NOT narrow #249's

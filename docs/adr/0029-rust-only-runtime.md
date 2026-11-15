@@ -40,7 +40,7 @@ Rust with Python purged from the repository
   released. Their qualification evidence stays historical and does not qualify
   the Rust implementation.
 
-The [cutover design](../design/v0.0.15-rust-cutover.md) defines adoption of
+The cutover design (removed 2026-11-15; superseded by the lean design) defined adoption of
 Python-era installations, the interpreter-free bootstrap and `release-v2`
 manifest, named codecs, tiers, coexistence rules and coverage obligations.
 

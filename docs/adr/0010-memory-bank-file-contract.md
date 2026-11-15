@@ -182,6 +182,8 @@ federation, caches, and recovery journals are not part of that definition.
 
 ## Amendment: Source-preserving layout recovery
 
+> Superseded by the lean design (2026-11-15): [v0.0.15-lean.md](../design/v0.0.15-lean.md).
+
 **Proposed 2026-10-31; implementation design approved 2026-11-04 for v0.0.15.**
 Work key: `ADR-0010:source-preserving-layout-recovery`. This is separate from
 bank-validation consistency and owned-hook health and does not expand the

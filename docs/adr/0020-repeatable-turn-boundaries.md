@@ -6,6 +6,8 @@ amended: 2026-10-27
 amends: [ADR-0004, ADR-0012, ADR-0019]
 ---
 
+> Superseded by the lean design (2026-11-15): [v0.0.15-lean.md](../design/v0.0.15-lean.md).
+
 # ADR-0020: Repeatable, quiet memory turn boundaries
 
 ## Context

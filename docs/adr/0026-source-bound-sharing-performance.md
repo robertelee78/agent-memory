@@ -6,6 +6,8 @@ amends: [ADR-0016]
 related: [ADR-0009, ADR-0010, ADR-0012, ADR-0014]
 ---
 
+> Superseded by the lean design (2026-11-15): [v0.0.15-lean.md](../design/v0.0.15-lean.md).
+
 # ADR-0026: Source-bound sharing performance without repeated page reconstruction
 
 Accepted architecture for existing [#209](https://github.com/robertelee78/agent-memory/issues/209), work key `robertelee78/agent-memory:ADR-0009:bounded-24-session-stress`. The operator explicitly directed “yes, fix that” and clarified that eliminating repeated page rebuilds is an obvious engineering fix, not another approval decision. Fable independently passed the architecture and execution contract. This authorizes the bounded checked-page export and consumer migration, not a broader cache rewrite. Initial acceptance requires eliminating per-page whole-frontier rebuilds with identical checked-page content and unchanged safety boundaries; actual end-to-end latency will be measured, without an invented percentage promise. Full workload/platform qualification remains required. This ADR is renumbered from the reviewed proposed0025 because another session had already assigned0025 to project/shared-memory architecture; that accepted decision is untouched.
@@ -24,7 +26,7 @@ Selected inspection MAY emit the exact already-qualified pages into an explicitl
 
 Fresh semantic review, publication prepare/land, refresh prepare/apply, original-index, scope/policy, authority and hold checks SHALL remain authoritative. An exported page MUST NOT substitute for those checks. Changed authority, local source, effective framing, lifecycle, hold state or recovery state SHALL invalidate the appropriate later operation rather than silently use a stale result. No global atomicity/currentness lease is claimed between independent commands.
 
-The exact proposed CLI/codec/filesystem contract is the [execution design](../design/v0.0.15-209-checked-page-export.md). It MUST be reviewed with this ADR. Its private completion marker SHALL mean only complete artifact persistence. A marker MUST NOT be treated as proof acknowledgment, successful publication or current semantic truth.
+The exact proposed CLI/codec/filesystem contract was the execution design (removed with the cut machinery). It MUST be reviewed with this ADR. Its private completion marker SHALL mean only complete artifact persistence. A marker MUST NOT be treated as proof acknowledgment, successful publication or current semantic truth.
 
 ### 2. Keep expensive safety boundaries; remove proven redundant derivation
 

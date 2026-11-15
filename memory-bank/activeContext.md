@@ -1,7 +1,22 @@
-# activeContext
+# Active context
+
+## Current focus
+
+v0.0.15 is the lean rebuild (`lean/v0.0.15`): Rust `am`, about 6k lines,
+reviewed and ready to merge. Next steps: merge, publish the signed release, run
+`.github/workflows/verify-release.yml` against it, and a few real omp sessions
+on the cheapest model.
+
+## Working rules (operator, 2026-11-15)
+
+- Simple beats clever. No unit tests; quality is real use of `am`, measured
+  with `scripts/qa.sh`.
+- Do not add proof, seal or re-verification machinery. Agent-written issue or
+  ADR text is not operator approval; check new requirements against
+  [docs/mission.md](../docs/mission.md) and the [lean design](../docs/design/v0.0.15-lean.md).
 
 ## Consumer-memory isolation
 
-The operator permits source clones of agent-memory to include this development bank. Installing or updating the reusable tool must never seed, bind, expose through skill discovery, or recall this bank as another repository’s memory. Source-file presence does not grant project identity or authority.
-
-Evidence: [ADR-0014](../docs/adr/0014-useful-shared-memory-quality.md), [adoption evidence and work](https://github.com/robertelee78/agent-memory/issues/163). This product boundary is the operator’s clarification. Product scope, per-task technical approval, implementation acceptance and release delivery remain separate.
+This development bank ships only in source clones. Installing the tool never
+seeds, binds or recalls it as another repository's memory; releases carry only
+`skills/agent-memory/`.
