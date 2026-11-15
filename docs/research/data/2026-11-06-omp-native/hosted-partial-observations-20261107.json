@@ -1,0 +1,160 @@
+{
+  "schema": "agent-memory/native249-hosted-candidate-projection-v1",
+  "source_commit": "a8e6b386db9a8719831ef69f9af6dd17cf8f1e4c",
+  "artifact_digest": "f1a27e181980f462216cb660f649603cc54dcc0240ca3ab1de3e84269e2bc497",
+  "native_version": "18.16.0",
+  "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "model": "openai-codex/gpt-6.1-sol",
+  "approval_mode": "native-existing-default",
+  "platform": "macOS arm64",
+  "full_native_qualification": false,
+  "release_acceptance": false,
+  "public_data": "synthetic fixture only",
+  "hosted_repository": "https://github.com/robertelee78/agent-memory-v015-qualification",
+  "publication": {
+    "witnessed_commit": "4bf0851142b61ee510fb8ed283d65464af560d84",
+    "parent_commits": [
+      "a52e65ead6cec154b0d432583ca4472e9937bbe2"
+    ],
+    "changed_files": [
+      "memory-bank/MEMORY.md",
+      "memory-bank/history/events/15f03f35-4762-4ae8-9cf6-afde63ef715b.md",
+      "memory-bank/topics/208e8261-299c-427f-9b6a-90d18318a103.md"
+    ],
+    "memory_only": true
+  },
+  "preservation": {
+    "head_preserved": true,
+    "entire_index_preserved": true,
+    "feature_index_preserved": true,
+    "feature_worktree_preserved": true,
+    "feature_files_preserved": true
+  },
+  "manual": {
+    "copy_print": {
+      "native_session": "01a1b54f-8d7d-7295-a649-f1a04eb54ac4",
+      "human_id": "a847af7a",
+      "invocation_id": "90d15d8b",
+      "result_id": "26344a64",
+      "answer_exact_once": true,
+      "native_exit": 0,
+      "classification_qualified": false,
+      "coverage": "admission-only; no snapshot/capture/enrollment/seal; terminal-helper outcomes unknown"
+    },
+    "link_rpc": {
+      "native_session": "01a1b550-0b5c-762d-85d0-fae86d706941",
+      "human_ids": [
+        "e73eb512",
+        "32843b86"
+      ],
+      "snapshot_annotation": {
+        "artifact_digest": "f1a27e181980f462216cb660f649603cc54dcc0240ca3ab1de3e84269e2bc497",
+        "installation_id": "3d5e1cea2e49407fab7d7917f86a2aa2",
+        "invocation_native_entry_id": "82c12cf5",
+        "kind": "installed-am-manual",
+        "manual_file_sha256": "8b184a95d69d8afd917c3310fae041146fccc8673bc3aa857521b4494db193b7",
+        "manual_relative_path": "SKILL.md",
+        "observed_receipt_sha256": "f6ba6840e6c70169f616fa5ea8ca7a13dedba5f7cfd1b621a918490eb39d3503",
+        "renderer": "omp-18.16-full-skill-v1",
+        "schema": "agent-memory/owned-instruction-context-v1",
+        "tool_call_id": "call_3c439d34a5164423b9568b1ac1f18b26|fc_0ce3bf881e0a8949016aeeed97d55887d1bf4c340f4c9c1c36"
+      },
+      "snapshot_sha256": "6c256193483dd506d147723aa81e836aa6d4eec26bcab9f92d07dacfd51dd39c",
+      "snapshot_content_empty": true,
+      "classification_observed": true,
+      "whole_session_coverage_qualified": false
+    }
+  },
+  "peer": {
+    "session": "01a1b560-ba44-7667-9a71-c94f2a453b9a",
+    "human_ids": [
+      "6627fe1a"
+    ],
+    "native_exit": 0,
+    "answer_exact_once": true,
+    "actual_recall_result_entry": "3e929eff",
+    "actual_recall_invocation_entry": "19a9bb81",
+    "actual_recall_tool_call_id": "call_d272bf57bca640438d166be75524cf42|fc_00b426b5e09fa76f016aeef30b624c87d1bff646139097e9c1",
+    "actual_tool_name": "bash",
+    "selected_current_records": [
+      {
+        "path": "topics/attempt-cap.md",
+        "record_id": "b7215b1c-e883-47dc-894f-32fc89b991f2",
+        "source_sha256": "82dd4fd5e0418fdc73cbf1b575afea74f36160d9ff7b71286d3f963501befaa9",
+        "selection_class": "current-record",
+        "selection": {
+          "current": true,
+          "gates": {
+            "authorized-scope": true,
+            "applicable": true,
+            "active": true,
+            "valid-time": true,
+            "sufficient-trust": true,
+            "visible": true,
+            "no-active-superseder": true
+          },
+          "reasons": []
+        },
+        "scope_chain": [
+          "repository"
+        ]
+      },
+      {
+        "path": "topics/208e8261-299c-427f-9b6a-90d18318a103.md",
+        "record_id": "208e8261-299c-427f-9b6a-90d18318a103",
+        "source_sha256": "de432b4572a14b3a90acf09b0f23eadcd7c3539787bf3c18b8a82898963d9b47",
+        "selection_class": "current-record",
+        "selection": {
+          "current": true,
+          "gates": {
+            "authorized-scope": true,
+            "applicable": true,
+            "active": true,
+            "valid-time": true,
+            "sufficient-trust": true,
+            "visible": true,
+            "no-active-superseder": true
+          },
+          "reasons": []
+        },
+        "scope_chain": [
+          "repository"
+        ]
+      }
+    ],
+    "caller_request": {
+      "project_id": "bd9ef8f1-f7a7-4dc9-9abb-9c6f9e11ccc0",
+      "query": "attempt",
+      "ids": [],
+      "paths": [],
+      "context": {},
+      "kinds": [
+        "semantic-fact"
+      ],
+      "minimum_trust": "reviewed",
+      "limit": 8,
+      "include_context": false
+    },
+    "canonical_hashes_equal_publisher": true,
+    "source_coverage_qualified": false
+  },
+  "tui": {
+    "session": "01a1b562-7871-746f-80da-b42e8325d6dd",
+    "human_ids": [
+      "adb85ff4"
+    ],
+    "answer_exact_once": true,
+    "native_exit": 0,
+    "ordinary_current_recall_observed": true,
+    "permission_approval_synthesized": false,
+    "source_coverage_qualified": false
+  },
+  "remaining_blockers": [
+    "Copy-print, copy-TUI and peer-print retained admission metadata but no stored-source snapshots/sealed enrollment; no no-gap-to-completion inference.",
+    "Link RPC second human exceeded750-second settled deadline; original first answer once, second completion sentinel absent in observed stored session.",
+    "Boundary review third human was not submitted; no-learning and completed refresh-assessment matrix unqualified.",
+    "Current helper absence does not prove historical terminal writes; initial copyprint helper ownership/stdin/stdout/exit receipts were not collected.",
+    "No post-ancestor-fix source qualification; old evidence never relabeled.",
+    "No current Linux/batch/steering/cancel/refusal/provider-unsupported/fork/compaction matrix proof from this journey."
+  ]
+}

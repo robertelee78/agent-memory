@@ -1,0 +1,202 @@
+{
+  "container_absent": true,
+  "container_created": "035256f3982f14396411f3404a1640fc3d9164f21fc5a1f4ef4036dae5407f3e",
+  "guarantee_limits": "Engine-visible absence, tmpfs config and local scratch removal only; not forensic RAM/VM swap/crash-dump/backup erasure.",
+  "inspect_after": {
+    "argv": [
+      "podman",
+      "inspect",
+      "035256f3982f14396411f3404a1640fc3d9164f21fc5a1f4ef4036dae5407f3e"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.07309999997960404,
+    "exit": 125,
+    "stderr": "Error: no such object: \"035256f3982f14396411f3404a1640fc3d9164f21fc5a1f4ef4036dae5407f3e\"\n",
+    "stdout": "[]\n"
+  },
+  "loopback_listener_absent": true,
+  "precreation_absence_proven": true,
+  "remove": {
+    "argv": [
+      "podman",
+      "rm",
+      "-f",
+      "035256f3982f14396411f3404a1640fc3d9164f21fc5a1f4ef4036dae5407f3e"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.08265024999855086,
+    "exit": 0,
+    "stderr": "",
+    "stdout": "035256f3982f14396411f3404a1640fc3d9164f21fc5a1f4ef4036dae5407f3e\n"
+  },
+  "scratch_absent": true,
+  "scratch_inventory": [
+    {
+      "bytes": 32,
+      "path": "owner",
+      "sha256": "a40a9904fdb9126ed3b36f13169361c802b37a71ca9720f9385c7aa5de8398c5"
+    },
+    {
+      "bytes": 36,
+      "path": "repo/.git/COMMIT_EDITMSG",
+      "sha256": "e0bfb72629a37d8efec430945df19003bf28f03ea4b262fbee6e7a39f5110781"
+    },
+    {
+      "bytes": 21,
+      "path": "repo/.git/HEAD",
+      "sha256": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80"
+    },
+    {
+      "bytes": 137,
+      "path": "repo/.git/config",
+      "sha256": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda"
+    },
+    {
+      "bytes": 73,
+      "path": "repo/.git/description",
+      "sha256": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee"
+    },
+    {
+      "bytes": 478,
+      "path": "repo/.git/hooks/applypatch-msg.sample",
+      "sha256": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7"
+    },
+    {
+      "bytes": 1972,
+      "path": "repo/.git/hooks/commit-msg.sample",
+      "sha256": "efc1401b0e99d1ff51494d154d98b46c1e99059bcd8bf9f73cecde19fd3eb23b"
+    },
+    {
+      "bytes": 4611,
+      "path": "repo/.git/hooks/fsmonitor-watchman.sample",
+      "sha256": "9159720099ad5595b8e66645cbfd47763c1e920f46e0b50ae75e642bbec57ef0"
+    },
+    {
+      "bytes": 189,
+      "path": "repo/.git/hooks/post-update.sample",
+      "sha256": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5"
+    },
+    {
+      "bytes": 424,
+      "path": "repo/.git/hooks/pre-applypatch.sample",
+      "sha256": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475"
+    },
+    {
+      "bytes": 1649,
+      "path": "repo/.git/hooks/pre-commit.sample",
+      "sha256": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b"
+    },
+    {
+      "bytes": 416,
+      "path": "repo/.git/hooks/pre-merge-commit.sample",
+      "sha256": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53"
+    },
+    {
+      "bytes": 1374,
+      "path": "repo/.git/hooks/pre-push.sample",
+      "sha256": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a"
+    },
+    {
+      "bytes": 4898,
+      "path": "repo/.git/hooks/pre-rebase.sample",
+      "sha256": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3"
+    },
+    {
+      "bytes": 544,
+      "path": "repo/.git/hooks/pre-receive.sample",
+      "sha256": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989"
+    },
+    {
+      "bytes": 1492,
+      "path": "repo/.git/hooks/prepare-commit-msg.sample",
+      "sha256": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619"
+    },
+    {
+      "bytes": 2783,
+      "path": "repo/.git/hooks/push-to-checkout.sample",
+      "sha256": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f"
+    },
+    {
+      "bytes": 2308,
+      "path": "repo/.git/hooks/sendemail-validate.sample",
+      "sha256": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92"
+    },
+    {
+      "bytes": 3650,
+      "path": "repo/.git/hooks/update.sample",
+      "sha256": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106"
+    },
+    {
+      "bytes": 335,
+      "path": "repo/.git/index",
+      "sha256": "b95685852c7b3b5dbbe54ff9c7822d121ed760139763a9d195b8c0c91ecb1881"
+    },
+    {
+      "bytes": 240,
+      "path": "repo/.git/info/exclude",
+      "sha256": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1"
+    },
+    {
+      "bytes": 202,
+      "path": "repo/.git/logs/HEAD",
+      "sha256": "64528f5a24be308b527805ececf0eea98107e63aee37d717e0cbabb8ce35765d"
+    },
+    {
+      "bytes": 202,
+      "path": "repo/.git/logs/refs/heads/main",
+      "sha256": "64528f5a24be308b527805ececf0eea98107e63aee37d717e0cbabb8ce35765d"
+    },
+    {
+      "bytes": 57,
+      "path": "repo/.git/objects/18/a8664ea4287c12673927fd726430896ba87a50",
+      "sha256": "a265aabbc22cadcbef06d40fed33168157a3e1fd8381d38eb9faf038323f030d"
+    },
+    {
+      "bytes": 154,
+      "path": "repo/.git/objects/2a/dffcc9dfa4ad0fe047c28b864dba2577e5a70d",
+      "sha256": "3a9ba540f2c856d228d7c3343d1d81b58059965fba1830615299041253e6d908"
+    },
+    {
+      "bytes": 123,
+      "path": "repo/.git/objects/43/a96fd289c3d21f6b1fef9f5198cc0d7a2bca40",
+      "sha256": "5403e04b64495df69b4723694b13af0ba24d3c6f8087137b0123fa00cbea2879"
+    },
+    {
+      "bytes": 265,
+      "path": "repo/.git/objects/4b/61f41c3d6431da2293bf81e6395d81bebd7007",
+      "sha256": "b107eb0956bccba8d14b30761eedc8659e1f5dbf2d9c5b2393049a2ad70bae0e"
+    },
+    {
+      "bytes": 96,
+      "path": "repo/.git/objects/d3/0737ec165ada57cff4863a1e273bf7d57aeed5",
+      "sha256": "ed4f63e439a5b797028c5736192b697fd98eac76eba5f9a6ad7786e410bafbfa"
+    },
+    {
+      "bytes": 188,
+      "path": "repo/.git/objects/e5/170c2d8c55d19748c0a22774e7599a46a16197",
+      "sha256": "7dd5581dd7eecbfb92c74ee540185b6bfe8f450892568c5c3d0ffd0f39b4a5c6"
+    },
+    {
+      "bytes": 41,
+      "path": "repo/.git/refs/heads/main",
+      "sha256": "c76baab9d3fcbd521ec8706c0add02c55303ff4c2c79517e9aa2d5b931046b82"
+    },
+    {
+      "bytes": 502,
+      "path": "repo/app.py",
+      "sha256": "79ed5803edaa76b23088bf17c4cf3f1e527c7be7582a47bdfd5b6b50ebace6a8"
+    },
+    {
+      "bytes": 91,
+      "path": "repo/requirements.txt",
+      "sha256": "1daca92b63eaa7fdc8f61a8386a13d4a8a8d351b8dd16b98154fc7e4877d1788"
+    },
+    {
+      "bytes": 226,
+      "path": "repo/tests/test_routes.py",
+      "sha256": "bbe6a781a45a28a8fa673580d012b6c1e00b3bacf9a20e1717da2e83f118c0ee"
+    }
+  ],
+  "slot_released": true,
+  "synthetic_raw_evidence_retained": true
+}

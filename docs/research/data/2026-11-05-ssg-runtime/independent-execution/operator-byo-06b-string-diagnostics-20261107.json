@@ -1,0 +1,87 @@
+{
+  "schema": "am255/operator-byo-string-diagnostics-v1",
+  "scope": "Synthetic host-side HTTP observations, not exact tokenizer/truncation/quality/managed/G1 acceptance",
+  "observations": [
+    {
+      "schema": "am255/byo-string-boundary-observations-v1",
+      "started_utc": "2026-11-07T08:59:18.822931+00:00",
+      "endpoint": "operator-configured endpoint; address withheld",
+      "model_requested": "qwen3-embedding-0.6b",
+      "calls": [
+        {
+          "repeated_ascii_units": 32,
+          "input_bytes": 64,
+          "request_bytes": 133,
+          "request_sha256": "2f2a0352e318f0ee4f974e99516766b91f9788d77847d08c6da46036c78f534d",
+          "http_status": 200,
+          "response_bytes": 12914,
+          "response_sha256": "da7111466f75117b15be9fe441d2f469a3660ef30b93b615979bd2d12cfe301a",
+          "usage": {
+            "prompt_tokens": 33,
+            "total_tokens": 33
+          },
+          "vector_valid": true,
+          "dimensions": 1024,
+          "response_model_matches_requested": true,
+          "elapsed_seconds": 0.424
+        },
+        {
+          "repeated_ascii_units": 4096,
+          "input_bytes": 8192,
+          "request_bytes": 8261,
+          "request_sha256": "e44f28a88efbb48dcdbaa47d72eb17a67d5bb744f80d374304ed9b94d6de4407",
+          "http_status": 413,
+          "error_class": "HTTPError",
+          "error_body_read": false,
+          "elapsed_seconds": 0.031
+        },
+        {
+          "repeated_ascii_units": 4097,
+          "input_bytes": 8194,
+          "request_bytes": 8263,
+          "request_sha256": "dfa3f5d6d2b10f7c0012c39de1d7f15e08bf552b8f692197836c3777b1f2468c",
+          "http_status": 413,
+          "error_class": "HTTPError",
+          "error_body_read": false,
+          "elapsed_seconds": 0.03
+        }
+      ],
+      "scope": "Three bounded synthetic string requests only, no project texts or reasoning calls. Repeated units are not independently verified tokenizer units. Usage is a provider report, not immutable tokenizer/weight attestation. No service or limits changed.",
+      "finished_utc": "2026-11-07T08:59:19.307871+00:00",
+      "elapsed_seconds": 0.485,
+      "credential_value_retained": false,
+      "redirects_allowed": false,
+      "environment_proxy_used": false
+    },
+    {
+      "schema": "am255/byo-string-boundary-observations-v1",
+      "started_utc": "2026-11-07T09:01:17.029942+00:00",
+      "endpoint": "operator-configured endpoint; address withheld",
+      "model_requested": "qwen3-embedding-0.6b",
+      "calls": [
+        {
+          "repeated_ascii_units": 4095,
+          "input_bytes": 8190,
+          "request_bytes": 8259,
+          "request_sha256": "4d077b414b6980bf8aabe9b21d024191cb3c8d9cc70a073db2aaf1031151937b",
+          "error_class": "TimeoutError",
+          "elapsed_seconds": 70.072
+        }
+      ],
+      "scope": "One bounded synthetic string request only, no project texts or reasoning calls. Repeated units are not independently verified tokenizer units. Usage is a provider report, not immutable tokenizer/weight attestation. No service or limits changed.",
+      "finished_utc": "2026-11-07T09:02:27.101950+00:00",
+      "elapsed_seconds": 70.072,
+      "credential_value_retained": false,
+      "redirects_allowed": false,
+      "environment_proxy_used": false
+    }
+  ],
+  "private_raw_bindings": {
+    "operator-embedding-06b-string-boundary.json": "cae9922a6cea83c7430e838d02d862384dc53efb5d0c997276e85bafcf0ae7ae",
+    "operator-embedding-06b-string-boundary-4095.json": "f526fc0988e85ab888ba2ee138e00f88b85d0ddfee0278e6cc881adc581c21f7",
+    "operator-embedding-06b-string-boundary-completion.json": "d43e80dcb40c2b02bf0bf2e26b88ecdc34c3db208be219dd26ecfa36f91871b3",
+    "operator-embedding-06b-string-boundary-4095-completion.json": "f9126a462bfb835ec1ea00488eca6f1765913eb687d6c7e1143fc88b37a60462",
+    "remote_embedding_06b_string_boundary.py": "ce78f83925d64f982d3ebd4ed607ce0b6db882e90a4c6ea99f2f6dfaa9c1f49f",
+    "remote_embedding_06b_string_boundary_4095.py": "738930445728d866df4365a80e905660e53e84d67d7006bb10f188e4ceac5623"
+  }
+}

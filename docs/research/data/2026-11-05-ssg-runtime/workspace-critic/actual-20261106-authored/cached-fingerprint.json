@@ -1,0 +1,830 @@
+{
+  "schema": "ssg.fingerprint.v1",
+  "root": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic/actual-20261106-authored/scratch/repo",
+  "commit": "e76f4612b9f2a63eae5d43625275d108beeb856d",
+  "content": "1076719aebc636ae9a37c11893bcaf0f4eedac7c5a12b9a01d6ffdffa8cdbd59",
+  "build": "1451d11ae7477d6571d36489b1e5703b5950c69146da9bc7250151200b87a36a",
+  "cgg_version": "0.11.2",
+  "cgg": {
+    "callables": 13,
+    "edges": 13,
+    "files": 2,
+    "files_not_ok": 0
+  },
+  "languages": {
+    "python": 2
+  },
+  "frameworks": [
+    {
+      "id": "flask",
+      "recognised": true,
+      "count": 4
+    }
+  ],
+  "lockfiles": [
+    {
+      "kind": "requirements",
+      "packages": 1,
+      "path": "requirements.txt",
+      "status": "parsed"
+    }
+  ],
+  "packages": [
+    {
+      "direct": true,
+      "key": "pypi/flask",
+      "lockfile": "requirements.txt",
+      "name": "flask",
+      "version": "3.1.2",
+      "vkey": "0000000000!0000000003.0000000001.0000000002.0000000000.0000000000.0000000000.40000000000.00000000000.10000000000"
+    },
+    {
+      "direct": true,
+      "key": "lang/python",
+      "lockfile": "cgg",
+      "name": "python",
+      "version": "",
+      "vkey": null
+    }
+  ],
+  "callees": [
+    {
+      "simple": "eval",
+      "lang": "python",
+      "sites": 4
+    },
+    {
+      "simple": "literal_eval",
+      "lang": "python",
+      "sites": 1
+    },
+    {
+      "simple": "str",
+      "lang": "python",
+      "sites": 3
+    }
+  ],
+  "symbols": [
+    {
+      "simple": "HTTPSConnection",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "Popen",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "SSLContext",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "ServerProxy",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "Unpickler",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "__import__",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "_create_unverified_context",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "check_call",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "check_output",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "choice",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "choices",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "compare_digest",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "copyfile",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "copytree",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "create_connection",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "create_subprocess_exec",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "create_subprocess_shell",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "eval",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 4,
+      "lexical_hits": 4,
+      "locations": [
+        "app.py:9",
+        "app.py:19",
+        "app.py:28",
+        "tests/test_routes.py:9"
+      ]
+    },
+    {
+      "simple": "exec",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "execute",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "executemany",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "executescript",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "extract",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "extractall",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "findall",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "finditer",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "format",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "format_map",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "fromstring",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "fullmatch",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "get_data",
+      "packages": [
+        "pypi/flask"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "get_json",
+      "packages": [
+        "pypi/flask"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "getattr",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "getoutput",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "getrandbits",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "getstatusoutput",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "import_module",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "input",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "is_relative_to",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "literal_eval",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 1,
+      "lexical_hits": 1,
+      "locations": [
+        "app.py:24"
+      ]
+    },
+    {
+      "simple": "load",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "loads",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "make_parser",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "match",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "md5",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "mktemp",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "parseString",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "pbkdf2_hmac",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "popen",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "posix_spawn",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "quote",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "randint",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "randrange",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "read_bytes",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "read_text",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "recv",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "redirect",
+      "packages": [
+        "pypi/flask"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "render_template_string",
+      "packages": [
+        "pypi/flask"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "rmtree",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "safe_substitute",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "sample",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "scrypt",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "search",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "send_file",
+      "packages": [
+        "pypi/flask"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "send_from_directory",
+      "packages": [
+        "pypi/flask"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "sha1",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "sha256",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "shuffle",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "subn",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "substitute",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "system",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "token_bytes",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "token_hex",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "token_urlsafe",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "uniform",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "unpack_archive",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "urlopen",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "write_bytes",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    },
+    {
+      "simple": "write_text",
+      "packages": [
+        "lang/python"
+      ],
+      "cgg_sites": 0,
+      "lexical_hits": 0,
+      "locations": []
+    }
+  ],
+  "entries": [
+    {
+      "cgg_minted": true,
+      "convention": "framework/flask/entry/route",
+      "export": "constant",
+      "file": "app.py",
+      "framework": "framework/flask",
+      "line": 17,
+      "trust_kind": "network",
+      "wrapper": null
+    },
+    {
+      "cgg_minted": true,
+      "convention": "framework/flask/entry/route",
+      "export": "direct",
+      "file": "app.py",
+      "framework": "framework/flask",
+      "line": 12,
+      "trust_kind": "network",
+      "wrapper": null
+    },
+    {
+      "cgg_minted": true,
+      "convention": "framework/flask/entry/route",
+      "export": "literal",
+      "file": "app.py",
+      "framework": "framework/flask",
+      "line": 22,
+      "trust_kind": "network",
+      "wrapper": null
+    },
+    {
+      "cgg_minted": true,
+      "convention": "framework/flask/entry/route",
+      "export": "test_only",
+      "file": "tests/test_routes.py",
+      "framework": "framework/flask",
+      "line": 7,
+      "trust_kind": "network",
+      "wrapper": null
+    }
+  ],
+  "prefixes_seen": []
+}

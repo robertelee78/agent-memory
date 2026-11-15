@@ -1,0 +1,28 @@
+{
+  "schema": "am255/concurrent-inventory-discrepancy-v1",
+  "actual_interval": {
+    "start": "2026-11-06T20:38:56.044418Z",
+    "end": "2026-11-06T20:39:27.886153Z"
+  },
+  "before_count": 55,
+  "after_count": 55,
+  "removed_baseline_ids": [
+    "b72615a10d085196075826e151ccd00b842b8f301defe90602208f7663024aff"
+  ],
+  "added_nonowned_ids": [
+    "79d14ae736e936b54edcfd2c0d20550f157b322480af76e97bd627933c53bbe1"
+  ],
+  "own_created_ids": [
+    "79acf5e099bb8be917b3694e71973ba4d1bf8b5ae956161177d905cddec2b4aa",
+    "b4693cf2a509c4c828b0adb918facc0716525b23b54f9a6f632f43f17ec09b48"
+  ],
+  "removed_are_not_our_created_ids": true,
+  "raw_report_global_baseline_preserved": false,
+  "final_qualifier_exit": 1,
+  "failed_check": "reported_baseline_container_ids_preserved",
+  "all_other_final_checks": true,
+  "owned_resources_disposition": "Both owned full container IDs absent; both loopback publications absent; no volumes; exact acquired/extracted owned bytes disposed; borrowed exact weights/carrier preserved",
+  "attribution": "Requested Main source-bound receipt for concurrent recovery/native-owner replacement. Not established by this set difference alone; failure retained, no server/qualification rerun and no fabricated pass.",
+  "raw_final_qualification_sha256": "7f58dffe7b1198a5b24a36bb5350277254e94bf7c02b425e93fe2f5ef0414f0c",
+  "raw_run_index_sha256": "6e36a967a589279e81c9f7388174afb12ffafc3349f655775fae65203ffd66a0"
+}

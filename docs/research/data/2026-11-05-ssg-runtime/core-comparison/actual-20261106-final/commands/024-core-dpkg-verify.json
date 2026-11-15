@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "podman",
+    "exec",
+    "a45b4947b38dfb2680ef4c44e7ea518fd9bc60632bfa88be1e5bba5d6f157a53",
+    "dpkg",
+    "--verify",
+    "memgraph",
+    "openssl",
+    "libssl3t64"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.26572566700633615,
+  "started_at": "2026-11-06T19:20:35.312909+00:00",
+  "stderr": "",
+  "stdout": ""
+}

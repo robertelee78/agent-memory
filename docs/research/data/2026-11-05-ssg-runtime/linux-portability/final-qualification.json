@@ -1,0 +1,56 @@
+{
+  "all_qualification_checks": false,
+  "borrowed_images_weights_preserved": true,
+  "checks": {
+    "alternate_borrowed_weight_preserved": true,
+    "alternate_owned_container_absent": true,
+    "alternate_owned_loopback_listener_absent": true,
+    "borrowed_carrier_image_preserved": true,
+    "core_all_pinned_layers_verified": true,
+    "core_elf_machine_amd64": true,
+    "core_exact_amd64_manifest": true,
+    "helper_matches_both_freezes": true,
+    "image_bindings_match_frozen_sha256": true,
+    "image_controller_matches_frozen_sha256": true,
+    "linux_config_matches_frozen_sha256": true,
+    "linux_controller_matches_frozen_sha256": true,
+    "mage_all_pinned_layers_verified": true,
+    "mage_elf_machine_amd64": true,
+    "mage_exact_amd64_manifest": true,
+    "owned_acquisition_directory_absent": true,
+    "owned_preflight_absent": true,
+    "reference_borrowed_weight_preserved": true,
+    "reference_owned_container_absent": true,
+    "reference_owned_loopback_listener_absent": true,
+    "reported_baseline_container_ids_preserved": false
+  },
+  "finalizer_sha256": "b836eab2338d69038409ee772ba4a547190ff7e4a99a95d1e4cd958f8d19cb1a",
+  "forensic_media_provider_backup_erasure": false,
+  "not_an_acceptance_pass": [
+    "legal",
+    "managed profile",
+    "G1",
+    "quality",
+    "clean performance",
+    "native amd64 support"
+  ],
+  "owned_acquisition_files_disposed": 72,
+  "owned_container_disposition": [
+    {
+      "final_exit": 1,
+      "id": "79acf5e099bb8be917b3694e71973ba4d1bf8b5ae956161177d905cddec2b4aa",
+      "path": "actual-20261106/alternate/cleanup.json",
+      "receipt_absent": true,
+      "sha256": "db2072a30199d5cdef33c3af529d507d3ccbffafd0e8c929802b2cfbc0f044a0"
+    },
+    {
+      "final_exit": 1,
+      "id": "b4693cf2a509c4c828b0adb918facc0716525b23b54f9a6f632f43f17ec09b48",
+      "path": "actual-20261106/reference/cleanup.json",
+      "receipt_absent": true,
+      "sha256": "87e987633e78f86008e4bbd6770219b11991f22568cb0f77e12eae22d25d51d5"
+    }
+  ],
+  "schema": "am255/linux-final-changed-path-qualification-v1",
+  "start_unix": 1793998192.1074612
+}

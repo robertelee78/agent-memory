@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "podman",
+    "start",
+    "79acf5e099bb8be917b3694e71973ba4d1bf8b5ae956161177d905cddec2b4aa"
+  ],
+  "duration_seconds": 0.1253368854522705,
+  "exit": 0,
+  "start_unix": 1793997563.602968,
+  "stderr": "",
+  "stdout": "79acf5e099bb8be917b3694e71973ba4d1bf8b5ae956161177d905cddec2b4aa\n"
+}

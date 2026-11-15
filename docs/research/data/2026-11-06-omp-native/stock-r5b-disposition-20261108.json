@@ -1,0 +1,47 @@
+{
+  "schema": "agent-memory/native249-stock-r5b-disposition-v1",
+  "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+  "status": "FAILED",
+  "full_native_qualification": false,
+  "plan_sha256": "4d5656273852d6ae5df5d3920ca4152be37314592b4ee44ce87a9dc3627a4d7e",
+  "actual_result_sha256": "45729620527943102690980d249ea7148c52dd987f57fc06a96627b8a4c60d66",
+  "safe_diagnosis_sha256": "1b5e323efe52befdd2ce397615d63097277990c02a2853936eec07a5adb24342",
+  "failed_worker": {
+    "exit_code": 1,
+    "closed": false,
+    "complete_input_requests": 141,
+    "final_sequence": 142,
+    "durable_verified_attempts": 42,
+    "unaccounted_sequences": [
+      43,
+      141
+    ],
+    "observer_health": true,
+    "observer_faults": 0
+  },
+  "cause": "Executor exception escapes, is swallowed by run, and prevents close; original exception type/stage was not retained. Lock contention, authority invalidation and filesystem fault are unproven alternatives.",
+  "additional_failures": [
+    "Zero root-wake reservations; queued seal cancelled behind executor backlog.",
+    "Old-session capture-refused/unresolvable identity and unresolved transition remain.",
+    "RPC acceptance checks aborted at wait_closed; positive model-forgets not established."
+  ],
+  "observed_backlog": {
+    "request_42_arrival_to_observed_seconds_approx": 106,
+    "timing_scope": "instrumented perturbed apparatus; not uninstrumented performance qualification"
+  },
+  "harness_defect": "Worker exit1 was misclassified as missing instrumentation despite complete healthy observer coverage. Remains a fatal worker failure.",
+  "scoped_positives": [
+    "Print exited0 with one sentinel; worker0/CLOSED11 and checked source coverage, assessments incomplete.",
+    "Fork synthetic327795-byte native entry stored before shutdown; actual peer EOF8.586ms and worker0/CLOSED16.",
+    "Governed admission observed, not linked to an automatic wake or established model-forgets condition."
+  ],
+  "independent_review": {
+    "model": "anthropic/claude-opus-5-5",
+    "verdict": "FAILED disposition confirmed; no whole249 acceptance",
+    "scope": "safe metadata/source only; no transcript bodies or execution"
+  },
+  "original_negatives_retained": true,
+  "runtime_changed": false,
+  "stock_omp_changed": false,
+  "retry_authorized": false
+}

@@ -1,0 +1,89 @@
+{
+  "page": [
+    {
+      "file": "frontmatter.py",
+      "line": 45,
+      "name": "read",
+      "calls": 123595,
+      "primitive_calls": 123595,
+      "own_s": 1.392763632,
+      "cumulative_s": 11.318911437
+    },
+    {
+      "file": "__init__.py",
+      "line": 313,
+      "name": "loads",
+      "calls": 2665103,
+      "primitive_calls": 2665103,
+      "own_s": 1.625303398,
+      "cumulative_s": 6.395393155000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<built-in method posix.open>",
+      "calls": 721824,
+      "primitive_calls": 721824,
+      "own_s": 5.775641096,
+      "cumulative_s": 5.7826030710000005
+    }
+  ],
+  "publication-land": [
+    {
+      "file": "frontmatter.py",
+      "line": 45,
+      "name": "read",
+      "calls": 549396,
+      "primitive_calls": 549396,
+      "own_s": 5.793019725000001,
+      "cumulative_s": 47.09473132
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<built-in method posix.open>",
+      "calls": 3196134,
+      "primitive_calls": 3196134,
+      "own_s": 28.008812233,
+      "cumulative_s": 28.038369907000003
+    },
+    {
+      "file": "__init__.py",
+      "line": 313,
+      "name": "loads",
+      "calls": 11778557,
+      "primitive_calls": 11778557,
+      "own_s": 6.743315467,
+      "cumulative_s": 26.492625516
+    }
+  ],
+  "refresh-apply": [
+    {
+      "file": "frontmatter.py",
+      "line": 45,
+      "name": "read",
+      "calls": 559727,
+      "primitive_calls": 559727,
+      "own_s": 6.09219221,
+      "cumulative_s": 49.548414504
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<built-in method posix.open>",
+      "calls": 3660008,
+      "primitive_calls": 3660008,
+      "own_s": 34.188592728,
+      "cumulative_s": 34.225112454000005
+    },
+    {
+      "file": "__init__.py",
+      "line": 313,
+      "name": "loads",
+      "calls": 12000752,
+      "primitive_calls": 12000752,
+      "own_s": 7.102657163000001,
+      "cumulative_s": 28.017402216
+    }
+  ]
+}

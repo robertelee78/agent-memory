@@ -1,0 +1,30 @@
+{
+  "schema": "am255/byo-batch9-transport-disposition-v1",
+  "status": "TRANSPORT_UNQUALIFIED",
+  "remote_execution": "UNKNOWN",
+  "http_exchange": "UNOBSERVED",
+  "embedding_batch9_result": "UNOBSERVED_NOT_REFUSED",
+  "result_sha256": "ecc9007caa776a22f529e51f36db0bb97dfa97845ae252f1ced35838778659fa",
+  "approval_sha256": "d583e48da5e70a46b032ad428985cc16f2054fb57f03b853aa399570cd8aed92",
+  "ssh_exit": 255,
+  "elapsed_seconds": 5.025108375004493,
+  "stdout_bytes": 0,
+  "stderr_bytes_counted_only": 62,
+  "local_pipe_flush_not_remote_execution": true,
+  "retry_count": 0,
+  "key_copied_or_locally_read": false,
+  "network_prerequisite": {
+    "tcp22": "timed out",
+    "tcp8081": "timed out",
+    "route": "default local route; infrastructure identity withheld",
+    "cause": "UNESTABLISHED",
+    "receipt_sha256": "cb7d3e3c01838b2694c6e545195d4a00fbc30cd5fa3540aa94dbc1d8ad534a61",
+    "receipt_provenance": "transcribed actual bash tool observations, not separately captured raw subprocess streams"
+  },
+  "independent_review": {
+    "model": "anthropic/claude-opus-5-5",
+    "verdict": "honest transport-unqualified disposition; no cap/refusal/profile/AC2/AC4/G1 claim"
+  },
+  "earlier_endpoint_evidence_unchanged": true,
+  "next_prerequisite": "Restore network reachability; any new request needs a new exact approval/output, never automatic retry."
+}

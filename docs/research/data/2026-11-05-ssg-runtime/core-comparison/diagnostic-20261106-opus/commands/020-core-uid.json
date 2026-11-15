@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "exec",
+    "693aa286afdc98ea2f6c0753dcf17f3d9d680129082e307ddbc1a4ce83e9f71a",
+    "id"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t09a3471e4/m",
+  "exit": 0,
+  "seconds": 0.13050937501247972,
+  "started_at": "2026-11-06T19:48:02.999906+00:00",
+  "stderr": "",
+  "stdout": "uid=101(memgraph) gid=103(memgraph) groups=103(memgraph)\n"
+}

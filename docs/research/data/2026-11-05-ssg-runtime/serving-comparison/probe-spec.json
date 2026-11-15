@@ -1,0 +1,35 @@
+{
+  "schema": "am255/same-weight-serving-probes-v1",
+  "origin": "Existing runtime-controls synthetic calibration adapted without inspecting independent-suite answers",
+  "probes": [
+    "Synthetic pagination retains a continuation token.",
+    "Synthetic retry budgets stop after three attempts.",
+    "Synthetic generation publication uses a complete candidate.",
+    "Synthetic erased records cannot reappear from a stale build."
+  ],
+  "documents": [
+    {"id": "retry", "own": "Retry a temporary synthetic transport failure at most three times.", "neighbor": "pagination"},
+    {"id": "pagination", "own": "Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page.", "neighbor": "retry"},
+    {"id": "publication", "own": "Publish a synthetic generation only after every required vector and graph node is complete.", "neighbor": "deletion"},
+    {"id": "deletion", "own": "A synthetic privacy epoch fences stale builders before deleted content can be republished.", "neighbor": "publication"},
+    {"id": "orientation", "own": "The synthetic compiler pipeline parses input before lowering its intermediate representation.", "neighbor": "retry"},
+    {"id": "unrelated", "own": "The synthetic cafeteria menu rotates fruit on Thursdays.", "neighbor": "pagination"}
+  ],
+  "queries": [
+    {"text": "How many times may a transient failure be tried again?", "expected": "retry"},
+    {"text": "Does an empty page end a scan if continuation remains?", "expected": "pagination"},
+    {"text": "When is an unfinished graph safe to activate?", "expected": "publication"},
+    {"text": "What stops an old worker restoring removed guidance?", "expected": "deletion"}
+  ],
+  "query_prefix": "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: ",
+  "relationship_separator": "\nRelated title: ",
+  "short": "Synthetic complete input with an unmistakable terminal marker AM255_END.",
+  "over_context": {"repeat": " synthetic", "count": 8256, "suffix": " AM255_DIFFERENT_END"},
+  "aggregate_budget": {"repeat": " synthetic", "count": 4160, "suffix": ""},
+  "batch_rows": ["Synthetic batch row 0", "Synthetic batch row 1", "Synthetic batch row 2", "Synthetic batch row 3", "Synthetic batch row 4", "Synthetic batch row 5", "Synthetic batch row 6", "Synthetic batch row 7", "Synthetic batch row 8"],
+  "settings": {"threads": 4, "threads_batch": 4, "threads_http": 4, "context": 8192, "batch": 8192, "ubatch": 8192, "parallel": 1, "pooling": "last", "backend": "Metal", "device": "MTL0", "gpu_layers": 99, "flash_attention": "off", "fit": "off", "alias": "qwen3-embedding-8b-q8_0-d20ddc71e8a5", "dimension": 4096, "launches_per_binary": 2},
+  "diagnostics": {"coordinate_tolerance": 0.00001, "cosine_distance_tolerance": 0.00001, "rank_changes_tolerance": 0, "not_quality_acceptance": true},
+  "maintenance_policy": {"max_inputs": 8, "aggregate_tokens": 8192},
+  "unknown_alias": "am255-synthetic-unknown-weight-alias",
+  "scope": "Same existing 8B GGUF on two existing serving binaries, loopback synthetic only, no held-out tuning, no clean timing or production/legal/G1 pass"
+}

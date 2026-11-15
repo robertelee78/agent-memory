@@ -1,0 +1,12 @@
+{
+ "argv": [
+  "/opt/homebrew/bin/llama-server",
+  "--version"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.117,
+ "started_at": "2026-11-05T16:58:10.203290+00:00",
+ "stderr": "version: 9360 (6b4e4bd58)\nbuilt with AppleClang 21.0.0.21000099 for Darwin arm64\n",
+ "stdout": ""
+}

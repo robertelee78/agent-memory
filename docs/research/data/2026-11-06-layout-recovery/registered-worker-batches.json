@@ -1,0 +1,160 @@
+{
+  "schema": "agent-memory/recovery-registered-worker-batches-v1",
+  "recorded_date_utc": "2026-11-07",
+  "scope": "Actual complete registered reconciliation and nested-reconciliation worker batches; not full244/originalincident/platform/hosted/release acceptance",
+  "passed": true,
+  "timeout_seconds_per_worker": 300,
+  "ci_minutes_unchanged": 180,
+  "groups": [
+    {
+      "path": "tests/contracts/test_layout_recovery_reconciliation.py",
+      "coverage": [
+        {
+          "path": "tests/contracts/test_layout_recovery_reconciliation.py",
+          "batches": 5,
+          "cases": [
+            "contract_suite.RecoveryReconciliationContract.test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits",
+            "contract_suite.RecoveryReconciliationContract.test_retained_rollback_repair_handoff_keeps_both_independent_obligations",
+            "contract_suite.RecoveryReconciliationContract.test_standalone_receipt_retry_finishes_exact_linkage_and_retirement",
+            "contract_suite.RecoveryReconciliationContract.test_unfinished_resolution_excludes_new_resolutions_nested_admission_and_revision",
+            "contract_suite.RecoveryReconciliationContract.test_unfinished_rolled_back_resolution_excludes_outer_repair_handoff"
+          ]
+        }
+      ],
+      "batches": [
+        {
+          "name": "layout-recovery-router-identity",
+          "tests": 1,
+          "elapsed_seconds": 7.833307791966945,
+          "source_commit": "348b19911962495537ca029c9546e31ea5bf99dd",
+          "receipt": {
+            "path": "layout-recovery-router-identity.json",
+            "sha256": "15d505cb7c422a2bf90042717b81a8e779d9f0461926c07a661c7d49f8c1972d"
+          }
+        },
+        {
+          "name": "layout-recovery-rollback-handoff",
+          "tests": 1,
+          "elapsed_seconds": 89.29919941700064,
+          "source_commit": "348b19911962495537ca029c9546e31ea5bf99dd",
+          "receipt": {
+            "path": "layout-recovery-rollback-handoff.json",
+            "sha256": "527a33af66158f6dd9c5aa686590e282d94b4b26b65205295be2557087fd0790"
+          }
+        },
+        {
+          "name": "layout-recovery-resolution-retirement",
+          "tests": 1,
+          "elapsed_seconds": 112.27918791695265,
+          "source_commit": "348b19911962495537ca029c9546e31ea5bf99dd",
+          "receipt": {
+            "path": "layout-recovery-resolution-retirement.json",
+            "sha256": "452e2147eaeb6dee092ee619d49684afcedf751c7237c62bb5b0b494d614209f"
+          }
+        },
+        {
+          "name": "layout-recovery-resolution-exclusion",
+          "tests": 1,
+          "elapsed_seconds": 213.99767541699111,
+          "source_commit": "348b19911962495537ca029c9546e31ea5bf99dd",
+          "receipt": {
+            "path": "layout-recovery-resolution-exclusion.json",
+            "sha256": "e76f946643ce866ecd1aa517d50b7ed13012ef8c12dda71d37ef62d824cc9554"
+          }
+        },
+        {
+          "name": "layout-recovery-rollback-exclusion",
+          "tests": 1,
+          "elapsed_seconds": 29.740273875009734,
+          "source_commit": "348b19911962495537ca029c9546e31ea5bf99dd",
+          "receipt": {
+            "path": "layout-recovery-rollback-exclusion.json",
+            "sha256": "8f381d8809d82386b332b7fa718841c4002d6d59757fb06463ba8d4d800c6647"
+          }
+        }
+      ]
+    },
+    {
+      "path": "tests/contracts/test_layout_nested_reconciliation.py",
+      "coverage": [
+        {
+          "path": "tests/contracts/test_layout_nested_reconciliation.py",
+          "batches": 6,
+          "cases": [
+            "contract_suite.NestedReconciliationContract.test_durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap",
+            "contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_after_marker_removal_without_canonical_replay",
+            "contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_after_sentinel_removal_without_canonical_replay",
+            "contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay",
+            "contract_suite.NestedReconciliationContract.test_interrupted_pre_receipt_rollback_resumes_ordered_plan_not_forward_prefix",
+            "contract_suite.NestedReconciliationContract.test_nested_retirement_resumes_active_binding_after_terminal_index"
+          ]
+        }
+      ],
+      "batches": [
+        {
+          "name": "layout-nested-canonical-receipt",
+          "tests": 1,
+          "elapsed_seconds": 122.1211619580281,
+          "source_commit": "f8638e7b916e6fc48dff99db940af23e5d557c6e",
+          "receipt": {
+            "path": "layout-nested-canonical-receipt.json",
+            "sha256": "324cf93d98e313dcc391eaa9efc3a37c0e096334d3993542547e0d0c5e724408"
+          }
+        },
+        {
+          "name": "layout-nested-pre-receipt-rollback",
+          "tests": 1,
+          "elapsed_seconds": 122.11403070902452,
+          "source_commit": "f8638e7b916e6fc48dff99db940af23e5d557c6e",
+          "receipt": {
+            "path": "layout-nested-pre-receipt-rollback.json",
+            "sha256": "d0bb218a62d4a501f0c9d2d368778e4593447fd6763d92569634a34dacbce195"
+          }
+        },
+        {
+          "name": "layout-nested-terminal-index",
+          "tests": 1,
+          "elapsed_seconds": 114.64269145799335,
+          "source_commit": "f8638e7b916e6fc48dff99db940af23e5d557c6e",
+          "receipt": {
+            "path": "layout-nested-terminal-index.json",
+            "sha256": "2927a154a423c2d24d15ca200162c0a662d8f25cd98e99dcb00627fb525e4540"
+          }
+        },
+        {
+          "name": "layout-nested-sentinel-retirement",
+          "tests": 1,
+          "elapsed_seconds": 121.36605591600528,
+          "source_commit": "f8638e7b916e6fc48dff99db940af23e5d557c6e",
+          "receipt": {
+            "path": "layout-nested-sentinel-retirement.json",
+            "sha256": "101148727f2a7b86879647c3f2e80674aa342db1fe2ae8cf5e633b23b7c52b5e"
+          }
+        },
+        {
+          "name": "layout-nested-marker-retirement",
+          "tests": 1,
+          "elapsed_seconds": 118.28779512504116,
+          "source_commit": "f8638e7b916e6fc48dff99db940af23e5d557c6e",
+          "receipt": {
+            "path": "layout-nested-marker-retirement.json",
+            "sha256": "e828b31d2d7172dafae7a26811636328472be8bd8c05bc381d6e6a1d243e7742"
+          }
+        },
+        {
+          "name": "layout-nested-sentinel-removed",
+          "tests": 1,
+          "elapsed_seconds": 117.37791749997996,
+          "source_commit": "f8638e7b916e6fc48dff99db940af23e5d557c6e",
+          "receipt": {
+            "path": "layout-nested-sentinel-removed.json",
+            "sha256": "68b9663fc6a12aebf41d16b7b77dbce2a674984b7e2fee3e0765f515f1d59fc6"
+          }
+        }
+      ]
+    }
+  ],
+  "retirement_case_preservation": "Original retirement method contained3stages x2faultmodes and exceeded300s alone. New3methods each executeone originalstage xboth error/exit modes through an AST-equivalent unchanged74linebody. All6retirement fault pairs and other3nestedmethods remain. Total nested6methods/12faultsubcases; reconciliation5methods unchanged.",
+  "independent_source_review": "Recovery244FinalReview scoped source PASS for348b199/f8638e7; no workloads rerun by reviewer, no full244 verdict.",
+  "original_failed_attempts": "Full original reconciliation and nested modules timed out300seconds; original six-subcase single retirement method separately timed out300.028513s. All remain failed receipts, not relabeled."
+}

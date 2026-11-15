@@ -22,6 +22,5 @@
     "progress.md": "Validated capabilities, remaining work and known problems"
   },
   "x-route-fields": ["path", "purpose", "scope", "lifecycle", "read-when"],
-  "x-lifecycle-model": "lifecycle.json",
   "x-optional-directories": ["topics", "episodes", "procedures", "history"]
 }

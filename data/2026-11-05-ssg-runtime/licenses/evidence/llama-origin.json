@@ -1,0 +1,16 @@
+{
+ "argv": [
+  "git",
+  "-C",
+  "/tmp/am-v15-delivery/llama-reference",
+  "remote",
+  "get-url",
+  "origin"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.005,
+ "started_at": "2026-11-05T16:52:22.799259+00:00",
+ "stderr": "",
+ "stdout": "https://github.com/ggml-org/llama.cpp.git\n"
+}

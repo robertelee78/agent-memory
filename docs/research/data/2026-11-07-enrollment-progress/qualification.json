@@ -1,0 +1,149 @@
+{
+  "all_recorded_source_fingerprints_unchanged": true,
+  "bytecode": "Every measurement parent and test worker launched Python -I -B before imports. No __pycache__ directories found in the independent source after the first pass or after all four final methods.",
+  "clone": "Independent git clone --no-local --no-checkout of the integration checkout, then exact-commit checkout before all runs.",
+  "coverage": {
+    "all_passed": true,
+    "complete_disjoint_coverage": true,
+    "counts": {
+      "test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival": {
+        "elapsed_seconds": 288.83289033401525,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 1,
+        "unexpected_successes": 0
+      },
+      "test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried": {
+        "elapsed_seconds": 46.192779499979224,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 1,
+        "unexpected_successes": 0
+      },
+      "test_public_observer_seal_and_no_learning_long_segment": {
+        "elapsed_seconds": 44.64496970799519,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 1,
+        "unexpected_successes": 0
+      },
+      "test_shared_fault_retained_across_later_observer_progress": {
+        "elapsed_seconds": 33.85660708404612,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 1,
+        "unexpected_successes": 0
+      }
+    },
+    "discovered_methods": [
+      "EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival",
+      "EnrollmentProgress.test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried",
+      "EnrollmentProgress.test_public_observer_seal_and_no_learning_long_segment",
+      "EnrollmentProgress.test_shared_fault_retained_across_later_observer_progress"
+    ],
+    "executed_methods": [
+      "EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival",
+      "EnrollmentProgress.test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried",
+      "EnrollmentProgress.test_public_observer_seal_and_no_learning_long_segment",
+      "EnrollmentProgress.test_shared_fault_retained_across_later_observer_progress"
+    ],
+    "execution_shape": "Four independent one-method workers; not a registered-suite or full-module-under-300 claim.",
+    "outer_elapsed_seconds": {
+      "test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival": 288.98152566701174,
+      "test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried": 46.33992879203288,
+      "test_public_observer_seal_and_no_learning_long_segment": 44.79164125001989,
+      "test_shared_fault_retained_across_later_observer_progress": 34.036894124990795
+    }
+  },
+  "decision": {
+    "bounds": "Original source counts, eight-registration sweep limit, real source registration, source/index/compatibility/lock guards, private source barriers, new-source-first ordering and unknown-attempt handling remain unchanged.",
+    "profiling": "The separately retained cProfile run timed out at 300 seconds; its instrumentation overhead is not a contrary unprofiled result. It recorded 23,679 identity_git.git calls, 545 private enrollment context observations, 352 context rechecks and 99 registration calls before termination during the third sweep. The unprofiled first method completed in 288.98152566701174 seconds.",
+    "runtime_optimization": "None. The unchanged first method genuinely passed on clean 1be9ad0 after the shared bytecode fix, so no gratuitous optimization or test/runtime/assertion changes were made."
+  },
+  "evidence_sha256": {
+    "original-source088-worker-timeout.json": "7b3865beeb160e9051b0cb8a42b66b770f0a0ed8de414a2f30b0a17edcacc105",
+    "profile-summary.json": "006d83e71f4e34caf129f5e8185a139bceb21791f23389c5a0dfbd6429ad216c",
+    "profiled-source1be9ad0-timeout.json": "3a2ed6e6029384cd73d5ff6b9d01c60070c434ac260d2fc17edf52cffd3e3f3f",
+    "run_profile.py": "5f41d944d378e0921d2c5e596690201301398518509a42d32fcb22e9cbd4ec1f",
+    "test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival.json": "ba4477908cc7118fdf72606e37b7524cd3ac8d99496109d91898430cdaf4582b",
+    "test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried.json": "fa457a387d23d467be79b1f3300f449d22e261eab6d74afd0d91f45cd1e5cbe6",
+    "test_public_observer_seal_and_no_learning_long_segment.json": "deb1564826ac515234fd097f3339c1aea4a2736ec3814e5fa997ad337ec9bac4",
+    "test_shared_fault_retained_across_later_observer_progress.json": "8de98ac6b5ba1899fbe97f2abb0c84385c33b3a4bf3d2d4c39d88455bdad7afe"
+  },
+  "executed_original_assertions": [
+    "5 genuine-human entries retain 10 sources, 8 registered and 2 waiting.",
+    "4 new genuine-human entries retain 18 sources, 16 registered; both oldest waiting sources enroll.",
+    "The final sweep enrolls all 18 while preserving original source IDs/digests and all new arrivals.",
+    "Lost successful registration reuses its original observation; unknown unsuccessful attempt is not retried.",
+    "A real shared MAX_SOURCES=1 capacity fault and its attempt/fault bytes remain retained across later observer progress.",
+    "Actual installed observer callback route, public pending/source/assessment CLI, 151 retained entries, two shared observations, no-learning completion and unchanged bank/index."
+  ],
+  "limitations": [
+    "No native omp executable loading, real model/provider request, native multi-turn workflow, Linux/platform matrix, complete CI gate or signed-release acceptance was exercised here.",
+    "The existing registered full-module worker remains unsplit in this branch; integration owner owns tests/contracts.json and named-worker qualification.",
+    "This evidence does not explain how much of the first-method timing changed solely because of the bytecode fix; it establishes a genuine clean-source pass without a new runtime optimization.",
+    "The profiled failure and the old source088 full-worker failure remain failures, not passes."
+  ],
+  "partition_recommendation": {
+    "first": "EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival must have its own 300-second registered worker; its measured margin is only about 11 seconds.",
+    "remaining": [
+      "EnrollmentProgress.test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried",
+      "EnrollmentProgress.test_public_observer_seal_and_no_learning_long_segment",
+      "EnrollmentProgress.test_shared_fault_retained_across_later_observer_progress"
+    ],
+    "remaining_outer_elapsed_sum_seconds": 125.16846416704357,
+    "status": "Either retain four one-method workers as actually measured, or register the remaining three together and separately exercise that exact group. The sum is not itself a measured combined-worker pass."
+  },
+  "public_proof": {
+    "elapsed_seconds": 15.923738792014774,
+    "model_provider": "not-exercised",
+    "native_loading": "not-exercised",
+    "proof": "public-observer-and-no-learning",
+    "retained_entries": 151,
+    "sources": [
+      {
+        "observation_id": "b8a81162-a065-4d5b-9a99-7d30af2b96d8",
+        "reference": "omp:capture:6b5d6eb1-ffea-5af1-b7cd-2db994ddd0b2",
+        "source_sha256": "c493777a4f8cbf479bc8a27833e0d3d9929eaf170842e5cf80847c441964d954"
+      },
+      {
+        "observation_id": "59b9b61c-69e2-4572-b8f1-044913d6d55b",
+        "reference": "omp:seal:a553dcac-0606-5a80-81b2-c856e6a17d5c",
+        "source_sha256": "8ddd73d7dbb9367bb0e0ec94c6266bb6145bda5fda387c32fab197cde822bcb2"
+      }
+    ]
+  },
+  "retained_raw_profile": {
+    "path": "/tmp/am-v15-delivery/enrollment-progress-evidence-20261107/baseline/test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival.profile",
+    "sha256": "ca5e926bb2eb692bca3a9a149cfa2bfe7c2a0b7175afeec1b2f1a7bfb29222c5"
+  },
+  "schema": "agent-memory/omp-enrollment-progress-evidence-v1",
+  "source_commit": "1be9ad0a5b67da637c5f1924831f6b52c9b2cbe0",
+  "source_files": {
+    "skills/agent-memory/scripts/agent_memory/omp_transport.py": "374b5660a9e24bfd2d9885305d8efc34a4c320efd0ff8f0bd4e45aaad5fd268f",
+    "tests/contracts/test_omp_enrollment_progress.py": "a29d5b245b74214a4bb92b1d2c097f24196e0b54d6d69611225021d15ec99cb4",
+    "tests/world.py": "6f4e78d202505872132ef4c8a5070cf550ac8993079bd79396f8b2d4614d0c5b"
+  },
+  "source_root": "/private/tmp/am-v15-delivery/enrollment-progress-clean-20261107",
+  "source_tree": "f08c7e2a995771772c33fe223b52c011d66ab1f6",
+  "tracker": {
+    "attempt": "v015-249-20261105",
+    "issue": 249,
+    "phase": "Executing",
+    "tracker_writer": "Parent integration owner; this delegated evidence slice makes no phase or acceptance transition and performs no competing tracker write."
+  },
+  "work_key": "robertelee78/agent-memory:ADR-0004:omp-first-class-integration",
+  "worker_timeout_seconds": 300
+}

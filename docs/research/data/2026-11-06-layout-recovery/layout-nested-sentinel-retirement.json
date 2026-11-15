@@ -1,0 +1,21 @@
+{
+  "source_commit": "f8638e7b916e6fc48dff99db940af23e5d557c6e",
+  "source_root": "/private/tmp/am-v15-delivery/244-nested-bounded-source",
+  "timeout_seconds": 300,
+  "started_at": "2026-11-06T23:58:41.641764+00:00",
+  "passed": true,
+  "command": [
+    "/tmp/am-v15-delivery/qualification-venv/bin/python",
+    "-I",
+    "-B",
+    "/private/tmp/am-v15-delivery/244-nested-bounded-source/scripts/run_contract_suite.py",
+    "/private/tmp/am-v15-delivery/244-nested-bounded-source/tests/contracts/test_layout_nested_reconciliation.py",
+    "--suite",
+    "layout-nested-sentinel-retirement"
+  ],
+  "exit": 0,
+  "stdout": "{\"case_selection\": {\"batch\": \"layout-nested-sentinel-retirement\", \"complete\": [\"contract_suite.NestedReconciliationContract.test_durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap\", \"contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_after_marker_removal_without_canonical_replay\", \"contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_after_sentinel_removal_without_canonical_replay\", \"contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay\", \"contract_suite.NestedReconciliationContract.test_interrupted_pre_receipt_rollback_resumes_ordered_plan_not_forward_prefix\", \"contract_suite.NestedReconciliationContract.test_nested_retirement_resumes_active_binding_after_terminal_index\"], \"selected\": [\"contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay\"]}, \"errors\": 0, \"expected_failures\": 0, \"failures\": 0, \"passed\": true, \"skipped\": 0, \"tests\": 1, \"unexpected_successes\": 0}\n",
+  "stderr": "test_exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay (contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 121.294s\n\nOK\n",
+  "timed_out": false,
+  "elapsed_seconds": 121.36605591600528
+}

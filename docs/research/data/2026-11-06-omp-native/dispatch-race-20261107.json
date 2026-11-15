@@ -1,0 +1,137 @@
+{
+  "schema": "agent-memory/native249-dispatch-race-projection-v1",
+  "source_commit": "a8e6b386db9a8719831ef69f9af6dd17cf8f1e4c",
+  "artifact_digest": "f1a27e181980f462216cb660f649603cc54dcc0240ca3ab1de3e84269e2bc497",
+  "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "native_version": "18.16.0",
+  "selected_cli_model": "openai-codex/gpt-6.1-sol",
+  "approval_mode": "native-existing-default",
+  "investigation_only": true,
+  "full_native_qualification": false,
+  "controlled_project_foreign_delay_ms": 20000,
+  "event_body_read_or_retained_by_probe": false,
+  "old_session": "01a1b59c-853f-70e1-ba88-9e8f46d1f4c4",
+  "new_session": "01a1b59c-910b-70f3-9450-e78209ebc441",
+  "supported_rpc_command": "new_session",
+  "rpc_result": {
+    "id": "switch-while-delayed",
+    "type": "response",
+    "command": "new_session",
+    "success": true,
+    "data": {
+      "cancelled": false
+    }
+  },
+  "metadata_event_trace": [
+    {
+      "kind": "project_start",
+      "unix_ms": 1794048296389,
+      "session": "01a1b59c-853f-70e1-ba88-9e8f46d1f4c4"
+    },
+    {
+      "kind": "genuine_user_delay_start",
+      "unix_ms": 1794048298320,
+      "captured_session_before": "01a1b59c-853f-70e1-ba88-9e8f46d1f4c4",
+      "role": "user",
+      "attribution": "user",
+      "delay_ms": 20000,
+      "event_body_read": false
+    },
+    {
+      "kind": "project_before_switch",
+      "unix_ms": 1794048298322,
+      "session": "01a1b59c-853f-70e1-ba88-9e8f46d1f4c4",
+      "reason": "new"
+    },
+    {
+      "kind": "project_switch",
+      "unix_ms": 1794048299280,
+      "session": "01a1b59c-910b-70f3-9450-e78209ebc441",
+      "reason": "new"
+    },
+    {
+      "kind": "genuine_user_delay_end",
+      "unix_ms": 1794048318322,
+      "captured_session_before": "01a1b59c-853f-70e1-ba88-9e8f46d1f4c4",
+      "ctx_session_after": "01a1b59c-910b-70f3-9450-e78209ebc441",
+      "role": "user",
+      "attribution": "user",
+      "event_body_read": false
+    },
+    {
+      "kind": "after_am_genuine_user",
+      "unix_ms": 1794048318323,
+      "ctx_session": "01a1b59c-910b-70f3-9450-e78209ebc441",
+      "role": "user",
+      "attribution": "user",
+      "event_body_read": false
+    }
+  ],
+  "actual_new_session_user_admit": {
+    "trace_id": "1794048318400756000-68592",
+    "wrapper_pid": 68592,
+    "native_parent_pid": 65792,
+    "unix": 1794048318.400773,
+    "action": "admit",
+    "session": "01a1b59c-910b-70f3-9450-e78209ebc441",
+    "lifecycle": "f957f83a-6a89-4fc4-8225-eacab2ab1ec5",
+    "event_ordinal": 1,
+    "trigger": null,
+    "terminal": null,
+    "role": "user",
+    "attribution": "user",
+    "capture_id": "abc56f47-4c14-45d4-a3d6-049a88343639",
+    "tool_call_ids": [],
+    "entry_ids": [],
+    "entry_roles": [],
+    "metadata_ordinals": [],
+    "input_bytes": 443,
+    "raw_body_logged": false
+  },
+  "persisted_metadata_only_admission": {
+    "sha256": "fe556742525598f64eed6c256b1aae8fd3c7bb389ee9b68196f5d26038bd76a6",
+    "value": {
+      "attribution": "user",
+      "capture_id": "abc56f47-4c14-45d4-a3d6-049a88343639",
+      "event_ordinal": 1,
+      "lifecycle": "f957f83a-6a89-4fc4-8225-eacab2ab1ec5",
+      "role": "user",
+      "schema": "agent-memory/omp-admission-v1",
+      "session": "01a1b59c-910b-70f3-9450-e78209ebc441",
+      "tool_call_ids": []
+    }
+  },
+  "persisted_phantom_cursor": {
+    "sha256": "7822fe2980ae198db718c92a0a6189660d8b2b9d1889b8d0d55f948b52543940",
+    "value": {
+      "control_interval": {
+        "metadata_predecessors": {
+          "abc56f47-4c14-45d4-a3d6-049a88343639": null
+        }
+      },
+      "event_ordinal": 1,
+      "last_native_entry": null,
+      "lifecycle": "f957f83a-6a89-4fc4-8225-eacab2ab1ec5",
+      "origin": {
+        "human_root": "f957f83a-6a89-4fc4-8225-eacab2ab1ec5",
+        "kind": "genuine-user",
+        "native_trigger": "human"
+      },
+      "schema": "agent-memory/omp-cursor-v1",
+      "session": "01a1b59c-910b-70f3-9450-e78209ebc441",
+      "tool_lifecycles": {}
+    }
+  },
+  "new_native_genuine_human_entry_count": 0,
+  "old_genuine_user_native_entry": "24ba9d92",
+  "old_stored_sweep_segment": "dc38bd21-d14f-52de-aab9-e94a76e337d2",
+  "old_native_session_file_retained": false,
+  "native_exit": 0,
+  "native_seconds": 24.13051754195476,
+  "helper_started_count": 7,
+  "helper_finished_count": 7,
+  "helper_verified_exit0_count": 6,
+  "helper_failed_pending_count": 1,
+  "unfinished_traced_requests": [],
+  "claim": "Actual delayed genuine-user event reaches AM after supported session identity switch and creates metadata-only genuine-user origin in the new session without any new-session genuine human entry. No extra wake, complete provider turn, source completeness, full mode or release acceptance is claimed."
+}

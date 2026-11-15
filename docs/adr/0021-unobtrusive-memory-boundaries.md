@@ -6,6 +6,8 @@ amended: 2026-10-31
 amends: [ADR-0018, ADR-0020]
 ---
 
+> Superseded by the lean design (2026-11-15): [v0.0.15-lean.md](../design/v0.0.15-lean.md).
+
 # ADR-0021: Unobtrusive boundaries and truthful operation health
 
 ## Context
@@ -23,6 +25,17 @@ contract, not a claim that native tool cards can be hidden. No zero-visibility
 capability is assumed. The operator requested fixes and release; the one-command route is a reversible
 implementation default within the existing skill/CLI contract, not a claim of an
 explicit preference vote. No new approval question blocks the clear defects.
+
+The #249 native delivery-window contract (its design doc was removed with the cut machinery)
+is a client-specific clock and reservation detail; it does not change this ADR's
+T2/T3 outcomes or wake policy.
+
+The approved #249 [answer-first omp boundary](0004-client-independent-integration.md#v0015-answer-first-omp-boundaries)
+places automatic maintenance in its governed continuation after the business
+answer. It does not change Codex/Claude same-turn timing, the OpenCode exception
+below, source/permission rules or the requirement to retain uncompleted work.
+Installed activation ownership and an offered continuation do not establish
+native loading, observed delivery or successful completion.
 
 ## Decision
 
@@ -49,6 +62,13 @@ transaction-recovery-pending, current-source-changed or current-review-required)
 plus a concrete next action; they MUST NOT echo arbitrary secret content. Doctor
 MUST exercise the relevant local prerequisite or label it not exercised, without
 claiming a fresh remote observation from a local check.
+
+Cooperating canonical writers may briefly defer before taking their writer slot
+when a source observer holds the bank source barrier. Exhausting the bounded
+30-second wait MUST report contention without a new canonical marker or
+transaction; it MUST NOT imply that a write completed. A failure after an
+already committed transaction retains its existing durable receipt and must be
+reported separately from an uncommitted attempt.
 
 Tests MUST reproduce protected 0775 intermediate directories below a trusted 0700
 barrier, and MUST preserve refusal for unprotected writable paths, foreign owners,

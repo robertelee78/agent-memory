@@ -1,0 +1,148 @@
+{
+  "schema": "am255/operator-byo-embedding-capability-v1",
+  "model_requested": "qwen3-embedding-0.6b",
+  "operator_declared_limits": {
+    "dimensions": 1024,
+    "tokens_per_input": 4096,
+    "inputs_per_batch": 8
+  },
+  "runs": [
+    {
+      "case": "single-string",
+      "started_at": "2026-11-07T02:22:57.598537+00:00",
+      "request_sha256": "d20e0ff7800fe814a8fd8ad0671f1983c4b74d1e953ad7a4632e5c08212b81b5",
+      "input_count": 1,
+      "http_status": 200,
+      "elapsed_seconds": 0.22387598268687725,
+      "response_sha256": "db7d4212c32ae89629f47159fbbb68fca0f5faa31b73ebeaffcf947cc52c249b",
+      "response_model": "qwen3-embedding-0.6b",
+      "usage": {
+        "prompt_tokens": 7,
+        "total_tokens": 7
+      },
+      "vectors": [
+        {
+          "index": 0,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.0000000170864143
+        }
+      ],
+      "index_set_exact": true,
+      "passed": true
+    },
+    {
+      "case": "single-list",
+      "started_at": "2026-11-07T02:22:57.822471+00:00",
+      "request_sha256": "90bb56d0eea18754ee5a3af0172e1afd830161b860a50c7d73902810363938cf",
+      "input_count": 1,
+      "http_status": 200,
+      "elapsed_seconds": 0.2210250119678676,
+      "response_sha256": "db7d4212c32ae89629f47159fbbb68fca0f5faa31b73ebeaffcf947cc52c249b",
+      "response_model": "qwen3-embedding-0.6b",
+      "usage": {
+        "prompt_tokens": 7,
+        "total_tokens": 7
+      },
+      "vectors": [
+        {
+          "index": 0,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.0000000170864143
+        }
+      ],
+      "index_set_exact": true,
+      "passed": true
+    },
+    {
+      "case": "eight-input-list",
+      "started_at": "2026-11-07T02:22:58.043546+00:00",
+      "request_sha256": "4afa1e64a0ef6ec88b564d37247fc66961a1ab73d72fdddead7421b412d87c55",
+      "input_count": 8,
+      "http_status": 200,
+      "elapsed_seconds": 1.3300938298925757,
+      "response_sha256": "9abecc9d01d80c7e9043c29bcf4ef153dab94c6a09029cb86916ade1e61f478f",
+      "response_model": "qwen3-embedding-0.6b",
+      "usage": {
+        "prompt_tokens": 72,
+        "total_tokens": 72
+      },
+      "vectors": [
+        {
+          "index": 0,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.0000000148593196
+        },
+        {
+          "index": 1,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.0000000341170154
+        },
+        {
+          "index": 2,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.0000000254304806
+        },
+        {
+          "index": 3,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.0000000298939467
+        },
+        {
+          "index": 4,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.000000026855346
+        },
+        {
+          "index": 5,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.000000012482297
+        },
+        {
+          "index": 6,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.0000000558537063
+        },
+        {
+          "index": 7,
+          "dimensions": 1024,
+          "finite": true,
+          "norm": 1.0000000093062156
+        }
+      ],
+      "index_set_exact": true,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "same_input_diagnostic": {
+    "cosine": 1.0,
+    "max_absolute_coordinate_difference": 0.0,
+    "scope": "Same synthetic input as string/list; diagnostic only, not drift identity or semantic quality acceptance"
+  },
+  "project_text_sent": false,
+  "credential_value_retained": false,
+  "redirects_allowed": false,
+  "environment_proxy_used": false,
+  "service_configuration_changed": false,
+  "scope": "Synthetic HTTP request-shape/index/finite/nonzero/default-dimension capability only; no quality, weight identity, token-boundary, auto-start, G1, managed stack, source disclosure consent or production acceptance",
+  "endpoint": "operator-configured dedicated OpenAI-compatible endpoint; address withheld",
+  "execution_location": "HTTP requests executed on the operator inference host through an existing authenticated SSH connection; not AM-workstation HTTP latency/reachability qualification",
+  "raw_private_controller_receipt_sha256": "7650ba062675993cd618a1880f70e5be7617b26e300b454626b13ba57a0e4b50",
+  "probe_script_sha256": "e01d2d9aac8cac52cac6d6f0158400496334447b7949ca681a234668d5cfe146",
+  "operator_reported_not_exercised": [
+    "4096-token per-input limit",
+    "Embeddings also routed alongside chat",
+    "Autostart at boot"
+  ],
+  "no_reference_profile_inheritance": "Separate0.6B/1024-dimensional BYO profile; no vectors, quality verdict or identity assurance inherited from8B/4096-dimensional SSG reference",
+  "identity_assurance": "provider-alias-unverified; response model echo is not immutable weight or binary attestation"
+}

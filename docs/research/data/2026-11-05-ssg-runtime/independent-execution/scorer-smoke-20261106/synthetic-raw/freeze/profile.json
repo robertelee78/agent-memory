@@ -1,0 +1,5 @@
+{
+  "schema": "synthetic-scorer-math-profile",
+  "scope": "EXPLICITLY SYNTHETIC scalar cosine records, not model embeddings or graph measurements",
+  "source_commit": "dd48777f6406449b9598b460ff5c5b3a54042208"
+}

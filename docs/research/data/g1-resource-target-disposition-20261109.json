@@ -1,0 +1,24 @@
+{
+  "schema": "agent-memory/g1-resource-target-disposition-v1",
+  "issue": 255,
+  "operator_selection": "Report measurements; no resource pass",
+  "source": "Explicit operator widget selection in this session on2026-11-09",
+  "scope": "Original G1 research resource-target disposition only",
+  "decision": {
+    "measurements_and_missing_prerequisites": "Retain actual RAM/disk/model/time-to-fresh/maintenance/provider/spend observations and explicit unknowns",
+    "resource_pass": false,
+    "production_profiles_enabled": false,
+    "future_enablement": "Requires approved scoped budgets and corresponding qualification"
+  },
+  "unchanged": [
+    "Previously adopted latency gates",
+    "Original eight research criteria and retained negatives",
+    "Original #206/#209/#244/#249 acceptance, coverage, deadlines and source/capacity bounds"
+  ],
+  "not_approved": [
+    "New numeric RAM/disk/model/time-to-fresh/maintenance/provider/spend ceilings",
+    "Any production profile or default",
+    "License/disclosure/server/model selection",
+    "G1 overall acceptance or dependent Ready"
+  ]
+}

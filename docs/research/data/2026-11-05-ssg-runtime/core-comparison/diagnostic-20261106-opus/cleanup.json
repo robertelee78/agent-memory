@@ -1,0 +1,38 @@
+[
+  {
+    "absent": true,
+    "id": "693aa286afdc98ea2f6c0753dcf17f3d9d680129082e307ddbc1a4ce83e9f71a",
+    "name": "am255-compare-4b1dcdfdab96-core",
+    "type": "container"
+  },
+  {
+    "absent": true,
+    "id": "8ba4ab0e079974f83f33c6277f2b807ffd017503a1426c572bb9002b87c9b24b",
+    "name": "am255-compare-4b1dcdfdab96-mage",
+    "type": "container"
+  },
+  {
+    "absent": true,
+    "created": "2026-11-06T11:48:01.863969668-08:00",
+    "name": "am255-compare-4b1dcdfdab96-core-data",
+    "type": "volume"
+  },
+  {
+    "absent": true,
+    "created": "2026-11-06T11:48:02.110392203-08:00",
+    "name": "am255-compare-4b1dcdfdab96-core-logs",
+    "type": "volume"
+  },
+  {
+    "absent": true,
+    "created": "2026-11-06T11:48:05.7916771-08:00",
+    "name": "am255-compare-4b1dcdfdab96-mage-data",
+    "type": "volume"
+  },
+  {
+    "absent": true,
+    "created": "2026-11-06T11:48:06.008367245-08:00",
+    "name": "am255-compare-4b1dcdfdab96-mage-logs",
+    "type": "volume"
+  }
+]

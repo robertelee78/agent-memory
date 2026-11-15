@@ -35,9 +35,10 @@ understand:
 4. **It is client-independent.** Any capable coding agent can use the files.
 5. **It grows with the project.** Initialization creates only useful content;
    new topics appear when actual complexity requires them.
-6. **Maintenance is accountable.** The agent captures durable learning
-   automatically and quietly; conflicts, failures, and consequential corrections
-   are surfaced promptly. Accumulating chat is not understanding.
+6. **Maintenance is accountable.** At milestones (a confirmed fix, a decision,
+   a finished task, a correction) the agent suggests a short memory and saves it
+   only after the user approves; conflicts, failures, and consequential
+   corrections are surfaced promptly. Accumulating chat is not understanding.
 
 ## What AWA contributes
 
@@ -101,10 +102,10 @@ The first release is not:
 - personal profiles or private per-developer memory banks.
 
 Same-repository Git sharing is part of the first release. Memory-only changes
-land through existing repository rules and refresh into working branches at turn
-boundaries without importing code changes. The selected interface is a portable
-skill plus CLI, similar to AWA. v0.0.4 hooks will invoke its shared capture/refresh
-operation automatically at turn boundaries even if an agent forgets to do so.
+land through existing repository rules and refresh into working branches on
+request without importing code changes. The selected interface is a portable
+skill plus CLI, similar to AWA. Hooks run at session start only, to hand the
+agent the project summary; nothing runs on each turn (operator, 2026-11-15).
 v0.0.2 focuses on daily reliability/recovery and
 recall quality as the bank grows, with additional scope informed by v0.0.1 use.
 Cross-project federation remains deferred for possible v0.0.4 pending operator
@@ -127,3 +128,5 @@ A proposed feature fails the mission if any answer is “no”:
 6. Is the operational complexity proportionate to an observed need?
 7. Can we prove the feature helps an executable task or materially improves
    reliability?
+8. Is the feature proven by real use of `am`, measured, rather than by unit
+   tests? There are no unit tests; quality is real use (operator, 2026-11-15).

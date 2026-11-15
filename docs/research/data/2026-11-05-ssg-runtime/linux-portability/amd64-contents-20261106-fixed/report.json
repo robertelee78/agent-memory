@@ -1,0 +1,28 @@
+{
+  "any_foreign_code_execution": false,
+  "license_acceptance": false,
+  "native_amd64_execution": false,
+  "production": false,
+  "results": [
+    {
+      "architecture": "amd64",
+      "contents_sha256": "729facc1c6add10bbd20f36bab7953477e5c90bba350b7088e9a2b5a531fb25a",
+      "module_files": 34,
+      "name": "core",
+      "output": "amd64-contents-20261106-fixed/core",
+      "packages": 130,
+      "python": 24,
+      "selected_texts_sha256": "cb8dcbb760a0e2e88e1784d0890ac3dc54739d94645d003b72c4c986a46208f7"
+    },
+    {
+      "architecture": "amd64",
+      "contents_sha256": "b5eb0615c01aec03b42881187272cc3c6cac0b0bbd60ae3a82cb825337f2464c",
+      "module_files": 189,
+      "name": "mage",
+      "output": "amd64-contents-20261106-fixed/mage",
+      "packages": 143,
+      "python": 137,
+      "selected_texts_sha256": "65223fac1a8e517affe13e757531a523d28c169c6e7029dd75c77c5071b51cc1"
+    }
+  ]
+}

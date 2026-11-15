@@ -1,0 +1,94 @@
+{
+  "schema": "am255/frozen-experiment-independent-interpretation-v1",
+  "date": "2026-11-07",
+  "reviewers": [
+    {
+      "model": "anthropic/claude-opus-5-5:high",
+      "slice": "Frozen255SafetyDiagnosis",
+      "verdict": "Recorded provider-send failure stands under frozen whole-run oracle; not observed post-delete send. New generation-scoped protocol clarification and freeze required."
+    },
+    {
+      "model": "anthropic/claude-opus-5-5:high",
+      "slice": "Frozen255QualityInterpretation",
+      "verdict": "Raw arithmetic/source binding correct; interpreting all failure predicates as model/traversal quality would be incorrect."
+    }
+  ],
+  "review_scope": "Read-only frozen source and retained actual artifacts; no calls, imports, tests, rerun, edits, labels, cutoff or parameter changes. Independent interpretation is not acceptance.",
+  "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20",
+  "raw_manifest_sha256": "489bfa60e23a21518360cc090a6a04d97cbea2870a3b43134bcb85450e424c48",
+  "offline_report_sha256": "6d9dc80392ef032c4435285c6569e9a206e4133bad6d41fb97f9d6c464927029",
+  "raw_metrics_record": "failed-allsize-offline-observations-20261107.json",
+  "findings": [
+    {
+      "severity": "P1",
+      "case_ordinals": [
+        58,
+        59
+      ],
+      "problem": "Executor native eligibility omits exact ids/paths selector intersection; crosscheck clears selectors. Case58 ranked10sources rather than1; selector controls do not establish correct domain.",
+      "source": [
+        "independent-suite/validate_suite.py:122-176",
+        "independent-execution/execute.py:383"
+      ],
+      "disposition": "Keep frozen results unchanged; classify selector intersection as unqualified, not a model ranking failure. Future correction is held-out-informed."
+    },
+    {
+      "severity": "P1",
+      "case_ordinals": [
+        76
+      ],
+      "problem": "Each observation carries all size-wide document sends. receipt-b was sent for original base; no document request from either delete generation. Absolute forbidden-send rule cannot pass alongside earlier cases requiring that source.",
+      "source": [
+        "independent-execution/execute.py:135-169,301-355",
+        "independent-execution/score.py:756-786"
+      ],
+      "disposition": "Frozen failure remains, but not evidence of a post-delete disclosure. Generation attribution and temporal deletion/erasure unqualified; shared vectors.f32 retained old row. Clarification and new accounting/freeze required."
+    },
+    {
+      "severity": "P1",
+      "case_ordinals": [
+        85,
+        86,
+        89,
+        98,
+        99
+      ],
+      "problem": "Typed primary candidates exclude seed although labels require it. component-attempts fixed relations/kind targets cannot produce some labeled paths. Every returned edge was canonical; missing requirements are protocol/template-label mismatch, not proved traversal defects.",
+      "source": [
+        "independent-execution/executor_graph.py:348",
+        "independent-execution/executor_templates.json",
+        "independent-execution/score.py:717-729"
+      ],
+      "disposition": "Keep original labels and score unchanged; independently reconcile contract/templates before another experiment; no post-hoc quality upgrade."
+    },
+    {
+      "severity": "P2",
+      "case_ordinals": [
+        89
+      ],
+      "problem": "Overlay batch-attempts has one genuine raw semantic ranking miss:3of4required atK5, missing replay result ranked8.",
+      "disposition": "Retain genuine miss, no threshold/rank/model tuning against opened held-out result."
+    },
+    {
+      "severity": "P2",
+      "problem": "All373executedANNcells used complete eligible domains of9\u201315sources and min16,N budget. Candidate count equaledN; budget<Nunexecuted. Padding records excluded by component scope.",
+      "disposition": "No boundedANNrecall proof; size increases do not establish large eligible-domain ranking quality. ANN optional under contract; exactcosine default unchanged."
+    },
+    {
+      "severity": "P3",
+      "problem": "Class-level typed unexecuted counts include different-mechanism cases. Correct template-case accounting is10of15overlay,7of12base, replacement-evidence0of5. Empty-required semantic cells are not positive recall tests.",
+      "disposition": "Retain raw intended/measured denominators and not-applicable reasons; do not pool or call no-failure counts passes."
+    }
+  ],
+  "independence_limit": "Held-out outcomes opened before any calibration-only cutoff freeze. This set cannot qualify a new cutoff/abstention. Any subsequent selector/template/accounting correction must disclose held-out influence.",
+  "remaining_research": [
+    "Complete50kexecution or explicit operational prerequisite",
+    "Eligible exactcosine-versus-ANN comparison atbudget<N ifANNselected",
+    "Exact selector intersection",
+    "Generation-scoped send attribution and actual delete/erasure transition",
+    "Contract/template/label reconciliation and historical mapper",
+    "Outcome/caveat/disclosure/literal mappings and runtime transitions",
+    "Operatorresource/profile/target and counseldeployment dispositions"
+  ],
+  "acceptance": false
+}

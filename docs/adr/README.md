@@ -1,5 +1,16 @@
 # Architecture decision records
 
+> **Authority, 2026-11-15.** The operator's lean design,
+> [docs/design/v0.0.15-lean.md](../design/v0.0.15-lean.md), is authoritative for
+> the product. The approved base is [docs/mission.md](../mission.md) plus
+> ADR-0001–0012. Any requirement in a later ADR or issue that conflicts with the
+> lean design is withdrawn, in particular per-turn seals and sources, authority
+> proofs, frontier/holds, layout recovery, repeated re-verification, and
+> unit/contract test suites. ADR-0009 (contract tests and fault injection) and
+> the ADR-0010 layout-recovery amendment are superseded. The v0.0.16 ADRs (guided
+> recall, graph) remain proposals for their own milestone. Agent-written issue
+> or ADR text is not operator approval.
+
 These ADRs were derived from the
 [state-of-the-art review](../research/2026-10-21-agent-memory-state-of-the-art.md).
 The operator accepted their v0.0.1 scope in the
@@ -23,7 +34,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0001](0001-local-first-authority-boundaries.md) | Local-first memory and authority boundaries | Accepted (v0.0.1) |
 | [0002](0002-markdown-first-temporal-memory.md) | Markdown-first, typed, temporal memory model | Accepted (v0.0.1) |
 | [0003](0003-progressive-disclosure.md) | Progressive disclosure for memory and skills | Accepted (v0.0.1) |
-| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Accepted (v0.0.1) |
+| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Accepted (v0.0.1, v0.0.4 hooks; v0.0.15 owned-instruction and stock-harness source-authority clarifications) |
 | [0005](0005-admission-consolidation-retrieval.md) | Separate admission, consolidation, retrieval, and forgetting | Accepted (v0.0.1) |
 | [0006](0006-security-and-evaluation.md) | Security boundaries and executable evaluation | Accepted (v0.0.1) |
 | [0007](0007-portable-pack-and-lifecycle.md) | Portable skill pack and installation lifecycle | Accepted (v0.0.1) |
@@ -44,6 +55,11 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0022](0022-restricted-push-publication.md) | Publish memory as an explicitly allowed push actor | Accepted (v0.0.10) |
 | [0023](0023-guided-progressive-recall.md) | Guided progressive recall and explicit cross-project expansion | Accepted architecture; task execution designs gated |
 | [0024](0024-ssg-graph-embedding-runtime.md) | SSG-derived graph database, embedding model, and retrieval runtime | Accepted architecture/G1 research; v0.0.16 execution gated on G1 |
+| [0025](0025-project-and-shared-memory.md) | Project memory plus deliberately published shared memory | Accepted architecture; operator/team/ecosystem datasets, per-install configuration; execution gated |
+| [0026](0026-source-bound-sharing-performance.md) | Source-bound sharing performance for existing #209 | Accepted bounded fix after Fable review; implementation/qualification pending |
+| [0027](0027-managed-core-memgraph.md) | AM-managed core Memgraph selection for existing #255/#257 | Operator-selected graph direction; qualification, licensing disposition and execution readiness gated |
+| [0028](0028-long-full-workload-qualification.md) | Long full-workload qualification for existing #209 | Accepted operator duration exception only; exact protocol, execution and acceptance remain gated |
+| [0029](0029-rust-only-runtime.md) | Rust-only runtime, tooling and tests; Python removed | Accepted operator directive; cutover design contract changes await confirmation; implementation in progress |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older

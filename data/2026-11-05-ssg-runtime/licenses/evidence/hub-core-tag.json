@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "curl",
+  "-sSL",
+  "--max-time",
+  "20",
+  "https://hub.docker.com/v2/repositories/memgraph/memgraph/tags/3.10.1"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.151,
+ "started_at": "2026-11-05T16:52:20.335715+00:00",
+ "stderr": "",
+ "stdout": "{\"creator\":5887884,\"id\":1165307121,\"images\":[{\"architecture\":\"amd64\",\"features\":\"\",\"variant\":null,\"digest\":\"sha256:bd01a159023283b56b807943ed28225c8f662920b64317f26da7d9f0f5b19de4\",\"os\":\"linux\",\"os_features\":\"\",\"os_version\":null,\"size\":226079840,\"status\":\"active\",\"last_pulled\":\"2026-11-05T16:21:21.651228029Z\",\"last_pushed\":\"2026-05-15T09:33:11.443177729Z\"},{\"architecture\":\"arm64\",\"features\":\"\",\"variant\":null,\"digest\":\"sha256:334cd2a524cdb05bb68310c8338c91de8d44d2998a7aa0349a6de9674824846d\",\"os\":\"linux\",\"os_features\":\"\",\"os_version\":null,\"size\":215563700,\"status\":\"active\",\"last_pulled\":\"2026-11-05T15:40:35.738505447Z\",\"last_pushed\":\"2026-05-15T09:32:41.991778774Z\"}],\"last_updated\":\"2026-05-15T09:33:13.628948Z\",\"last_updater\":5887884,\"last_updater_username\":\"dockerbuda\",\"name\":\"3.10.1\",\"repository\":11447364,\"full_size\":226079840,\"v2\":true,\"tag_status\":\"active\",\"tag_last_pulled\":\"2026-11-05T16:21:21.651228029Z\",\"tag_last_pushed\":\"2026-05-15T09:33:13.628948Z\",\"media_type\":\"application/vnd.docker.distribution.manifest.list.v2+json\",\"content_type\":\"image\",\"digest\":\"sha256:042c8642954a7bde971a9c7683c8b1360e7fcf129a5fae36d63f12449e7154aa\"}"
+}

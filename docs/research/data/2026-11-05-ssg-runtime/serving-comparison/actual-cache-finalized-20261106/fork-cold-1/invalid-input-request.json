@@ -1,0 +1,11 @@
+{
+  "at": "2026-11-06T19:56:00.598971+00:00",
+  "body": {
+    "input": {
+      "synthetic": "invalid type"
+    },
+    "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+  },
+  "name": "invalid-input",
+  "route": "/v1/embeddings"
+}

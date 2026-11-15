@@ -1,0 +1,14 @@
+{
+  "body": {
+    "encoding_format": "float",
+    "input": [
+      "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: How many times may a transient failure be tried again?",
+      "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: Does an empty page end a scan if continuation remains?",
+      "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: When is an unfinished graph safe to activate?",
+      "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: What stops an old worker restoring removed guidance?"
+    ],
+    "model": "qwen3-embedding-06b-q8_0-06507c7b4268"
+  },
+  "method": "POST",
+  "url": "http://127.0.0.1:60006/v1/embeddings"
+}

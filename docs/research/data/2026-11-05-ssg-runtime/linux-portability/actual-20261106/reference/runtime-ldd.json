@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "exec",
+    "b4693cf2a509c4c828b0adb918facc0716525b23b54f9a6f632f43f17ec09b48",
+    "ldd",
+    "/release/llama-server"
+  ],
+  "duration_seconds": 0.09053397178649902,
+  "exit": 0,
+  "start_unix": 1793997553.552695,
+  "stderr": "",
+  "stdout": "\tlinux-vdso.so.1 (0x0000ffffa888b000)\n\tlibllama-server-impl.so => /release/libllama-server-impl.so (0x0000ffffa7fd0000)\n\tlibstdc++.so.6 => /lib/aarch64-linux-gnu/libstdc++.so.6 (0x0000ffffa7d40000)\n\tlibgcc_s.so.1 => /lib/aarch64-linux-gnu/libgcc_s.so.1 (0x0000ffffa7d00000)\n\tlibc.so.6 => /lib/aarch64-linux-gnu/libc.so.6 (0x0000ffffa7b40000)\n\t/lib/ld-linux-aarch64.so.1 (0x0000ffffa8840000)\n\tlibllama-common.so.0 => /release/libllama-common.so.0 (0x0000ffffa7730000)\n\tlibmtmd.so.0 => /release/libmtmd.so.0 (0x0000ffffa7600000)\n\tlibllama.so.0 => /release/libllama.so.0 (0x0000ffffa7330000)\n\tlibggml.so.0 => /release/libggml.so.0 (0x0000ffffa7300000)\n\tlibggml-base.so.0 => /release/libggml-base.so.0 (0x0000ffffa7230000)\n\tlibssl.so.3 => /lib/aarch64-linux-gnu/libssl.so.3 (0x0000ffffa7110000)\n\tlibcrypto.so.3 => /lib/aarch64-linux-gnu/libcrypto.so.3 (0x0000ffffa6b40000)\n\tlibm.so.6 => /lib/aarch64-linux-gnu/libm.so.6 (0x0000ffffa6a90000)\n\tlibgomp.so.1 => /lib/aarch64-linux-gnu/libgomp.so.1 (0x0000ffffa6a10000)\n"
+}

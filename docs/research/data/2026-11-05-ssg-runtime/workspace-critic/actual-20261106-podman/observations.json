@@ -1,0 +1,10 @@
+{
+  "critic_executed": false,
+  "critic_quality": "unmeasured",
+  "raw_receipts": "commands.json",
+  "run_id": "12e9f8a6f3d94b3f8052f27e43ac80bf",
+  "schema": "am255/workspace-critic-observations-v1",
+  "status": "unavailable",
+  "timings": "shared host descriptive only",
+  "unavailable_input_or_failure": "Owned graph startup deadline exceeded"
+}

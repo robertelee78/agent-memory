@@ -1,0 +1,134 @@
+{
+  "schema": "am255/linux-arm64-portability-recipe-v1",
+  "am_baseline": "483adede202bac2dc3a69856a73b16533190ebb7",
+  "ssg": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+  "upstream_release": "b9360",
+  "upstream_commit": "6b4e4bd582e457a47ee7cd498058495f47fee228",
+  "archive": "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability/.acquired/llama-b9360-bin-ubuntu-arm64.tar.gz",
+  "archive_sha256": "ff85fef9c91027d8037c182cdb5a6f3d29ea0a12b31557338188810308b112dc",
+  "carrier_image": "3792294abf9a035895d8db16cbc56146d48a9fa1d379be6581631fdeae525c4f",
+  "carrier_manifest": "sha256:334cd2a524cdb05bb68310c8338c91de8d44d2998a7aa0349a6de9674824846d",
+  "backend": "CPU / Linux-arm64 container in Podman AppleHV VM, not baremetal",
+  "profile_scope": "Upstream b9360 serving exact existing reference/alternate weights; not equivalence to the SSG 9341 fork profile",
+  "profiles": {
+    "reference": {
+      "weight": "/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf",
+      "bytes": 8047105824,
+      "sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb",
+      "dimension": 4096,
+      "context": 8192,
+      "alias": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+    },
+    "alternate": {
+      "weight": "/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "bytes": 639150592,
+      "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+      "dimension": 1024,
+      "context": 4096,
+      "alias": "qwen3-embedding-06b-q8_0-06507c7b4268"
+    }
+  },
+  "probes": {
+    "short": "Synthetic complete input with an unmistakable terminal marker AM255_END.",
+    "unknown_alias": "am255-synthetic-unknown-weight-alias",
+    "documents": [
+      {
+        "id": "retry",
+        "own": "Retry a temporary synthetic transport failure at most three times.",
+        "neighbor": "pagination"
+      },
+      {
+        "id": "pagination",
+        "own": "Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page.",
+        "neighbor": "retry"
+      },
+      {
+        "id": "publication",
+        "own": "Publish a synthetic generation only after every required vector and graph node is complete.",
+        "neighbor": "deletion"
+      },
+      {
+        "id": "deletion",
+        "own": "A synthetic privacy epoch fences stale builders before deleted content can be republished.",
+        "neighbor": "publication"
+      },
+      {
+        "id": "orientation",
+        "own": "The synthetic compiler pipeline parses input before lowering its intermediate representation.",
+        "neighbor": "retry"
+      },
+      {
+        "id": "unrelated",
+        "own": "The synthetic cafeteria menu rotates fruit on Thursdays.",
+        "neighbor": "pagination"
+      }
+    ],
+    "queries": [
+      {
+        "text": "How many times may a transient failure be tried again?",
+        "expected": "retry"
+      },
+      {
+        "text": "Does an empty page end a scan if continuation remains?",
+        "expected": "pagination"
+      },
+      {
+        "text": "When is an unfinished graph safe to activate?",
+        "expected": "publication"
+      },
+      {
+        "text": "What stops an old worker restoring removed guidance?",
+        "expected": "deletion"
+      }
+    ],
+    "query_prefix": "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: ",
+    "relationship_separator": "\nRelated title: ",
+    "over_context": {
+      "repeat": " synthetic",
+      "count": 8256,
+      "suffix": " AM255_DIFFERENT_END"
+    },
+    "batch_rows": [
+      "Synthetic batch row 0",
+      "Synthetic batch row 1",
+      "Synthetic batch row 2",
+      "Synthetic batch row 3",
+      "Synthetic batch row 4",
+      "Synthetic batch row 5",
+      "Synthetic batch row 6",
+      "Synthetic batch row 7",
+      "Synthetic batch row 8"
+    ]
+  },
+  "probe_origin": "Existing synthetic serving-comparison probes, frozen unchanged before Linux output; no independent-suite labels read or retuned",
+  "policy": {
+    "max_inputs": 8,
+    "aggregate_tokens": 8192,
+    "observed_server_batch9_is_not_policy_acceptance": true
+  },
+  "resource_reservation": "Main approved serial slot AFTER Workspace exact cleanup; <=4 CPU/12 GiB each, no graphservice; public 11MB acquisition while waiting approved",
+  "commands": {
+    "linux": [
+      "python3",
+      "-B",
+      "qualify_linux.py",
+      "--config",
+      "recipe.json",
+      "--output",
+      "actual-20261106",
+      "--reserved-host-slot"
+    ],
+    "contents": [
+      "python3",
+      "-B",
+      "image_contents.py",
+      "--bindings",
+      "discovery-20261106/image-bindings.json",
+      "--output",
+      "amd64-contents-20261106",
+      "--acquisition",
+      ".acquired/amd64",
+      "--reserved-host-slot"
+    ]
+  }
+}

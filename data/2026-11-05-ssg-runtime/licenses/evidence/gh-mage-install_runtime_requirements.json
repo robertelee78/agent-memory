@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "curl",
+  "-sSL",
+  "--max-time",
+  "20",
+  "https://raw.githubusercontent.com/memgraph/memgraph/v3.10.1/mage/install_runtime_requirements.sh"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.048,
+ "started_at": "2026-11-05T16:52:21.495783+00:00",
+ "stderr": "",
+ "stdout": "#!/bin/bash\nset -euo pipefail\n# run me as `root` user\n\nPY_VERSION=3.12\nTARGET_ARCH=amd64\nCI=false\nCUDA=false\nCUSTOM_MIRROR=\nwhile [[ $# -gt 0 ]]; do\n    case $1 in\n        --py-version)\n            PY_VERSION=$2\n            shift 2\n            ;;\n        --target-arch)\n            TARGET_ARCH=$2\n            shift 2\n            ;;\n        --custom-mirror)\n            CUSTOM_MIRROR=$2\n            shift 2\n            ;;\n        --ci)\n            CI=true\n            shift 1\n            ;;\n        --cuda)\n            CUDA=$2\n            shift 2\n            ;;\n        *)\n            echo \"Unknown option: $1\"\n            exit 1\n    esac\ndone\n\n# This modifies the apt configuration to retry 3 times\nif [[ \"$CI\" == true ]]; then\n    echo 'Acquire::Retries \"3\";' > /etc/apt/apt.conf.d/80-retries\nfi\n\n# We test for the fastest responding mirror in CI, we can set it here.\nif [[ -n \"$CUSTOM_MIRROR\" && \"$CI\" == true ]]; then\n    sed -E -i \\\n        -e '/^URIs:/ s#https?://[^ ]*archive\\.ubuntu\\.com#'\"$CUSTOM_MIRROR\"'#g' \\\n        -e '/^URIs:/ s#https?://security\\.ubuntu\\.com#'\"$CUSTOM_MIRROR\"'#g' \\\n        /etc/apt/sources.list.d/ubuntu.sources\nfi\n\napt-get update\napt-get install -y curl\ncurl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb\ndpkg -i packages-microsoft-prod.deb\nrm packages-microsoft-prod.deb\napt-get update\nACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev\napt-get install -y libcurl4 libpython${PY_VERSION} openssl python3 \\\n    libgomp1 libaio1t64 libatomic1 libkrb5-3 --no-install-recommends\nln -s /usr/bin/$(ls /usr/bin | grep perf) /usr/bin/perf\n\n# In CI, we clean up the apt cache to save space in the Docker container.\nif [[ \"$CI\" == true ]]; then\n    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*\nfi\n\nif [[ \"${TARGET_ARCH}\" == \"arm64\" ]]; then\n    ln -s /usr/lib/aarch64-linux-gnu/libaio.so.1t64 /usr/lib/aarch64-linux-gnu/libaio.so.1;\nelse\n    ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1;\nfi\n"
+}

@@ -1,0 +1,10 @@
+{
+  "critic_executed": false,
+  "critic_quality": "unmeasured",
+  "raw_receipts": "commands.json",
+  "run_id": "d7f9ee5b4e1b4a3dbf0ad25c69de516b",
+  "schema": "am255/workspace-critic-observations-v1",
+  "status": "unavailable",
+  "timings": "shared host descriptive only",
+  "unavailable_input_or_failure": "Required command unavailable: ['/tmp/am-v15-delivery/ssg-target/release/ssg', 'build']: ssg: graph unreachable: an IO error occurred: unexpected end of file\n"
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "agent-memory/layout-recovery-connected-qualification-v1",
+  "base_commit": "e570aa73a5303bc35b5979f5ed579201dff9a0e5",
+  "source_state": "Base commit plus uncommitted conflicting-project router refusal subcases in existing recovery reconciliation method; not an unchanged e570 tree",
+  "changed_test": "tests/contracts/test_layout_recovery_reconciliation.py",
+  "changed_test_sha256": "dad02976f12001a7482b1ef7747627b6393e2f79deb289a5ebdbb4cbe52badab",
+  "runtime_commit": "b85bf055cf1c356494765d1516328246cca52409",
+  "cell": "macOS/arm64/Python3.15",
+  "worker_limit_seconds": 300,
+  "raw_receipt_sha256": "2e197f2aa786e49efc90a439ed3e28d267c95aa5e66271a0a1de67583ae9620d",
+  "workers": [
+    {
+      "suite": "layout-recovery-router-identity",
+      "exit": 0,
+      "elapsed_seconds": 10.850317750009708,
+      "methods": 1,
+      "selected": [
+        "contract_suite.RecoveryReconciliationContract.test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits"
+      ],
+      "executed": [
+        "contract_suite.RecoveryReconciliationContract.test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits"
+      ],
+      "passed": true,
+      "skipped": 0
+    },
+    {
+      "suite": "layout-recovery-eight-admission",
+      "exit": 0,
+      "elapsed_seconds": 48.18001833406743,
+      "methods": 1,
+      "selected": [
+        "contract_suite.EightUnitAdmissionContract.test_reported_handoff_resolves_every_unit_against_actual_admission"
+      ],
+      "executed": [
+        "contract_suite.EightUnitAdmissionContract.test_reported_handoff_resolves_every_unit_against_actual_admission"
+      ],
+      "passed": true,
+      "skipped": 0
+    },
+    {
+      "suite": "layout-publication-resolved-handoff",
+      "exit": 0,
+      "elapsed_seconds": 127.47463729197625,
+      "methods": 1,
+      "selected": [
+        "contract_suite.ResolvedPublicationJourneyContract.test_eight_resolved_units_land_and_recall_in_an_empty_profile"
+      ],
+      "executed": [
+        "contract_suite.ResolvedPublicationJourneyContract.test_eight_resolved_units_land_and_recall_in_an_empty_profile"
+      ],
+      "passed": true,
+      "skipped": 0
+    }
+  ],
+  "scope": "Actual installed public inspect, admission/resolution and memory-only publication to empty-profile second-clone recall on synthetic reported-size fixtures; local controlled authority, not hosted publication or original incident",
+  "full_244_platform_or_release_acceptance": false
+}

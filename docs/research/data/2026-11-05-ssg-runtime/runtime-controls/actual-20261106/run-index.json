@@ -1,0 +1,77 @@
+{
+  "schema": "am255/actual-runtime-evidence-index-v1",
+  "execution_commit": "4a3c1c571eccecd587074c07dc3467f1f7a436dd",
+  "raw_private_root": "/tmp/am-v15-delivery/runtime-controls-wal-20261106",
+  "observed_platform": "macOS 27.2 arm64; native Metal model servers, Linux-arm64 Podman graph",
+  "result": "five actual endpoint profiles and graph/fault/fencing/disposal controls completed; not full G1 acceptance",
+  "command_exit": 0,
+  "reported_wall_seconds": 123.54,
+  "source_bindings": "source-bindings.json",
+  "artifacts": [
+    {
+      "path": "runtime-report.json",
+      "source_path": "report.json",
+      "bytes": 64844,
+      "sha256": "2f9f5b08697335c6a5a0f844b636bf3b6cb2e65a53050be4a927c003391d159f"
+    },
+    {
+      "path": "graph-report.json",
+      "source_path": "graph-controls/report.json",
+      "bytes": 69778,
+      "sha256": "f0f7273cd8a1745c940f895283501a4054fa14564319b08b430ff377806bbcbf"
+    },
+    {
+      "path": "cleanup.json",
+      "source_path": "graph-controls/cleanup.json",
+      "bytes": 6069,
+      "sha256": "e6523f643332beee540840fbed586452763335c9ec5975f4bfaf4f4bab26a36c"
+    },
+    {
+      "path": "vector-erasure.json",
+      "source_path": "graph-controls/vector-erasure.json",
+      "bytes": 3641,
+      "sha256": "fc54eff1d13ace9e7018216c454feb257f0d7434a56d28a6cebc1e328cd0244e"
+    },
+    {
+      "path": "unrelated-preservation.json",
+      "source_path": "graph-controls/unrelated-preservation.json",
+      "bytes": 151,
+      "sha256": "17e1ee3b8c5786f9c0fdc1388da0512662ad7635bd568e2a3e196ab4bc8537fa"
+    },
+    {
+      "path": "actual-artifacts.json",
+      "source_path": "actual-artifacts.json",
+      "bytes": 2725,
+      "sha256": "e7d0fb129593b8913affdca42671afa69b7c2a849b214367101ec013e8a1b060"
+    },
+    {
+      "path": "source-bindings.json",
+      "source_path": "source-bindings.json",
+      "bytes": 2382,
+      "sha256": "66b9ca7362bbadf3405fd77350a09445cc149e98a58ec9c40df235408b009575"
+    }
+  ],
+  "known_earlier_failed_attempts": [
+    {
+      "root": "/tmp/am-v15-delivery/runtime-controls-actual-20261106",
+      "reason": "new run root returned /tmp alias while owned receipt required canonical /private/tmp; no graph resources acquired"
+    },
+    {
+      "root": "/tmp/am-v15-delivery/runtime-controls-canonical-20261106",
+      "reason": "WAL enabled while periodic snapshots disabled; server exited before readiness. Owned graph/volumes disposed."
+    },
+    {
+      "root": "/tmp/am-v15-delivery/graph-startup-cause-20261106",
+      "reason": "diagnostic retained actual exit133, default memgraph user and exact startup argv; later binary help established WAL requires periodic snapshots"
+    }
+  ],
+  "not_proven": [
+    "full independent 101-case query/relationship suite at1k/10k/50k",
+    "clean scale or performance targets",
+    "native Linux model server and cross-platform tolerances",
+    "mainline-versus-fork same-weight serving comparison",
+    "core-Memgraph actual comparison and complete legal disposition",
+    "production AM graph/embedding/shared-memory implementation",
+    "forensic media erasure, external backups, provider erasure or hostile weight attestation"
+  ]
+}

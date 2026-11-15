@@ -1,0 +1,13 @@
+{
+  "borrowed_receipt_not_modified": true,
+  "cleanup_path": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic/actual-20261106-authored/cleanup.json",
+  "cleanup_sha256": "99c1b1623fc5451f2a2447bcb0bfc67f8eff6cd2e495f186e9bf9c745b0c7052",
+  "cleanup_source_commit": "faf6a12220e47def418357c2caa5f3e5e83612c7",
+  "container_absent": true,
+  "freeze_source_commit": "cd4f4ee2485bd3362322c45555654d4709c2cc61",
+  "loopback_listener_absent": true,
+  "peer": "Workspace255Qualification",
+  "release_time": "2026-11-06T20:37:12Z",
+  "scratch_absent": true,
+  "slot_released": true
+}

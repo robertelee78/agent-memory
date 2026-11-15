@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "git",
+    "merge-base",
+    "--is-ancestor",
+    "ba0087a129fed6dcda03ff4aa25060289531014a",
+    "f7746eb3c86b96a41e58144c17fb971fc9da97d8"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t09a3471e4/m",
+  "exit": 0,
+  "seconds": 0.008073374978266656,
+  "started_at": "2026-11-06T19:48:01.260216+00:00",
+  "stderr": "",
+  "stdout": ""
+}

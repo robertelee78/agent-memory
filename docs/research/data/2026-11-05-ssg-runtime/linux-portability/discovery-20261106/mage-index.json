@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "skopeo",
+    "inspect",
+    "--raw",
+    "docker://docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27"
+  ],
+  "duration_seconds": 0.6451778411865234,
+  "exit": 0,
+  "start_unix": 1793996229.715873,
+  "stderr": "",
+  "stdout": "{\n   \"schemaVersion\": 2,\n   \"mediaType\": \"application/vnd.docker.distribution.manifest.list.v2+json\",\n   \"manifests\": [\n      {\n         \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\",\n         \"size\": 1371,\n         \"digest\": \"sha256:1b903aa7c4502a55ccdf76d034156542a56d0c4a00e2a760a10bf5968de8b3c4\",\n         \"platform\": {\n            \"architecture\": \"amd64\",\n            \"os\": \"linux\"\n         }\n      },\n      {\n         \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\",\n         \"size\": 1371,\n         \"digest\": \"sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39\",\n         \"platform\": {\n            \"architecture\": \"arm64\",\n            \"os\": \"linux\"\n         }\n      }\n   ]\n}"
+}

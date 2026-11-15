@@ -1,0 +1,20 @@
+{
+  "schema": "agent-memory/layout-recovery-platform-limitation-v1",
+  "source_commit": "fb2a731ac5a9c239b3c596e0bd0f5bff80e4ad8a",
+  "platform": "Linux-7.2.7-200.fc44.aarch64-aarch64-with-glibc2.36",
+  "runtime": "Linuxarm64 unprivileged502:20 container on SELinux-enabled Podman host, rootful daemon connection, immutablepublicPythonimage0d539227a5680f3930ee694bba8b37d8d990f7ff247ae834668096df4af5a294",
+  "observed_directory_xattrs": [
+    "security.selinux"
+  ],
+  "observed_file_xattrs": [
+    "security.selinux"
+  ],
+  "recovery_outcome": "pending-metadata-preservation on recovery inspect; not accepted or repaired",
+  "diagnostic_exit": 0,
+  "raw_diagnostic_sha256": "7008f1f1fd03fd3086237a721a6c4b2b174245ff83630f69de4486c582ffb204",
+  "raw_recovery_consumer_receipts_sha256": "616471999175ac5104919868c1b26fe2adcd47b182e2097f05e2995e57aecd5c",
+  "source_guard": "skills/agent-memory/scripts/agent_memory/layout_recovery_observation.py refuses unpreservable xattr/ACL/flag metadata before canonical mutation",
+  "disposition": "Preserve originals/privateevidence and reportpending; no stripxattr/chmod/chown/securitypolicybypass",
+  "scope": "Specific unsupported metadata configuration; hostedUbuntu shard passes do not establish allLinux/filesystemsupport",
+  "not_a_runtime_fix_or_platform_pass": true
+}

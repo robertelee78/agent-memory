@@ -1,0 +1,888 @@
+{
+  "frozen_profile": {
+    "cli": [
+      "--cache-ram",
+      "0",
+      "--log-verbosity",
+      "5"
+    ],
+    "not_prompt_cache_disabled": true,
+    "per_request_settings": {
+      "cache_prompt": "omitted on every embedding request; not assumed honored"
+    },
+    "purpose": "Pre-output diagnostic serving configuration only; not a managed profile or ADR freeze",
+    "ram_prompt_cache": "disabled by explicit CLI; must be confirmed by actual server log",
+    "request_sequence": "three probe batches; two query batches; two own batches; two relationship batches; tokenize short/over_context/aggregate_budget; short; over-context diagnostic; unknown alias single; known alias single; empty and malformed diagnostics; batch1/4/8/9 diagnostics",
+    "slot_local_prefix_reuse": "enabled task default; must retain actual prefix/evaluated-token logs per successful embedding row",
+    "source_evidence": {
+      "default_lines": "52; bool cache_prompt = true",
+      "default_path": "tools/server/server-task.h",
+      "default_sha256": "d41d2c681a3a3e02b4826decbd592769690cc6acc45477cdc6dea15790b6c92a",
+      "embedding_handler_lines": "4452-4547; tasks created directly at4512, only res_type/embd_normalize set at4518-4519; body.cache_prompt never parsed here",
+      "limit": "Direct source evidence is for the reference fork; upstream behavior must be established from new actual logs, not inferred from an accepted unknown HTTP field",
+      "path": "tools/server/server-context.cpp",
+      "ram_cache_lines": "958-969; --cache-ram0 disables the RAM prompt cache object, not slot-local reuse",
+      "sha256": "4c8bee10fa5629fb35d1f80c50ef56d9d0d04219c8afc6950bdf76684d4afb2b",
+      "slot_cache_lines": "2473-2475; task.params.cache_prompt enables longest-common-prefix reuse",
+      "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07"
+    }
+  },
+  "logged_completed_prompts": 69,
+  "per_request_cache_field_support_claimed": false,
+  "ram_cache_disabled_log_confirmed": true,
+  "requests": [
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 9,
+          "task_id": 0,
+          "total_tokens": 9
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "task_id": 1,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "task_id": 2,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 11,
+          "task_id": 3,
+          "total_tokens": 13
+        }
+      ],
+      "expected_rows": 4,
+      "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+      "name": "probes-0",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 0
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 1
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 3
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 7,
+          "task_id": 8,
+          "total_tokens": 9
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "task_id": 9,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "task_id": 10,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 11,
+          "task_id": 11,
+          "total_tokens": 13
+        }
+      ],
+      "expected_rows": 4,
+      "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+      "name": "probes-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 8
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 9
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 10
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 11
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 7,
+          "task_id": 16,
+          "total_tokens": 9
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "task_id": 17,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "task_id": 18,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 11,
+          "task_id": 19,
+          "total_tokens": 13
+        }
+      ],
+      "expected_rows": 4,
+      "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+      "name": "probes-2",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 16
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 17
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 18
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 19
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 26,
+          "task_id": 24,
+          "total_tokens": 26
+        },
+        {
+          "evaluated_batch_tokens": 12,
+          "task_id": 25,
+          "total_tokens": 26
+        },
+        {
+          "evaluated_batch_tokens": 10,
+          "task_id": 26,
+          "total_tokens": 24
+        },
+        {
+          "evaluated_batch_tokens": 10,
+          "task_id": 27,
+          "total_tokens": 24
+        }
+      ],
+      "expected_rows": 4,
+      "input_sha256": "ddfe62792c525c178ddbbbc5ced31c76b394bc406c28b664c3880bddb2b22d59",
+      "name": "queries-0",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 24
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14,
+          "task_id": 25
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14,
+          "task_id": 26
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14,
+          "task_id": 27
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 12,
+          "task_id": 32,
+          "total_tokens": 26
+        },
+        {
+          "evaluated_batch_tokens": 12,
+          "task_id": 33,
+          "total_tokens": 26
+        },
+        {
+          "evaluated_batch_tokens": 10,
+          "task_id": 34,
+          "total_tokens": 24
+        },
+        {
+          "evaluated_batch_tokens": 10,
+          "task_id": 35,
+          "total_tokens": 24
+        }
+      ],
+      "expected_rows": 4,
+      "input_sha256": "ddfe62792c525c178ddbbbc5ced31c76b394bc406c28b664c3880bddb2b22d59",
+      "name": "queries-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14,
+          "task_id": 32
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14,
+          "task_id": 33
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14,
+          "task_id": 34
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14,
+          "task_id": 35
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 12,
+          "task_id": 40,
+          "total_tokens": 12
+        },
+        {
+          "evaluated_batch_tokens": 19,
+          "task_id": 41,
+          "total_tokens": 19
+        },
+        {
+          "evaluated_batch_tokens": 16,
+          "task_id": 42,
+          "total_tokens": 16
+        },
+        {
+          "evaluated_batch_tokens": 16,
+          "task_id": 43,
+          "total_tokens": 16
+        },
+        {
+          "evaluated_batch_tokens": 13,
+          "task_id": 44,
+          "total_tokens": 13
+        },
+        {
+          "evaluated_batch_tokens": 9,
+          "task_id": 45,
+          "total_tokens": 11
+        }
+      ],
+      "expected_rows": 6,
+      "input_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+      "name": "own-0",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 40
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 41
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 42
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 43
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 44
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 45
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 12,
+          "task_id": 52,
+          "total_tokens": 12
+        },
+        {
+          "evaluated_batch_tokens": 19,
+          "task_id": 53,
+          "total_tokens": 19
+        },
+        {
+          "evaluated_batch_tokens": 16,
+          "task_id": 54,
+          "total_tokens": 16
+        },
+        {
+          "evaluated_batch_tokens": 16,
+          "task_id": 55,
+          "total_tokens": 16
+        },
+        {
+          "evaluated_batch_tokens": 13,
+          "task_id": 56,
+          "total_tokens": 13
+        },
+        {
+          "evaluated_batch_tokens": 9,
+          "task_id": 57,
+          "total_tokens": 11
+        }
+      ],
+      "expected_rows": 6,
+      "input_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+      "name": "own-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 52
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 53
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 54
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 55
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 56
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 57
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 33,
+          "task_id": 64,
+          "total_tokens": 33
+        },
+        {
+          "evaluated_batch_tokens": 33,
+          "task_id": 65,
+          "total_tokens": 33
+        },
+        {
+          "evaluated_batch_tokens": 34,
+          "task_id": 66,
+          "total_tokens": 34
+        },
+        {
+          "evaluated_batch_tokens": 34,
+          "task_id": 67,
+          "total_tokens": 34
+        },
+        {
+          "evaluated_batch_tokens": 27,
+          "task_id": 68,
+          "total_tokens": 27
+        },
+        {
+          "evaluated_batch_tokens": 30,
+          "task_id": 69,
+          "total_tokens": 32
+        }
+      ],
+      "expected_rows": 6,
+      "input_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+      "name": "relationship-0",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 64
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 65
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 66
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 67
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 68
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 69
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 33,
+          "task_id": 76,
+          "total_tokens": 33
+        },
+        {
+          "evaluated_batch_tokens": 33,
+          "task_id": 77,
+          "total_tokens": 33
+        },
+        {
+          "evaluated_batch_tokens": 34,
+          "task_id": 78,
+          "total_tokens": 34
+        },
+        {
+          "evaluated_batch_tokens": 34,
+          "task_id": 79,
+          "total_tokens": 34
+        },
+        {
+          "evaluated_batch_tokens": 27,
+          "task_id": 80,
+          "total_tokens": 27
+        },
+        {
+          "evaluated_batch_tokens": 30,
+          "task_id": 81,
+          "total_tokens": 32
+        }
+      ],
+      "expected_rows": 6,
+      "input_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+      "name": "relationship-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 76
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 77
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 78
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 79
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 80
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 81
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 17,
+          "task_id": 88,
+          "total_tokens": 17
+        }
+      ],
+      "expected_rows": 1,
+      "input_sha256": "19daa4f80c0a6768cb985ef42753d1da820991fa2c1efa540ea8f291c1f77395",
+      "name": "short",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0,
+          "task_id": 88
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 7,
+          "task_id": 93,
+          "total_tokens": 9
+        }
+      ],
+      "expected_rows": 1,
+      "input_sha256": "629a5b40a36f89f12b57814372529d64e625643b1fa1265d1cf00770ddafb44a",
+      "name": "unknown-model",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 93
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 1,
+          "task_id": 95,
+          "total_tokens": 9
+        }
+      ],
+      "expected_rows": 1,
+      "input_sha256": "629a5b40a36f89f12b57814372529d64e625643b1fa1265d1cf00770ddafb44a",
+      "name": "known-single",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 8,
+          "memory_start": 8,
+          "task_id": 95
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 5,
+          "task_id": 97,
+          "total_tokens": 7
+        }
+      ],
+      "expected_rows": 1,
+      "input_sha256": "64bca61363f233e9192b97035c9f2e5bfbd8f2033462005c76479fd40c0378e9",
+      "name": "batch-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2,
+          "task_id": 97
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 1,
+          "task_id": 99,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 100,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 101,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 102,
+          "total_tokens": 7
+        }
+      ],
+      "expected_rows": 4,
+      "input_sha256": "a6790f7e651f2c9264b1455b82ebe4ec0267295f2d37f4901e9025e9d0e355c8",
+      "name": "batch-4",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 6,
+          "memory_start": 6,
+          "task_id": 99
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 100
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 101
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 102
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 107,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 108,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 109,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 110,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 111,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 112,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 113,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 114,
+          "total_tokens": 7
+        }
+      ],
+      "expected_rows": 8,
+      "input_sha256": "8b3656c4b3a0b1ae30236d6e61c9daacd87863dbd8c3735f60549cf8d5bb9cd5",
+      "name": "batch-8",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 107
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 108
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 109
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 110
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 111
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 112
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 113
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 114
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 123,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 124,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 125,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 126,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 127,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 128,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 129,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 130,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "task_id": 131,
+          "total_tokens": 7
+        }
+      ],
+      "expected_rows": 9,
+      "input_sha256": "e182b7a36acb3e7374465b6b13d336909dc8e2292bc40d8bcfbde6614ca1bf97",
+      "name": "batch-9",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 123
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 124
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 125
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 126
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 127
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 128
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 129
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 130
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5,
+          "task_id": 131
+        }
+      ],
+      "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+    }
+  ],
+  "scope": "Reference embedding source does not parse cache_prompt; field deliberately absent on both servers. RAM cache disabled does not disable slot-local reuse. Actual prefix/evaluated-token logs define upstream behavior independently.",
+  "slot_prefix_reuse_observed": true,
+  "successful_embedding_rows": 69
+}

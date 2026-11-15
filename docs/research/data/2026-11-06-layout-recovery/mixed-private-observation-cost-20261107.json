@@ -1,0 +1,58 @@
+{
+  "schema": "agent-memory/mixed-private-observation-cost-v1",
+  "source_commit": "2ecfff981698ea6c053aa4ab3e0f02a1263c6250",
+  "scope": "Four scoped lifecycle consumers; not whole release, rollback or platform qualification",
+  "review": "Opus source review PASS after canonical-root and late-mutation injection corrections",
+  "deadlines": {
+    "worker_seconds": 300,
+    "public_child_seconds": 30
+  },
+  "before": {
+    "managed_apply": "Timed out at unchanged30-second public deadline",
+    "alias_check": "Failed compatibility at28b6486"
+  },
+  "after": {
+    "worker_deadline_seconds": 300,
+    "standard_public_child_deadline_seconds": 30,
+    "all_four_workers_passed": true,
+    "alias_worker_seconds": 18.719477250007913,
+    "alias_public_check_seconds": 5.667204249999486,
+    "alias_public_apply_seconds": 8.082081041997299,
+    "late_race_worker_seconds": 23.718885999987833,
+    "late_race_result": "Config, bank location, hold and attestation mutations all refused after successful real verified_hold; restored exact proof equality and bank/private/config/active artifact/feature/index/HEAD preservation passed",
+    "unchanged_mixed_managed_worker_seconds": 121.14795979100745,
+    "reviewed_new_artifact_public_check_seconds": 10.910463833948597,
+    "reviewed_new_artifact_public_apply_seconds": 23.706588958972134,
+    "public_apply_verified": true,
+    "public_apply_changed": true,
+    "current_artifact_digest": "d21713c88f49dbbb9ef9ea6b92f97a1a112382c2c9db6b2f15e039dd9ec9102d",
+    "reviewed_target_and_activated_receipt_digest": "4c0ad674bb7bac05fff716d18e6c5bb5ebb4cfec342e14cd769ecbf1cc29806d",
+    "unchanged_old_candidate_and_downgrade_refusals": "passed",
+    "unchanged_bank_private_config_index_HEAD_and_pending_ID_assertions": "passed",
+    "existing_bad_proof_new_route_worker_seconds": 155.64100512495497,
+    "existing_bad_proof_new_route_result": "passed"
+  },
+  "late_mutation_control": {
+    "mutation": "Delete only full-frontier and fresh-bank end checks in a disposable source clone",
+    "result": "All4actual late mutations then incorrectly succeeded; meaningful consumer regression failed",
+    "production": "All4actual late mutations refused; exact restored proof and source/artifact/feature/index/HEAD preservation passed"
+  },
+  "not_claimed": [
+    "full release gate",
+    "full legacy rollback",
+    "platform acceptance",
+    "build",
+    "lint",
+    "formatter"
+  ],
+  "runtime_files": [
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/private_state.py",
+      "sha256": "a842e71dee6115ffba5f19186b77fa5fcf143b8dad58731f422369792f8bc5e4"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/recovery_quiescence.py",
+      "sha256": "59cb191251f3e96ec8d34c61c18634f2df1a649fed4c4869f0a8ca45401a1e2d"
+    }
+  ]
+}

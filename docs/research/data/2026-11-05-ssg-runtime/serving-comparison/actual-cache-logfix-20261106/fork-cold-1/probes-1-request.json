@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-06T19:53:23.094527+00:00",
+  "body": {
+    "input": [
+      "Synthetic pagination retains a continuation token.",
+      "Synthetic retry budgets stop after three attempts.",
+      "Synthetic generation publication uses a complete candidate.",
+      "Synthetic erased records cannot reappear from a stale build."
+    ],
+    "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+  },
+  "name": "probes-1",
+  "route": "/v1/embeddings"
+}

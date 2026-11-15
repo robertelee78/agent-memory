@@ -1,0 +1,675 @@
+{
+  "schema": "agent-memory/stock-omp-context-cost-observations-v1",
+  "issue": "https://github.com/robertelee78/agent-memory/issues/249",
+  "status": "Executing / At risk; not native/platform/release acceptance",
+  "source_bindings": [
+    {
+      "commit": "4694a725c562271245704f11178ac6fcc2bfbf32",
+      "archive_sha256": "a47524d15669198a4c5884bf06ebef75fb1cbf7d835c3e344b5db0fd3ab9cd1c"
+    },
+    {
+      "commit": "4efcec75b9a644571a2779402cf118cd4e9407be",
+      "archive_sha256": "4c09c130e9cc31c9362f8ca63f8395f6605a6f80207764e4f49ee427b0a901e0"
+    },
+    {
+      "commit": "295e80110737c0785761941d7cdf6366f65600ef",
+      "archive_sha256": "51a35aa595279bfb2c16124827f96450303fc7fc89784dea2b2656802e42791e"
+    }
+  ],
+  "authority_qualification": {
+    "source_commit": "4694a725c562271245704f11178ac6fcc2bfbf32",
+    "unique_cases": 32,
+    "exhaustive_disjoint": true,
+    "batches": [
+      {
+        "suite": "omp-stored-authority-v2",
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 6,
+          "unexpected_successes": 0
+        },
+        "seconds": 169.97183120902628,
+        "sha256": "9764295ef0fd51860ee81fd0a928891dd2717c00df4670c473aac1eac2d08c9d"
+      },
+      {
+        "suite": "omp-stored-fork-scope",
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 5,
+          "unexpected_successes": 0
+        },
+        "seconds": 81.16156441695057,
+        "sha256": "23f34c31980b3a4aeb351b15068e08fdd4929db89c71155c8b2e91a56bcf5fbe"
+      },
+      {
+        "suite": "omp-stored-hint-window",
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 4,
+          "unexpected_successes": 0
+        },
+        "seconds": 105.99343404104002,
+        "sha256": "cd93fca482211d85941f4f763aeb52e9c81f98fd12f67b1e42d4ff7baa556f90"
+      },
+      {
+        "suite": "omp-stored-legacy-replay",
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 3,
+          "unexpected_successes": 0
+        },
+        "seconds": 142.68475929193664,
+        "sha256": "70926bce5b27b254d1b66c78f127e14248f0bb12a99bb24e22c23d31b808fb95"
+      },
+      {
+        "suite": "omp-stored-old-reader",
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 5,
+          "unexpected_successes": 0
+        },
+        "seconds": 45.592808416928165,
+        "sha256": "123e66c4a614d51a95150a2da9deb7134c295165b2ade097e193d56d2ce5f1cd"
+      },
+      {
+        "suite": "omp-stored-sealed-recovery",
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 3,
+          "unexpected_successes": 0
+        },
+        "seconds": 159.783567583072,
+        "sha256": "ce7ba7350f027c63dfd7fcf98af2dee7e0619287f93dd57813de93b44d0b8034"
+      },
+      {
+        "suite": "omp-stored-sealed-resume",
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "seconds": 111.01554837508593,
+        "sha256": "35f92c2bc6c39e066cc108f32708f8e89885aab481eae3ef6cfad09e2b52d1b2"
+      },
+      {
+        "suite": "omp-stored-wake-budget",
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 5,
+          "unexpected_successes": 0
+        },
+        "seconds": 138.1008529580431,
+        "sha256": "e328d3949409b475171c30af0df0f07fdf1ef07a660ded54432a0070a2261385"
+      }
+    ],
+    "scope": "Controlled offline authority cases; no native/provider launch. Does not retroattest later production changes."
+  },
+  "changed_path_qualification": [
+    {
+      "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
+      "suite": "omp-enrollment-live-read-context",
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 3,
+        "unexpected_successes": 0
+      },
+      "seconds": 22.6879674999509,
+      "raw_sha256": "3890cd59f7a67110505eff786111104aaf23fe2e211de978cfe6ecbe84250ec6"
+    },
+    {
+      "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
+      "suite": "omp-enrollment-reused-mutation-guard",
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 1,
+        "unexpected_successes": 0
+      },
+      "seconds": 5.166785458102822,
+      "raw_sha256": "ff68e4182b7c5fc66b9313902a8e40a947d89f086f7904172f7eb57c179e7d27"
+    },
+    {
+      "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
+      "suite": "omp-enrollment-held-read-context",
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 1,
+        "unexpected_successes": 0
+      },
+      "seconds": 7.93958758295048,
+      "raw_sha256": "a0b8bdf34e2747898d7f100ef0ce0346b10125e90f2af5f0caf9d877619f9821"
+    },
+    {
+      "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
+      "suite": "omp-native-smoke-source-verifier",
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 3,
+        "unexpected_successes": 0
+      },
+      "seconds": 157.50193183298688,
+      "raw_sha256": "8b980bce0377534327e8fbf0473131172a7299e2e3f1bd0ea3dedf2868577970"
+    },
+    {
+      "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
+      "suite": "omp-native-smoke-profile-refusals",
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 2,
+        "unexpected_successes": 0
+      },
+      "seconds": 55.75293445796706,
+      "raw_sha256": "47326989e6b404b3acc0fa6e938eaa3a9097fa4767f780f832efbdba76fad28c"
+    }
+  ],
+  "timing_diagnostics": [
+    {
+      "label": "warm-baseline-4694a72",
+      "passed": true,
+      "startup_seconds": 2.08395424997434,
+      "frames": [
+        {
+          "sequence": 1,
+          "action": "ingest",
+          "phase": "cold-source",
+          "encoded_bytes": 1420,
+          "seconds": 9.57159645901993,
+          "verified": true,
+          "result_status": "pending"
+        },
+        {
+          "sequence": 2,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 5.82181604206562,
+          "verified": true,
+          "result_status": "pending"
+        },
+        {
+          "sequence": 3,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 5.699342333944514,
+          "verified": true,
+          "result_status": "pending"
+        },
+        {
+          "sequence": 4,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 5.67947870795615,
+          "verified": true,
+          "result_status": "pending"
+        },
+        {
+          "sequence": 5,
+          "action": "seal",
+          "phase": "seal",
+          "encoded_bytes": 1439,
+          "seconds": 11.803411624976434,
+          "verified": true,
+          "result_status": "pending"
+        }
+      ],
+      "sha256": "c1f232bf92f5dfb68bfe660ef5f00431001df38f6e0eae5e5d17041e7e1a7b75",
+      "driver_sha256": "54da8e7215245ffd36d6dee368a0431336f306e8e515a233d147a50e4a44e67d"
+    },
+    {
+      "label": "count-baseline-4694a72",
+      "passed": true,
+      "startup_seconds": 2.252549749915488,
+      "frames": [
+        {
+          "sequence": 1,
+          "action": "ingest",
+          "phase": "cold-source",
+          "encoded_bytes": 1420,
+          "seconds": 10.95768304192461,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 1433,
+            "observe_seconds": 8.770188959082589,
+            "returned": true
+          }
+        },
+        {
+          "sequence": 2,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 8.975305957952514,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 752,
+            "observe_seconds": 6.091706249979325,
+            "returned": true
+          }
+        },
+        {
+          "sequence": 3,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 8.643541041994467,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 752,
+            "observe_seconds": 6.011976417037658,
+            "returned": true
+          }
+        },
+        {
+          "sequence": 4,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 8.725296166958287,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 752,
+            "observe_seconds": 6.10092075006105,
+            "returned": true
+          }
+        },
+        {
+          "sequence": 5,
+          "action": "seal",
+          "phase": "seal",
+          "encoded_bytes": 1439,
+          "seconds": 15.681501958053559,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 1715,
+            "observe_seconds": 13.25509408407379,
+            "returned": true
+          }
+        }
+      ],
+      "sha256": "40e679ffde27a361245b26dbb5cfabaca8f9e7e5cd980573275a5b08089fb217",
+      "driver_sha256": "54da8e7215245ffd36d6dee368a0431336f306e8e515a233d147a50e4a44e67d"
+    },
+    {
+      "label": "warm-reuse-4efcec7",
+      "passed": true,
+      "startup_seconds": 2.3300784999737516,
+      "frames": [
+        {
+          "sequence": 1,
+          "action": "ingest",
+          "phase": "cold-source",
+          "encoded_bytes": 1420,
+          "seconds": 7.89999037492089,
+          "verified": true,
+          "result_status": "pending"
+        },
+        {
+          "sequence": 2,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 5.035311207990162,
+          "verified": true,
+          "result_status": "pending"
+        },
+        {
+          "sequence": 3,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 5.571220582933165,
+          "verified": true,
+          "result_status": "pending"
+        },
+        {
+          "sequence": 4,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 5.349751833011396,
+          "verified": true,
+          "result_status": "pending"
+        },
+        {
+          "sequence": 5,
+          "action": "seal",
+          "phase": "seal",
+          "encoded_bytes": 1439,
+          "seconds": 8.051680707954802,
+          "verified": true,
+          "result_status": "pending"
+        }
+      ],
+      "sha256": "a4db9016873b9c64fc1c497bd10aae9a1308cb11661d4d4e3728237433d6639c",
+      "driver_sha256": "54da8e7215245ffd36d6dee368a0431336f306e8e515a233d147a50e4a44e67d"
+    },
+    {
+      "label": "count-reuse-4efcec7",
+      "passed": true,
+      "startup_seconds": 2.2550453749718145,
+      "frames": [
+        {
+          "sequence": 1,
+          "action": "ingest",
+          "phase": "cold-source",
+          "encoded_bytes": 1420,
+          "seconds": 7.845653000054881,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 921,
+            "observe_seconds": 5.816807375056669,
+            "returned": true
+          }
+        },
+        {
+          "sequence": 2,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 4.865769000025466,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 496,
+            "observe_seconds": 2.8461227909429,
+            "returned": true
+          }
+        },
+        {
+          "sequence": 3,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 4.886454749968834,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 496,
+            "observe_seconds": 2.814804333029315,
+            "returned": true
+          }
+        },
+        {
+          "sequence": 4,
+          "action": "ingest",
+          "phase": "warm-repeat",
+          "encoded_bytes": 1420,
+          "seconds": 4.905669040977955,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 496,
+            "observe_seconds": 2.843821999966167,
+            "returned": true
+          }
+        },
+        {
+          "sequence": 5,
+          "action": "seal",
+          "phase": "seal",
+          "encoded_bytes": 1439,
+          "seconds": 10.075727749965154,
+          "verified": true,
+          "result_status": "pending",
+          "instrumented_observe": {
+            "git_calls": 865,
+            "observe_seconds": 7.599697500001639,
+            "returned": true
+          }
+        }
+      ],
+      "sha256": "10caf43b2c53ca9624c29f669e1f215f6224ff2a1f6287b0a815445119d588bf",
+      "driver_sha256": "54da8e7215245ffd36d6dee368a0431336f306e8e515a233d147a50e4a44e67d"
+    }
+  ],
+  "timing_limits": [
+    "Three identical-view warm-repeat ingests per candidate, not growing-session/p99 qualification",
+    "Actual hook helper argv is distinct from instrumented Python companion; latter delegates every original call",
+    "All frames verified, durable CLOSED inventory and original public source readback passed; no TypeScript callback/omp launch/automatic wake/clock/platform qualification",
+    "Callback/stop-window latency remains unqualified and is not met by these observed frame times"
+  ],
+  "binding_attribution": {
+    "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
+    "scope": "Instrumented companion, inclusive nested timings; DO NOT sum labels. Git counts cover identity_git.git only.",
+    "phases": [
+      {
+        "phase": 2,
+        "labels_inclusive_not_additive": {
+          "installation.verify_targets": {
+            "calls": 1,
+            "seconds_inclusive": 8.037500083446503e-05,
+            "git_calls_inclusive": 0
+          },
+          "artifact.inspect": {
+            "calls": 1,
+            "seconds_inclusive": 0.025789791019633412,
+            "git_calls_inclusive": 0
+          },
+          "full.verified_observer_binding": {
+            "calls": 1,
+            "seconds_inclusive": 0.0279202499659732,
+            "git_calls_inclusive": 0
+          },
+          "scope.private_enrollment_context": {
+            "calls": 18,
+            "seconds_inclusive": 4.2493262911448255,
+            "git_calls_inclusive": 738
+          },
+          "marker.verify_marker": {
+            "calls": 4,
+            "seconds_inclusive": 1.9907058748649433,
+            "git_calls_inclusive": 348
+          },
+          "fast.verify_observer_binding": {
+            "calls": 4,
+            "seconds_inclusive": 2.111204208107665,
+            "git_calls_inclusive": 368
+          }
+        }
+      },
+      {
+        "phase": 3,
+        "labels_inclusive_not_additive": {
+          "installation.verify_targets": {
+            "calls": 1,
+            "seconds_inclusive": 8.40409193187952e-05,
+            "git_calls_inclusive": 0
+          },
+          "artifact.inspect": {
+            "calls": 1,
+            "seconds_inclusive": 0.02824154100380838,
+            "git_calls_inclusive": 0
+          },
+          "full.verified_observer_binding": {
+            "calls": 1,
+            "seconds_inclusive": 0.030461500049568713,
+            "git_calls_inclusive": 0
+          },
+          "scope.private_enrollment_context": {
+            "calls": 18,
+            "seconds_inclusive": 4.188181707053445,
+            "git_calls_inclusive": 738
+          },
+          "marker.verify_marker": {
+            "calls": 4,
+            "seconds_inclusive": 1.9645114577142522,
+            "git_calls_inclusive": 348
+          },
+          "fast.verify_observer_binding": {
+            "calls": 4,
+            "seconds_inclusive": 2.079638791969046,
+            "git_calls_inclusive": 368
+          }
+        }
+      },
+      {
+        "phase": 4,
+        "labels_inclusive_not_additive": {
+          "installation.verify_targets": {
+            "calls": 1,
+            "seconds_inclusive": 7.441604975610971e-05,
+            "git_calls_inclusive": 0
+          },
+          "artifact.inspect": {
+            "calls": 1,
+            "seconds_inclusive": 0.02381199994124472,
+            "git_calls_inclusive": 0
+          },
+          "full.verified_observer_binding": {
+            "calls": 1,
+            "seconds_inclusive": 0.025895208935253322,
+            "git_calls_inclusive": 0
+          },
+          "scope.private_enrollment_context": {
+            "calls": 18,
+            "seconds_inclusive": 4.21625666716136,
+            "git_calls_inclusive": 738
+          },
+          "marker.verify_marker": {
+            "calls": 4,
+            "seconds_inclusive": 1.97461970790755,
+            "git_calls_inclusive": 348
+          },
+          "fast.verify_observer_binding": {
+            "calls": 4,
+            "seconds_inclusive": 2.094427000149153,
+            "git_calls_inclusive": 368
+          }
+        }
+      }
+    ],
+    "decision": "Keep full executable attestation on EVERY frame: observed ~28ms full check is not the ~2s fast scope/marker cost. No waiver of receipt, marker or mutation checks.",
+    "raw_costs_sha256": "ab6fa56cbcc592183edc2fb20461aeb5a21472d2252004fc0f59c5f0c81ce255"
+  },
+  "retained_failures_and_corrections": [
+    {
+      "source_commit": "4694a725c562271245704f11178ac6fcc2bfbf32",
+      "suite": "omp-native-smoke-source-verifier",
+      "actual": "3 tests, 1 error; registration fixture remained pending",
+      "correction": "Replace random notification-only root fixture with an exact stored-user-ID-bound crash state; real observe repairs its shared registration. No outcome mock or erased fault."
+    },
+    {
+      "source_commit": "4694a725c562271245704f11178ac6fcc2bfbf32",
+      "suite": "omp-native-smoke-profile-refusals",
+      "actual": "2 tests, 1 error; report.status_readback absent",
+      "correction": "Delete incidental reporting-order assertion/fake-protocol coupling; directly require new current session to remain pending despite historical sources with copied IDs and text. Other fake-protocol negatives remain."
+    }
+  ],
+  "review": {
+    "model": "anthropic/claude-opus-5-5",
+    "scope": "Source PASS for 4efcec7 read-context seam and 4f618dd explicit locator reuse; meaningful fixture corrections at 22816d4; copied-ID strengthening at 295e801 acknowledged. Not runtime acceptance."
+  },
+  "private_evidence_archive": {
+    "files_verified": 51,
+    "index_sha256": "911d7e0f7ca89bd80759df6f6176da04e2a0a7e01e36100426e80d101fd2d873",
+    "classification": "Owner-only retained qualification records; not provider-side or forensic-erasure evidence"
+  },
+  "remaining_at_initial_capture": [
+    "Source-reviewed explicit observer-locator optimization at 4f618dd still requires its actual timing/guard proof",
+    "Further fresh-context cost reduction if measurements require it; no authority-cache or deadline waiver",
+    "Composed original native matrix, actual stock event path, >=256KiB shutdown flush, old-reader blocking cap, clocks, TUI/fork/transition journeys and Linux"
+  ],
+  "later_observation_20261108": {
+    "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+    "archive_sha256": "9d7b6c0cca32cdfb4ce9f497717ed7fd491621e3bd1d4287084ad6bf012939ba",
+    "source_review": "Independent Claude Opus5.5 source PASS; original ordinary and raw locator refusals restored after unexecuted f8ee1bf was rejected",
+    "registered_correctness_suites": {
+      "passed": 9,
+      "scope": "Four original-composition conformance cases, four raw-locator cases each with and without a verified hold, and the lost-response/no-retry regression",
+      "scope_limits": "Controlled workers only; not native callback, automatic wake or platform acceptance"
+    },
+    "direct_receipt_owned_helper": {
+      "driver_sha256": "54da8e7215245ffd36d6dee368a0431336f306e8e515a233d147a50e4a44e67d",
+      "raw_receipt_sha256": "df5893b317371aca931d0e7dce297bf370f62ab32115ce8b9c337f0e99f96da1",
+      "cold_ingest_seconds": 5.373874124954455,
+      "warm_repeat_seconds": [3.279977041995153, 3.251153749995865, 3.291954749962315],
+      "seal_seconds": 5.215801125043072,
+      "verified_original_source": true,
+      "verified_closed_inventory": true,
+      "canonical_index_head_preserved": true,
+      "scope": "Actual installed helper argv; no TypeScript callback, omp launch, provider, automatic wake, clock-rate, p99 or platform qualification"
+    },
+    "instrumented_companion": {
+      "raw_receipt_sha256": "235b09e1a1a8a14ddca0aa2bd2400fffab98d7df11a59d0249bf50f6d5799840",
+      "warm_observe_identity_git_calls": [361, 361, 361],
+      "scope": "Delegating instrumentation, not the hook argv; counts only identity_git.git, not every subprocess",
+      "full_executable_attestation": "Retained on every frame"
+    },
+    "disagreeing_locators": {
+      "failed_test_only_candidate": "2247954f084641b4d2f6f9a1ad84ff07fdce8844",
+      "failure": "The asserted old-mint success was disproved by its actual raw-router parse; no production defect or runtime pass inferred",
+      "corrected_test_only_candidate": "fc026b89d620d027eace3db9cb51ad57d3716e80",
+      "result": "Independent Opus source PASS and actual one-case PASS; both locators succeed and disagree, both old and new mints refuse, all private/repository bytes and HEAD preserved",
+      "known_untested_case": "A raw-only bank with actual private recovery ledgers supplying project_ids can skip the old router parse. No production-path fixture was established for that old-success/new-refusal path; no hand-crafted ledger or equivalence claim."
+    },
+    "private_evidence_archive": {
+      "files_verified": 80,
+      "index_sha256": "70547ae240a1d5d22adda252b2fa3634627d6f2dc12cedef3814e80efda598d2",
+      "classification": "Owner-only retained qualification records; not provider-side or forensic-erasure evidence"
+    },
+    "remaining": [
+      "Actual stock short-print >=256KiB shutdown flush and RPC delayed-switch/fork journeys",
+      "Native callback timing, positive session_stop automatic wake/model-forgets delivery, measured post-reservation margin and eventual durable source completion as separate gates",
+      "Composed original permissions, lifecycle, peer-harness, TUI and macOS/Linux matrix; signed release delivery"
+    ]
+  }
+}

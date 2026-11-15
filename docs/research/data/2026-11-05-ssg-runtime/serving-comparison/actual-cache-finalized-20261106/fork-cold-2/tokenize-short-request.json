@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-06T19:56:05.441799+00:00",
+  "body": {
+    "add_special": true,
+    "content": "Synthetic complete input with an unmistakable terminal marker AM255_END."
+  },
+  "name": "tokenize-short",
+  "route": "/tokenize"
+}

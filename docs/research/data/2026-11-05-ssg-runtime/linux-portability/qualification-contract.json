@@ -1,0 +1,31 @@
+{
+  "schema": "am255/linux-portability-slice-contract-v1",
+  "issue": "https://github.com/robertelee78/agent-memory/issues/255",
+  "am_baseline": "483adede202bac2dc3a69856a73b16533190ebb7",
+  "ssg": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+  "new_owned_subtree_only": "docs/research/data/2026-11-05-ssg-runtime/linux-portability/",
+  "execution": {
+    "platform": "Linux-arm64 userspace and kernel in existing Podman AppleHV VM on Darwin arm64",
+    "not": ["Linux bare metal", "native Linux-amd64 execution", "clean-host performance", "macOS-quality inheritance", "production integration"],
+    "cpu_limit": 4,
+    "memory_limit_bytes": 12884901888,
+    "serial": ["8B exact Q8_0", "0.6B exact Q8_0"],
+    "slot": "Must wait for Workspace255Qualification exact owned cleanup/release, as approved by Main",
+    "provider": "Only own synthetic text, own new loopback container, locally borrowed read-only byte-verified weights",
+    "network": "Host publication is loopback only; default container network is not egress-isolation evidence"
+  },
+  "ownership": {
+    "fresh_owned": ["container overlay", "bounded tmpfs", "downloaded public release copy", "exact downloaded amd64 image layers in owned .acquired directory"],
+    "borrowed_read_only": ["existing exact model files", "existing pinned MAGE runtime carrier image", "existing frozen arm64 graph BOMs", "SSG source"],
+    "never_adopt": ["user BYO graph stores", "other containers", "other volumes", "global configuration or accounts"],
+    "disposal": "Stop/remove exact newly created container IDs, verify absence, inventory and remove only own downloaded/extracted bytes; do not remove borrowed images/weights or claim forensic media/backups erasure"
+  },
+  "acceptance_limits": [
+    "Missing exact executable ABI/runtime/model prerequisite remains missing, not a substituted pass",
+    "Nonexecuting amd64 merged-layer inspection is contents/BOM evidence only, not graph execution, ABI, query or native support validation",
+    "Declared package/Python/source licenses and hashed notice bytes do not complete linkage/source/provenance or counsel analysis",
+    "No legal, deployment-profile, managed-server, G1 or quality/performance acceptance follows",
+    "Independent-suite inputs and frozen labels are neither read to tune this recipe nor modified",
+    "No other service, real project export or shared execution contract/brief modification"
+  ]
+}

@@ -180,12 +180,17 @@ visible statement's scope and current/stale status can be understood, and no
 active transaction marker is present. Search indexes, databases, MCP, hooks,
 federation, caches, and recovery journals are not part of that definition.
 
-## Proposed amendment: Source-preserving layout recovery
+## Amendment: Source-preserving layout recovery
 
-**Proposal dated 2026-10-31; outside the accepted v0.0.1 scope.** Stable proposed
-work key: `ADR-0010:source-preserving-layout-recovery`. This is a separate outcome
-from bank-validation consistency and owned-hook health, with no v0.0.13 release
-assignment or implementation authorization.
+> Superseded by the lean design (2026-11-15): [v0.0.15-lean.md](../design/v0.0.15-lean.md).
+
+**Proposed 2026-10-31; implementation design approved 2026-11-04 for v0.0.15.**
+Work key: `ADR-0010:source-preserving-layout-recovery`. This is separate from
+bank-validation consistency and owned-hook health and does not expand the
+earlier accepted release scopes. [Task-specific design approval](https://github.com/robertelee78/agent-memory/issues/244#issuecomment-6633503972)
+authorizes implementation; independent acceptance and signed delivery remain
+separate. The implementation and scoped qualification are on the release
+integration branch, not evidence that v0.0.15 has shipped.
 
 The [secondary RCA](../research/2026-10-31-bank-size-and-owned-hook-health-rca.md)
 shows that ordinary governed operations cannot repair a bank whose initial
@@ -195,10 +200,11 @@ to edit that bank, invent a definition or infer its source producer.
 
 ### Separate observation and review boundary
 
-A proposed explicit `bank recover-layout` workflow SHALL provide inspect,
-prepare, apply and known-operation recovery stages. These are **proposed future
-interfaces**, not commands presently available. Ordinary initialization,
-checkpoint, admission and sharing SHALL retain their existing source gates.
+The explicit `bank recover-layout` workflow provides inspect, prepare, apply and
+known-operation recovery stages in the v0.0.15 candidate. User-facing operations
+and pending-state handling are documented in the [bank guide](../../skills/agent-memory/bank/GUIDE.md#source-preserving-layout-recovery).
+Ordinary initialization, checkpoint, admission and sharing SHALL retain their
+existing source gates.
 
 Recovery inspect SHALL use a dedicated bounded raw-source observer rather than
 pretend that the invalid bank passed its normal snapshot. It SHALL resolve the
@@ -211,7 +217,7 @@ failed ordinary bank snapshot to succeed first. It MUST NOT invent an alternate
 identity algorithm or treat bank prose as permission. Existing live locks or
 unknown transaction markers SHALL retain precedence.
 
-The initial proposed recovery allowance is 1 MiB per ordinary raw source,
+The recovery allowance is 1 MiB per ordinary raw source,
 64 MiB total source bytes, 65,536 source files, at most 131,072 physical entries
 and directory depth 64. It SHALL read in bounded chunks and disclose complete
 source context in bounded pages. Exceeding this distinct allowance SHALL leave
@@ -303,6 +309,17 @@ canonical tree only through the reviewed pending-candidate disposition above;
 unknown concurrent edits MUST NOT disappear to make the result fit. Global normal limits,
 personal memory, cross-repository transfer and implicit schema migration remain
 out of scope.
+Where pending or inherited units require quiescence, the operator SHALL declare
+the authorized principals, invocation routes and stopped sessions and attest
+their quiescence against the pinned bank, state and runtime. The independent
+review SHALL bind the SHA-256 of that exact complete attestation; an absent
+attestation requires an explicit null review pin, and an optional supplied
+attestation is bound identically. Changed declarations require a fresh
+qualified review, never a rewritten historical approval. This is an explicit
+operator and reviewer attestation, not automatic operating-system process,
+principal or installation discovery. Unknown routes or sessions remain pending,
+and the hold does not control direct edits or uncooperative software.
+
 
 ### Transaction, retry and sharing
 
@@ -314,6 +331,39 @@ intended result MAY replace the observed invalid state. Required metadata and
 rollback capability SHALL be established before the first replacement; no
 `chmod`, privileged ownership change or force-overwrite MAY substitute for that
 proof.
+
+The v0.0.15 metadata policy MAY support the Darwin kernel attribute
+`com.apple.provenance` only through exact per-path preservation. The private
+manifest and required metadata plan SHALL retain the complete attribute map;
+`metadata_plan_sha256` SHALL bind the entire reviewed uid/gid/mode/xattrs plan.
+Empty maps mean observed absence, not permission to ignore metadata. Other
+xattrs, ACL entries, nonzero BSD file flags and unsupported filesystem behavior
+SHALL remain explicit refusals. Linux SHALL read `FS_IOC_GETFLAGS` and refuse
+every bit except the kernel-managed EXTENT/INDEX storage-format bits; an
+unavailable or unstable check SHALL remain pending. It MUST NOT silently drop
+backup, access, inheritance or write-semantics flags. Linux SELinux labels are
+not supported by this policy. Existing observation and private-artifact bounds
+SHALL remain unchanged and include the serialized metadata.
+
+Before source replacement or restoration, the unprivileged runtime SHALL prove
+that both forward and rollback temporaries reproduce the exact required
+metadata without setting, stripping or ignoring attributes. It SHALL recheck
+the temporary and resulting path and prove only the remaining actions when
+resuming a known operation. Probe plans SHALL be durable before probe creation
+and before any transaction marker or persistent frontier safeguard is published.
+Temporary probe entries are writes, not a read-only inspection.
+
+Probe cleanup SHALL require live creator ownership or durable physical,
+parent, exact-metadata and file-nonce pins. A probe name, journal entry,
+empty directory or matching owner alone MUST NOT establish ownership. An
+un-pinned create-before-pin crash or a mismatched occupant SHALL preserve the
+occupant and journal and report `pending-ambiguous-probe-ownership`, with
+truthful unknown mutation state and operator inspection actions. Only an
+operator, after inspection, MAY remove the exact ambiguous occupant before
+aware recovery resumes. Known pinned attempts and cleanup progress SHALL
+remain in the retention dependency inventory. Empty-directory inode reuse
+cannot always be distinguished from the pinned directory; the runtime MUST
+disclose that residual limitation rather than promise automatic recovery.
 
 The private workspace SHALL use owner-only directories (0700) and regular private
 files (0600), outside canonical banks and the installed payload. Runtime update

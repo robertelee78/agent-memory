@@ -1,0 +1,10 @@
+{
+  "declared_not_linkage_verified": true,
+  "sources": "exact upstream root LICENSE + licenses directory; archive/runtime carrier separately inventoried",
+  "unknowns": [
+    "No complete embedded header-level third-party license attribution",
+    "No reproducible-build proof of source-to-release binary identity",
+    "Carrier package/third-party/legal deployment unknowns remain inherited explicitly, not cleared"
+  ],
+  "upstream": "6b4e4bd582e457a47ee7cd498058495f47fee228"
+}

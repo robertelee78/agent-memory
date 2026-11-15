@@ -1,0 +1,131 @@
+{
+  "schema": "agent-memory/omp-minimal-smoke-evidence-v1",
+  "source_commit": "90d822b42e41b96b27682ebca2bcf405c6a26bfc",
+  "scope": "Real installed macOS RPC two-human source journey only; not full #249 acceptance, source completeness, semantic assessment, publication, refresh, peer exchange or release qualification.",
+  "original_report_sha256": "b43543dd4b87cf0280df0a31a4aa219deefbd41aad75420f2498e8229b16b7ba",
+  "report_projection": {
+    "qualified": true,
+    "full_native_qualification": false,
+    "platform": "darwin",
+    "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+    "native_version": "omp/18.16.0",
+    "supported_version": "18.16.0",
+    "receipt_sha256": "bbec7e1486c3136a577e48bce25203b3655b77e79c94ae8d00e58f225f7d69af",
+    "extension_sha256": "837c14dcccf77e0588e2818ff9540284e931cc542c4375bda37d0c5194b9befe",
+    "model": "openai-codex/gpt-6.1-sol",
+    "approval_mode": "native-existing-default",
+    "refused_ui_requests": 0,
+    "task_sentinels": {
+      "OMP_SMOKE_FIRST_dfc03b88c0004cd882fcdeed986588ee": 1,
+      "OMP_SMOKE_SECOND_f8316af33b92447f87cebfbb5746caf2": 1
+    },
+    "failures": [],
+    "native_adapter_diagnostics": [
+      "observer wait ended; retained work pending"
+    ],
+    "native_ui_methods": {
+      "setWidget": 3,
+      "setStatus": 2,
+      "notify": 1
+    },
+    "readback_attempts": 193,
+    "session_id": "01a1b2bc-0d03-7439-96aa-3aaec7170260",
+    "native_is_settled": true,
+    "observer_wait_seconds": 116.07551058300305,
+    "current_human_observations": [
+      {
+        "native_entry_id": "3b37371c",
+        "human_root": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "observation_id": "fe0eafca-bac2-4843-b1a5-c9d80afc8dc8",
+        "source_reference": "omp:capture:d0d3ae2d-3550-5b00-bd98-753f0f38d59f",
+        "source_sha256": "39156ceae18ff14f354e41e3873890e5a0d9617c5e39b562999a0e4ec205ef99",
+        "mapping": "verified"
+      },
+      {
+        "native_entry_id": "281976cf",
+        "human_root": "04d1676d-6c3c-52d7-aca3-84a8425881f9",
+        "observation_id": "c94050e4-6e51-4640-baf5-02e590078a53",
+        "source_reference": "omp:capture:a5b3eff9-856f-5f00-9596-fafb9e08ab53",
+        "source_sha256": "ca702aaf27ec9df2e7d4f14438693ba44e6db36121dff6bbe8abb2de540e1e0b",
+        "mapping": "verified"
+      }
+    ],
+    "limits": [
+      "Smoke proves only the recorded real installed multi-turn/source journey.",
+      "Inspect individual source assessments, refresh and publication separately.",
+      "Pending sources/refused tools remain pending; this is not a full source-drain or release pass.",
+      "Other modes/platforms/clients, durable capture and peer exchange need the full retained matrix."
+    ],
+    "native_exit": 0
+  },
+  "installed_artifact_digest": "c8c4a03280d7c34e2eb975dfc4157a8a5999409790a0973a5d020ea3166a55b5",
+  "pending_readback": {
+    "operation": "pending",
+    "pending": [
+      {
+        "session": "01a1b2bc-0d03-7439-96aa-3aaec7170260",
+        "lifecycle": "04d1676d-6c3c-52d7-aca3-84a8425881f9",
+        "human_root": "04d1676d-6c3c-52d7-aca3-84a8425881f9",
+        "source_reference": "omp:capture:a5b3eff9-856f-5f00-9596-fafb9e08ab53",
+        "source_sha256": "ca702aaf27ec9df2e7d4f14438693ba44e6db36121dff6bbe8abb2de540e1e0b",
+        "status": "pending-assessment",
+        "observation_id": "c94050e4-6e51-4640-baf5-02e590078a53"
+      },
+      {
+        "session": "01a1b2bc-0d03-7439-96aa-3aaec7170260",
+        "lifecycle": "04d1676d-6c3c-52d7-aca3-84a8425881f9",
+        "human_root": "04d1676d-6c3c-52d7-aca3-84a8425881f9",
+        "source_reference": "omp:seal:84b920fe-a8c1-5342-b0b8-04b73a4fa269",
+        "source_sha256": "ddaef6ad55f134314685d6793c291f6502d5a8d9cc63152d059a869ee3dd3a55",
+        "status": "pending-assessment",
+        "observation_id": "990f1adb-fe3d-4a9c-b843-c1406bf7a412"
+      },
+      {
+        "session": "01a1b2bc-0d03-7439-96aa-3aaec7170260",
+        "lifecycle": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "human_root": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "source_reference": "omp:capture:d0d3ae2d-3550-5b00-bd98-753f0f38d59f",
+        "source_sha256": "39156ceae18ff14f354e41e3873890e5a0d9617c5e39b562999a0e4ec205ef99",
+        "status": "pending-coverage-gap",
+        "observation_id": "fe0eafca-bac2-4843-b1a5-c9d80afc8dc8"
+      },
+      {
+        "session": "01a1b2bc-0d03-7439-96aa-3aaec7170260",
+        "lifecycle": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "human_root": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "status": "pending-stored-source",
+        "source_reference": "omp:event:3757fe3c-10d9-42c3-87b0-7746e711663d"
+      },
+      {
+        "session": "01a1b2bc-0d03-7439-96aa-3aaec7170260",
+        "lifecycle": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "human_root": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "source_reference": "omp:seal:81f48686-7d59-567a-800f-db21c456bae4",
+        "source_sha256": "9b6f6a915c69c1b55be06cb48b8696f7128659216dadd834e4b30d764e6c5e89",
+        "status": "pending-coverage-gap",
+        "observation_id": "907db169-2956-44cd-bb90-94756f507ccb"
+      },
+      {
+        "session": "01a1b2bc-0d03-7439-96aa-3aaec7170260",
+        "lifecycle": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "human_root": "c412957e-65eb-4921-835f-f1e06ca54c01",
+        "status": "pending-native-tool",
+        "source_reference": "omp:tool:call_2a067f9787a84661baba8cea73a9e684|fc_017296e9cfabd0fc016aee44a2904087d08f8721c2a1be6110"
+      }
+    ],
+    "faults": [],
+    "next_offset": null,
+    "inventory_complete": true,
+    "source_completeness_verified": false,
+    "canonical_writes_performed": false,
+    "verified": true
+  },
+  "regression": {
+    "test_selection": "contracts.test_omp_boundary.NativeSmokeQualification.test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof",
+    "interpreter_mode": "Python3.13.12, isolated -I, bytecode disabled -B, inline unittest runner",
+    "observed_result": "OK: one unittest method, three real-driver fixture subcases (normal completion, late duplicate answer, late unsettled state)",
+    "elapsed_seconds": 267.045,
+    "qualification": "Synthetic driver behavior, not additional native/provider rows."
+  },
+  "provenance_limit": "Curated projection of private smoke report; arbitrary display, stored transcript/tool payloads, absolute fixture paths and credentials are not published. Hash binding is byte identity, not publisher authentication."
+}

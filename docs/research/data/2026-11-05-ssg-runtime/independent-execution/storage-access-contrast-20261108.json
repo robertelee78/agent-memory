@@ -1,0 +1,81 @@
+{
+  "schema": "agent-memory/255-storage-access-contrast-v1",
+  "diagnostic_result": "deliberate-transaction-contention-mechanism-observed-not-historical-cause",
+  "source_sha256": "a32469f7f992dc51290f764cf8a16dd571c408382398ca4c9fcef32b35e2ddbb",
+  "image": "sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+  "image_config": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+  "arm64_manifest": "sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39",
+  "runtime": {
+    "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "machine": [
+      {
+        "ConfigDir": {
+          "Path": "/Users/robert.lee/.config/containers/podman/machine/applehv"
+        },
+        "ConnectionInfo": {
+          "PodmanPipe": null,
+          "PodmanSocket": {
+            "Path": "/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/podman/podman-machine-default-api.sock"
+          }
+        },
+        "Created": "2026-11-06T22:43:35.982645-08:00",
+        "LastUp": "0001-01-01T00:00:00Z",
+        "Name": "podman-machine-default",
+        "Resources": {
+          "CPUs": 12,
+          "DiskSize": 100,
+          "Memory": 32768,
+          "USBs": []
+        },
+        "Rootful": false,
+        "Rosetta": false,
+        "SSHConfig": {
+          "IdentityPath": "/Users/robert.lee/.local/share/containers/podman/machine/machine",
+          "Port": 56882,
+          "RemoteUsername": "core"
+        },
+        "State": "running",
+        "UserModeNetworking": true
+      }
+    ],
+    "neo4j_version": "5.28.2",
+    "interpreter_sha256": "15c72833c1ffc09bc4e05d1e1866784d126721ad548d9c4d8f943641262535cb"
+  },
+  "arms": [
+    {
+      "arm": "idle",
+      "ddl_outcome": "success",
+      "ddl_attempts": 1,
+      "error_type": null,
+      "error_code": null,
+      "cleanup": "disposed",
+      "all_owned_resources_absent": true
+    },
+    {
+      "arm": "held-transaction",
+      "ddl_outcome": "error",
+      "ddl_attempts": 1,
+      "error_type": "TransientError",
+      "error_code": "Memgraph.TransientError.MemgraphError.MemgraphError",
+      "cleanup": "disposed",
+      "all_owned_resources_absent": true
+    }
+  ],
+  "external_resources_preserved": true,
+  "cleanup_status": "disposed",
+  "model_endpoint_calls": 0,
+  "original_experiment_modified": false,
+  "profile_flags_changed": false,
+  "historical_snapshot_cause_established": false,
+  "G1_acceptance": false,
+  "raw_artifact_sha256": {
+    "run.json": "2a18b9298ef89adfa10a790e56427ee5cbf6b5c4bd7b2f59254c06d1d5b42a0b",
+    "preflight.json": "30d721b369711a37c65ceb45e763ea1d9d7106d0149248917b7f8791a3b508e4",
+    "controller-source.py": "a32469f7f992dc51290f764cf8a16dd571c408382398ca4c9fcef32b35e2ddbb"
+  },
+  "apparatus_history": [
+    "Initial launch referenced the historical qualification-venv interpreter, which is now absent; exit127 before controller execution.",
+    "A new isolated Python3.15/neo4j5.28.2/pytz2026.6 environment was provisioned. Both new arms use this common recorded runtime, not the historical Python3.13.13 environment."
+  ]
+}

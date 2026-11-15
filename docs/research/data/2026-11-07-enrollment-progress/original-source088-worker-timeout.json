@@ -1,0 +1,21 @@
+{
+  "source_commit": "0884832ebd1f31d67b52520d381e9af38f10aeca",
+  "source_root": "/private/tmp/am-v15-delivery/source-boundary-qualified-source-20261107",
+  "timeout_seconds": 300,
+  "started_at": "2026-11-07T08:40:28.738964+00:00",
+  "passed": false,
+  "command": [
+    "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+    "-I",
+    "-B",
+    "/private/tmp/am-v15-delivery/source-boundary-qualified-source-20261107/scripts/run_contract_suite.py",
+    "/private/tmp/am-v15-delivery/source-boundary-qualified-source-20261107/tests/contracts/test_omp_enrollment_progress.py",
+    "--suite",
+    "omp-enrollment-progress"
+  ],
+  "exit": null,
+  "stdout": "",
+  "stderr": "test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival (contract_suite.EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival) ... ",
+  "timed_out": true,
+  "elapsed_seconds": 300.0456335420022
+}

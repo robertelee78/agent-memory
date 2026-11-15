@@ -1,0 +1,14 @@
+{
+  "schema": "am255/linux-carrier-decision-v1",
+  "old_recipe_source_commit": "a50f494ec2943f607d5c9e45d3bf24c8002b9573",
+  "old_recipe_executed": false,
+  "frozen_execution_source": "3cca42a1760fd8c72fb3549f66243c48601b1e14",
+  "evidence": [
+    "release-static-closure.json",
+    "../core-comparison/observed-20261106/core-bom.json",
+    "../core-comparison/observed-20261106/mage-bom.json"
+  ],
+  "reason": "Exact release DT_NEEDED includes libgomp.so.1. Existing core package inventory lacks libgomp1; existing pinned MAGE declares libgomp1 14.2.0-4ubuntu2~24.04.1.",
+  "scope": "MAGE only supplies existing runtime libraries in a new read-only CPU embedding container, no graphdaemon. No package install and no additional requested model.",
+  "approval": "Main approved this pre-output frozen existing carrier after Workspace release; this does not approve MAGE as managed graph/server choice or resolve legal/G1/profile acceptance."
+}

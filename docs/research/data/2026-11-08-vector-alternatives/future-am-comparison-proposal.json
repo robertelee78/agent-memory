@@ -1,0 +1,336 @@
+{
+  "schema": "agent-memory/255-alternatives-followup-proposal-v1",
+  "status": "proposed-not-executed-not-acceptance",
+  "purpose": "Separate score semantics, candidate completeness, embedding/profile behavior, native authority and graph operations before any scoped replacement recommendation.",
+  "assignment_actions": {
+    "existing_evidence_read": true,
+    "upstream_source_read": true,
+    "model_endpoint_calls": 0,
+    "runtime_or_scorer_executions": 0,
+    "repository_edits": false,
+    "old_results_or_labels_modified": false,
+    "authored_files": [
+      "failure-analysis.md",
+      "proposed-followup.json"
+    ]
+  },
+  "external_decision_record": {
+    "source": "https://github.com/robertelee78/agent-memory/issues/255#issuecomment-6722856189",
+    "reported_time_utc": "2026-11-08T14:42Z",
+    "assurance": "Published ADR0027 at8a56e0e2e82b7224452a0559652b3f9f5aca4f85, integrated candidate44d38a1; graph direction only",
+    "direction": "Accepted operator-selected AM-managed core Memgraph direction; separate technical/licensing/productionG1gates",
+    "not_approved": [
+      "serving build",
+      "embedding model",
+      "license clearance",
+      "G1",
+      "implementation Ready"
+    ],
+    "measurement_reference_unchanged": "MAGE 3.10.1 / 9341 fork / exact 8B Q8_0",
+    "core_qualification": "Own original qualification remains required; shared observed signed-score defect is not fixed by core"
+  },
+  "evidence_root": "docs/research/data/2026-11-05-ssg-runtime",
+  "evidence": {
+    "old_raw_report": "independent-execution/failed-allsize-offline-observations-20261107.json",
+    "old_interpretation": "independent-execution/frozen-experiment-interpretation-20261107.json",
+    "old_source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20",
+    "old_manifest_sha256": "489bfa60e23a21518360cc090a6a04d97cbea2870a3b43134bcb85450e424c48",
+    "serving": "serving-comparison/cache-interpretation-results.json",
+    "signed_score": "core-comparison/diagnostic-20261106-opus/report.json",
+    "storage_contrast": "independent-execution/storage-access-contrast-20261108.json",
+    "new_numeric_events": [
+      "docs/research/data/2026-11-08-vector-alternatives/1k-events.jsonl",
+      "docs/research/data/2026-11-08-vector-alternatives/10k-events.jsonl",
+      "docs/research/data/2026-11-08-vector-alternatives/50k-events.jsonl"
+    ],
+    "upstream_source": [
+      "https://github.com/memgraph/memgraph/blob/v3.10.1/src/storage/v2/indices/vector_index.cpp#L434-L460",
+      "https://github.com/memgraph/memgraph/blob/v3.10.1/src/storage/v2/indices/vector_index_utils.hpp#L270-L279"
+    ],
+    "source_attribution_limit": "Tagged source predicts abs(1-distance) output after candidate search; pinned binaries observed matching behavior, but no reproducible source-to-binary attribution",
+    "contract": "docs/design/v0.0.16-graph-embedding-execution.md sections 7, 8, 13, 14",
+    "original_obligations": "docs/adr/0024-ssg-graph-embedding-runtime.md R1/R3/R5/G1"
+  },
+  "retrospective_limits": {
+    "fresh_heldout_claim": false,
+    "old_independent_labels": {
+      "total": 101,
+      "calibration": 16,
+      "now_opened_heldout": 85
+    },
+    "observations": {
+      "expected": 567,
+      "retained": 426,
+      "unexecuted": 141
+    },
+    "old_ann": {
+      "executed_cells": 373,
+      "eligible_domain_range": [
+        9,
+        15
+      ],
+      "candidate_budget": 16,
+      "budget_less_than_domain_executed": false,
+      "interpretation": "Complete eligible candidate sets; scorer K<N does not establish ANN budget<N"
+    },
+    "old_50k": "Failed CREATE VECTOR INDEX; partial observations and canonical artifacts are not completed execution",
+    "old_cases_after_protocol_correction": "Retrospective regression/development only; never new held-out qualification or cutoff calibration"
+  },
+  "mechanism_matrix": [
+    {
+      "id": "wrong-signed-output-score",
+      "evidence_class": "observed plus tagged-source mechanism",
+      "observed": "Both images distance 2, similarity +1, database/host exact -1; SSG consumer orders antiparallel source first",
+      "exact_or_rescore": "Avoids wrong signed score; rescoring only repairs returned candidates",
+      "serving_or_model": "Not needed for arithmetic repair",
+      "graph": "Core alone retains observed defect; reviewed signed output path or independent score needed",
+      "not_proved": "abs conversion occurs after ANN search and does not itself prove candidate selection wrong"
+    },
+    {
+      "id": "profile-render-history-drift",
+      "evidence_class": "observed diagnostics; quality direction unmeasured",
+      "observed": "Same-path restarts exact; cache-history and cross-build drift distinct; relationship text changes ranking tails and tokens",
+      "exact_or_rescore": "Cannot repair incompatible embedding/profile inputs",
+      "serving_or_model": "May change vectors; requires immutable profile/re-embedding and fresh quality",
+      "graph": "No embedding drift repair from core",
+      "not_proved": "Coordinate diagnostic breach is not upstream unusability or semantic regression"
+    },
+    {
+      "id": "native-domain-and-semantic-source-selection",
+      "evidence_class": "frozen source and independent interpretation",
+      "observed": "Case58 selected 10 sources instead of 1; original crosscheck cleared selectors; scorer-only semantic ranking is not native result packing",
+      "exact_or_rescore": "Cannot repair wrong domain or missing consumer seam",
+      "serving_or_model": "Does not implement selector/authority/packing semantics",
+      "graph": "Requires native selection and complete source-score handoff, not engine replacement",
+      "required_fix_boundary": "IDs OR paths union constrained by qualification/discovery; semantic ordering before result and byte budgets"
+    },
+    {
+      "id": "genuine-semantic-ranking-miss",
+      "evidence_class": "retained exact ranking interpretation",
+      "observed": "Case89 overlay requires four sources; three at scorer K5, replay result rank8",
+      "exact_or_rescore": "Same vectors/domain should preserve this exact ordering; all candidates already present",
+      "serving_or_model": "New model/renderer may improve or regress, not measured; no old-output tuning",
+      "graph": "Recorded evidence navigation may help if contract explicitly requires it; do not invent derivation",
+      "scope": "Scorer-only metric; repeated sizes are not independent labels or shipped-output omissions"
+    },
+    {
+      "id": "template-label-primary-mismatch",
+      "evidence_class": "source and retained label comparison",
+      "observed": "Cases85/86/89/98/99; excluded seed, restrictive relation/target types, inactive correction endpoint; returned edges canonical",
+      "exact_or_rescore": "No path/primary-assembly fix",
+      "serving_or_model": "No path constraint fix",
+      "graph": "Reconcile contract/template/oracle and primary-versus-related channels before new freeze; same Cypher on new engine retains restrictions",
+      "historical": "Replacement-evidence 0of5 executed; no reviewed historical native mapper"
+    },
+    {
+      "id": "caveat-authority-abstention-disclosure-erasure",
+      "evidence_class": "explicit unexecuted classes plus accounting diagnosis",
+      "observed": "No outcome/caveat/literal-status mapper or calibrated cutoff; case76 whole-size sends include authorized pre-delete receipt; old vector row retained",
+      "exact_or_rescore": "Cannot qualify no-match, caveats, authority or erasure",
+      "serving_or_model": "Cannot establish consent, retention or temporal erasure",
+      "graph": "Needs native policy/assembly, generation ledgers, real transitions and whole-derived-store disposal/readback",
+      "frozen_failure_disposition": "Retain case76 failure; not proof of a post-delete send or successful erasure"
+    },
+    {
+      "id": "storage-access",
+      "evidence_class": "old operational failure plus new controlled mechanism",
+      "observed": "Old50k unique-storage-access failure; new idle CREATE succeeds and held-read CREATE errors; historical holder unknown",
+      "exact_or_rescore": "External eligible exact path can avoid query-time DDL",
+      "serving_or_model": "No graph storage-lock repair",
+      "graph": "Candidate-local once-built persistent index/quiescent publication can avoid operation; new lifecycle qualification required",
+      "not_proved": "No historical snapshot causation, core cure, retry policy or oldrun completion"
+    }
+  ],
+  "new_numeric_evidence": {
+    "evidence_class": "Observed existing private numerical event streams, not executed by this slice",
+    "binding": "USearch 2.26.6 f32 cosine; same HNSW/USearch family as Memgraph, alternative binding not independent algorithm",
+    "sizes": [
+      1000,
+      10000,
+      50000
+    ],
+    "dimensions": 64,
+    "queries_per_size": 8,
+    "top_k": 10,
+    "candidate_budget": 32,
+    "signed_controls_pass": true,
+    "exact_candidate_recall_at_10_all_queries": 1.0,
+    "hnsw_candidate_recall_ranges_at_10": {
+      "1000": [
+        0.9,
+        1.0
+      ],
+      "10000": [
+        0.5,
+        1.0
+      ],
+      "50000": [
+        0.2,
+        0.8
+      ]
+    },
+    "exact_rescoring_restored_missing_candidates": false,
+    "not_established": [
+      "AM 4096-D/1024-D retrieval",
+      "native eligibility",
+      "semantic relevance",
+      "coding benefit",
+      "graph replacement",
+      "historical failure cause",
+      "G1"
+    ]
+  },
+  "minimal_fresh_screen": {
+    "status": "Design proposal requiring parent independent review and exact closure freeze, not execution authorization",
+    "sample_size_assurance": "32 is a proposed bounded screen, not a statistical sufficiency theorem or replacement G1 denominator; inadequate power/calibration yields inconclusive",
+    "data": {
+      "new_independent_cases": 32,
+      "calibration": 8,
+      "blinded": 24,
+      "blinded_journeys": {
+        "coding": 12,
+        "investigation": 8,
+        "orientation": 4
+      },
+      "blinded_mechanisms": {
+        "semantic_primary": 16,
+        "typed_path": 8
+      },
+      "novelty": "New source content, identities, components and queries authored from canonical meaning without output access; not paraphrased or re-IDed old held-out tasks",
+      "coverage": [
+        "no-help",
+        "low-overlap paraphrase",
+        "multiple required sources",
+        "correction/conflict caveats",
+        "ID/path selection",
+        "hidden endpoints",
+        "unknown conditions",
+        "recorded versus inferred relations"
+      ],
+      "independent_denominator": "32 total; repeated sizes and variants do not multiply labels",
+      "truth_freeze": "Independent author and reviewer bind canonical bytes, source qualification, required/tolerated/forbidden primaries, caveats, paths, outcome/absence policy before runtime outputs"
+    },
+    "arms": [
+      {
+        "id": "reference-serving",
+        "server": "9341 source a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07",
+        "weight": "8B Q8_0 SHA256 d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb",
+        "ranking": "Complete native-eligible exact signed cosine"
+      },
+      {
+        "id": "candidate-serving",
+        "server": "Upstream b9360 source 6b4e4bd582e457a47ee7cd498058495f47fee228, newly bound selected platform closure",
+        "weight": "Same exact 8B Q8_0 bytes",
+        "ranking": "Same complete native-eligible exact signed cosine"
+      },
+      {
+        "id": "binding-comparison",
+        "input": "Identical per-profile persisted AM-shaped vectors and qualified domains",
+        "baseline": "Independent signed exact-cosine oracle",
+        "candidate": "Direct USearch f32 exact and separately optional HNSW at frozen budget32",
+        "isolation": "Separate from server/model and graph-arm changes; no blended causal conclusion"
+      }
+    ],
+    "model_or_renderer_change": "Not silently included; a named 0.6B or alternative-renderer arm requires explicit parent selection, independent design, complete re-embedding and its own fresh quality scope",
+    "graph_direction": "Core is externally selected direction, not a quality pass. Reference-versus-core original qualification remains separate; no inherited MAGE result",
+    "domain_and_scale": {
+      "lesson_sizes": [
+        1000,
+        10000,
+        50000
+      ],
+      "mandatory_bounded_case": "At least one actual native-eligible N>32 per size; report scorer K, N and candidate budget separately",
+      "dimensions": "4096 for fixed8B; 1024 only for separately selected0.6B",
+      "adversaries": [
+        "wrong context",
+        "ID selector",
+        "path selector",
+        "hidden",
+        "unknown condition",
+        "inactive",
+        "stale source"
+      ],
+      "no_global_topk_completeness_claim": true
+    },
+    "immutable_controls": [
+      "own canonical body plus declared scope renderer",
+      "versioned AM query prefix",
+      "native qualification/authority",
+      "same document and query model",
+      "actual loaded dependency/profile identity",
+      "request order and cache history",
+      "exact source-score consumer before native budgets",
+      "mandatory caveat precedence",
+      "recorded relation provenance"
+    ],
+    "review_before_execution": [
+      "Source-score producer and native consumer dispatch/packing",
+      "Seed primary versus optional related semantics and historical qualification if exercised",
+      "Real contract-derived outcome/caveat/no-match mapping",
+      "Source/profile/generation/privacy-epoch transitions",
+      "Immutable tokenizer/embedding attempt ledgers including failed transport",
+      "Exact source/input/template/renderer/scorer/model/runtime closure",
+      "Proposed targets and resource ceilings independently frozen by operator"
+    ],
+    "calibration": {
+      "use_old_outputs": false,
+      "policy": "Freeze cutoff method/value using only new calibration before opening new blinded scores; if infeasible retain raw ranks and leave abstention unqualified",
+      "post_blind_changes": "Development only; any changed protocol/model/threshold needs another untouched blind set"
+    },
+    "execution_policy": {
+      "owner": "Parent after independent review and explicit slot authorization",
+      "order": "Predeclare serial paired arm order, cold-launch policy and deterministic cache/request history",
+      "query_sweeps_per_size": 3,
+      "timing_scope": "Normally busy target host; serialize owned arms and record competing activity, not a quietmachine prerequisite. Warm variability only; no broadp95claim from tinydenominator.",
+      "no_retry_until_pass": true,
+      "raw_outputs": "Durably hash before blinded scoring; retain failures, unavailable cells, exact parameter values and cleanup"
+    },
+    "metrics": [
+      "Paired per-case required-primary recall at predeclared scorer K=max(3,required+1)",
+      "Candidate recall versus complete eligible exact cosine",
+      "Exact-rescored top-K overlap separate from candidate recall",
+      "Required typed-path recall and relation correctness",
+      "Native forbidden current-primary and disclosure counts",
+      "Mandatory caveat completeness",
+      "Abstention denominator and uncertainty",
+      "Source/vector coverage and exclusions",
+      "Native budget packing and final emitted order",
+      "Tokens and embedding fill",
+      "Exact search / ANN build, search, rescore separately",
+      "Graph load/rebuild and operational completion",
+      "End-to-end native query and checkpoint time-to-fresh",
+      "Peak RAM, disk, model bytes, startup and cold/warm distinction",
+      "Owned-resource cleanup and external preservation"
+    ],
+    "freshness": "Actual ordinary activeContext.md checkpoint commit to first qualified semantic read under exact new bank-state; stopped/interrupted controls separate",
+    "hard_gates": [
+      "Zero unsafe/hidden/inactive source exposed as current guidance",
+      "Zero forbidden disclosure or unapproved send",
+      "No missing mandatory caveat for returned primary",
+      "No false semantic absence or literal-as-semantic fallback",
+      "Source/profile/frontier freshness checks and complete domain",
+      "Typed relation assertions and channels correct",
+      "Missing real mapper/transition remains unqualified, never copied from oracle"
+    ],
+    "numerical_thresholds": "Existing proposals are not adopted automatically. Independent operator freeze required before outputs; do not derive acceptable loss/speed/tolerance from old opened outcomes or relax after new failures",
+    "recommendation_limits": [
+      "Binding-only result may support signed-score/resource recommendation, not semantic or coding benefit",
+      "Serving/model recommendation needs fresh paired AM quality without safety/caveat regression",
+      "ANN remains optional/unselected if frozen eligible-recall/resource target at budget<N is not met",
+      "Small screen cannot replace full original core/profile/platform/license/G1 obligations"
+    ]
+  },
+  "original_255_coverage": {
+    "authority": "ADR0024 original eight G1 research criteria, as amended by accepted ADR0027 graphdirection; no productionimplementation added",
+    "new_screen_is_unconditional_release_gate": false,
+    "new_screen_required_for": "A new independently qualified semantic/product improvement claim after opened outcomes informed changes",
+    "G1_acceptance": false,
+    "implementation_ready": false,
+    "old_results_preserved": true
+  },
+  "source_derivation": {
+    "raw_analysis_sha256": "cdaa18ccb6c64854a948ef87f284293ed95bd7262c7acad8392437669ab14598",
+    "raw_proposal_sha256": "9d4dd359a57c338065427322b829394fe823ab1f85fadda28dde363d493161ce",
+    "parent_changes": "Update published ADR0027 provenance/evidence paths, remove proposed-study-as-unconditional-G1 interpretation, retain normalbusyhost; original private drafts and old observations preserved."
+  }
+}

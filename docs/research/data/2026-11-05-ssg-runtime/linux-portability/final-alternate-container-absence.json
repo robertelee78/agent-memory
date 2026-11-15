@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "podman",
+    "container",
+    "exists",
+    "79acf5e099bb8be917b3694e71973ba4d1bf8b5ae956161177d905cddec2b4aa"
+  ],
+  "duration_seconds": 0.1354207992553711,
+  "exit": 1,
+  "start_unix": 1793998191.406846,
+  "stderr": "",
+  "stdout": ""
+}

@@ -1,0 +1,14 @@
+{
+ "argv": [
+  "sh",
+  "-c",
+  "curl -sSL --max-time 20 \"$0\" | shasum -a 256",
+  "https://raw.githubusercontent.com/memgraph/memgraph/v3.10.1/licenses/MEL.pdf"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.066,
+ "started_at": "2026-11-05T16:52:21.331484+00:00",
+ "stderr": "",
+ "stdout": "09b9a62f64f09073cbef3f348c58b2f1e4368d7c1b919e9d2952520ad77cd47e  -\n"
+}

@@ -1,0 +1,2805 @@
+{
+  "source_commit": "78eaf70a3cfc7c7e3c9444435715d7d437c242dd",
+  "encode": [
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 407,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 409,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 78,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 348,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 117,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 308,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 205,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 231,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 236,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 109,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_prompt.py",
+      "line": 59,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_prompt.py",
+      "line": 63,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 31,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 50,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 53,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 40,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 177,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 150,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 153,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_prompt.py",
+      "line": 71,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_prompt.py",
+      "line": 77,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_prompt.py",
+      "line": 81,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 36,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 38,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 100,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 33,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 67,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 92,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 99,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 105,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 108,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/turn_hook.py",
+      "line": 33,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/turn_hook.py",
+      "line": 37,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/admission.py",
+      "line": 413,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/admission.py",
+      "line": 419,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/artifact.py",
+      "line": 119,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/artifact.py",
+      "line": 95,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/assembly.py",
+      "line": 201,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/assembly.py",
+      "line": 203,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/authority.py",
+      "line": 25,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "allow_nan": "False",
+        "ensure_ascii": "False",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/authority.py",
+      "line": 98,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/authority.py",
+      "line": 101,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "line": 413,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "line": 205,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "line": 416,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_layout.py",
+      "line": 205,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_layout.py",
+      "line": 208,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_state.py",
+      "line": 131,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_state.py",
+      "line": 134,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "line": 656,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "line": 659,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "line": 302,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "line": 305,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/boundary_assessment.py",
+      "line": 11,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/checkpoint.py",
+      "line": 116,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "True",
+        "sort_keys": "True",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/checkpoint.py",
+      "line": 118,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "True",
+        "sort_keys": "True",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/checkpoint.py",
+      "line": 287,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/checkpoint.py",
+      "line": 122,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "True",
+        "sort_keys": "True",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/checkpoint.py",
+      "line": 289,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/claude_boundary.py",
+      "line": 105,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/claude_boundary.py",
+      "line": 172,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/claude_boundary.py",
+      "line": 41,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/client_hooks.py",
+      "line": 71,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/client_hooks.py",
+      "line": 57,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/client_hooks.py",
+      "line": 58,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/client_hooks.py",
+      "line": 43,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/client_hooks.py",
+      "line": 73,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/codex_boundary.py",
+      "line": 101,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/codex_boundary.py",
+      "line": 209,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/codex_boundary.py",
+      "line": 37,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/comparison.py",
+      "line": 332,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/comparison.py",
+      "line": 336,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/comparison.py",
+      "line": 339,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/comparison.py",
+      "line": 122,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/console.py",
+      "line": 267,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/consolidation.py",
+      "line": 401,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/consolidation.py",
+      "line": 403,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/developer_identity.py",
+      "line": 390,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/developer_identity.py",
+      "line": 42,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "ensure_ascii": "False",
+        "indent": "2",
+        "allow_nan": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/developer_identity.py",
+      "line": 393,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/diagnostics.py",
+      "line": 767,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/discovery.py",
+      "line": 336,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/discovery.py",
+      "line": 339,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/frontmatter.py",
+      "line": 81,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "allow_nan": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/governance.py",
+      "line": 660,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/governance.py",
+      "line": 662,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/hook_failure.py",
+      "line": 120,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/inactive.py",
+      "line": 118,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/inactive.py",
+      "line": 123,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/initialization.py",
+      "line": 280,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/initialization.py",
+      "line": 286,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/initialization.py",
+      "line": 513,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/initialization.py",
+      "line": 516,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/initialization.py",
+      "line": 289,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "line": 1603,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "line": 98,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 1591,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 1626,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 1597,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "line": 186,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "line": 190,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_publication.py",
+      "line": 533,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_publication.py",
+      "line": 535,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_publication.py",
+      "line": 540,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_publication.py",
+      "line": 547,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_refresh.py",
+      "line": 622,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_refresh.py",
+      "line": 640,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_refresh.py",
+      "line": 595,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_refresh.py",
+      "line": 613,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/migration.py",
+      "line": 902,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/migration.py",
+      "line": 918,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_boundary.py",
+      "line": 919,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_installation.py",
+      "line": 90,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_installation.py",
+      "line": 91,
+      "fn": "dumps",
+      "kw": {
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_projection.py",
+      "line": 297,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "allow_nan": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_projection.py",
+      "line": 351,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "allow_nan": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_projection.py",
+      "line": 397,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "allow_nan": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_transport.py",
+      "line": 1165,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_transport.py",
+      "line": 1164,
+      "fn": "dumps",
+      "kw": {
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/omp_transport.py",
+      "line": 1156,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/pack_validation.py",
+      "line": 556,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/private_workspace.py",
+      "line": 136,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/private_workspace.py",
+      "line": 138,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/project_identity.py",
+      "line": 463,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/project_identity.py",
+      "line": 466,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/projections.py",
+      "line": 106,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/projections.py",
+      "line": 109,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/purging.py",
+      "line": 344,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "line": 58,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "ensure_ascii": "False",
+        "allow_nan": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/records.py",
+      "line": 242,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False",
+        "allow_nan": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/records.py",
+      "line": 246,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/release_distribution.py",
+      "line": 69,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/release_distribution.py",
+      "line": 239,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "line": 325,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "line": 328,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "line": 144,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/runtime_faults.py",
+      "line": 67,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/scope_binding.py",
+      "line": 505,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/scope_binding.py",
+      "line": 508,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/scopes.py",
+      "line": 90,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/scopes.py",
+      "line": 93,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/security.py",
+      "line": 273,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/security.py",
+      "line": 276,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/semantic_sharing.py",
+      "line": 676,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/semantic_sharing.py",
+      "line": 683,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/sharing_boundary.py",
+      "line": 156,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/sharing_boundary.py",
+      "line": 159,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/sharing_recovery.py",
+      "line": 623,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/sharing_recovery.py",
+      "line": 625,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "line": 136,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "line": 141,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/turn_check.py",
+      "line": 165,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/turn_check.py",
+      "line": 114,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/turn_sources.py",
+      "line": 72,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/uninstallation.py",
+      "line": 243,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/updating.py",
+      "line": 398,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/validation_memo.py",
+      "line": 35,
+      "fn": "dumps",
+      "kw": {
+        "ensure_ascii": "False",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "scripts/capture_guide_examples.py",
+      "line": 37,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/capture_guide_examples.py",
+      "line": 20,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/check_execution_plan.py",
+      "line": 70,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 273,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 154,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 41,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 92,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 647,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 700,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 40,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 54,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 117,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 614,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 895,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 91,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 746,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 792,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 68,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 99,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 668,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 769,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_fixture.py",
+      "line": 23,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 29,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 120,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 124,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 141,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 154,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 146,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 208,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 180,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/literal_growth_probe.py",
+      "line": 28,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')"
+      }
+    },
+    {
+      "file": "scripts/evaluations/literal_growth_probe.py",
+      "line": 61,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/literal_growth_probe.py",
+      "line": 113,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/literal_growth_probe.py",
+      "line": 29,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 62,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 481,
+      "fn": "dump",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 482,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 315,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 24,
+      "fn": "dump",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 89,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 31,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 39,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 89,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 91,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 49,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 68,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_comparison_builds.py",
+      "line": 186,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_comparison_builds.py",
+      "line": 37,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True",
+        "separators": "(',', ':')",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_comparison_builds.py",
+      "line": 49,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "ensure_ascii": "False"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 47,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 143,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 55,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 80,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 89,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 113,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 79,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_qualification_matrix.py",
+      "line": 153,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 557,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 247,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 349,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 391,
+      "fn": "dump",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 550,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 221,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 96,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 342,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_smoke.py",
+      "line": 47,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 88,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 88,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 31,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 45,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 47,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 41,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 69,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 68,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 83,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 61,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/sharing_capacity_probe.py",
+      "line": 104,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/evaluations/sharing_capacity_probe.py",
+      "line": 96,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/guide_evidence.py",
+      "line": 148,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2"
+      }
+    },
+    {
+      "file": "scripts/guide_evidence.py",
+      "line": 150,
+      "fn": "dumps",
+      "kw": {}
+    },
+    {
+      "file": "scripts/run_contract_suite.py",
+      "line": 121,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "scripts/run_incident.py",
+      "line": 34,
+      "fn": "dumps",
+      "kw": {
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "scripts/test_gate.py",
+      "line": 399,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "sort_keys": "True"
+      }
+    },
+    {
+      "file": "scripts/test_gate.py",
+      "line": 397,
+      "fn": "dumps",
+      "kw": {
+        "indent": "2",
+        "sort_keys": "True"
+      }
+    }
+  ],
+  "decode": [
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 24,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 389,
+      "fn": "load",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 256,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 282,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/boundary_ledger.py",
+      "line": 301,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_prompt.py",
+      "line": 21,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_source.py",
+      "line": 41,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 64,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 136,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/claude_stop.py",
+      "line": 117,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_prompt.py",
+      "line": 29,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 48,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/codex_stop.py",
+      "line": 84,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/hooks/turn_hook.py",
+      "line": 22,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/artifact.py",
+      "line": 32,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object",
+        "parse_constant": "lambda _: (_ for _ in ()).throw(ContractError('Nonfinite declaration'))"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/authority.py",
+      "line": 14,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "line": 22,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "line": 410,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/bank_layout.py",
+      "line": 15,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/client_hooks.py",
+      "line": 28,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/console.py",
+      "line": 261,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/developer_identity.py",
+      "line": 26,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/developer_identity.py",
+      "line": 46,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/frontmatter.py",
+      "line": 32,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object",
+        "parse_constant": "lambda _: (_ for _ in ()).throw(ContractError('Non-finite JSON value'))"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/hook_failure.py",
+      "line": 82,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "line": 105,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "line": 321,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 566,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 1100,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 1101,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 1408,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 1412,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "line": 776,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_recovery_temps.py",
+      "line": 32,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_restore.py",
+      "line": 255,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/layout_restore.py",
+      "line": 118,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "line": 16,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "line": 181,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/memory_publication.py",
+      "line": 87,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/migration_contract.py",
+      "line": 60,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object",
+        "parse_constant": "lambda _: (_ for _ in ()).throw(ContractError('Nonfinite migration catalog'))"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/model_reference.py",
+      "line": 120,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/model_reference.py",
+      "line": 121,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/model_reference.py",
+      "line": 122,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/pack_validation.py",
+      "line": 379,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object",
+        "parse_constant": "lambda _: (_ for _ in ()).throw(ValueError('Nonfinite JSON'))"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/project_identity.py",
+      "line": 23,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/purging.py",
+      "line": 108,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/purging.py",
+      "line": 134,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique_object"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "line": 316,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "line": 350,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "line": 514,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "line": 413,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "line": 433,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "line": 411,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/records.py",
+      "line": 16,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/records.py",
+      "line": 17,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/records.py",
+      "line": 18,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/release_distribution.py",
+      "line": 64,
+      "fn": "loads",
+      "kw": {
+        "object_pairs_hook": "unique",
+        "parse_constant": "lambda _: require(False, 'Nonfinite release metadata')"
+      }
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/runtime_faults.py",
+      "line": 25,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/scopes.py",
+      "line": 12,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "line": 15,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/capture_guide_examples.py",
+      "line": 17,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/capture_guide_examples.py",
+      "line": 32,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/check_execution_plan.py",
+      "line": 11,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 54,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 78,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 89,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 176,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 177,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 51,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 64,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 224,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 70,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 76,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 98,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 236,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 246,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/distribution/release.py",
+      "line": 189,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 30,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 227,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 349,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 584,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 83,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 120,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 354,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 614,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 707,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 718,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 752,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 117,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 165,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 598,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 741,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 768,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 801,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 175,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 881,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/daily_use.py",
+      "line": 877,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 116,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/labeled_recall_probe.py",
+      "line": 142,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/literal_growth_probe.py",
+      "line": 27,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/literal_growth_probe.py",
+      "line": 59,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 265,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 82,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 115,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 209,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 215,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 38,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 130,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 136,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 223,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 225,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 412,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 426,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 303,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/omp_native_smoke.py",
+      "line": 418,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 15,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 50,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 58,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 22,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 22,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 53,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 74,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 76,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 77,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 79,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 80,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 82,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 17,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 18,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/public_release.py",
+      "line": 88,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_comparison_builds.py",
+      "line": 165,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 70,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_navigation_qualification.py",
+      "line": 116,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_qualification_matrix.py",
+      "line": 44,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_qualification_matrix.py",
+      "line": 98,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_qualification_matrix.py",
+      "line": 129,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 213,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 244,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 271,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 347,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 440,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_quality_qualification.py",
+      "line": 453,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 126,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 94,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 210,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 219,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 398,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/recall_refresh_qualification.py",
+      "line": 503,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 29,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 37,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 42,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 47,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 49,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/refresh_handoff.py",
+      "line": 78,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/sharing_capacity_probe.py",
+      "line": 43,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/evaluations/sharing_capacity_probe.py",
+      "line": 67,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/guide_evidence.py",
+      "line": 133,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/run_contract_suite.py",
+      "line": 28,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/run_incident.py",
+      "line": 18,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/test_gate.py",
+      "line": 35,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/test_gate.py",
+      "line": 97,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/test_gate.py",
+      "line": 218,
+      "fn": "loads",
+      "kw": {}
+    },
+    {
+      "file": "scripts/test_gate.py",
+      "line": 292,
+      "fn": "loads",
+      "kw": {}
+    }
+  ]
+}

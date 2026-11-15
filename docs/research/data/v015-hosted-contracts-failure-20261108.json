@@ -1,0 +1,40 @@
+{
+  "schema": "agent-memory/v015-hosted-contracts-terminal-disposition-v1",
+  "workflow_url": "https://github.com/robertelee78/agent-memory/actions/runs/42494359530",
+  "source_commit": "8a56e0e2e82b7224452a0559652b3f9f5aca4f85",
+  "status": "FAILED",
+  "jobs": {
+    "ubuntu_python_3_11": {
+      "result": "failure",
+      "registered_suites": 263,
+      "failed_suites": 37,
+      "not_applicable_suites": 1
+    },
+    "ubuntu_python_3_15": {
+      "result": "failure",
+      "registered_suites": 263,
+      "failed_suites": 33,
+      "not_applicable_suites": 1
+    },
+    "macos_python_3_11": {
+      "result": "cancelled",
+      "job_deadline_minutes": 180,
+      "final_json": false
+    },
+    "macos_python_3_15": {
+      "result": "cancelled",
+      "job_deadline_minutes": 180,
+      "final_json": false
+    }
+  },
+  "worker_deadline_seconds": 300,
+  "workers": 2,
+  "root_cause": "Under investigation. Missing successful registered case batch is secondary coverage aggregation failure, not an established root cause.",
+  "retracted_hypothesis": "Missing sys.dont_write_bytecode guards was inferred from truncated search output; actual relevant entries and generated wrapper already contain guards. No guard fix is justified by that inference.",
+  "constraints": [
+    "No rerun to confirm known failures.",
+    "No budget increase, dropped assertion, suite omission or source-cache deletion to obtain green.",
+    "No whole-release or platform acceptance inferred from scoped local successes."
+  ],
+  "runtime_changed": false
+}

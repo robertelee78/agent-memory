@@ -1,23 +1,22 @@
-# projectbrief
+# Project brief
 
-## Documentation to inspect
+agent-memory gives a fresh coding agent entering a project a quick picture of
+what the project is and why, how it is built, and its lessons (fixes, dead ends,
+the user's corrections and decisions). Memory is plain Markdown in the
+repository's `memory-bank/`, shared through Git. It never makes the user wait.
 
-- [README.md](../README.md)
-- [docs/mission.md](../docs/mission.md)
-- [docs/releases/v0.0.2.md](../docs/releases/v0.0.2.md)
+## Authority
 
-## Reviewed intent: shared-project-memory
+- **Product requirements:** [docs/mission.md](../docs/mission.md) plus ADR-0001–0012,
+  and the operator's lean design [docs/design/v0.0.15-lean.md](../docs/design/v0.0.15-lean.md)
+  (2026-11-15), which wins where they differ. Requirements added later by agents
+  (seals, proofs, frontier/holds, layout recovery, re-verification, unit/contract
+  test suites) were withdrawn; see the notice in [docs/adr/README.md](../docs/adr/README.md).
+- **Behaviour:** the code in `src/` and real use measured by `scripts/qa.sh`.
+- **Work and delivery:** AWA issues and milestones; live coordination: Vox.
+  Memory gives context and links, not permission.
 
-Agent-memory provides durable, source-linked repository context across harnesses, sessions, separate worktrees and machines; ordinary Markdown is the authority for memory.
+## Boundaries
 
-Applicability: `{"conditions": {}, "scope": "repository"}`.
-Reviewed value: `"One repository-bound shared Markdown bank"`.
-Evidence: [docs/adr/0001-local-first-authority-boundaries.md](../docs/adr/0001-local-first-authority-boundaries.md), [docs/adr/0010-memory-bank-file-contract.md](../docs/adr/0010-memory-bank-file-contract.md), [docs/adr/0012-git-shared-memory.md](../docs/adr/0012-git-shared-memory.md).
-
-## Reviewed intent: authority-boundaries
-
-Code/tests establish behavior, approved ADRs establish intent, AWA establishes work/delivery, and Vox establishes live coordination. Memory supplies context and links, not a duplicate tracker or permission source.
-
-Applicability: `{"conditions": {}, "scope": "repository"}`.
-Reviewed value: `"Authority remains with the relevant current source"`.
-Evidence: [docs/adr/0001-local-first-authority-boundaries.md](../docs/adr/0001-local-first-authority-boundaries.md), [docs/adr/0012-git-shared-memory.md](../docs/adr/0012-git-shared-memory.md).
+One repository-bound shared bank. No personal or per-developer memory, no
+database or daemon, no MCP server, no cross-project federation (deferred).

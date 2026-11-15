@@ -1,0 +1,56 @@
+{
+  "files": [
+    {
+      "bytes": 17117,
+      "path": "README.md",
+      "sha256": "fc5eb47916d15ae0b83512f13d5d1636479bc52ae36265da307eabe1bbbe4031"
+    },
+    {
+      "bytes": 9054,
+      "path": "common.py",
+      "sha256": "788a93404d84b1c19c29f572ebd2395e7e1a5306c99c78b4b004243ac13d7e10"
+    },
+    {
+      "bytes": 16498,
+      "path": "endpoint_controls.py",
+      "sha256": "ab6eb5adea154078fc44acb6200a6dca1f78fec3a7a7689dc4d70c317ff0d6ec"
+    },
+    {
+      "bytes": 8848,
+      "path": "execution-manifest.json",
+      "sha256": "231e50f36e1a1e2b0056f1dc85f2c450e5f4f4243b93cb34dfaf569c85226656"
+    },
+    {
+      "bytes": 964,
+      "path": "final-source-bindings.json",
+      "sha256": "f4bc4d54a1c6ad05b1d2d1f52355460e9e909b0958eb1feaebb69f9cbd7fb988"
+    },
+    {
+      "bytes": 35988,
+      "path": "graph_controls.py",
+      "sha256": "ede7d4e101b8a090fa087ea0c304c117d8627a741f97224e4bb61fe0f93ecc63"
+    },
+    {
+      "bytes": 532,
+      "path": "host-config.json",
+      "sha256": "a8b53a1abab826d651337a72fa644cc3ee1966cd5c91616873e3f79321870f83"
+    },
+    {
+      "bytes": 13945,
+      "path": "managed_endpoints.py",
+      "sha256": "e96645e04e002b8ff59bd9a9af0caf5883a616978a68c87b50bc908749370bf0"
+    },
+    {
+      "bytes": 6869,
+      "path": "prior-observations.json",
+      "sha256": "f15c10f5fbb99db0578ae3f41957deb105b3ff69eb7031e9e33b5685306f7543"
+    },
+    {
+      "bytes": 2684,
+      "path": "source-math-smoke.json",
+      "sha256": "e2d1f566597379edea37280bf78270f0effa9404a3d39dfa2f61f9ae8cdf2ccb"
+    }
+  ],
+  "schema": "am255/authored-artifact-inventory-v1",
+  "scope": "Authored research-only controllers/manifests/evidence before parent execution; no runtime pass"
+}

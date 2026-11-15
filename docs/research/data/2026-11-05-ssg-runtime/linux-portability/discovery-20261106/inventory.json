@@ -1,0 +1,152 @@
+[
+  {
+    "bytes": 1078,
+    "path": "LICENSE",
+    "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+  },
+  {
+    "bytes": 1556,
+    "path": "LICENSE.receipt.json",
+    "sha256": "24ee98107c55ffbb236337fc43e2b46019b3d274ef0f75ba4ca42c7f966296e0"
+  },
+  {
+    "bytes": 433,
+    "path": "binding.json",
+    "sha256": "c8101b05ac4f737d381d36644aa74f1427ec1c5a63264a80f0ede6bba5268d0b"
+  },
+  {
+    "bytes": 7401,
+    "path": "core-amd64-config.json",
+    "sha256": "9b238667bebda3688c17095dab5849fc37001b689bdb49bddd4817c2e4a29f9f"
+  },
+  {
+    "bytes": 1550,
+    "path": "core-amd64-manifest.json",
+    "sha256": "604256a26baa6e4f3963e3a46c5bcfd62832699a8358250fd9035330677b1209"
+  },
+  {
+    "bytes": 7408,
+    "path": "core-arm64-config.json",
+    "sha256": "a7f17ced5db19e818d2282d2706eea33705099428050b4e044b56a63d8084665"
+  },
+  {
+    "bytes": 1548,
+    "path": "core-arm64-manifest.json",
+    "sha256": "837a9114351c7a83b1014c52e189b575ff1b970a2822831b434f035895b463c1"
+  },
+  {
+    "bytes": 1112,
+    "path": "core-index.json",
+    "sha256": "702452b3dbed6c3b394b6dd3b0e87a8f702ad325e8f322688e096caf4f4cc824"
+  },
+  {
+    "bytes": 10189,
+    "path": "core-local.json",
+    "sha256": "40108ee0d721946aa39011aa252445fbbb83da9c64ed09a354459d0c934bcc55"
+  },
+  {
+    "bytes": 2860,
+    "path": "cpu.Dockerfile",
+    "sha256": "bdd254c68e95f078599e0b03c43d3244bd36314c7880b1e7e181ea37bc4cb09d"
+  },
+  {
+    "bytes": 1579,
+    "path": "cpu.Dockerfile.receipt.json",
+    "sha256": "643a40fbe1ddde7d6a4cf2a9956a1b12e9c5cb8d19c1b30a8464c8c0f1e64d72"
+  },
+  {
+    "bytes": 23944,
+    "path": "docker.yml",
+    "sha256": "cb646bf11acf7b1c75a2fb24e373a411fe2dc0b2f54dd6ffdec1e0447488ce63"
+  },
+  {
+    "bytes": 1594,
+    "path": "docker.yml.receipt.json",
+    "sha256": "3f594f39d448fc62604661936507b3e14bce960798b7f309e4f6525a805c8651"
+  },
+  {
+    "bytes": 298,
+    "path": "host.json",
+    "sha256": "92034c01201e4a66b40c4147c999ca44c27237831cfc74ee1c9763555c3a098d"
+  },
+  {
+    "bytes": 6538,
+    "path": "image-bindings.json",
+    "sha256": "fd06a5066222f413794d92c8db2bb98249bc4aa4005d2049cde5490d9db796ed"
+  },
+  {
+    "bytes": 11649,
+    "path": "mage-amd64-config.json",
+    "sha256": "52a569e1d739ef68bce2e6a8c917f7b840339a41cfdc4b62dbc1c4fa9bc01717"
+  },
+  {
+    "bytes": 1780,
+    "path": "mage-amd64-manifest.json",
+    "sha256": "d5dd1d4ab6de07f59e403e6014d79fbe73c0908873c445a981bf0b97039fbf5f"
+  },
+  {
+    "bytes": 11655,
+    "path": "mage-arm64-config.json",
+    "sha256": "0a33e4003b73cfc40bf85cd9ca621ccb32a23400023dddfc1341441112a7b7f8"
+  },
+  {
+    "bytes": 1780,
+    "path": "mage-arm64-manifest.json",
+    "sha256": "548bc18d4c8e2113dabda9a6956bbf6d9addc9d532d207a17d88afb267cc1272"
+  },
+  {
+    "bytes": 1118,
+    "path": "mage-index.json",
+    "sha256": "50a018f30d783be374f12e493c15d957fbf67155ffc9576527a384f928005d8c"
+  },
+  {
+    "bytes": 15291,
+    "path": "mage-local.json",
+    "sha256": "9ae176238e0e6f99d81095cd4eddf2f4b3258da7884776add8a0f51d42917c81"
+  },
+  {
+    "bytes": 42406,
+    "path": "release.json",
+    "sha256": "f97befdf335f651e7442b9e158b9d4e5a565cd1de784ce212e77bc3d214f7de6"
+  },
+  {
+    "bytes": 1930,
+    "path": "release.json.receipt.json",
+    "sha256": "6c579dcd19db9b8ce46f8b4e9fd898169dd0a469ce822c9413816cffed658c30"
+  },
+  {
+    "bytes": 55158,
+    "path": "release.yml",
+    "sha256": "41abed1345136bc6a49068ae7c0f16b4e2560e51f80d4c71011873f413c688af"
+  },
+  {
+    "bytes": 1601,
+    "path": "release.yml.receipt.json",
+    "sha256": "b83bf4682f98627c79ae4aba0a4d394f8e5f80c66913c01b27cecf57df5a1867"
+  },
+  {
+    "bytes": 2238,
+    "path": "selected-release.json",
+    "sha256": "a1e581e3492fa022269d2cda89948192c9a0b6afef9eaf4bc034f222978e23f4"
+  },
+  {
+    "bytes": 457,
+    "path": "server-b9360-tag.json",
+    "sha256": "04f049a3dea19b6b9f60c3f68336e427cea465c1e913b07e296f8366d876d828"
+  },
+  {
+    "bytes": 1545,
+    "path": "vm.json",
+    "sha256": "e41caab60144d4d76dae5b13a068ae18e3718fe99c090d20c3dcf0c06c375e62"
+  },
+  {
+    "bytes": 50481,
+    "path": "workflows.json",
+    "sha256": "a6c8df32298dc2530daa6101986ea0d970a21d60dce2adc9a678441bad65182b"
+  },
+  {
+    "bytes": 2003,
+    "path": "workflows.json.receipt.json",
+    "sha256": "ceecea3135aa912c1c89f14b268b3f6645100f278d2852403866d7ecf1f7ed5f"
+  }
+]

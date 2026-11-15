@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "podman",
+    "version"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.12170366704231128,
+  "started_at": "2026-11-06T19:23:16.203741+00:00",
+  "stderr": "",
+  "stdout": "Client:        Podman Engine\nVersion:       6.1.4\nAPI Version:   6.1.4\nGo Version:    go1.27.2\nBuilt:         Mon Oct 12 10:07:47 2026\nBuild Origin:  brew\nOS/Arch:       darwin/arm64\n\nServer:       Podman Engine\nVersion:      5.8.8\nAPI Version:  5.8.8\nGo Version:   go1.26.8-X:nodwarf5\nGit Commit:   ee099ca84b6c99376cefa765c84bf2082628e336\nBuilt:        Mon Sep 28 17:00:00 2026\nOS/Arch:      linux/arm64\n"
+}

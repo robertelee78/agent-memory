@@ -1,0 +1,43 @@
+{
+  "schema": "agent-memory/owned-instruction-ancestor-qualification-v1",
+  "status": "scoped controlled consumer passes, not native or release acceptance",
+  "source_commit": "398d5eab4e7995414d73f0a9b45e15c3103f736c",
+  "runtime_file": "skills/agent-memory/scripts/agent_memory/omp_installation.py",
+  "runtime_sha256": "f9180b25d82b72cddc742d888361791a3387b704c58e978b786b4bf6bc33e9b2",
+  "problem": "Directory sibling churn invalidated a genuine unchanged manual witness through directory link-count/size/time pins.",
+  "fix": "Pin ancestor directory device/inode/mode/uid/gid while preserving full final manual/symlink stability, no-follow named identity, receipt and artifact-byte verification.",
+  "review": {
+    "runtime": "Opus source PASS; test isolation and nonportable link-count assertion corrected before final worker runs",
+    "scope": "No full native/source coverage or release verdict"
+  },
+  "workers": [
+    {
+      "source_commit": "398d5eab4e7995414d73f0a9b45e15c3103f736c",
+      "passed": true,
+      "timed_out": false,
+      "elapsed_seconds": 62.62798616697546,
+      "suite": "omp-owned-instruction-binding-races"
+    },
+    {
+      "source_commit": "398d5eab4e7995414d73f0a9b45e15c3103f736c",
+      "passed": true,
+      "timed_out": false,
+      "elapsed_seconds": 109.39150799997151,
+      "suite": "omp-owned-instruction-capture"
+    },
+    {
+      "source_commit": "398d5eab4e7995414d73f0a9b45e15c3103f736c",
+      "passed": true,
+      "timed_out": false,
+      "elapsed_seconds": 144.95400487497682,
+      "suite": "omp-owned-instruction-recovery"
+    }
+  ],
+  "worker_deadline_seconds": 300,
+  "not_qualified": [
+    "Actual post-fix native source coverage",
+    "Cross-platform matrix",
+    "Whole #249 acceptance",
+    "Release delivery"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "attempts": [
+    {
+      "error": "URLError"
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.004890999989584088,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.004781499970704317,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.004892333003226668,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.004889958014246076,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 15,
+      "response_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "seconds": 0.005194208992179483,
+      "status": 200,
+      "usage": null
+    }
+  ],
+  "seconds": 1.0609076250111684,
+  "successful_health": {
+    "body": {
+      "status": "ok"
+    },
+    "response_bytes": 15,
+    "response_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+    "seconds": 0.005194208992179483,
+    "status": 200
+  }
+}

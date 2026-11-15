@@ -1,0 +1,36 @@
+{
+  "case_ordinal": 4,
+  "caveats": {
+    "executed": false,
+    "prerequisite": "No reviewed caveat assembler"
+  },
+  "costs": {},
+  "executed": false,
+  "native": {
+    "prerequisite": "Synthetic missing native execution",
+    "request_valid": null
+  },
+  "operation": "semantic-recall",
+  "outcome": {
+    "executed": false,
+    "prerequisite": "No reviewed outcome mapper"
+  },
+  "prerequisites": [
+    "EXPLICITLY SYNTHETIC scorer/math fixture; never a model/graph/native qualification"
+  ],
+  "provider": {
+    "executed": false,
+    "prerequisite": "Synthetic scorer smoke sends nothing to a provider"
+  },
+  "schema": "am255/independent-case-observation-v1",
+  "semantic": {
+    "executed": false,
+    "prerequisite": "Synthetic case has no semantic execution"
+  },
+  "size": 1000,
+  "typed": {
+    "executed": false,
+    "prerequisite": "Synthetic case has no typed execution"
+  },
+  "variant": "base"
+}

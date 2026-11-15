@@ -1,0 +1,139 @@
+{
+  "schema": "am249/stock-native-negative-scoped-proof-v1",
+  "date": "2026-11-09",
+  "source_commit": "d171f85ab79896231489748b1ace9247b29dfcd2",
+  "driver_sha256": "fd6ed021d1cf25f9bb7c630e28a43116dd80d364b54951750805df4f443e170f",
+  "plan_sha256": "94aff9462efb8976261fc0e65461b7d45f9ad9470f67d79edf65c70872326b47",
+  "approval_sha256": "a21b1a828c3a8131a5b81d1f3027f9b9f9eb5b12abec27e3601b40c548551aa2",
+  "source_binding_sha256": "639ebbc06ff3212f0b4c54087ee6d9be8cc8bf46bd8148104d6ba27fd76f2fa1",
+  "source_archive_sha256": "7cf9c838df157baee4c947fcf62f294f321ec0e081f0b003c835ff05c3fe3e92",
+  "stock_native_binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "model": "openai-codex/gpt-6.1-sol",
+  "outcome": "failed-qualification",
+  "failures": [
+    {
+      "type": "Blocked",
+      "code": "finite-worker-OPEN-or-terminal-outcome-unavailable"
+    },
+    {
+      "type": "Blocked",
+      "code": "worker-nonzero-unknown-OPEN-or-source-outcome-transition-incomplete"
+    }
+  ],
+  "processes": {
+    "all_four_source_workers_and_native_processes_terminal": true,
+    "signals_sent": false,
+    "basis": "Post-native PID absence plus exactly one integer worker finish; not an atomic lifetime proof"
+  },
+  "integrity": {
+    "approved_inputs_and_installed_files_modes_rechecked": true,
+    "unrelated_feature_HEAD_index_extension_receipt_preserved": true,
+    "scope": "Endpoint comparison only, not transient-drift or atomicity proof"
+  },
+  "print_short": {
+    "native_exit": 0,
+    "source_worker_exit": 0,
+    "source_stream_closed": true,
+    "verified_source_attempts": 11,
+    "valid_pending_assessments": 2,
+    "assessment_completed": false
+  },
+  "rpc": {
+    "attempted_switch_fork_and_learning": true,
+    "native_exit": 0,
+    "source_worker_exits": [
+      0,
+      1,
+      0
+    ],
+    "open_worker_missing_outcome_sequence": 135,
+    "old_transition_final_view_resolved": false,
+    "wake_reservations_observed": 0,
+    "verified_finished_canonical_transaction_receipts": 1,
+    "canonical_changed_paths": [
+      "memory-bank/MEMORY.md",
+      "memory-bank/history/events/54c786b9-b5d4-430d-9d9e-bfef5fd2ad19.md",
+      "memory-bank/topics/fd02b0fe-a76d-4f4c-978f-58efef90a631.md"
+    ],
+    "positive_automatic_model_forgets_adjudication": false
+  },
+  "first_escaping_fault": {
+    "exception_type": "ContractError",
+    "sequence": 135,
+    "stage": "run-execute-escaped",
+    "source_locations": [
+      {
+        "source": "scripts/agent_memory/omp_stream.py",
+        "line": 1565
+      },
+      {
+        "source": "scripts/agent_memory/omp_stream.py",
+        "line": 978
+      },
+      {
+        "source": "scripts/agent_memory/omp_stream.py",
+        "line": 861
+      },
+      {
+        "source": "scripts/agent_memory/omp_stream.py",
+        "line": 751
+      },
+      {
+        "source": "scripts/agent_memory/omp_stream.py",
+        "line": 667
+      },
+      {
+        "source": "scripts/agent_memory/omp_stream.py",
+        "line": 608
+      },
+      {
+        "source": "scripts/agent_memory/omp_installation.py",
+        "line": 252
+      },
+      {
+        "source": "scripts/agent_memory/omp_boundary.py",
+        "line": 54
+      },
+      {
+        "source": "scripts/agent_memory/scope_binding.py",
+        "line": 152
+      },
+      {
+        "source": "scripts/agent_memory/scope_binding.py",
+        "line": 164
+      },
+      {
+        "source": "scripts/agent_memory/scope_binding.py",
+        "line": 66
+      },
+      {
+        "source": "scripts/agent_memory/project_identity.py",
+        "line": 285
+      },
+      {
+        "source": "scripts/agent_memory/project_identity.py",
+        "line": 242
+      },
+      {
+        "source": "scripts/agent_memory/project_identity.py",
+        "line": 155
+      }
+    ],
+    "post_exception_diagnostic_pins_equal": true,
+    "observed_localization": "Canonical bank marker guard at project_identity.py:155",
+    "marker_bytes_owner_and_concurrency_at_failure_observed": false,
+    "causal_limit": "Legitimate concurrent canonical writer versus persistent/interrupted marker remains unproven. This does not establish the original R5b cause."
+  },
+  "source_gate_reviews": {
+    "model": "anthropic/claude-opus-5-5",
+    "R7_unexecuted": "Both reviewers rejected overbroad pending exemption",
+    "R7b_executed": "Both reviewers passed narrowed source gate only",
+    "gate_smoke": "Two real valid pending-assessment rows and18 negative predicate cases; not regraded native acceptance"
+  },
+  "private_evidence": {
+    "archive_sha256": "22edecd960c449cc0a1bde7d7d5aec1e8f4133cf272e40cf2a75ff8dc6eb2b64",
+    "raw_native_sessions_excluded": true,
+    "failed_world_retained_unmodified": true
+  },
+  "full_native_or_release_acceptance": false
+}

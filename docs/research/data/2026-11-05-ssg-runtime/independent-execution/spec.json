@@ -1,0 +1,84 @@
+{
+  "schema": "am255/independent-execution-design-v2",
+  "status": "Held-out-informed future research correction; new independent review and full closure freeze required; no rerun or acceptance",
+  "purpose": "Exercise independently authored AM-shaped query and typed-relationship labels against actual embeddings, persisted exact cosine and an owned graph. Not production P1/G3 implementation.",
+  "authoring_am_commit": "175d21fa26bbef41f8ec859b463876934e16db79",
+  "suite_sha256": "36b663df90a5002ef93996ccc76e0a5de932f984d4a35178fe32b6f74e83b21f",
+  "labels_sha256": "39b78cd401b4170cc0dcaa35df18dd914477bd9b4a40532d079fd4024ac5c43b",
+  "native_binding": "Use the original frozen authoring checkout and its unchanged full source/hash validator. Do not disable its hash checks or claim current integration-runtime compatibility. The recipe itself gets a separate exact source freeze before execution.",
+  "sizes": [1000, 10000, 50000],
+  "fixtures": "Unchanged semantic-navigation-v3-parent-scopes plus the frozen relationship overlay and three authored canonical mutations. Reuse source-identical immutable vectors only within this new explicitly fingerprinted execution, not old unhashed-runtime runs.",
+  "input_oracle_separation": {
+    "executor_inputs_only": ["case_ordinal", "partition", "operation", "request", "context_truth", "template.seed", "template.historical", "template.component", "template.relations", "mutations"],
+    "oracle_only_after_raw_output_hashes": ["descriptive case_id", "split", "primary", "mandatory_caveats", "relationships", "disclosure", "availability", "rationale", "emit-oracles forbidden strings"],
+    "enforcement": "A separate input compiler writes an exact allowlisted input file and its hash before execution. The executor accepts only that file, not suite.json or expanded oracles. A separate scorer opens oracle fields only after raw outputs are durably hashed. Freeze/review compiler, executor, scorer and exact template/renderer bytes before output.",
+    "case_partition": "Descriptive case_id and split live only in a separate hash-bound scorer map; executor receives opaque integer ordinals. Partition selects the canonical fixture variant, not a ranking feature. Compiler resolves seed/deferred/mutation refs from the actual canonical fixture to id/version/path; executor rechecks those bindings at every size. new_record is a cross-check of the real mutator output, never an injected answer. No oracle record catalog is forwarded."
+  },
+  "resource_ceiling_not_acceptance_target": {
+    "serial_embedding_processes": 1,
+    "embedding_threads": 4,
+    "graph_instances_at_once": 1,
+    "graph_cpus": 2,
+    "graph_memory_gib": 12,
+    "graph_network": "new exact-owned instance, loopback Bolt only; default container network is not an egress proof",
+    "vm_precondition": "Retain actual Podman VM total/available memory and running-resource inventory before starting. A 12 GiB container limit is a ceiling, not proof the VM can supply it; unavailable capacity remains a prerequisite.",
+    "host_scope": "Ordinary shared macOS arm64 host with Linux-arm64 Podman graph. No clean timing/performance acceptance and no overlap with the other assigned heavy #255 slice. No #206 denominator change."
+  },
+  "profile": {
+    "reference_server_source": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07",
+    "reference_weight_sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb",
+    "reference_dimension": 4096,
+    "identity": "Freeze actual executable, loaded local backend dependency closure and exact weight hashes before outputs; retain source/build/profile/renderer fingerprints and explicit OS shared-cache limitations.",
+    "parameters": "Metal, context8192, poolinglast, parallel1, batch/ubatch8192, four generation/batch/HTTP threads, explicit cache-ram0; slot-local prefix reuse remains enabled and measured, not described as disabled.",
+    "document_renderer": {"prefix": "", "format": "{canonical_body}\nScope: {canonical_scope}", "version": 1, "neighbor_bodies": false},
+    "query_renderer": {"prefix": "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: ", "format": "{prefix}{authored_query}", "version": 1},
+    "scope_framing": "canonical_scope is the exact native string, UTF-8 encoded verbatim, not JSON-quoted, trimmed or case-normalized; canonical_body bytes and trailing newlines are preserved before the literal newline Scope: space framing.",
+    "batch_limit": 8,
+    "normalization": "Validate response count/index/dimension/finite/nonzero values before float32 storage; normalize both stored and query norms for signed cosine, float64 accumulation."
+  },
+  "request_schedule": {
+    "sizes": "1000 then10000 then50000; cold owned model launch per size, no cross-size vector reuse or inherited old-run runtime identity.",
+    "variants": "Execute the88 base cases on base and all101 cases on overlay, including each case's declared mutation stage. Manifest observation identity is(size,variant,case_ordinal); base-versus-overlay counterparts are separate controls, not extra independent labels or a padded held-out denominator.",
+    "documents": "Contiguous batches of at most8 belong to exactly one first-send canonical generation, in base, overlay, then mutation-declaration order. Deduplicate only exact rendered bytes under the identical frozen profile within this size. Each persisted vector row retains every generation/source-key/file-hash membership; actual requests retain their complete original first-generation source keys, request bytes and first-send attribution. Reuse is not fresh inference.",
+    "queries": "Suite case order; each distinct exact rendered query is embedded once per size at its first eligible, approved occurrence. Repeated text reuses that same vector across case contexts; no per-case order choice. Calibration outputs and candidate-cutoff freeze precede held-out scoring.",
+    "history": "Retain a global immutable scientific request ledger, exact frozen batch schedule and complete per-generation coverage separately from case delivery accounting. Each case binds its generation, all actual first-generation requests and explicit prior-generation reused requests. Never filter keys out of a shared real batch; hard global exclusions apply to all retained requests. Mutation-local disclosure labels apply only to actual sends first attributed to that generation; prior authorized sends remain visible and are not retroactive post-delete disclosure."
+  },
+  "graph_profile": {
+    "image": "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+    "arm64_manifest": "sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39",
+    "config_image": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+    "driver": "neo4j==5.28.2",
+    "numeric_dependency": "numpy==2.2.6",
+    "flags": ["--telemetry-enabled=false", "--storage-properties-on-edges=true", "--storage-wal-enabled=true", "--storage-snapshot-interval-sec=300", "--storage-snapshot-on-exit=true", "--log-level=WARNING", "--also-log-to-stderr=true"],
+    "ownership": "One new owned project/generation instance with two exact-owned data/log volumes, default image UID101/GID103, loopback Bolt, no adoption of old graphs. Verify image/config and full identity receipts before read/write/disposal. Core is not adopted by this reference run; licenses/disposition remain open."
+  },
+  "provider_boundary": {
+    "documents": "Only active visible natively security-safe canonical record/context sources in the exact generation projection may be sent for that generation. Every original batch key, rendered hash, canonical source hash and complete generation membership is bound and checked fail-closed. Hidden/unsafe hard exclusions apply globally. A deleted record absent from a new projection cannot be sent as part of that projection, but its previously authorized request and retained vector remain scientific evidence, not erased data.",
+    "queries": "Real AM175 request/security/branch validation precedes each query. Endpoint approval here is the harness's explicit exact-owned loopback profile gate, not a nonexistent AM175 endpoint-approval API. This yields raw local observations, not production approval-required or other semantic-result statuses.",
+    "observability": "Synthetic request source/renderer hashes, token counts, vector hashes, dependency identity and raw scientific outcomes; no credentials, production memories, persistent query logging in the product, or real exports."
+  },
+  "exact_and_ann": {
+    "native_qualification": "Use real authoring-AM request/context/eligibility functions, cross-checked with native evaluate_sources on every distinct finite context. Expected labels are used only after results exist, never for selection or projection.",
+    "persisted_exact": "Source/profile-bound float32 vector store with full coverage manifest. Chunked float64 signed-cosine accumulation over the complete freshly eligible vector domain, deterministic key tie-break; no global top-K then filtering.",
+    "ann": "One fixed trusted label and digest-bound index for one complete native eligible domain at a time. Set the label only on exactly qualified source keys, build the index, query, retain full cardinality/capacity/raw engine order/distance/similarity/candidates/exact rescoring, then drop that index and remove that owned label before the next domain. Retain deletion/readback receipts. No case-derived Cypher or oracle relationships. Retrieval candidate budget16 is independent of labels; scoring top-K is computed only in the scorer.",
+    "ann_candidate_budget": 16,
+    "interpretation": "Per-domain prefiltered ANN is an idealized upper bound with perfect native pre-filtering and an explicit per-context index-build cost, NOT a deployable general AM eligible-ANN implementation. Generation-wide ANN followed by native filtering, if measured, is separately labeled incomplete and cannot prove eligible top-K/absence. Do not use unchanged SSG search for signed-cosine AM ranking.",
+    "recall": "Compare eligible ANN candidate recall and exact-rescored top-K to complete eligible exact cosine. Report k<N versus exhaustive cells separately. A second explicitly numerical-only full-projection index may measure 1k/10k/50k vector scaling, never claim native eligibility or semantic absence.",
+    "known_failure": "SSG's raw ANN similarity inverts the antiparallel control; never use that score as accepted signed cosine. Preserve raw error, do not repair evidence. ANN remains optional/ineligible pending full independent acceptance."
+  },
+  "typed_projection": {
+    "nodes": "Tagged project/record-version/context/route/scope/condition/evidence/origin keys, exact canonical source hashes and physical generation identity.",
+    "edges": "Recorded correction/supersession/derived-from, evidence, scope, condition, routing and origin assertions with asserting source/hash; no invented durable semantic relations. Inferred similarity stays separate.",
+    "templates": "Freeze exact parameter-value-only Cypher and EXPLAIN plans from contract table, independent of case oracle fields: replacement-evidence <=4 hops/64 paths; component-attempts <=2 hops/64 candidates; recorded-related <=2 hops/32 candidates per page; database-time diagnostic bound250ms each, not an accepted target. Explicit seed/historical/component/relations parameters come only from input compiler. Endpoint/provenance qualification is source/native-derived; unsupported historical/outcome/caveat mappings stay unexecuted.",
+    "selection": "Do not traverse shared origin as task relevance; do not equate co-routing with an asserted lesson relationship. Explicit origin/co-routing views are provenance/navigation only."
+  },
+  "scoring": {
+    "raw_quality": "Report raw primary rank/score and required-primary top-K recall, actual typed edges and canary observations only where exercised. AM175 has no semantic-result outcome or mandatory-caveat assembler: those oracle classes stay unexecuted unless a separately reviewed contract-derived research mapper is frozen before outputs. Do not copy expected outcomes into results. No synthesized answers or coding-benefit claim.",
+    "cutoff": "No held-out-derived semantic cutoff. If a candidate cutoff is evaluated, derive it exclusively from frozen calibration outputs, durably freeze its method/value before opening held-out scores, and report infeasibility instead of relaxing a target.",
+    "runtime_cells": "Earlier runtime-control evidence is a separate mechanism study and fills NONE of this suite's request cells. Stopping the owned server exercises raw service-stopped/literal-fallback observations only; status/exit/no-match mapping remains unexecuted without a separately reviewed mapper. Remote-unapproved/opaque-remote-alias cells remain unexecuted without a real separately authorized remote endpoint. Profile-change/branch-generation/first-fill-interruption/prior-generation/correction-stale cells require their own actual source/profile/generation state transition, otherwise are unexecuted with a named prerequisite. A mock expected-status mapper cannot count a pass.",
+    "delete_erasure": "UNEXECUTED: no actual temporal delete/erasure phase exists. A separately source/profile/generation-bound controlled implementation must establish pre-delete state and authorized send, perform the real canonical delete and rebuild, purge/read back derived vectors and graph/index state, bind provider/cache lifecycle/disposal and retained-evidence policy, and perform forensic absence/readback checks. Projection membership or zero new requests cannot prove any of this. Independent review plus a new complete closure freeze of all changed source/spec/IO/input/profile/coverage bytes is mandatory before any actual rerun.",
+    "interpretation": "This correction was informed by opened held-out outcomes. Do not relabel or rescore the immutable failed reference; frozen old scorer remains its authority. Repeated affected labels are not independent held-out qualification and cannot qualify a newly tuned cutoff. Unknown runtime, status, consent and erasure classes stay unexecuted; no overall pass flags.",
+    "targets": "Suite quality/resource targets remain proposed; actual observations plus independent review and explicit operator disposition are required. Missing platform/profile/license evidence is not a pass."
+  },
+  "completion": "Retain immutable inputs, code freeze, failures, raw measurements and ownership-bound cleanup; update existing brief and contract only after actual proof. One missing source/profile permission or unsupported runtime state must not be mislabeled complete."
+}

@@ -1,0 +1,360 @@
+{
+  "G1_acceptance": false,
+  "any_amd64_execution": false,
+  "legal_acceptance": false,
+  "profile_acceptance": false,
+  "results": {
+    "core": {
+      "amd64_identity": {
+        "compressed_bytes": 226079840,
+        "config": "sha256:fd953086aef643038bf6e6fc92f9a2764fda17d6126587e4b707c638c4fd2a09",
+        "layers": [
+          {
+            "digest": "sha256:2f7571f14c6ff1d57c690bd1924fd1e125936eb144dc51eb20b4172776a5c743",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 30599957
+          },
+          {
+            "digest": "sha256:d65ff1f94c3ac8f69040a7d173afd43652935bc84ecbff1fcaa482dff27ab758",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 74993224
+          },
+          {
+            "digest": "sha256:a65e690dfe4571632346fc719a830e99e49d9c6b852fd4a6b91dfbc38e760514",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 120486627
+          },
+          {
+            "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 32
+          }
+        ],
+        "manifest": "sha256:bd01a159023283b56b807943ed28225c8f662920b64317f26da7d9f0f5b19de4",
+        "metadata_only": true,
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        "reference": "docker.io/memgraph/memgraph@sha256:bd01a159023283b56b807943ed28225c8f662920b64317f26da7d9f0f5b19de4"
+      },
+      "amd64_memgraph_binary": {
+        "bytes": 72666656,
+        "elf_machine": 62,
+        "gid": 0,
+        "layer": "sha256:d65ff1f94c3ac8f69040a7d173afd43652935bc84ecbff1fcaa482dff27ab758",
+        "link": null,
+        "mode": 493,
+        "path": "usr/lib/memgraph/memgraph",
+        "sha256": "70b9b4d25aa5e9b8f4d6cae4ad1d2cb6d778a7f2d782e672e2a021369d32d6f3",
+        "type": "file",
+        "uid": 0
+      },
+      "amd64_mgconsole": {
+        "bytes": 2438848,
+        "elf_machine": 62,
+        "gid": 0,
+        "layer": "sha256:d65ff1f94c3ac8f69040a7d173afd43652935bc84ecbff1fcaa482dff27ab758",
+        "link": null,
+        "mode": 493,
+        "path": "usr/bin/mgconsole",
+        "sha256": "11270c154a73ea75f24cecf949636ec333ecc4443c366175e89b806f81e76989",
+        "type": "file",
+        "uid": 0
+      },
+      "amd64_packages_without_copyright": [
+        {
+          "maintainer": "Matt James <matthew.james@memgraph.io>",
+          "name": "libssl3t64",
+          "version": "3.5.4-0ubuntu0custom1"
+        },
+        {
+          "maintainer": "tech@memgraph.com (Memgraph Ltd.)",
+          "name": "memgraph",
+          "version": "3.10.1-1"
+        },
+        {
+          "maintainer": "Matt James <matthew.james@memgraph.io>",
+          "name": "openssl",
+          "version": "3.5.4-0ubuntu0custom1"
+        }
+      ],
+      "amd64_python_missing_license_files": [],
+      "amd64_regular_file_bytes": 620693003,
+      "amd64_source": {
+        "class": "new exact merged layer contents; nonexecuting",
+        "path": "amd64-contents-20261106-qualified/core/contents.json",
+        "sha256": "d9b283175fa5aaafed835f19101573d1211d6b6346de332531bc5dfd2e4316af"
+      },
+      "arm64_source": {
+        "class": "prior observed pinned arm64 inventory",
+        "path": "../core-comparison/observed-20261106/core-bom.json",
+        "sha256": "02328c6c4af3714fe19f68c764bc95c3e4126974a7e18942b0f691d6333db3c9"
+      },
+      "installed_packages": {
+        "amd64": 129,
+        "arm64": 129,
+        "differences": {
+          "different_versions": {},
+          "only_amd64": {},
+          "only_arm64": {},
+          "same_name_version_count": 129
+        }
+      },
+      "memgraph_legal": {
+        "amd64_count": 35,
+        "arm64_count": 35,
+        "different": {},
+        "identical_path_and_bytes": true
+      },
+      "nested_vendor_python_metadata": {
+        "amd64_count": 0,
+        "amd64_records": [],
+        "scope": "Additional nested metadata surface; prior arm64 importlib inventory did not enumerate it, so not evidence of architecture differences"
+      },
+      "python": {
+        "amd64": 24,
+        "arm64": 24,
+        "differences": {
+          "different_versions": {},
+          "only_amd64": {},
+          "only_arm64": {},
+          "same_name_version_count": 24
+        }
+      },
+      "query_modules": {
+        "amd64": 34,
+        "arm64": 34,
+        "only_amd64": [],
+        "only_arm64": []
+      },
+      "unknowns": [
+        "No foreign binary executed: package/METADATA declarations are not runtime validation",
+        "No reproducible build or binary-source attestation",
+        "Third-party versions and static/dynamic linkage not completely resolved",
+        "Wheel-vendored native-library license coverage remains incomplete",
+        "All local/distribution/hosted operator/counsel dispositions remain pending",
+        "Hash coverage is selected notices/metadata/native/module files, not every rootfs byte"
+      ]
+    },
+    "mage": {
+      "amd64_identity": {
+        "compressed_bytes": 726398809,
+        "config": "sha256:064aa6d4f8b2bcb90880def1752a746a15c42839fb190fed42ab7f8fb696219a",
+        "layers": [
+          {
+            "digest": "sha256:2f7571f14c6ff1d57c690bd1924fd1e125936eb144dc51eb20b4172776a5c743",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 30599957
+          },
+          {
+            "digest": "sha256:7412cdb2ae8c749b2f2a11d1dc15264a7c3df2adcbb9228993e63ee2da1b3296",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 60804438
+          },
+          {
+            "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 32
+          },
+          {
+            "digest": "sha256:38263f6bd6be44598e0d6084a57ec2d606ed18f6c30c36000cdf06b087df023d",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 2764840
+          },
+          {
+            "digest": "sha256:8f520ea5207cf32113759ee380125e11cbf9b996fdf5587f302f1ec177d92f12",
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 632229542
+          }
+        ],
+        "manifest": "sha256:1b903aa7c4502a55ccdf76d034156542a56d0c4a00e2a760a10bf5968de8b3c4",
+        "metadata_only": true,
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        "reference": "docker.io/memgraph/memgraph-mage@sha256:1b903aa7c4502a55ccdf76d034156542a56d0c4a00e2a760a10bf5968de8b3c4"
+      },
+      "amd64_memgraph_binary": {
+        "bytes": 72666656,
+        "elf_machine": 62,
+        "gid": 0,
+        "layer": "sha256:7412cdb2ae8c749b2f2a11d1dc15264a7c3df2adcbb9228993e63ee2da1b3296",
+        "link": null,
+        "mode": 493,
+        "path": "usr/lib/memgraph/memgraph",
+        "sha256": "c47bb1a3946099b3addc7bb87dddef55c9954772f50a2e42943290fa11bdda3a",
+        "type": "file",
+        "uid": 0
+      },
+      "amd64_mgconsole": {
+        "bytes": 2438848,
+        "elf_machine": 62,
+        "gid": 0,
+        "layer": "sha256:7412cdb2ae8c749b2f2a11d1dc15264a7c3df2adcbb9228993e63ee2da1b3296",
+        "link": null,
+        "mode": 493,
+        "path": "usr/bin/mgconsole",
+        "sha256": "11270c154a73ea75f24cecf949636ec333ecc4443c366175e89b806f81e76989",
+        "type": "file",
+        "uid": 0
+      },
+      "amd64_packages_without_copyright": [
+        {
+          "maintainer": "Matt James <matthew.james@memgraph.io>",
+          "name": "libssl3t64",
+          "version": "3.5.4-0ubuntu0custom1"
+        },
+        {
+          "maintainer": "tech@memgraph.com (Memgraph Ltd.)",
+          "name": "memgraph",
+          "version": "3.10.1-1"
+        },
+        {
+          "maintainer": "Microsoft SQL ODBC Team <mssql-odbc@microsoft.com>",
+          "name": "msodbcsql18",
+          "version": "18.6.2.1-1"
+        },
+        {
+          "maintainer": "Matt James <matthew.james@memgraph.io>",
+          "name": "openssl",
+          "version": "3.5.4-0ubuntu0custom1"
+        }
+      ],
+      "amd64_python_missing_license_files": [
+        {
+          "name": "dgl",
+          "version": "2.5"
+        },
+        {
+          "name": "duckdb",
+          "version": "1.2.1"
+        },
+        {
+          "name": "tokenizers",
+          "version": "0.22.2"
+        }
+      ],
+      "amd64_regular_file_bytes": 2299379184,
+      "amd64_source": {
+        "class": "new exact merged layer contents; nonexecuting",
+        "path": "amd64-contents-20261106-qualified/mage/contents.json",
+        "sha256": "73346c597ad00dca8d9ff6384859d1e1f565fb7cc5f9a65ff74ed70f6b0d3a2a"
+      },
+      "arm64_source": {
+        "class": "prior observed pinned arm64 inventory",
+        "path": "../core-comparison/observed-20261106/mage-bom.json",
+        "sha256": "55a184c895e9a499dcaea79f9989223c45e3172c2afcaa894ec7f797d16d429d"
+      },
+      "installed_packages": {
+        "amd64": 142,
+        "arm64": 142,
+        "differences": {
+          "different_versions": {},
+          "only_amd64": {},
+          "only_arm64": {},
+          "same_name_version_count": 142
+        }
+      },
+      "memgraph_legal": {
+        "amd64_count": 35,
+        "arm64_count": 35,
+        "different": {},
+        "identical_path_and_bytes": true
+      },
+      "nested_vendor_python_metadata": {
+        "amd64_count": 12,
+        "amd64_records": [
+          {
+            "name": "autocommand",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/autocommand-2.2.2.dist-info/METADATA",
+            "version": "2.2.2"
+          },
+          {
+            "name": "backports.tarfile",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/backports.tarfile-1.2.0.dist-info/METADATA",
+            "version": "1.2.0"
+          },
+          {
+            "name": "importlib_metadata",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/importlib_metadata-8.7.1.dist-info/METADATA",
+            "version": "8.7.1"
+          },
+          {
+            "name": "jaraco.text",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/jaraco.text-4.0.0.dist-info/METADATA",
+            "version": "4.0.0"
+          },
+          {
+            "name": "jaraco.context",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/jaraco_context-6.1.0.dist-info/METADATA",
+            "version": "6.1.0"
+          },
+          {
+            "name": "jaraco.functools",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/jaraco_functools-4.4.0.dist-info/METADATA",
+            "version": "4.4.0"
+          },
+          {
+            "name": "more-itertools",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/more_itertools-10.8.0.dist-info/METADATA",
+            "version": "10.8.0"
+          },
+          {
+            "name": "packaging",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/packaging-26.0.dist-info/METADATA",
+            "version": "26.0"
+          },
+          {
+            "name": "platformdirs",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/platformdirs-4.4.0.dist-info/METADATA",
+            "version": "4.4.0"
+          },
+          {
+            "name": "tomli",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/tomli-2.4.0.dist-info/METADATA",
+            "version": "2.4.0"
+          },
+          {
+            "name": "wheel",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/wheel-0.46.3.dist-info/METADATA",
+            "version": "0.46.3"
+          },
+          {
+            "name": "zipp",
+            "path": "home/memgraph/.local/lib/python3.12/site-packages/setuptools/_vendor/zipp-3.23.0.dist-info/METADATA",
+            "version": "3.23.0"
+          }
+        ],
+        "scope": "Additional nested metadata surface; prior arm64 importlib inventory did not enumerate it, so not evidence of architecture differences"
+      },
+      "python": {
+        "amd64": 125,
+        "arm64": 125,
+        "differences": {
+          "different_versions": {},
+          "only_amd64": {},
+          "only_arm64": {},
+          "same_name_version_count": 125
+        }
+      },
+      "query_modules": {
+        "amd64": 189,
+        "arm64": 189,
+        "only_amd64": [],
+        "only_arm64": []
+      },
+      "unknowns": [
+        "No foreign binary executed: package/METADATA declarations are not runtime validation",
+        "No reproducible build or binary-source attestation",
+        "Third-party versions and static/dynamic linkage not completely resolved",
+        "Wheel-vendored native-library license coverage remains incomplete",
+        "All local/distribution/hosted operator/counsel dispositions remain pending",
+        "Hash coverage is selected notices/metadata/native/module files, not every rootfs byte"
+      ]
+    }
+  },
+  "schema": "am255/architecture-bom-comparison-v1",
+  "scope": "Contents parity/differences and metadata declarations; no amd64 graph/query/ABI execution, no native/emulation equivalence"
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "ssg.assessment.v1",
+  "target": {
+    "root": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic/actual-20261106-authored/scratch/repo",
+    "commit": "e76f4612b9f2a63eae5d43625275d108beeb856d",
+    "fingerprint": "1076719aebc636ae9a37c11893bcaf0f4eedac7c5a12b9a01d6ffdffa8cdbd59",
+    "build": "1451d11ae7477d6571d36489b1e5703b5950c69146da9bc7250151200b87a36a"
+  },
+  "posture": "scoped",
+  "scope": "Synthetic static fixture only, not a security assessment",
+  "plan": [],
+  "claims": [
+    {
+      "id": "positive-evidence",
+      "kind": "coverage",
+      "depth": "scoped",
+      "statement": "Synthetic evidence-resolution control, not a security finding.",
+      "class": null,
+      "reasoning": "Synthetic control; graph structure does not prove dataflow or safety. Proposed expertise remains unreviewed.",
+      "evidence": [
+        {
+          "type": "code",
+          "path": "app.py",
+          "lines": [
+            8,
+            14
+          ],
+          "blake3": "fc94bde7d82c40ee56b19cc531fbf4d4bb018e2aa73ee68f573d91a92f133f64",
+          "excerpt": "    8  def evaluate_text(text):\n    9      return eval(text)\n   10  \n   11  \n   12  @app.get(\"/direct\")\n   13  def direct():\n   14      return str(evaluate_text(request.args[\"expression\"]))"
+        },
+        {
+          "type": "fact",
+          "key": "lang/python/sink/eval-exec",
+          "title": "eval / exec / compile run Python source; restricting __builtins__ is not a sandbox",
+          "status": "proposed",
+          "unit_digest": "17a329875102e95da9ff5b0b2300dc3ea9f28c29984c77c3ec4fccd3fedafa2a",
+          "build": "1451d11ae7477d6571d36489b1e5703b5950c69146da9bc7250151200b87a36a"
+        },
+        {
+          "type": "path",
+          "from": "app.direct",
+          "to": "app.evaluate_text",
+          "hops": [
+            {
+              "caller": "app.direct",
+              "callee": "app.evaluate_text",
+              "file": "app.py",
+              "line": 14,
+              "confidence": "high"
+            }
+          ]
+        }
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "unsupported-claim-boundary",
+      "kind": "coverage",
+      "depth": "scoped",
+      "statement": "DELIBERATELY FALSE NEGATIVE CONTROL: every application path has been proven safe.",
+      "class": null,
+      "reasoning": "Synthetic control; graph structure does not prove dataflow or safety. Proposed expertise remains unreviewed.",
+      "evidence": [
+        {
+          "type": "code",
+          "path": "app.py",
+          "lines": [
+            18,
+            19
+          ],
+          "blake3": "fc94bde7d82c40ee56b19cc531fbf4d4bb018e2aa73ee68f573d91a92f133f64",
+          "excerpt": "   18  def constant():\n   19      return str(eval(\"1 + 1\"))"
+        }
+      ],
+      "depends_on": []
+    }
+  ]
+}

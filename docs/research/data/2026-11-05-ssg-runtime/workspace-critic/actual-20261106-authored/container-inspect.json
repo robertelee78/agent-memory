@@ -1,0 +1,340 @@
+{
+  "AppArmorProfile": "",
+  "Args": [
+    "-c",
+    "import os,sys; [os.chown(p,101,103) for p in ('/var/lib/memgraph','/var/log/memgraph')]; os.environ['HOME']='/var/lib/memgraph'; os.setgroups([]); os.setgid(103); os.setuid(101); os.execv('/usr/lib/memgraph/memgraph',['memgraph']+sys.argv[1:])",
+    "--telemetry-enabled=false",
+    "--storage-properties-on-edges=true",
+    "--storage-wal-enabled=false",
+    "--storage-snapshot-interval-sec=0",
+    "--storage-snapshot-on-exit=false",
+    "--log-level=WARNING"
+  ],
+  "BoundingCaps": [
+    "CAP_CHOWN",
+    "CAP_DAC_OVERRIDE",
+    "CAP_FOWNER",
+    "CAP_FSETID",
+    "CAP_KILL",
+    "CAP_NET_BIND_SERVICE",
+    "CAP_SETFCAP",
+    "CAP_SETGID",
+    "CAP_SETPCAP",
+    "CAP_SETUID",
+    "CAP_SYS_CHROOT"
+  ],
+  "Config": {
+    "Annotations": {
+      "io.container.manager": "libpod",
+      "org.opencontainers.image.stopSignal": "15",
+      "org.systemd.property.KillSignal": "15",
+      "org.systemd.property.TimeoutStopUSec": "uint64 10000000"
+    },
+    "AttachStderr": false,
+    "AttachStdin": false,
+    "AttachStdout": false,
+    "Cmd": [
+      "-c",
+      "import os,sys; [os.chown(p,101,103) for p in ('/var/lib/memgraph','/var/log/memgraph')]; os.environ['HOME']='/var/lib/memgraph'; os.setgroups([]); os.setgid(103); os.setuid(101); os.execv('/usr/lib/memgraph/memgraph',['memgraph']+sys.argv[1:])",
+      "--telemetry-enabled=false",
+      "--storage-properties-on-edges=true",
+      "--storage-wal-enabled=false",
+      "--storage-snapshot-interval-sec=0",
+      "--storage-snapshot-on-exit=false",
+      "--log-level=WARNING"
+    ],
+    "CreateCommand": [
+      "podman",
+      "run",
+      "-d",
+      "--pull=never",
+      "--name",
+      "am255-workspace-critic",
+      "--label",
+      "org.agent-memory.workspace-critic=1c0ece8aa94641d68556dd5878bb26b0",
+      "--cpus=2",
+      "--memory=2g",
+      "-p",
+      "127.0.0.1:17749:7687",
+      "--user",
+      "0:0",
+      "--tmpfs",
+      "/var/lib/memgraph:rw,mode=0700",
+      "--tmpfs",
+      "/var/log/memgraph:rw,mode=0700",
+      "--entrypoint",
+      "/usr/bin/python3",
+      "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+      "-c",
+      "import os,sys; [os.chown(p,101,103) for p in ('/var/lib/memgraph','/var/log/memgraph')]; os.environ['HOME']='/var/lib/memgraph'; os.setgroups([]); os.setgid(103); os.setuid(101); os.execv('/usr/lib/memgraph/memgraph',['memgraph']+sys.argv[1:])",
+      "--telemetry-enabled=false",
+      "--storage-properties-on-edges=true",
+      "--storage-wal-enabled=false",
+      "--storage-snapshot-interval-sec=0",
+      "--storage-snapshot-on-exit=false",
+      "--log-level=WARNING"
+    ],
+    "Domainname": "",
+    "Entrypoint": [
+      "/usr/bin/python3"
+    ],
+    "Env": [
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "container=podman",
+      "PY_VERSION=3.12",
+      "MEMGRAPH_REF=v3.10.1-rc1",
+      "LD_LIBRARY_PATH=/usr/lib/memgraph/query_modules",
+      "BUILD_TYPE=Release",
+      "HOME=/root",
+      "HOSTNAME=3634d8e3a9c3"
+    ],
+    "ExposedPorts": {
+      "7687/tcp": {}
+    },
+    "HealthLogDestination": "local",
+    "HealthcheckMaxLogCount": 5,
+    "HealthcheckMaxLogSize": 500,
+    "HealthcheckOnFailureAction": "none",
+    "Hostname": "3634d8e3a9c3",
+    "Image": "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+    "Labels": {
+      "org.agent-memory.workspace-critic": "1c0ece8aa94641d68556dd5878bb26b0",
+      "org.opencontainers.image.version": "24.04"
+    },
+    "OnBuild": null,
+    "OpenStdin": false,
+    "Passwd": true,
+    "StdinOnce": false,
+    "StopSignal": "SIGTERM",
+    "StopTimeout": 10,
+    "Timeout": 0,
+    "Tty": false,
+    "Umask": "0022",
+    "User": "0:0",
+    "Volumes": null,
+    "WorkingDir": "/",
+    "sdNotifyMode": "container"
+  },
+  "ConmonPidFile": "/run/user/502/containers/overlay-containers/3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a/userdata/conmon.pid",
+  "Created": "2026-11-06T12:36:07.550821114-08:00",
+  "Dependencies": [],
+  "Driver": "overlay",
+  "EffectiveCaps": [
+    "CAP_CHOWN",
+    "CAP_DAC_OVERRIDE",
+    "CAP_FOWNER",
+    "CAP_FSETID",
+    "CAP_KILL",
+    "CAP_NET_BIND_SERVICE",
+    "CAP_SETFCAP",
+    "CAP_SETGID",
+    "CAP_SETPCAP",
+    "CAP_SETUID",
+    "CAP_SYS_CHROOT"
+  ],
+  "ExecIDs": [],
+  "GraphDriver": {
+    "Data": {
+      "LowerDir": "/var/home/core/.local/share/containers/storage/overlay/9d4858de22f22ae59b8fb7efe127cd85054181f19efab09b207e2826e3276552/diff:/var/home/core/.local/share/containers/storage/overlay/bc6384c939cad9e665b86d45b126c3a3d85bc145ca4cdb1cb7437e00766dbf56/diff:/var/home/core/.local/share/containers/storage/overlay/970d03a26d8de68fb7f00b0b6778358b78824fc7d355792806c7057ee4b0d43c/diff:/var/home/core/.local/share/containers/storage/overlay/099ddf8589b79211ae1d24bbeb4410511be7e756ec64e4491ff0df8ee1ddadd7/diff:/var/home/core/.local/share/containers/storage/overlay/d9a56420aee7ff835e0c05fc666d1237d40f0da5fe338738e651b01db4672a5d/diff",
+      "MergedDir": "/var/home/core/.local/share/containers/storage/overlay/43c58d3f9b4cbe0022acfa3bc74de2df89901e8c2e90eb1ed2363e00333de6b8/merged",
+      "UpperDir": "/var/home/core/.local/share/containers/storage/overlay/43c58d3f9b4cbe0022acfa3bc74de2df89901e8c2e90eb1ed2363e00333de6b8/diff",
+      "WorkDir": "/var/home/core/.local/share/containers/storage/overlay/43c58d3f9b4cbe0022acfa3bc74de2df89901e8c2e90eb1ed2363e00333de6b8/work"
+    },
+    "Name": "overlay"
+  },
+  "HostConfig": {
+    "Annotations": {
+      "io.container.manager": "libpod",
+      "org.opencontainers.image.stopSignal": "15",
+      "org.systemd.property.KillSignal": "15",
+      "org.systemd.property.TimeoutStopUSec": "uint64 10000000"
+    },
+    "AutoRemove": false,
+    "AutoRemoveImage": false,
+    "Binds": [],
+    "BlkioDeviceReadBps": null,
+    "BlkioDeviceReadIOps": null,
+    "BlkioDeviceWriteBps": null,
+    "BlkioDeviceWriteIOps": null,
+    "BlkioWeight": 0,
+    "BlkioWeightDevice": null,
+    "CapAdd": [],
+    "CapDrop": [],
+    "Cgroup": "",
+    "CgroupConf": null,
+    "CgroupManager": "systemd",
+    "CgroupMode": "private",
+    "CgroupParent": "user.slice",
+    "Cgroups": "default",
+    "ConsoleSize": [
+      0,
+      0
+    ],
+    "ContainerIDFile": "",
+    "CpuCount": 0,
+    "CpuPercent": 0,
+    "CpuPeriod": 100000,
+    "CpuQuota": 200000,
+    "CpuRealtimePeriod": 0,
+    "CpuRealtimeRuntime": 0,
+    "CpuShares": 0,
+    "CpusetCpus": "",
+    "CpusetMems": "",
+    "Devices": [],
+    "DiskQuota": 0,
+    "Dns": [],
+    "DnsOptions": [],
+    "DnsSearch": [],
+    "ExtraHosts": [],
+    "GroupAdd": [],
+    "HostsFile": "",
+    "IOMaximumBandwidth": 0,
+    "IOMaximumIOps": 0,
+    "IpcMode": "shareable",
+    "Isolation": "",
+    "KernelMemory": 0,
+    "Links": null,
+    "LogConfig": {
+      "Config": null,
+      "Path": "",
+      "Size": "-1B",
+      "Tag": "",
+      "Type": "journald"
+    },
+    "Memory": 2147483648,
+    "MemoryReservation": 0,
+    "MemorySwap": 4294967296,
+    "MemorySwappiness": -1,
+    "NanoCpus": 2000000000,
+    "NetworkMode": "bridge",
+    "OomKillDisable": false,
+    "OomScoreAdj": 0,
+    "PidMode": "private",
+    "PidsLimit": 0,
+    "PortBindings": {
+      "7687/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "17749"
+        }
+      ]
+    },
+    "Privileged": false,
+    "PublishAllPorts": false,
+    "ReadonlyRootfs": false,
+    "RestartPolicy": {
+      "MaximumRetryCount": 0,
+      "Name": "no"
+    },
+    "Runtime": "oci",
+    "SecurityOpt": [],
+    "ShmSize": 65536000,
+    "Tmpfs": {
+      "/var/lib/memgraph": "rw,mode=0700,rprivate,nosuid,nodev,tmpcopyup",
+      "/var/log/memgraph": "rw,mode=0700,rprivate,nosuid,nodev,tmpcopyup"
+    },
+    "UTSMode": "private",
+    "Ulimits": [
+      {
+        "Hard": 524288,
+        "Name": "RLIMIT_NOFILE",
+        "Soft": 524288
+      },
+      {
+        "Hard": 128039,
+        "Name": "RLIMIT_NPROC",
+        "Soft": 128039
+      }
+    ],
+    "UsernsMode": "",
+    "VolumeDriver": "",
+    "VolumesFrom": null
+  },
+  "HostnamePath": "/run/user/502/containers/overlay-containers/3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a/userdata/hostname",
+  "HostsPath": "/run/user/502/containers/overlay-containers/3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a/userdata/hosts",
+  "Id": "3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a",
+  "Image": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+  "ImageDigest": "sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+  "ImageName": "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+  "IsInfra": false,
+  "IsService": false,
+  "KubeExitCodePropagation": "invalid",
+  "MountLabel": "system_u:object_r:container_file_t:s0:c110,c404",
+  "Mounts": [],
+  "Name": "am255-workspace-critic",
+  "Namespace": "",
+  "NetworkSettings": {
+    "Bridge": "",
+    "EndpointID": "",
+    "Gateway": "10.88.0.1",
+    "GlobalIPv6Address": "",
+    "GlobalIPv6PrefixLen": 0,
+    "HairpinMode": false,
+    "IPAddress": "10.88.5.56",
+    "IPPrefixLen": 16,
+    "IPv6Gateway": "",
+    "LinkLocalIPv6Address": "",
+    "LinkLocalIPv6PrefixLen": 0,
+    "MacAddress": "66:86:6c:3a:6b:ec",
+    "Networks": {
+      "podman": {
+        "Aliases": [
+          "3634d8e3a9c3"
+        ],
+        "DriverOpts": null,
+        "EndpointID": "",
+        "Gateway": "10.88.0.1",
+        "GlobalIPv6Address": "",
+        "GlobalIPv6PrefixLen": 0,
+        "IPAMConfig": null,
+        "IPAddress": "10.88.5.56",
+        "IPPrefixLen": 16,
+        "IPv6Gateway": "",
+        "Links": null,
+        "MacAddress": "66:86:6c:3a:6b:ec",
+        "NetworkID": "2f259bab93aaaaa2542ba43ef33eb990d0999ee1b9924b557b7be53c0b7a1bb9"
+      }
+    },
+    "Ports": {
+      "7687/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "17749"
+        }
+      ]
+    },
+    "SandboxID": "",
+    "SandboxKey": "/run/user/502/netns/netns-17b97374-9327-3b21-448d-b13ac900a2da"
+  },
+  "OCIConfigPath": "/var/home/core/.local/share/containers/storage/overlay-containers/3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a/userdata/config.json",
+  "OCIRuntime": "crun",
+  "Path": "/usr/bin/python3",
+  "PidFile": "/run/user/502/containers/overlay-containers/3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a/userdata/pidfile",
+  "Pod": "",
+  "ProcessLabel": "system_u:system_r:container_t:s0:c110,c404",
+  "ResolvConfPath": "/run/user/502/containers/overlay-containers/3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a/userdata/resolv.conf",
+  "RestartCount": 0,
+  "Rootfs": "",
+  "State": {
+    "CgroupPath": "/user.slice/user-502.slice/user@502.service/user.slice/libpod-3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a.scope",
+    "CheckpointedAt": "0001-01-01T00:00:00Z",
+    "ConmonPid": 693584,
+    "Dead": false,
+    "Error": "",
+    "ExitCode": 0,
+    "FinishedAt": "0001-01-01T00:00:00Z",
+    "OOMKilled": false,
+    "OciVersion": "1.2.1",
+    "Paused": false,
+    "Pid": 693586,
+    "Restarting": false,
+    "RestoredAt": "0001-01-01T00:00:00Z",
+    "Running": true,
+    "StartedAt": "2026-11-06T12:36:07.597627699-08:00",
+    "Status": "running"
+  },
+  "StaticDir": "/var/home/core/.local/share/containers/storage/overlay-containers/3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a/userdata",
+  "UseImageHostname": false,
+  "UseImageHosts": false,
+  "lockNumber": 40
+}

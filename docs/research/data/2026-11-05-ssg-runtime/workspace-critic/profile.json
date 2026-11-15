@@ -1,0 +1,10 @@
+{
+  "schema": "am255/workspace-critic-profile-v1",
+  "profile": "authored-only-synthetic-code-workspace",
+  "source": "/opt/ssg at 9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0; unchanged release binary",
+  "inputs": "Copy every expertise/ and queries/ file byte-identically into this run's private scratch source view, with per-file SHA256 frozen before run. No data/advisories export is included. No source Rust, expertise, query or prompt contents are edited.",
+  "reason": "The retained full-source run actual-20261106-final reached Bolt readiness but its unchanged SSG build of the full expertise/advisory dataset was OOMKilled=true/exit137 within the fixed 2GiB graph cap. This narrower source-input profile is sufficient for code/workspace joins against authored Python/Flask facets; it is not a full-source runtime pass.",
+  "unchanged_inputs": "Synthetic fixture files and independent expected-facts.json are unchanged from the initial pre-output freeze.",
+  "excluded_claims": ["No advisory/version-range qualification", "No unchanged ssg workspace up portability pass", "No full 62k-advisory graph memory qualification", "No complete runtime adoption", "No completion model or critic quality evaluation"],
+  "startup_adapter": "Podman rejects SSG's Docker uid/gid tmpfs syntax. A new root init changes only ownership of the two newly created tmpfs roots, sets HOME to the owned data tmpfs, then clears groups and execs Memgraph as101:103. Manual exact-identity removal retains startup logs before disposal; default nonroot startup and --rm behavior are not claimed."
+}

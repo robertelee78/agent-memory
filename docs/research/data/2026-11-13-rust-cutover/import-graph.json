@@ -1,0 +1,1598 @@
+{
+ "source_commit": "78eaf70a3cfc7c7e3c9444435715d7d437c242dd",
+ "modules": {
+  "__init__": {
+   "lines": 60,
+   "top": [],
+   "lazy": [],
+   "inbound": 0
+  },
+  "admission": {
+   "lines": 427,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_transactions",
+    "bank_writes",
+    "comparison",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "layout_resolution",
+    "lifecycle",
+    "records",
+    "recovery_frontier",
+    "scope_binding",
+    "security",
+    "sharing_limits",
+    "trust_paths",
+    "turn_sources"
+   ],
+   "lazy": [
+    "admission_navigation",
+    "discovery"
+   ],
+   "inbound": 5
+  },
+  "admission_navigation": {
+   "lines": 81,
+   "top": [
+    "bank_contract",
+    "bank_layout",
+    "developer_identity",
+    "frontmatter",
+    "scopes",
+    "security"
+   ],
+   "lazy": [],
+   "inbound": 1
+  },
+  "artifact": {
+   "lines": 120,
+   "top": [
+    "frontmatter",
+    "pack_validation"
+   ],
+   "lazy": [
+    "migration_contract"
+   ],
+   "inbound": 14
+  },
+  "assembly": {
+   "lines": 211,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_writes",
+    "comparison",
+    "developer_identity",
+    "frontmatter",
+    "retrieval",
+    "scope_binding"
+   ],
+   "lazy": [
+    "recovery_frontier"
+   ],
+   "inbound": 0
+  },
+  "authority": {
+   "lines": 107,
+   "top": [
+    "developer_identity",
+    "frontmatter",
+    "scopes"
+   ],
+   "lazy": [],
+   "inbound": 1
+  },
+  "bank_capacity": {
+   "lines": 76,
+   "top": [
+    "frontmatter",
+    "sharing_limits"
+   ],
+   "lazy": [],
+   "inbound": 35
+  },
+  "bank_contract": {
+   "lines": 419,
+   "top": [
+    "bank_capacity",
+    "frontmatter",
+    "lifecycle",
+    "remote_identity",
+    "repository_config",
+    "scopes",
+    "validation_memo"
+   ],
+   "lazy": [
+    "bank_layout",
+    "bank_observation",
+    "cli",
+    "recovery_frontier"
+   ],
+   "inbound": 37
+  },
+  "bank_layout": {
+   "lines": 216,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "developer_identity",
+    "frontmatter",
+    "lifecycle",
+    "records",
+    "scopes"
+   ],
+   "lazy": [
+    "bank_writes"
+   ],
+   "inbound": 8
+  },
+  "bank_observation": {
+   "lines": 220,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "local_registry",
+    "recovery_frontier"
+   ],
+   "inbound": 16
+  },
+  "bank_state": {
+   "lines": 140,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_writes",
+    "frontmatter",
+    "repository_config"
+   ],
+   "lazy": [
+    "developer_identity",
+    "handoff",
+    "recovery_frontier",
+    "retrieval",
+    "scope_binding",
+    "security"
+   ],
+   "inbound": 0
+  },
+  "bank_transactions": {
+   "lines": 665,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "lifecycle",
+    "local_registry",
+    "repository_config",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "admission",
+    "bank_observation",
+    "checkpoint",
+    "consolidation",
+    "governance",
+    "initialization",
+    "memory_refresh",
+    "project_identity",
+    "recall_catalog",
+    "recovery_frontier",
+    "recovery_transactions",
+    "scope_binding",
+    "security",
+    "turn_sources"
+   ],
+   "inbound": 22
+  },
+  "bank_writes": {
+   "lines": 312,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "developer_identity",
+    "frontmatter",
+    "local_registry",
+    "repository_config"
+   ],
+   "lazy": [
+    "bank_observation",
+    "checkpoint",
+    "recovery_frontier",
+    "recovery_transactions",
+    "scope_binding",
+    "security",
+    "turn_sources"
+   ],
+   "inbound": 50
+  },
+  "boundary_assessment": {
+   "lines": 24,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 3
+  },
+  "cache_recovery": {
+   "lines": 226,
+   "top": [
+    "artifact",
+    "frontmatter",
+    "release_distribution",
+    "trust_paths"
+   ],
+   "lazy": [
+    "installation"
+   ],
+   "inbound": 2
+  },
+  "checkpoint": {
+   "lines": 293,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "handoff",
+    "local_registry",
+    "repository_config",
+    "scope_binding",
+    "scopes",
+    "security"
+   ],
+   "lazy": [
+    "recovery_frontier"
+   ],
+   "inbound": 4
+  },
+  "claude_boundary": {
+   "lines": 176,
+   "top": [
+    "bank_capacity",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "memory_publication",
+    "scope_binding",
+    "sharing_limits",
+    "sharing_recovery",
+    "trust_paths"
+   ],
+   "lazy": [
+    "boundary_assessment",
+    "claude_turns",
+    "turn_check"
+   ],
+   "inbound": 0
+  },
+  "claude_turns": {
+   "lines": 36,
+   "top": [
+    "frontmatter",
+    "turn_sources"
+   ],
+   "lazy": [],
+   "inbound": 1
+  },
+  "cli": {
+   "lines": 38,
+   "top": [],
+   "lazy": [],
+   "inbound": 2
+  },
+  "client_hooks": {
+   "lines": 110,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 2
+  },
+  "codex_boundary": {
+   "lines": 210,
+   "top": [
+    "bank_capacity",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "memory_publication",
+    "scope_binding",
+    "sharing_limits",
+    "sharing_recovery",
+    "trust_paths"
+   ],
+   "lazy": [
+    "boundary_assessment",
+    "turn_check",
+    "turn_sources"
+   ],
+   "inbound": 0
+  },
+  "comparison": {
+   "lines": 348,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "records",
+    "recovery_frontier",
+    "retrieval",
+    "scope_binding",
+    "security",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "discovery",
+    "layout_recovery_state"
+   ],
+   "inbound": 8
+  },
+  "console": {
+   "lines": 268,
+   "top": [],
+   "lazy": [
+    "installation"
+   ],
+   "inbound": 0
+  },
+  "consolidation": {
+   "lines": 411,
+   "top": [
+    "admission",
+    "bank_capacity",
+    "bank_contract",
+    "bank_layout",
+    "bank_transactions",
+    "bank_writes",
+    "comparison",
+    "developer_identity",
+    "frontmatter",
+    "layout_resolution",
+    "lifecycle",
+    "records",
+    "recovery_frontier",
+    "retrieval",
+    "scope_binding",
+    "security"
+   ],
+   "lazy": [
+    "sharing_limits"
+   ],
+   "inbound": 3
+  },
+  "developer_identity": {
+   "lines": 398,
+   "top": [
+    "frontmatter",
+    "lifecycle"
+   ],
+   "lazy": [
+    "identity_git"
+   ],
+   "inbound": 61
+  },
+  "diagnostics": {
+   "lines": 782,
+   "top": [
+    "artifact",
+    "bank_capacity",
+    "bank_contract",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "installation",
+    "local_registry",
+    "project_identity",
+    "projections",
+    "remote_identity",
+    "repository_config"
+   ],
+   "lazy": [
+    "doctor_fix",
+    "hook_failure",
+    "managed_source",
+    "memory_refresh",
+    "omp_installation",
+    "purging"
+   ],
+   "inbound": 2
+  },
+  "discovery": {
+   "lines": 347,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_layout",
+    "bank_observation",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "recovery_frontier",
+    "repository_config",
+    "scope_binding",
+    "security",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "comparison",
+    "recall_catalog",
+    "retrieval",
+    "scopes"
+   ],
+   "inbound": 3
+  },
+  "doctor_fix": {
+   "lines": 185,
+   "top": [
+    "artifact",
+    "frontmatter",
+    "installation",
+    "updating"
+   ],
+   "lazy": [
+    "bank_transactions",
+    "diagnostics",
+    "migration",
+    "project_identity",
+    "scope_binding"
+   ],
+   "inbound": 1
+  },
+  "frontmatter": {
+   "lines": 82,
+   "top": [],
+   "lazy": [],
+   "inbound": 87
+  },
+  "governance": {
+   "lines": 670,
+   "top": [
+    "admission",
+    "bank_capacity",
+    "bank_contract",
+    "bank_layout",
+    "bank_transactions",
+    "bank_writes",
+    "comparison",
+    "developer_identity",
+    "frontmatter",
+    "inactive",
+    "layout_resolution",
+    "lifecycle",
+    "records",
+    "recovery_frontier",
+    "retrieval",
+    "scope_binding",
+    "security",
+    "tombstones"
+   ],
+   "lazy": [],
+   "inbound": 3
+  },
+  "handoff": {
+   "lines": 270,
+   "top": [
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "scopes"
+   ],
+   "lazy": [
+    "checkpoint"
+   ],
+   "inbound": 3
+  },
+  "hook_failure": {
+   "lines": 143,
+   "top": [
+    "frontmatter",
+    "trust_paths"
+   ],
+   "lazy": [],
+   "inbound": 1
+  },
+  "identity_git": {
+   "lines": 395,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 19
+  },
+  "inactive": {
+   "lines": 131,
+   "top": [
+    "bank_capacity",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "records",
+    "scope_binding",
+    "security",
+    "tombstones"
+   ],
+   "lazy": [],
+   "inbound": 2
+  },
+  "initialization": {
+   "lines": 522,
+   "top": [
+    "authority",
+    "bank_capacity",
+    "bank_contract",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "local_registry",
+    "repository_config",
+    "scope_binding",
+    "scopes",
+    "security"
+   ],
+   "lazy": [],
+   "inbound": 1
+  },
+  "installation": {
+   "lines": 1604,
+   "top": [
+    "artifact",
+    "bank_writes",
+    "frontmatter",
+    "runtime_faults",
+    "trust_paths"
+   ],
+   "lazy": [
+    "cache_recovery",
+    "cli",
+    "client_hooks",
+    "diagnostics",
+    "managed_source",
+    "omp_boundary",
+    "omp_installation",
+    "private_state",
+    "purging",
+    "release_distribution",
+    "uninstallation",
+    "updating"
+   ],
+   "inbound": 12
+  },
+  "layout_history": {
+   "lines": 46,
+   "top": [
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "layout_recovery_state",
+    "local_registry",
+    "project_identity",
+    "scope_binding"
+   ],
+   "lazy": [],
+   "inbound": 3
+  },
+  "layout_recovery": {
+   "lines": 1627,
+   "top": [
+    "artifact",
+    "bank_capacity",
+    "bank_contract",
+    "bank_observation",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_history",
+    "layout_recovery_context",
+    "layout_recovery_observation",
+    "layout_recovery_state",
+    "layout_recovery_temps",
+    "local_registry",
+    "recovery_frontier",
+    "recovery_quiescence",
+    "security",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "layout_recovery_publication",
+    "layout_recovery_retention",
+    "layout_resolution",
+    "layout_restore",
+    "layout_units",
+    "records",
+    "retrieval",
+    "turn_sources"
+   ],
+   "inbound": 3
+  },
+  "layout_recovery_context": {
+   "lines": 141,
+   "top": [
+    "artifact",
+    "bank_observation",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery_state",
+    "recovery_frontier",
+    "recovery_quiescence"
+   ],
+   "lazy": [
+    "layout_recovery",
+    "layout_restore"
+   ],
+   "inbound": 1
+  },
+  "layout_recovery_observation": {
+   "lines": 413,
+   "top": [
+    "artifact",
+    "bank_contract",
+    "bank_observation",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "layout_recovery_state",
+    "local_registry",
+    "project_identity",
+    "repository_config",
+    "scope_binding",
+    "sharing_limits"
+   ],
+   "lazy": [],
+   "inbound": 7
+  },
+  "layout_recovery_publication": {
+   "lines": 851,
+   "top": [
+    "bank_contract",
+    "bank_observation",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery_observation",
+    "layout_recovery_state",
+    "local_registry",
+    "memory_publication",
+    "recovery_frontier",
+    "repository_config",
+    "scope_binding",
+    "security",
+    "sharing_recovery"
+   ],
+   "lazy": [
+    "lifecycle",
+    "pack_validation",
+    "records"
+   ],
+   "inbound": 3
+  },
+  "layout_recovery_retention": {
+   "lines": 570,
+   "top": [
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery_observation",
+    "layout_recovery_publication",
+    "layout_recovery_state",
+    "layout_recovery_temps",
+    "local_registry",
+    "recovery_frontier",
+    "scope_binding",
+    "sharing_limits",
+    "trust_paths"
+   ],
+   "lazy": [
+    "bank_transactions",
+    "layout_restore",
+    "lifecycle",
+    "recovery_transactions",
+    "turn_sources"
+   ],
+   "inbound": 1
+  },
+  "layout_recovery_state": {
+   "lines": 226,
+   "top": [
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "local_registry",
+    "sharing_limits",
+    "trust_paths"
+   ],
+   "lazy": [
+    "bank_contract",
+    "repository_config"
+   ],
+   "inbound": 20
+  },
+  "layout_recovery_temps": {
+   "lines": 681,
+   "top": [
+    "bank_observation",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery_observation",
+    "layout_recovery_state",
+    "sharing_limits"
+   ],
+   "lazy": [],
+   "inbound": 2
+  },
+  "layout_resolution": {
+   "lines": 610,
+   "top": [
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery_state",
+    "local_registry",
+    "records",
+    "recovery_frontier"
+   ],
+   "lazy": [
+    "bank_observation",
+    "comparison",
+    "layout_history",
+    "lifecycle",
+    "turn_sources"
+   ],
+   "inbound": 8
+  },
+  "layout_restore": {
+   "lines": 370,
+   "top": [
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery",
+    "layout_recovery_observation",
+    "layout_recovery_state",
+    "local_registry",
+    "recovery_frontier"
+   ],
+   "lazy": [
+    "layout_resolution",
+    "turn_sources"
+   ],
+   "inbound": 3
+  },
+  "layout_units": {
+   "lines": 202,
+   "top": [
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery",
+    "layout_recovery_state",
+    "layout_resolution",
+    "local_registry",
+    "recovery_frontier"
+   ],
+   "lazy": [
+    "turn_sources"
+   ],
+   "inbound": 1
+  },
+  "lifecycle": {
+   "lines": 192,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [
+    "model_reference"
+   ],
+   "inbound": 17
+  },
+  "local_registry": {
+   "lines": 334,
+   "top": [
+    "developer_identity",
+    "frontmatter",
+    "lifecycle"
+   ],
+   "lazy": [],
+   "inbound": 31
+  },
+  "managed_source": {
+   "lines": 218,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [
+    "installation"
+   ],
+   "inbound": 3
+  },
+  "memory_publication": {
+   "lines": 556,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "local_registry",
+    "scope_binding",
+    "semantic_sharing",
+    "sharing_holds",
+    "sharing_limits",
+    "sharing_recovery",
+    "validation_memo"
+   ],
+   "lazy": [
+    "layout_recovery_publication",
+    "recovery_frontier"
+   ],
+   "inbound": 4
+  },
+  "memory_refresh": {
+   "lines": 645,
+   "top": [
+    "bank_capacity",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "local_registry",
+    "retrieval",
+    "scope_binding",
+    "semantic_sharing",
+    "sharing_limits",
+    "sharing_recovery",
+    "trust_paths",
+    "validation_memo"
+   ],
+   "lazy": [
+    "records",
+    "recovery_frontier",
+    "sharing_boundary",
+    "sharing_frontier",
+    "sharing_holds"
+   ],
+   "inbound": 3
+  },
+  "migration": {
+   "lines": 923,
+   "top": [
+    "artifact",
+    "bank_capacity",
+    "bank_contract",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "local_registry",
+    "migration_contract",
+    "repository_config",
+    "scope_binding",
+    "security",
+    "trust_paths"
+   ],
+   "lazy": [
+    "installation",
+    "turn_sources"
+   ],
+   "inbound": 3
+  },
+  "migration_codecs": {
+   "lines": 10,
+   "top": [
+    "bank_contract",
+    "developer_identity"
+   ],
+   "lazy": [],
+   "inbound": 0
+  },
+  "migration_contract": {
+   "lines": 102,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 2
+  },
+  "model_reference": {
+   "lines": 147,
+   "top": [],
+   "lazy": [
+    "security"
+   ],
+   "inbound": 1
+  },
+  "omp_boundary": {
+   "lines": 920,
+   "top": [
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "local_registry",
+    "project_identity",
+    "trust_paths",
+    "turn_sources"
+   ],
+   "lazy": [
+    "identity_git",
+    "installation",
+    "layout_recovery_state",
+    "omp_installation",
+    "omp_stream",
+    "omp_transport",
+    "private_state",
+    "recovery_frontier",
+    "repository_config",
+    "scope_binding",
+    "turn_check"
+   ],
+   "inbound": 7
+  },
+  "omp_control": {
+   "lines": 60,
+   "top": [
+    "omp_projection"
+   ],
+   "lazy": [],
+   "inbound": 1
+  },
+  "omp_installation": {
+   "lines": 491,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [
+    "artifact",
+    "installation",
+    "omp_boundary",
+    "omp_projection",
+    "omp_stream",
+    "omp_transport",
+    "trust_paths",
+    "turn_sources"
+   ],
+   "inbound": 6
+  },
+  "omp_projection": {
+   "lines": 432,
+   "top": [
+    "frontmatter",
+    "security"
+   ],
+   "lazy": [
+    "identity_git",
+    "omp_installation",
+    "turn_sources"
+   ],
+   "inbound": 3
+  },
+  "omp_stream": {
+   "lines": 2138,
+   "top": [
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "trust_paths",
+    "turn_sources"
+   ],
+   "lazy": [
+    "omp_boundary",
+    "omp_installation",
+    "omp_transport",
+    "private_state",
+    "scope_binding"
+   ],
+   "inbound": 3
+  },
+  "omp_transport": {
+   "lines": 1735,
+   "top": [
+    "developer_identity",
+    "frontmatter",
+    "omp_control",
+    "omp_projection",
+    "scope_binding",
+    "trust_paths",
+    "turn_sources"
+   ],
+   "lazy": [
+    "omp_boundary",
+    "omp_installation",
+    "omp_stream"
+   ],
+   "inbound": 3
+  },
+  "pack_validation": {
+   "lines": 557,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 3
+  },
+  "private_state": {
+   "lines": 373,
+   "top": [
+    "artifact",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "layout_recovery_state",
+    "project_identity",
+    "repository_config"
+   ],
+   "lazy": [
+    "admission",
+    "bank_writes",
+    "installation",
+    "omp_boundary",
+    "recovery_frontier",
+    "recovery_quiescence",
+    "scope_binding",
+    "turn_sources"
+   ],
+   "inbound": 5
+  },
+  "private_workspace": {
+   "lines": 141,
+   "top": [
+    "bank_capacity",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "local_registry",
+    "scope_binding",
+    "trust_paths"
+   ],
+   "lazy": [],
+   "inbound": 1
+  },
+  "project_identity": {
+   "lines": 471,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "local_registry",
+    "remote_identity",
+    "repository_config"
+   ],
+   "lazy": [
+    "bank_observation",
+    "bank_writes",
+    "layout_recovery_observation"
+   ],
+   "inbound": 10
+  },
+  "projections": {
+   "lines": 117,
+   "top": [
+    "bank_capacity",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "inactive",
+    "scope_binding"
+   ],
+   "lazy": [],
+   "inbound": 1
+  },
+  "purging": {
+   "lines": 345,
+   "top": [
+    "bank_contract",
+    "bank_transactions",
+    "bank_writes",
+    "frontmatter",
+    "installation",
+    "local_registry",
+    "repository_config",
+    "runtime_faults"
+   ],
+   "lazy": [
+    "layout_recovery_state",
+    "recovery_frontier",
+    "turn_sources"
+   ],
+   "inbound": 3
+  },
+  "recall_catalog": {
+   "lines": 570,
+   "top": [
+    "bank_contract",
+    "bank_observation",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "local_registry",
+    "records",
+    "repository_config",
+    "trust_paths",
+    "turn_sources",
+    "validation_memo"
+   ],
+   "lazy": [
+    "recovery_frontier"
+   ],
+   "inbound": 4
+  },
+  "records": {
+   "lines": 252,
+   "top": [
+    "developer_identity",
+    "frontmatter",
+    "lifecycle",
+    "scopes"
+   ],
+   "lazy": [
+    "tombstones"
+   ],
+   "inbound": 17
+  },
+  "recovery_frontier": {
+   "lines": 971,
+   "top": [
+    "bank_contract",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery_state",
+    "local_registry",
+    "security",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "artifact",
+    "bank_capacity",
+    "bank_observation",
+    "comparison",
+    "layout_recovery_observation",
+    "layout_resolution",
+    "lifecycle",
+    "project_identity",
+    "recall_catalog",
+    "records",
+    "recovery_quiescence",
+    "recovery_transactions",
+    "scope_binding"
+   ],
+   "inbound": 32
+  },
+  "recovery_quiescence": {
+   "lines": 136,
+   "top": [
+    "artifact",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery_state",
+    "local_registry",
+    "recovery_frontier"
+   ],
+   "lazy": [
+    "bank_observation",
+    "bank_writes",
+    "comparison",
+    "lifecycle",
+    "scope_binding",
+    "turn_sources"
+   ],
+   "inbound": 4
+  },
+  "recovery_transactions": {
+   "lines": 528,
+   "top": [
+    "bank_contract",
+    "bank_observation",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "layout_recovery_state",
+    "layout_resolution",
+    "local_registry",
+    "recovery_frontier",
+    "security"
+   ],
+   "lazy": [
+    "admission",
+    "checkpoint",
+    "consolidation",
+    "governance",
+    "layout_history",
+    "turn_sources"
+   ],
+   "inbound": 4
+  },
+  "release_distribution": {
+   "lines": 408,
+   "top": [],
+   "lazy": [],
+   "inbound": 3
+  },
+  "remote_identity": {
+   "lines": 58,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 3
+  },
+  "repository_config": {
+   "lines": 364,
+   "top": [
+    "frontmatter",
+    "identity_git"
+   ],
+   "lazy": [
+    "bank_contract",
+    "security"
+   ],
+   "inbound": 22
+  },
+  "retrieval": {
+   "lines": 337,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_observation",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "handoff",
+    "identity_git",
+    "lifecycle",
+    "records",
+    "scope_binding",
+    "scopes",
+    "security",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "discovery",
+    "recall_catalog",
+    "recovery_frontier",
+    "validation_memo"
+   ],
+   "inbound": 10
+  },
+  "runtime_faults": {
+   "lines": 80,
+   "top": [
+    "bank_writes",
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 4
+  },
+  "scope_binding": {
+   "lines": 514,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "local_registry",
+    "project_identity",
+    "repository_config"
+   ],
+   "lazy": [
+    "layout_recovery_state",
+    "recovery_frontier",
+    "security",
+    "turn_sources"
+   ],
+   "inbound": 38
+  },
+  "scopes": {
+   "lines": 99,
+   "top": [
+    "developer_identity",
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 11
+  },
+  "security": {
+   "lines": 282,
+   "top": [
+    "bank_capacity",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "local_registry",
+    "repository_config",
+    "scope_binding",
+    "tombstones",
+    "validation_memo"
+   ],
+   "lazy": [
+    "bank_contract",
+    "migration",
+    "sharing_limits"
+   ],
+   "inbound": 27
+  },
+  "semantic_sharing": {
+   "lines": 692,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_layout",
+    "bank_transactions",
+    "bank_writes",
+    "consolidation",
+    "developer_identity",
+    "frontmatter",
+    "governance",
+    "identity_git",
+    "lifecycle",
+    "records",
+    "retrieval",
+    "scope_binding",
+    "scopes",
+    "security",
+    "sharing_limits",
+    "validation_memo"
+   ],
+   "lazy": [
+    "recovery_frontier",
+    "sharing_frontier",
+    "sharing_hold_mapping",
+    "sharing_holds",
+    "sharing_page_export",
+    "sharing_recovery"
+   ],
+   "inbound": 5
+  },
+  "sharing_boundary": {
+   "lines": 167,
+   "top": [
+    "bank_capacity",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "repository_config",
+    "scope_binding",
+    "security"
+   ],
+   "lazy": [
+    "sharing_limits",
+    "sharing_recovery"
+   ],
+   "inbound": 2
+  },
+  "sharing_frontier": {
+   "lines": 321,
+   "top": [
+    "bank_contract",
+    "bank_layout",
+    "developer_identity",
+    "frontmatter",
+    "records",
+    "retrieval",
+    "security",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "semantic_sharing",
+    "sharing_hold_mapping",
+    "sharing_holds"
+   ],
+   "inbound": 3
+  },
+  "sharing_hold_mapping": {
+   "lines": 94,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [
+    "security",
+    "semantic_sharing",
+    "sharing_holds"
+   ],
+   "inbound": 2
+  },
+  "sharing_holds": {
+   "lines": 343,
+   "top": [
+    "bank_contract",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "local_registry",
+    "sharing_limits",
+    "trust_paths"
+   ],
+   "lazy": [
+    "records",
+    "scope_binding",
+    "turn_sources"
+   ],
+   "inbound": 6
+  },
+  "sharing_limits": {
+   "lines": 89,
+   "top": [
+    "developer_identity",
+    "frontmatter"
+   ],
+   "lazy": [
+    "bank_capacity",
+    "local_registry",
+    "trust_paths"
+   ],
+   "inbound": 25
+  },
+  "sharing_page_export": {
+   "lines": 165,
+   "top": [
+    "developer_identity",
+    "frontmatter",
+    "private_workspace",
+    "recovery_frontier",
+    "sharing_frontier",
+    "sharing_holds",
+    "sharing_limits"
+   ],
+   "lazy": [
+    "semantic_sharing"
+   ],
+   "inbound": 1
+  },
+  "sharing_recovery": {
+   "lines": 632,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_layout",
+    "bank_transactions",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "identity_git",
+    "repository_config",
+    "scope_binding",
+    "security",
+    "sharing_boundary",
+    "sharing_limits",
+    "validation_memo"
+   ],
+   "lazy": [
+    "records"
+   ],
+   "inbound": 8
+  },
+  "tombstones": {
+   "lines": 149,
+   "top": [
+    "bank_capacity",
+    "bank_contract",
+    "bank_writes",
+    "developer_identity",
+    "frontmatter",
+    "lifecycle"
+   ],
+   "lazy": [],
+   "inbound": 4
+  },
+  "trust_paths": {
+   "lines": 176,
+   "top": [
+    "frontmatter"
+   ],
+   "lazy": [],
+   "inbound": 19
+  },
+  "turn_check": {
+   "lines": 168,
+   "top": [
+    "bank_capacity",
+    "frontmatter"
+   ],
+   "lazy": [
+    "memory_refresh",
+    "scope_binding",
+    "turn_sources"
+   ],
+   "inbound": 3
+  },
+  "turn_sources": {
+   "lines": 985,
+   "top": [
+    "bank_writes",
+    "frontmatter",
+    "scope_binding",
+    "trust_paths"
+   ],
+   "lazy": [
+    "boundary_assessment",
+    "developer_identity",
+    "layout_recovery_state",
+    "local_registry",
+    "memory_publication",
+    "sharing_recovery"
+   ],
+   "inbound": 24
+  },
+  "uninstallation": {
+   "lines": 265,
+   "top": [
+    "frontmatter",
+    "installation",
+    "runtime_faults"
+   ],
+   "lazy": [
+    "artifact",
+    "client_hooks",
+    "layout_recovery_state",
+    "managed_source",
+    "omp_boundary",
+    "private_state",
+    "purging"
+   ],
+   "inbound": 1
+  },
+  "updating": {
+   "lines": 413,
+   "top": [
+    "artifact",
+    "bank_contract",
+    "frontmatter",
+    "installation",
+    "pack_validation",
+    "project_identity",
+    "repository_config",
+    "runtime_faults"
+   ],
+   "lazy": [
+    "bank_transactions",
+    "cache_recovery",
+    "migration",
+    "omp_boundary",
+    "private_state",
+    "recovery_frontier",
+    "release_distribution"
+   ],
+   "inbound": 2
+  },
+  "validation_memo": {
+   "lines": 114,
+   "top": [],
+   "lazy": [],
+   "inbound": 8
+  }
+ }
+}

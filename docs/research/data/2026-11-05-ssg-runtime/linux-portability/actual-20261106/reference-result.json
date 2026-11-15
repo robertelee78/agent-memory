@@ -1,0 +1,138 @@
+{
+  "actual_linux_vm": true,
+  "bare_metal": false,
+  "batch_counts": {
+    "1": 1,
+    "4": 4,
+    "8": 8,
+    "9": 9
+  },
+  "dimension": 4096,
+  "discovery": {
+    "alias": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+    "identity_evidence": "owned byte-hashed weight + release archive + launch; response echo alone is NOT identity",
+    "metadata": {
+      "aliases": [
+        "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+      ],
+      "created": 1793997553,
+      "id": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "meta": {
+        "n_ctx": 8192,
+        "n_ctx_train": 40960,
+        "n_embd": 4096,
+        "n_params": 7567295488,
+        "n_vocab": 151665,
+        "size": 8041156864,
+        "vocab_type": 2
+      },
+      "object": "model",
+      "owned_by": "llamacpp",
+      "tags": []
+    },
+    "single_model": true,
+    "unknown_alias_equals_loaded_single": false,
+    "unknown_alias_returned_embeddings": true
+  },
+  "finite_nonzero_embeddings": true,
+  "limits": {
+    "actual_over_context_status": 400,
+    "batch9_is_server_observation_not_AM_policy_acceptance": true,
+    "context": 8192,
+    "empty_status": 500,
+    "malformed_status": 500,
+    "no_truncation_observed_for_over_context_control": true,
+    "over_context_error": {
+      "error": {
+        "code": 400,
+        "message": "request (8265 tokens) exceeds the available context size (8192 tokens), try increasing it",
+        "n_ctx": 8192,
+        "n_prompt_tokens": 8265,
+        "type": "exceed_context_size_error"
+      }
+    },
+    "tokenized_count": 8265,
+    "truncation_assurance": "This exact synthetic over-context refusal only; not a generic BYO assurance or arbitrary-input proof"
+  },
+  "own_text_controls": {
+    "own_relationship_cosines": [
+      0.8148566711490367,
+      0.8916157009060001,
+      0.8405485582241948,
+      0.9004634387891707,
+      0.8320576544843739,
+      0.7392116167706602
+    ],
+    "ranks_own": [
+      [
+        "retry",
+        "deletion",
+        "pagination",
+        "publication",
+        "unrelated",
+        "orientation"
+      ],
+      [
+        "pagination",
+        "deletion",
+        "publication",
+        "orientation",
+        "retry",
+        "unrelated"
+      ],
+      [
+        "publication",
+        "deletion",
+        "orientation",
+        "pagination",
+        "retry",
+        "unrelated"
+      ],
+      [
+        "deletion",
+        "publication",
+        "retry",
+        "unrelated",
+        "pagination",
+        "orientation"
+      ]
+    ],
+    "ranks_relationship": [
+      [
+        "retry",
+        "orientation",
+        "pagination",
+        "unrelated",
+        "deletion",
+        "publication"
+      ],
+      [
+        "pagination",
+        "unrelated",
+        "retry",
+        "publication",
+        "deletion",
+        "orientation"
+      ],
+      [
+        "publication",
+        "deletion",
+        "orientation",
+        "unrelated",
+        "pagination",
+        "retry"
+      ],
+      [
+        "deletion",
+        "publication",
+        "unrelated",
+        "orientation",
+        "retry",
+        "pagination"
+      ]
+    ],
+    "scope": "synthetic portability controls; NOT independent held-out quality or inherited macOS quality"
+  },
+  "performance_acceptance": false,
+  "profile": "reference"
+}

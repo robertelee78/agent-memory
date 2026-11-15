@@ -1,0 +1,17 @@
+{
+ "argv": [
+  "git",
+  "-C",
+  "/tmp/am-v15-delivery/llama-reference",
+  "log",
+  "-1",
+  "--format=%H%n%ci%n%an%n%s",
+  "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.007,
+ "started_at": "2026-11-05T16:52:22.792048+00:00",
+ "stderr": "",
+ "stdout": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07\n2026-05-12 19:56:31 +0200\nSam\nfix: resolve conflicts with ggerganov/master\n"
+}

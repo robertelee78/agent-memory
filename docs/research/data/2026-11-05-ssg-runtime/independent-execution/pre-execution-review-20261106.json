@@ -1,0 +1,162 @@
+{
+  "schema": "am255/independent-pre-execution-source-review-v1",
+  "reviewed_candidate": "8577e1f3756f0b18c328081bfbd006f64ff6d169",
+  "requested_reviewer_model": "anthropic/claude-opus-5-5:high",
+  "synthetic_control_capsule": {
+    "path": "scorer-reviewed-controls-20261106.tar.gz",
+    "bytes": 2360809,
+    "sha256": "1ecbcad09aa5c63fe35b209993e7fdb528cbbeac2f1c85d26fea64e81cd084e0",
+    "scope": "Regular-file fixtures and actual reports for all eleven final controls; explicitly synthetic, no model/graph calls. FIFO itself is not archived.",
+    "reproduce": "Extract into a new private owned directory. From repository root run python3 -I -B docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py --suite docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json --scorer-map docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json --raw-root ABSOLUTE_EXTRACTED_CONTROL_ROOT --manifest manifest.json --expected-source-commit 8577e1f3756f0b18c328081bfbd006f64ff6d169 --output NEW_REPORT. Use the same 13 frozen source files and a new output; never replace raw results."
+  },
+  "reviews": [
+    {
+      "agent": "Scorer255IntegrityOpus",
+      "source": "24b6f45d80962a7582d2b80c9a966c9fb68c428c",
+      "scope": "Scorer source authority/path/domain/helper closure",
+      "verdict": "scoped PASS; no runtime performed"
+    },
+    {
+      "agent": "Scorer255MetricsOpus",
+      "source": "2c62bc23edc8bc1b11c7493a4f5f7e98955cb9b5",
+      "scope": "Scorer math/denominators/provenance and native-only producer accounting",
+      "verdict": "scoped PASS; no runtime performed"
+    },
+    {
+      "agent": "Executor255NativeOpus",
+      "source": "3187629caa2d1aa39649582a576751540500b5b3",
+      "scope": "Native pinning/eligibility/mutation catalogs/renderers",
+      "verdict": "scoped PASS; no runtime performed"
+    },
+    {
+      "agent": "Executor255ControllerOpus",
+      "source": "8577e1f3756f0b18c328081bfbd006f64ff6d169",
+      "scope": "Whole controller scheduling/freeze/artifact interface/failure state",
+      "verdict": "scoped PASS; no runtime performed"
+    },
+    {
+      "agent": "Executor255RuntimeOpus",
+      "source": "8577e1f3756f0b18c328081bfbd006f64ff6d169",
+      "scope": "Runtime/dependency/token/vector/graph/templates/disposal",
+      "verdict": "scoped PASS; no runtime performed"
+    }
+  ],
+  "source_files": {
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/execute.py": "0ec6a7397623f060da79fd4025042ada791d43820426f8d87a2943f92390a10e",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py": "d1c123985fc24dcb6386a2cac8cc6182fa3d8b83e5f5c433ee99de4476198ce6",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/compile_inputs.py": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_native.py": "657faa3697f4be541acca0d71a1292a38512dddd8a797c3f9312217e24578b17",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_runtime.py": "e29a9900528612c70e5e5f5d10510b00bc213866a2b4edec3de4eafb3001ddbe",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_graph.py": "efb2ff0366e0cb15f2483b5f8a014e47a288911449343d58a16825d8a2573097",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_render.py": "17b4d90a23ad9ab441f908d5aa1de4ad47463f976aae2de1a7f73e45240a42d8",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_templates.json": "dc7e2a4185eac1e802550d4de7d3097e4b8fac6771b1b45dcdd365108f649075",
+    "skills/agent-memory/scripts/source_startup.py": "124aa791b1da7b236d859a1153dbd47f98d924ac713b53289e81d3c3da10bf01",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-suite/validate_suite.py": "5b47a20c573d1cbbf093016f6ef33b42c72196d7140990c5d569a773d0c552a4",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-suite/g1_relationship_overlay.py": "69127e95964ba5e9ee46ff5ce1a616aebe5172f624923445e7cc5714279f993a",
+    "docs/research/data/2026-11-05-ssg-runtime/runtime-controls/common.py": "f08cb242284c91c8fb91445ff560bc2a1ea0e655844c66800eaa6c099cb9b6ab",
+    "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/compare_serving.py": "621c58ac9672a84b099d094e59658a263b733220d0ae5005ca1de4d12491f672"
+  },
+  "parent_smoke": {
+    "scope": "Explicitly synthetic math/integrity only; no embeddings/graph/model/runtime-state quality execution",
+    "expected_source_commit": "8577e1f3756f0b18c328081bfbd006f64ff6d169",
+    "checks": {
+      "final-native-refusal_exit": true,
+      "final-null-binding_exit": true,
+      "final-recipe-substitution_exit": true,
+      "final-helper-omission_exit": true,
+      "final-provider-on-unexecuted_exit": true,
+      "final-runtime_exit": true,
+      "final-stale_exit": true,
+      "final-origin_exit": true,
+      "final-provenance_exit": true,
+      "final-runtime-provider-gated_exit": true,
+      "final-stale-provider-gated_exit": true,
+      "65_semantic_typed_ann_unexecuted": true,
+      "73_semantic_typed_ann_unexecuted": true,
+      "stale_native_unexecuted": true,
+      "65_provider_unexecuted": true,
+      "73_provider_unexecuted": true,
+      "provenance_channel_origin_is_disallowed": true,
+      "unverified_required_separate_from_miss": true,
+      "typed_denominator_conservation": true,
+      "native_refusal_no_context_invention": true,
+      "null_binding_stays_unexecuted": true
+    },
+    "raw_root": "/tmp/am-v15-delivery/255-scorer-reviewed-controls-20261106",
+    "attempts": [
+      {
+        "name": "final-native-refusal",
+        "observed_exit": 0,
+        "seconds": 0.21420320798642933,
+        "report_sha256": "8267558e7e5ac9802de49762afcf43c9747141f095e449445fdb4bdc5598c410"
+      },
+      {
+        "name": "final-null-binding",
+        "observed_exit": 0,
+        "seconds": 0.189660708012525,
+        "report_sha256": "b1d9346aa18dc3a35a48033adf503b56b5e3d3a0d3c006a887a4b71547f470f4"
+      },
+      {
+        "name": "final-recipe-substitution",
+        "observed_exit": 2,
+        "seconds": 0.07280054199509323,
+        "report_sha256": "5a639568b42fdbfb9685af7b577673965569b63c6a9e14540c977e19b2ac5063"
+      },
+      {
+        "name": "final-helper-omission",
+        "observed_exit": 2,
+        "seconds": 0.15452916698995978,
+        "report_sha256": "016a612746d946e0574fff056961f0d70bd81e22e0b33e3df9d78b45ba888a0d"
+      },
+      {
+        "name": "final-provider-on-unexecuted",
+        "observed_exit": 2,
+        "seconds": 0.17449420801131055,
+        "report_sha256": "b198db652aaf2170caa8360d319267055fd108ac4f53659533955d4a214a39bb"
+      },
+      {
+        "name": "final-runtime",
+        "observed_exit": 0,
+        "seconds": 0.19133083400083706,
+        "report_sha256": "3561e76bf8125bb2d4530df9cdcc38b389758c3abbf0ffab1ce569b9d96cc7c5"
+      },
+      {
+        "name": "final-stale",
+        "observed_exit": 0,
+        "seconds": 0.1940502499928698,
+        "report_sha256": "5d117aa80d98d8a185dcf8914859a410c4d7458216614142b1667e8e162916f4"
+      },
+      {
+        "name": "final-origin",
+        "observed_exit": 0,
+        "seconds": 0.1889004580443725,
+        "report_sha256": "3a2c63c73d717fad39afe95d110648e623b2200d802d8095c186fad6326c62f4"
+      },
+      {
+        "name": "final-provenance",
+        "observed_exit": 0,
+        "seconds": 0.1880665000062436,
+        "report_sha256": "df1e3e743a8689f43ba4735f4e1810725088f2e77a3ab03398ea11185a68c01c"
+      },
+      {
+        "name": "final-runtime-provider-gated",
+        "observed_exit": 0,
+        "seconds": 0.18333070899825543,
+        "report_sha256": "e4f58869cd80b54c7df167df872496cab74b0670915e674de628afc062a6f1df"
+      },
+      {
+        "name": "final-stale-provider-gated",
+        "observed_exit": 0,
+        "seconds": 0.18333716597408056,
+        "report_sha256": "f45b6dcb4883c568d0a5d4c16e903b3bcc03a176d4cf28cff26e3b63594fcd26"
+      }
+    ],
+    "additional_fifo_control": {
+      "before": "Blocked until controller3s timeout; no report, child killed/reaped",
+      "after_exit": 2,
+      "after_seconds": 0.03993637498933822,
+      "after_report_sha256": "37cd06358423a5653f0200af540559f035d9fe0fd6ea633d588f22da24bcbd36"
+    }
+  },
+  "remaining": "Fresh8577e1f freeze and real model/graph1k10k50k execution/scoring, real state transitions or honest prerequisites, independent result/operator/legal disposition and task/release acceptance. Source review and synthetic controls fill no query-quality cells."
+}

@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "ls",
+    "--format",
+    "{{.Name}}"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t09a3471e4/m",
+  "exit": 0,
+  "seconds": 0.06699979200493544,
+  "started_at": "2026-11-06T19:48:15.883894+00:00",
+  "stderr": "",
+  "stdout": ""
+}

@@ -1,0 +1,31 @@
+{
+  "base_commit": "ba0087a129fed6dcda03ff4aa25060289531014a",
+  "canonical_inputs_sha256": "5e7d61a18511bc8182685e04ae4777f260d737fe6e80ead901bb0be3ac0d9645",
+  "clone": "/Users/robert.lee/.omp/wt/t8186eff00/m",
+  "common_sha256": "f08cb242284c91c8fb91445ff560bc2a1ea0e655844c66800eaa6c099cb9b6ab",
+  "contention": "Normal shared host load; graph comparison/other ordinary jobs may overlap. No clean timing reservation or OS cache purge.",
+  "execution_commit": "fef68d07d0a8617220c3f332b0de7694cec7ad20",
+  "freeze_commit": "fef68d07d0a8617220c3f332b0de7694cec7ad20",
+  "frozen_inputs_file_sha256": "a913cacb13e660ad738b76fae2beddb2e3a6631796e915d788ab66308ad61edd",
+  "host": {
+    "argv": [
+      "sysctl",
+      "hw.model",
+      "hw.memsize",
+      "hw.ncpu"
+    ],
+    "exit": 0,
+    "seconds": 0.0039135420229285955,
+    "stderr": "",
+    "stdout": "hw.model: Mac17,6\nhw.memsize: 137438953472\nhw.ncpu: 18\n"
+  },
+  "load_before": [
+    7.41259765625,
+    6.4267578125,
+    6.1728515625
+  ],
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.12",
+  "script_sha256": "6e0a0198822e939ec875c37cb9786379a95f220dec6a43c0204bafabd37c24b7",
+  "started_at": "2026-11-06T19:16:09.107136+00:00"
+}

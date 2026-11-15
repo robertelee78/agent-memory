@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "uptime"
+  ],
+  "duration_seconds": 0.006228208541870117,
+  "exit": 0,
+  "start_unix": 1793997536.3666189,
+  "stderr": "",
+  "stdout": "12:38  up 4 days, 18:01, 1 user, load averages: 3.16 3.86 4.50\n"
+}

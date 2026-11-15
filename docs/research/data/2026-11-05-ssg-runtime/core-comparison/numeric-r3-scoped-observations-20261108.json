@@ -1,0 +1,116 @@
+{
+  "schema": "am255/core-numeric-r3-scoped-observations-v1",
+  "status": "SCOPED_NUMERIC_PASS_NOT_ACCEPTANCE",
+  "G1": "NOT_ACCEPTED",
+  "semantic_quality": "UNEXECUTED",
+  "source_binary_linkage": "UNATTESTED",
+  "platform": "local macOS arm64 Podman VM",
+  "image": "docker.io/memgraph/memgraph@sha256:042c8642954a7bde971a9c7683c8b1360e7fcf129a5fae36d63f12449e7154aa",
+  "freeze_sha256": "e9eaf1f98fd80e12123ccc986f3221856c590f834b91fb64d4643fd76e8557da",
+  "scientific_result_sha256": "0ca0b4ddbd0de77ca0e5757cbabd3d9cace87783f5e5e767817ebbe5c7cca963",
+  "outer_completion_notice_sha256": "a14b5eebc77f680b0370aee84994156ffc36c1896520640d9360f9913019e449",
+  "geometry": {
+    "dimension": 4096,
+    "dtype": "f32",
+    "metric": "cos",
+    "B": 16,
+    "K": 5,
+    "eligible_N": [
+      64,
+      1024
+    ],
+    "fresh_builds_per_size": 5,
+    "submitted_schedules": [
+      "key-ascending",
+      "key-descending",
+      "three frozen sha256 orders"
+    ],
+    "native_membership": "native175 complete prebudget gates, not the bounded32-row output",
+    "nonexhaustive_visitation_proven": false
+  },
+  "observed": {
+    "all_ten_completed": true,
+    "all_numeric_predicates_met": true,
+    "raw_candidates_equal_exact_top16_in_order_every_build": true,
+    "candidate_recall_of_exact_top5": 1.0,
+    "rescored_top5_overlap": 1.0,
+    "maximum_raw_similarity_or_distance_absolute_error_upper_bound": 4.4e-08,
+    "numpy_float64_vs_independent_fsum_max_difference": 0.0,
+    "raw_signed_controls": "PARTIAL_B16_ONLY; antiparallel/orthogonal not returned, engine negative-score semantics unobserved",
+    "create_drop_retries": 0,
+    "owned_cells_disposed": 10,
+    "owned_containers_disposed": 10,
+    "owned_named_volumes_disposed": 20,
+    "cleanup_errors": 0,
+    "live_scientific_workers": 0,
+    "forensic_erasure_claim": false,
+    "inventory_atomic": false
+  },
+  "cells": [
+    {
+      "eligible_N": 64,
+      "build": 0,
+      "build_result_sha256": "a04df6746e964e6b83f2db9079abe8c813f1e5ac724c5ee566a3c0d8fd73cce2"
+    },
+    {
+      "eligible_N": 64,
+      "build": 1,
+      "build_result_sha256": "cc84d7168bbe22d31d6961af3edc84dad7a5f0f2c3154345566fad392c8ea090"
+    },
+    {
+      "eligible_N": 64,
+      "build": 2,
+      "build_result_sha256": "3d218cfa6f36588be5cda137d7f0fc2ecf918d89ec42723dfa4961430bc061bf"
+    },
+    {
+      "eligible_N": 64,
+      "build": 3,
+      "build_result_sha256": "4b97825b0c2a13d8bccad0ac8829ba731682c9576640507f997f51b6527ac356"
+    },
+    {
+      "eligible_N": 64,
+      "build": 4,
+      "build_result_sha256": "ad86a927e11216cb2d642fb2964e16ea056cd2977e30fe87e99c57aab15b52bf"
+    },
+    {
+      "eligible_N": 1024,
+      "build": 0,
+      "build_result_sha256": "9d9b4ad522212535589d4ab20e634d1107efa40083a255b523a19de6582bbc50"
+    },
+    {
+      "eligible_N": 1024,
+      "build": 1,
+      "build_result_sha256": "aea58c3133d2a23d63446b54514b9c5b2fc4bcf14e0730b6233e1f3749fd05d8"
+    },
+    {
+      "eligible_N": 1024,
+      "build": 2,
+      "build_result_sha256": "7710aa6d7ab25e10f8d258ee8636b48da994f13a8c62609a94d600eb6d6ec5da"
+    },
+    {
+      "eligible_N": 1024,
+      "build": 3,
+      "build_result_sha256": "5676285fc0c857b37519686faf6500ab3e24af01f9ad8a596e8ce718367abb49"
+    },
+    {
+      "eligible_N": 1024,
+      "build": 4,
+      "build_result_sha256": "81a24fc52d3912b560dd8ec35855ac8ff9f702efe72738a3730c53f93be07606"
+    }
+  ],
+  "limits": [
+    "N64 is mechanism-only; N1024 is an easy well-separated synthetic numeric diagnostic, not named1000.",
+    "1000/10000/50000 native-semantic ANN comparisons remain UNEXECUTED.",
+    "Seed, internal index insertion order, visited vectors and source-to-binary attestation unobserved.",
+    "Per-statement subprocess/hash/import overhead is included; timings are not engine latency or performance qualification.",
+    "Outer receipt is a transcription of tool completion notice; raw OS streams/wait status not captured; exit0 is inferred only.",
+    "Six NumPy matmul warnings emitted unsuppressed; cause unknown despite finite exact math.fsum agreement."
+  ],
+  "independent_review": {
+    "model": "anthropic/claude-opus-5-5",
+    "verdict": "scoped actual numeric PASS with explicit limits; no P2 remaining after honest outer-notice retention",
+    "all_eight_original_acceptance_criteria_closed": false
+  },
+  "original_negative_runs_retained": true,
+  "licensing_or_production_approval": false
+}

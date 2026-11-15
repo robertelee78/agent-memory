@@ -1,0 +1,40 @@
+{
+  "schema": "am249/controlled-source-profile-scoped-observation-v1",
+  "source_commit": "dc66d2af521017d7c09f2a56b28f535504671cac",
+  "artifact_digest": "b78fe88351c286384bf602c7a9dedf6ee7f14fc7cc9f4ca4cb582890db9f4caf",
+  "worker_exit": 0,
+  "worker_seconds_instrumented": 29.61890050000511,
+  "request_count": 7,
+  "all_requests_verified": true,
+  "verified_sequences": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "source_unchanged": true,
+  "canonical_bank_unchanged": true,
+  "model_native_provider_graph_or_token_launched": false,
+  "native_release_or_G1_acceptance": false,
+  "pending_assessments_not_cleared": true,
+  "signals_sent": false,
+  "profile_sha256": "dfbac039776d094e50d4089991d134c3ba3926bf51d28af0d6b896f4947ece57",
+  "profile_total_calls": 31216003,
+  "private_archive_sha256": "73d2ceea21d612b6f6d1b9fd6fe52f9324cbe5158f5ddd9f2dd71cea2ee5e90e",
+  "result_sha256": "c0554e69a000bad66273898af2179d285d45fab68dd8d75abb9584ec8a8a7683",
+  "call_counts": {
+    "identity_git.git": 3902,
+    "scope_binding.private_enrollment_context": 134,
+    "scope_binding.recheck_private_enrollment": 105,
+    "repository_config.settings": 773
+  },
+  "limits": [
+    "Seven controlled synthetic requests, no native client or model; not native performance acceptance.",
+    "cProfile instruments execution. Overlapping cumulative thread timings cannot be summed or treated as exclusive stage costs.",
+    "No nonce-bearing wake, deadline improvement, causal source-path latency or original R5b exception cause is established.",
+    "Counted FIFO source attempts remain complete; no pending assessment cleared."
+  ]
+}

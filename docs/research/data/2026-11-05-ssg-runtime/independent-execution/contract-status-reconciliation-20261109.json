@@ -1,0 +1,40 @@
+{
+  "schema": "am255/contract-status-reconciliation-v1",
+  "date": "2026-11-09",
+  "base_commit": "02af460e8859279402370d65ad138df4bb73a25a",
+  "scope": "Editorial reconciliation of dated observations and accepted ADR27 graph direction; normative original acceptance criteria unchanged",
+  "files": [
+    {
+      "path": "docs/design/v0.0.16-graph-embedding-execution.md",
+      "before_sha256": "2fda4a658acdbcb10d4ed07efa5f0e7ed80eac8de98a032aaec0f897fe63c4ac",
+      "after_sha256": "32b9fb5b4261015f6a9f979178230167d69ac66be69a0c7eb4d28c6f1f977730"
+    },
+    {
+      "path": "docs/research/v0.0.15-ssg-runtime-licenses.md",
+      "before_sha256": "f7584e8d54974ab494ed7d5c2475d6575c865058471d815a87c4004ddd715267",
+      "after_sha256": "c2a2d7f6f772820ebfceba4d39f283b20334deb26ee23831d5e06eb1feba8be5"
+    }
+  ],
+  "independent_source_review": {
+    "reviewer": "G1ReconciledContractOpus",
+    "model": "anthropic/claude-opus-5-5",
+    "verdict": "PASS after corrections; source-only, no execution acceptance",
+    "retained_review_sha256": "6d54b1da2634663a671eb1d8c9ed252d7548fc93643b2d30c0d7504387fea010"
+  },
+  "corrections": [
+    "Accepted ADR27 graph-direction amendment no longer listed as missing; no silent managed MAGE fallback or embedding selection.",
+    "Serving comparison historical two llama endpoints distinguished from later separate BYO API observations.",
+    "amd64 contents observed vs execution unqualified kept separate.",
+    "Exact license/target dispositions still unrecorded, rather than falsely saying no operator graph decision exists.",
+    "Later actual fiftyK failure/partial opened-holdout scoring linked instead of stale launched status; original negatives unchanged.",
+    "Research and later implementation gaps explicitly not a second #255 requirement authority.",
+    "Failed 50k execution, opened holdout and partial offline scoring replace stale pending prose; original negatives and erasure-pending unchanged.",
+    "Operator-reported BYO limits, routing and autostart remain unexercised; transport failure does not prove host unavailable or contradict the report.",
+    "Signed raw distance interpretation is separate from candidate-selection containment and the standalone USearch comparison."
+  ],
+  "limits": [
+    "Managed core selection is the operator decision, not licensing or deployment clearance.",
+    "Core lifecycle and named 1k/10k/50k research, serving-artifact choice, contract dispositions and exact operator target/licence dispositions remain open.",
+    "No G1, downstream Ready, quality, production or release acceptance."
+  ]
+}

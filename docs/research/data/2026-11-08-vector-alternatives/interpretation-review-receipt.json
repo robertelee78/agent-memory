@@ -1,0 +1,26 @@
+{
+  "model": "anthropic/claude-fable-5",
+  "session": "01a1bbd1-7431-7266-8d60-88fa4239e494",
+  "verdict": "PASS for bounded numeric research/recommendation only",
+  "verdict_sha256": "0d66c49b9bbad972eb7f9d9047d8b95d28d92120df6cc1795351497327eb94c0",
+  "report_sha256": "b14bfddaec76a233f8624a13a60c919eb55e45eff5a04d08474ba60d5b00f44f",
+  "reviewed_input_sha256": {
+    "execution-review.txt": "4b6066f56083a3709368ae1a1c1ca8d3e7a16090a6971d8a7b2b4186625c29a3",
+    "50k-events.jsonl": "66e9e62c63e73afe027b15c04ada746db8a15ebd1f515530ce7f6c4aab62907c",
+    "1k-manifest.json": "9ae74c39cf0eab0b96690e41ca8f29ee042d146b669859aceb480074e75a01c8",
+    "1k-events.jsonl": "e28736039d66e51653f6a1c422e16c02ae438c3efd392b572378cb55b06f0358",
+    "50k-manifest.json": "11caafad818e352ac53dd32345cc31840fd25045c3117a30747ef8dc1bef166e",
+    "10k-events.jsonl": "44227eb2b52bc93ad01b57d52252152f1e60af1014ab086f9763413a2516b12b",
+    "experiment.py": "ca7b95fbdab40e0a87b92c83e0e9756314a703006f35656f5583e3c227a82bd0",
+    "observations.json": "49c7b810b9bfa623bb5d006cf25b4af7f9ce41824856c69830f8f003c795b6d6",
+    "10k-manifest.json": "4292fe7cce1e1b7cdafc5629962757d797ceee39f8632d4373b2a779aa43c865",
+    "design.json": "8e4dad6369e08afa2e5efd66a4cd834863559643bec8077b2f1b6ceb3fa9932f"
+  },
+  "not_granted": [
+    "G1acceptance",
+    "AMprofileapproval",
+    "operatorapproval",
+    "licenseclearance",
+    "signedreleaseacceptance"
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "schema": "agent-memory/vector-alternative-observations-v1",
+  "recorded_at": "2026-11-08T15:38:21.505373+00:00",
+  "status": "Completed bounded synthetic numeric research; not AM native, semantic-quality or G1 qualification",
+  "design_sha256": "8e4dad6369e08afa2e5efd66a4cd834863559643bec8077b2f1b6ceb3fa9932f",
+  "experiment_sha256": "ca7b95fbdab40e0a87b92c83e0e9756314a703006f35656f5583e3c227a82bd0",
+  "review": {
+    "model": "anthropic/claude-opus-5-5",
+    "session": "01a1bbb1-7830-73c9-90ee-0292b620f7bb",
+    "verdict": "PASS for bounded research execution, not operator approval",
+    "verdict_sha256": "f7571c98929e17534d418c61095f3803e09ca461e4a3d66025b980b7636d2270"
+  },
+  "wheel_verification": [
+    {
+      "file": "usearch-2.26.6-cp313-cp313-macosx_11_0_arm64.whl",
+      "sha256": "9803ae36ab7ba67d2273e81761092ab4fb98556318c9f12755f4427e5332f2a7",
+      "bytes": 455223,
+      "name": "usearch",
+      "version": "2.26.6",
+      "requires_dist": [
+        "numpy",
+        "tqdm",
+        "numkong>=7.8.6"
+      ]
+    },
+    {
+      "file": "numpy-2.2.6-cp313-cp313-macosx_11_0_arm64.whl",
+      "sha256": "287cc3162b6f01463ccd86be154f284d0893d2b3ed7292439ea97eafa8170e0b",
+      "bytes": 14143006,
+      "name": "numpy",
+      "version": "2.2.6",
+      "requires_dist": []
+    },
+    {
+      "file": "numkong-7.8.6-cp313-cp313-macosx_11_0_arm64.whl",
+      "sha256": "fb746b12970d8891f43f777d6e47c2f7b35c55769340b6e8d6b2631d2633d9e7",
+      "bytes": 817522,
+      "name": "numkong",
+      "version": "7.8.6",
+      "requires_dist": []
+    },
+    {
+      "file": "tqdm-4.67.1-py3-none-any.whl",
+      "sha256": "26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2",
+      "bytes": 78540,
+      "name": "tqdm",
+      "version": "4.67.1",
+      "requires_dist": [
+        "colorama; platform_system == \"Windows\"",
+        "pytest>=6; extra == \"dev\"",
+        "pytest-cov; extra == \"dev\"",
+        "pytest-timeout; extra == \"dev\"",
+        "pytest-asyncio>=0.24; extra == \"dev\"",
+        "nbval; extra == \"dev\"",
+        "requests; extra == \"discord\"",
+        "slack-sdk; extra == \"slack\"",
+        "requests; extra == \"telegram\"",
+        "ipywidgets>=6; extra == \"notebook\""
+      ]
+    }
+  ],
+  "cells": {
+    "1000": {
+      "events_sha256": "e28736039d66e51653f6a1c422e16c02ae438c3efd392b572378cb55b06f0358",
+      "manifest_sha256": "9ae74c39cf0eab0b96690e41ca8f29ee042d146b669859aceb480074e75a01c8",
+      "data_sha256": "df700924d227099e545cfcfe94d966d732c856be2a75eb5c02910d58d7d7620c",
+      "queries_sha256": "3cd522711d8040dd62efe4ab8c149aa36865873c07b91eeeccdfbbd0581e1816",
+      "hnsw_candidate_recall_at_10": [
+        1.0,
+        0.9,
+        1.0,
+        1.0,
+        1.0,
+        0.9,
+        1.0,
+        1.0
+      ],
+      "exact_candidate_recall_at_10": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "median_exact_ms": 0.069833,
+      "median_hnsw_ms": 0.04706249999999999,
+      "max_score_error": 2.959313416539544e-08,
+      "build_ms": 43.692875,
+      "index_bytes": 403784,
+      "corrupt_index_refused": true,
+      "reload_identical": true,
+      "supervisor": {
+        "exit": 0,
+        "elapsed_seconds": 2.528932375018485,
+        "aggregate_owned_peak_rss_sampled_bytes": 48906240,
+        "sample_interval_seconds": 0.25,
+        "stop_reason": null,
+        "source_sha256": "ca7b95fbdab40e0a87b92c83e0e9756314a703006f35656f5583e3c227a82bd0",
+        "design_sha256": "8e4dad6369e08afa2e5efd66a4cd834863559643bec8077b2f1b6ceb3fa9932f",
+        "rss_limit": "Sampled parent+child process-group RSS; short-lived peaks between samples may be missed."
+      }
+    },
+    "10000": {
+      "events_sha256": "44227eb2b52bc93ad01b57d52252152f1e60af1014ab086f9763413a2516b12b",
+      "manifest_sha256": "4292fe7cce1e1b7cdafc5629962757d797ceee39f8632d4373b2a779aa43c865",
+      "data_sha256": "0d2da780de745abd3a223e4f9828c5e5f00ebc6bf3ddd95de7cfc0b740f5cccd",
+      "queries_sha256": "b19b79c22c23676304c34591263101477a2f50cc2907ca6af28141298218d48b",
+      "hnsw_candidate_recall_at_10": [
+        1.0,
+        0.5,
+        0.8,
+        0.8,
+        0.7,
+        0.9,
+        0.9,
+        0.9
+      ],
+      "exact_candidate_recall_at_10": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "median_exact_ms": 0.33841699999999997,
+      "median_hnsw_ms": 0.1038335,
+      "max_score_error": 2.969998447177602e-08,
+      "build_ms": 1021.968875,
+      "index_bytes": 4044788,
+      "corrupt_index_refused": true,
+      "reload_identical": true,
+      "supervisor": {
+        "exit": 0,
+        "elapsed_seconds": 2.267920708982274,
+        "aggregate_owned_peak_rss_sampled_bytes": 68747264,
+        "sample_interval_seconds": 0.25,
+        "stop_reason": null,
+        "source_sha256": "ca7b95fbdab40e0a87b92c83e0e9756314a703006f35656f5583e3c227a82bd0",
+        "design_sha256": "8e4dad6369e08afa2e5efd66a4cd834863559643bec8077b2f1b6ceb3fa9932f",
+        "rss_limit": "Sampled parent+child process-group RSS; short-lived peaks between samples may be missed."
+      }
+    },
+    "50000": {
+      "events_sha256": "66e9e62c63e73afe027b15c04ada746db8a15ebd1f515530ce7f6c4aab62907c",
+      "manifest_sha256": "11caafad818e352ac53dd32345cc31840fd25045c3117a30747ef8dc1bef166e",
+      "data_sha256": "b91570582d46c1f5fea2baccd9efed4892304bbaadf48d18d8b86424ae12b867",
+      "queries_sha256": "adf9c96e52a8f09eadf1babe46ecadac9ec34a91fb7cb97aa982cc0b10fd810f",
+      "hnsw_candidate_recall_at_10": [
+        0.5,
+        0.8,
+        0.8,
+        0.6,
+        0.7,
+        0.4,
+        0.2,
+        0.3
+      ],
+      "exact_candidate_recall_at_10": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "median_exact_ms": 1.4367705000000002,
+      "median_hnsw_ms": 0.17260399999999998,
+      "max_score_error": 2.966418977123908e-08,
+      "build_ms": 8567.414042,
+      "index_bytes": 20222540,
+      "corrupt_index_refused": true,
+      "reload_identical": true,
+      "supervisor": {
+        "exit": 0,
+        "elapsed_seconds": 13.298122167005204,
+        "aggregate_owned_peak_rss_sampled_bytes": 167411712,
+        "sample_interval_seconds": 0.25,
+        "stop_reason": null,
+        "source_sha256": "ca7b95fbdab40e0a87b92c83e0e9756314a703006f35656f5583e3c227a82bd0",
+        "design_sha256": "8e4dad6369e08afa2e5efd66a4cd834863559643bec8077b2f1b6ceb3fa9932f",
+        "rss_limit": "Sampled parent+child process-group RSS; short-lived peaks between samples may be missed."
+      }
+    }
+  },
+  "scope": {
+    "data": "Synthetic64-dimensional original f32 integer vectors;8queries per size; querybytes differ acrosssizes",
+    "safety": "Invalidzero/nonfiniteinputs rejected by experiment beforelibrary, not evidence of native library rejection",
+    "recall": "Oracle top10 membership in32returned candidates, not arbitrarysemanticrelevance or AMeligibility",
+    "runtime": "macOSarm64 pyenv CPython3.13.12; unchanged pinned packages/settings/tolerance; one run per size",
+    "load": "Normally busyhost, concurrentreleasegate and other activity; no causal cross-stack speedup or representativepercentiles",
+    "rss": "Sampled processgroup aggregate can miss short-livedpeaks; libraryparentmaxRSS separatelyinevents",
+    "corruption": "Only actual64byte truncation; not generalcorruption/AMlifecycle safety",
+    "relationship": "Memgraph itself embedsUSearch; this tests separatebinding/version/path, not independentANNalgorithm",
+    "none_claimed": [
+      "Productionapproval",
+      "Licensingclearance",
+      "AMprofilepromotion",
+      "Original50kDDLcause",
+      "Freshsemanticheldoutqualification",
+      "#255G1acceptance"
+    ]
+  }
+}

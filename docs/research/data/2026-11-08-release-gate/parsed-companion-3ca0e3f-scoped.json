@@ -1,0 +1,51 @@
+{
+  "schema": "agent-memory/scoped-public-reuse-diagnostic-v1",
+  "source_commit": "3ca0e3fbdcc060b1aa57a4c2dd67ee8da74ee4b9",
+  "bank_contract_sha256": "4e590572d93741c5887358e50f31b4bc8f58cea04a06a7a523467e582f73822b",
+  "scope": "Small disposable synthetic public refresh/recall; instrumentation, not performance qualification",
+  "result": "pass",
+  "public_command_deadline_seconds": 300,
+  "prepare": {
+    "seconds": 6.644952,
+    "companion_consumers": 11,
+    "companion_hits": 10
+  },
+  "apply": {
+    "seconds": 11.77247,
+    "companion_consumers": 20,
+    "companion_hits": 19
+  },
+  "recall": {
+    "seconds": 1.358002,
+    "result_and_source_hash_parity": true
+  },
+  "preserved": {
+    "preexisting_nonrouter_bank_files": true,
+    "feature_index_head_branch": true,
+    "unrelated_file": true,
+    "exact_imported_record_bytes": true,
+    "recall_keeps_bank_and_feature_state": true
+  },
+  "fixture_cleaned": true,
+  "focused_complete_workers": [
+    {
+      "suite": "operation-validation-reuse",
+      "methods": 7,
+      "seconds": 185.4323792080395,
+      "passed": true
+    },
+    {
+      "suite": "learning-admission-case-13",
+      "methods": 1,
+      "seconds": 22.25487249996513,
+      "passed": true
+    },
+    {
+      "suite": "refresh-cursor",
+      "methods": 2,
+      "seconds": 129.12906858301722,
+      "passed": true
+    }
+  ],
+  "not_full_stress_or_platform_acceptance": true
+}

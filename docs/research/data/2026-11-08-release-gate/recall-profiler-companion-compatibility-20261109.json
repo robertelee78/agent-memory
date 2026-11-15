@@ -1,0 +1,69 @@
+{
+  "schema": "agent-memory/scoped-profiler-compatibility-proof-v1",
+  "old_profiler_source_commit": "f148da42e0944adf323556685981b1545e0c8a9e",
+  "corrected_profiler_source_sha256": "be5f0f22d11086322529c9c4c4edb4f22eabf05402e512cbb53030891c3bffdf",
+  "scope": "Evaluation apparatus compatibility with parsed companion producers; portable product runtime unchanged",
+  "before": {
+    "old_profiler_source_commit": "f148da42e0944adf323556685981b1545e0c8a9e",
+    "old_source_sha256": "d6ad93ca4c571a228d8e33ada9c021b6e8f518ac778466f2786ca264f88e907b",
+    "witness_only_diagnostic_no_exception_suppression": true,
+    "actual_unsupported_type": "function",
+    "public_exit": 1,
+    "public_failure_code": "refresh-unverified",
+    "bank_and_feature_state_preserved": true,
+    "scope": "Actual pre-fix public consumer failure mechanism, not a new product failure or timing claim",
+    "passed": true,
+    "fixture_cleaned": true
+  },
+  "after": {
+    "all_public_commands_succeed": true,
+    "public_refresh_verified": true,
+    "actual_bank_format_hits_recorded": true,
+    "actual_security_inputs_recorded": true,
+    "record_identity_and_source_bytes_preserved": true,
+    "feature_index_head_preserved": true,
+    "preexisting_nonrouter_bank_preserved": true,
+    "fixture_cleaned": true,
+    "commands": [
+      {
+        "helper": "refresh_memory.py",
+        "operation": "inspect",
+        "exit": 0,
+        "seconds": 3.88554733293131,
+        "bank_format_calls": 13,
+        "bank_format_hits": 11,
+        "security_scan_calls": 170
+      },
+      {
+        "helper": "reconcile_memory.py",
+        "operation": "review",
+        "exit": 0,
+        "seconds": 3.3144839589949697,
+        "bank_format_calls": 31,
+        "bank_format_hits": 29,
+        "security_scan_calls": 228
+      },
+      {
+        "helper": "refresh_memory.py",
+        "operation": "prepare",
+        "exit": 0,
+        "seconds": 6.829540500068106,
+        "bank_format_calls": 65,
+        "bank_format_hits": 63,
+        "security_scan_calls": 488
+      },
+      {
+        "helper": "refresh_memory.py",
+        "operation": "apply",
+        "exit": 0,
+        "seconds": 12.245809457963333,
+        "bank_format_calls": 81,
+        "bank_format_hits": 79,
+        "security_scan_calls": 725
+      }
+    ]
+  },
+  "prior_combined_diagnostic_failed_because_wrapper_screens_exception": true,
+  "prior_failed_diagnostic_not_relabelled_as_overall_pass": true,
+  "full_24_world_instrument_or_performance_accepted": false
+}

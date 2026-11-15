@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "rm",
+    "am255-compare-5b6962955026-mage-logs"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.06741562503157184,
+  "started_at": "2026-11-06T19:23:29.130078+00:00",
+  "stderr": "",
+  "stdout": "am255-compare-5b6962955026-mage-logs\n"
+}

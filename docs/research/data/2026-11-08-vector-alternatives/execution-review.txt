@@ -1,0 +1,32 @@
+**Verdict: PASS.** I found no blockers to one default 1k smoke run. 10k and 50k can follow on the same frozen design, each only after the operator reviews the result before it. This is not operator approval.
+
+**Scope.** I read both files in full using only read/grep. I also read the USearch v2.26.6 `python/usearch/index.py` file from GitHub to check the API calls; that was during review, not during the diagnostic. I could not compute SHA256 with read-only tools, so the parent must still confirm `8e4dad63…` and `ca7b95fb…` against the files, and `source_sha256`/`design_sha256` in the manifest. Results cover synthetic integer-valued f32 fixtures and one interpreter/wheel cell on macOS arm64. They say nothing about AM, Memgraph, semantic quality, production use or lifecycle.
+
+**Checks that hold**
+- **API calls match USearch 2.26.6.** `Index(ndim, metric, dtype, connectivity, expansion_add, expansion_search, multi)` is keyword-only. `add(keys, vectors, threads=)`, `search(v, count, threads=, exact=)` and `hardware_acceleration` all exist. A single query returns `BatchMatches[0]`, trimmed to `counts`. `save`, `metadata` and `load` call `os.fspath`, so `Path` arguments work. `restore(path, **kwargs)` returns `None` when there is no metadata, otherwise builds the index and calls `load`.
+- **Signed score control.** The 5-vector control (experiment.py:96-116) compares every key's raw exact and HNSW distance to `1 − f64 signed cosine` within 2e-5. It covers parallel, antiparallel (expected 2), orthogonal, non-unit, and exact-tie cases. Integer values up to 127 in 64 dimensions keep all f32 dot products and squared norms exact (below 2^24). So any error comes from the library's sqrt/divide step or from its scoring definition, which is the effect being tested.
+- **Truncated-boundary tie control.** Lines 130-143 handle it correctly. `tie_recall` (85-91) is correct: it uses exact f64 equality and ignores the library's tie order.
+- **Checks before use.** Input validation runs before every `add`. Result count, uniqueness, key range and finite scores are checked (77-82) before any key indexes `data`.
+- **Corrupt-index child.** The truncated index is opened in a separate child with a 30 s timeout, and its exit code, stdout and stderr are kept. Acceptance, a crash (negative exit code) or a timeout counts as failure. Because the parent's own `restore(Path)` succeeds first, a `TypeError` caused by the argument type cannot pass for a refusal.
+- **Manifest and failure retention.** The manifest is written exclusively and fsynced before controls run. It binds the data and query hashes, settings, versions, executable hash and source/design hashes. Events are append-only with fsync. A `BaseException` after the output directory exists still produces a failure event, and nothing gets deleted.
+- **Resource bounds.** At 50k: about 400k Python cosine computations (roughly tens of seconds), a native index of about 25–40 MB, and a child of about 100 MB. That is well inside 1 GiB RSS, 30 min wall time and 256 MiB disk.
+
+**Interpretation limits (non-blocking)**
+1. **Reranked recall adds nothing** (experiment.py:274). With an exact oracle, it equals `hnsw_candidate_recall_at_10` by construction. Recall from HNSW's own top-10 ordering is not computed. Work it out afterwards from `hnsw_raw` if needed.
+2. **The exact pass check is loose** (267). It only requires the oracle top-10 to appear somewhere in the 32 exact candidates. It does not test the library's exact ordering or its top-10 set. The per-key score error check covers score correctness.
+3. **The tie-order check is trivial** (127). It sorts Python values that are all exactly 1.0 and says nothing about the library. The invalid-input checks only test the experiment's own `validate`, as the design says. No zero/NaN/Inf input reaches USearch, so library handling of invalid input stays unmeasured.
+4. **One truncation case only.** The 64 bytes most likely equal the complete USearch dense header, so the loader probably fails on the missing body. Not tested: mid-body truncation, bit flips, or `view=True`. Any exception class counts as a refusal, so read the recorded `stdout`.
+5. **Short HNSW results end the run** (82). If HNSW returns fewer than 32 results, the run stops with a failure event and later queries are not measured. On the tiny controls, this would stop the run before the data build. Either outcome is a valid negative finding, not a pass.
+6. **Peak memory is parent-only** (278). `ru_maxrss` covers just the parent process; the supervisor's RSS figure is the authoritative one. The executable hash does not cover a shared `libpython` or the USearch native extension. Results across sizes use different query bytes, so recall is not compared on the same queries.
+
+**Operator steps for 10k/50k** (no code change needed)
+- The size gate (186-188) only finds a passing `complete` line. It does not check the smoke run's source, design or manifest, and the code would let 50k run straight after 1k.
+- Before 10k, check by hand that the smoke run's `manifest.json` has `source_sha256` and `design_sha256` equal to the frozen hashes, and that the `started` event's `manifest_sha256` matches that manifest. Check all events and supervisor logs too.
+- Run 10k before 50k and review it before authorizing 50k.
+- Clear `PYTHONPATH` in the supervisor's launch environment, because the child inherits it.
+
+**Optional changes for the next design version** (each needs a new review, because it changes the hashes)
+- Record `usearch.__file__` and the SHA of the compiled extension, plus `USES_NUMKONG`/`USES_SIMSIMD`.
+- Record `RUSAGE_CHILDREN`.
+- Add HNSW top-10 recall computed from the library's ordering.
+- Make the size gate check the smoke manifest's hashes.

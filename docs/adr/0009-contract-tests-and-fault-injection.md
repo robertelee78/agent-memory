@@ -6,6 +6,8 @@ date: 2026-10-21
 depends-on: [ADR-0003, ADR-0006, ADR-0007]
 ---
 
+> Superseded by the lean design (2026-11-15): [v0.0.15-lean.md](../design/v0.0.15-lean.md).
+
 # ADR-0009: End-to-end contract tests and incident-derived regressions
 
 Accepted for **v0.0.1 only**, as recorded in the

@@ -1,0 +1,104 @@
+{
+ "schema": "agent-memory/g1-independent-suite-freeze-v1",
+ "suite_id": "g1-paraphrase-relationship-safety-v1",
+ "frozen_at": "2026-11-05T17:19:50Z",
+ "am_base_commit": "175d21fa26bbef41f8ec859b463876934e16db79",
+ "artifacts_sha256": {
+  "suite.json": "36b663df90a5002ef93996ccc76e0a5de932f984d4a35178fe32b6f74e83b21f",
+  "author_suite.py": "8c4cfe15588a731c40505ad3258e1d6b87977236b7336aa44bcb60c7fcd591a9",
+  "g1_relationship_overlay.py": "69127e95964ba5e9ee46ff5ce1a616aebe5172f624923445e7cc5714279f993a",
+  "validate_suite.py": "5b47a20c573d1cbbf093016f6ef33b42c72196d7140990c5d569a773d0c552a4",
+  "validation-1000.json": "2c1e580385a3f94419c9a5da62bfff58f334a11fc6849b914fb3e984bf8180a9"
+ },
+ "labels_sha256": {
+  "cases": "39b78cd401b4170cc0dcaa35df18dd914477bd9b4a40532d079fd4024ac5c43b",
+  "records": "742fc76f1f54027cf19d41e85f6238cae0d0ad0416a8dea9f1fe09040851b7e1",
+  "mutations": "4f05278a4dc1a0b4fadc5aebf1c25f78adf60e28ecf1060986516bb30e9b351d",
+  "global_invariants": "e431e62c7a5a6fe8df4d40e15e0ade70a682665134b55228cc60c07d11a5bef8",
+  "coverage": "7ccc08af0d21998de78ec32d79f07c0b37aaf99bf2a8df8b2dc7c0fa30cc4cac",
+  "proposals": "3847e955739257287352fcea94c845e63b4fe8f1a26375cdf0e02e86acefc578"
+ },
+ "sources": {
+  "am_base_commit": "175d21fa26bbef41f8ec859b463876934e16db79",
+  "pinned_files_sha256": {
+   "scripts/evaluations/semantic_navigation_fixture.py": "a1b8cfae9a269ba79c6ae0e29e287dfd6c6c57c64bb7f88ab03927dd5ce9963f",
+   "scripts/evaluations/labeled_recall_fixture.py": "dded27f037c0770edbf3127eb8f8b944ce29d05b331d4cf0782c2389e627e2a9",
+   "skills/agent-memory/templates/record-proposal.example.json": "87e9a441607c8ec83545ee57f157cd51b2be8b6adbc527f730f9c533e2ef4ce8",
+   "skills/agent-memory/scripts/agent_memory/retrieval.py": "9f1d5349be0a60105922b3503ac13741c78aba6332d62f03dc4fb16626066a43",
+   "skills/agent-memory/scripts/agent_memory/records.py": "04bf692fa98337b9ee8e3fe6072d115106592c03fbdc1b237a867fa97369fb96",
+   "skills/agent-memory/scripts/agent_memory/lifecycle.py": "0bbf1aa4ff91e89dda010ab9a24ff92f9ffd8e1d730e3c83bc4f6d3de122b54b",
+   "skills/agent-memory/scripts/agent_memory/scopes.py": "db04b8a90103d45731a02e2da4a0bbfc940b5745bf5b9d72d8b1d6ee08fbad61",
+   "skills/agent-memory/scripts/agent_memory/security.py": "768a91fad491ed3996defae434a41b983c2aa42dacc4aede5ab3009226a5c5d8",
+   "skills/agent-memory/scripts/agent_memory/bank_layout.py": "d71fb7d9a893ac6cab47c933ecf7305a9476957e45e59a84f5d6f126d814f19e",
+   "skills/agent-memory/scripts/agent_memory/bank_contract.py": "73525b5648e179b178221470cac5a9bbe1115c80ac2db600746babaa63fae7b1",
+   "skills/agent-memory/scripts/agent_memory/tombstones.py": "3c001ac52d4830340372e143a02cbb723644e1a22978f1606ee0c495e605cd0a",
+   "skills/agent-memory/schemas/scope-policy.json": "a2742b9b6fd03a8a0fc2f05744194a176024eb9198013aabfa4e917dded7af35",
+   "skills/agent-memory/schemas/lifecycle.json": "3bcc178a912f3eae1938c8af4b5560505e98333b0ed631cf05cee26e5aecff68",
+   "docs/research/data/2026-10-25-recall-final/semantic-controller-v5.py": "a80779a561f2cc3a6006eabfa58a48ac85452a5afc12e8443d8b5cdb88c7a2e2",
+   "docs/adr/0017-standalone-semantic-search.md": "3c7384fe830e25031969e4d2328db8d2d91d4eda66050696d4b09e98a55f5f09",
+   "docs/adr/0023-guided-progressive-recall.md": "500931552895dba8f13889cbdabbe9c042a0618704b40f409c417dfb54796a1c",
+   "docs/adr/0024-ssg-graph-embedding-runtime.md": "1bdf194cb83fc960aa68eb096e48c165128068245787cbb8d146cbbe51f6b95c"
+  },
+  "native_package_tree": {
+   "roots": [
+    "skills/agent-memory/scripts/agent_memory",
+    "skills/agent-memory/schemas"
+   ],
+   "files": 86,
+   "sha256": "9bd89d0e341ee8984db9e5082936807a49f1368a05a40ce026193f7b34e88ef3"
+  },
+  "overlay_module": "g1_relationship_overlay.py (hash in freeze.json)",
+  "historical_16": {
+   "path": "docs/research/data/2026-10-25-recall-final/semantic-controller-v5.py",
+   "lines": "19-36",
+   "approved_206_plan": {
+    "commit": "e78eee13e4f4533d2a8871184a1dbb7e6f0aaa13",
+    "path": "docs/design/v0.0.15-206-execution.md",
+    "blob": "88c7d061afa130a3ddc1038c3b7356725cbe34f9",
+    "sha256": "2bae7893872c2b825a0c5f4eed40062e58d3a9a565ad35fc9fd917ddee0d7c3e",
+    "clause": "Step 3: freeze the separate 16 meaning-based questions/expected labels and context"
+   }
+  },
+  "literal_24_cases_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf"
+ },
+ "validation": {
+  "1000": {
+   "valid": true,
+   "problems": 0,
+   "seconds": 8.265,
+   "crosschecked_contexts_native": {
+    "base": 85,
+    "overlay": 98
+   }
+  },
+  "10000": "targeted subset only (c-journaling-7, r-journaling-component, r-retry-co-routed, ov-batch-attempts, h16-hidden-replacement) with native cross-check: valid, 20.5 s; full run is a parent prerequisite",
+  "50000": "not run here; explicit prerequisite for the parent reserved slot"
+ },
+ "independence_attestation": {
+  "statement": "Every case label, caveat, typed path, disclosure and availability oracle was authored from canonical fixture meaning/metadata/context and ADR requirements, then frozen in suite.json, before any #255 graph, embedding, similarity, model or retrieval output was inspected. Labels are not derived from graph edge implementation or retrieval thresholds.",
+  "inputs_read": [
+   "issue #255 text (/tmp/am-v15-delivery/issue-255.md)",
+   "ADR-0017, ADR-0023, ADR-0024 at base",
+   "parent docs/design/v0.0.16-graph-embedding-execution.md (proposed contract; read-only)",
+   "scripts/evaluations/semantic_navigation_fixture.py, labeled_recall_fixture.py, labeled_recall_probe.py (template usage only)",
+   "native agent_memory retrieval/records/lifecycle/scopes/security/bank_layout/bank_contract sources",
+   "historical 16 cases: semantic-controller-v5.py:19-36 (case table only) and approved #206 plan at e78eee13 step 3",
+   "#206 issue/comment text and /tmp/am-v15-delivery/v0.0.15-206-execution.md (byte-identical to the e78eee13 plan)",
+   "Incidental disclosure: a search for the historical 16 cases displayed two prose summary lines from docs/research/2026-10-25-semantic-parent-scope-routing.md:6-9 and 2026-10-25-semantic-map-coverage.md:10-13 (October v0.0.3 Claude navigation summaries, not #255 outputs). One noted an extra deadline record on the retry question; this suite did not adopt it (timeout-v2 is an ordinary extra for h16-retry-paraphrase)."
+  ],
+  "not_inspected": [
+   "/tmp/am-v15-delivery/scale-*/ (reports, graphs, vectors, logs)",
+   "parent docs/research/data/2026-11-05-ssg-runtime/qualify.py",
+   "any SSG/Memgraph graph edge, score, embedding or similarity value",
+   "any model or retrieval response, including historical semantic-1000/10000/50000 result directories"
+  ],
+  "executed": "Only fixture construction, native bank validation, native request validation and empty-query native eligibility (evaluate_sources cross-check); no query-dependent retrieval, embedding, graph, service or model run.",
+  "author": "IndependentSuite255 (isolated worktree, branch research/255-g1-independent-suite)"
+ },
+ "not_claimed": [
+  "graph/native/semantic quality",
+  "resource or latency pass",
+  "10,000/50,000 full validation",
+  "operator freeze of proposals"
+ ]
+}

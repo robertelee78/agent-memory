@@ -1,0 +1,27 @@
+{
+  "schema": "am255/workspace-critic-expectations-v1",
+  "authority": "Hand-authored from the tiny fixture and pinned interfaces before any fixture output. Never retuned from graph or model results.",
+  "fixture_execution": "Never import or execute app.py or tests/test_routes.py; no web server, attack payload, package installation, CVE or real repository.",
+  "controls": [
+    {"id": "direct-path", "expected": "A network entry named direct calls evaluate_text, which calls the builtin eval. A graph path is structural reachability, not a vulnerability verdict."},
+    {"id": "constant-false-positive", "expected": "The network entry constant calls eval with a constant string. A sink route may exist, but code injection does not follow from that route."},
+    {"id": "safe-lookalike", "expected": "literal calls ast.literal_eval, not eval. It must not be treated as an eval code-execution sink. This is not a claim of safety against resource exhaustion."},
+    {"id": "orphan-unreached", "expected": "orphan calls eval but no declared application entry calls orphan. It should be listed as unreached, not safe."},
+    {"id": "test-trust", "expected": "test_only is under tests/ and must not be a default application entry; it may be reachable with explicit trust=test."},
+    {"id": "positive-evidence", "expected": "Real assess claim resolves code from app.py, graph fact lang/python/sink/eval-exec with proposed status and digest, and cached cgg path direct->evaluate_text."},
+    {"id": "missing-code", "expected": "Reject code:missing.py:1-1; do not fabricate an excerpt."},
+    {"id": "invalid-range", "expected": "Reject code:app.py:0-1."},
+    {"id": "missing-fact", "expected": "Reject fact:synthetic/does-not-exist."},
+    {"id": "unconnected-path", "expected": "Reject a path from direct to orphan even though both callable names exist."},
+    {"id": "changed-code", "expected": "After app.py changes, evidence resolution should refuse a stale indexed code excerpt. Capture the observed result even if this desired guard fails."},
+    {"id": "stale-path-boundary", "expected": "After app.py changes without recomputing the fingerprint, capture whether workspace paths notices it. Source latest() reads the cached fingerprint, so stale acceptance is a known candidate failure, not a passing freshness guarantee."},
+    {"id": "unsupported-claim-boundary", "expected": "Claim storage can accept fluent unsupported statement text with valid code evidence. No semantic acceptance or critic quality follows; retain this deliberately incorrect negative-control claim as unreviewed."},
+    {"id": "disposal", "expected": "Only the exact newly created owned container and this run's transient cache/repository may be disposed. Container data/logs are tmpfs, WAL and snapshots disabled, loopback only; persistent synthetic raw receipts intentionally remain."}
+  ],
+  "critic": {
+    "appropriate_completion_endpoint": "not supplied or authorized for this assignment",
+    "run": false,
+    "verdict_quality": "unmeasured",
+    "embedding_model_substitution": false
+  }
+}

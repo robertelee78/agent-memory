@@ -1,0 +1,27 @@
+{
+ "argv": [
+  "docker",
+  "run",
+  "--rm",
+  "--pull=never",
+  "--network",
+  "none",
+  "--platform",
+  "linux/arm64",
+  "--entrypoint",
+  "/usr/bin/dpkg",
+  "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+  "--verify",
+  "memgraph",
+  "msodbcsql18",
+  "openssl",
+  "libssl3t64",
+  "packages-microsoft-prod"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.321,
+ "started_at": "2026-11-05T16:52:19.699222+00:00",
+ "stderr": "",
+ "stdout": "missing     /usr/share/doc/msodbcsql18/LICENSE.txt\nmissing     /usr/share/doc/msodbcsql18/RELEASE_NOTES\n"
+}

@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "git",
+  "-C",
+  "/opt/ssg",
+  "rev-parse",
+  "HEAD"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.005,
+ "started_at": "2026-11-05T16:52:22.849959+00:00",
+ "stderr": "",
+ "stdout": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0\n"
+}

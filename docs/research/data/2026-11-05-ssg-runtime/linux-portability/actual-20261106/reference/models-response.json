@@ -1,0 +1,64 @@
+{
+  "body": {
+    "data": [
+      {
+        "aliases": [
+          "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+        ],
+        "created": 1793997553,
+        "id": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "meta": {
+          "n_ctx": 8192,
+          "n_ctx_train": 40960,
+          "n_embd": 4096,
+          "n_params": 7567295488,
+          "n_vocab": 151665,
+          "size": 8041156864,
+          "vocab_type": 2
+        },
+        "object": "model",
+        "owned_by": "llamacpp",
+        "tags": []
+      }
+    ],
+    "models": [
+      {
+        "capabilities": [
+          "completion"
+        ],
+        "description": "",
+        "details": {
+          "families": [
+            ""
+          ],
+          "family": "",
+          "format": "gguf",
+          "parameter_size": "",
+          "parent_model": "",
+          "quantization_level": ""
+        },
+        "digest": "",
+        "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "modified_at": "",
+        "name": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "parameters": "",
+        "size": "",
+        "tags": [
+          ""
+        ],
+        "type": "model"
+      }
+    ],
+    "object": "list"
+  },
+  "duration_seconds": 0.003258943557739258,
+  "headers": {
+    "Access-Control-Allow-Origin": "",
+    "Connection": "close",
+    "Content-Length": "674",
+    "Content-Type": "application/json; charset=utf-8",
+    "Server": "llama.cpp"
+  },
+  "raw_body": "{\"models\":[{\"name\":\"qwen3-embedding-8b-q8_0-d20ddc71e8a5\",\"model\":\"qwen3-embedding-8b-q8_0-d20ddc71e8a5\",\"modified_at\":\"\",\"size\":\"\",\"digest\":\"\",\"type\":\"model\",\"description\":\"\",\"tags\":[\"\"],\"capabilities\":[\"completion\"],\"parameters\":\"\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"\",\"families\":[\"\"],\"parameter_size\":\"\",\"quantization_level\":\"\"}}],\"object\":\"list\",\"data\":[{\"id\":\"qwen3-embedding-8b-q8_0-d20ddc71e8a5\",\"aliases\":[\"qwen3-embedding-8b-q8_0-d20ddc71e8a5\"],\"tags\":[],\"object\":\"model\",\"created\":1793997553,\"owned_by\":\"llamacpp\",\"meta\":{\"vocab_type\":2,\"n_vocab\":151665,\"n_ctx\":8192,\"n_ctx_train\":40960,\"n_embd\":4096,\"n_params\":7567295488,\"size\":8041156864}}]}",
+  "status": 200
+}

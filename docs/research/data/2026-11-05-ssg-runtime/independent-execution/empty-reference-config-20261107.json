@@ -1,0 +1,174 @@
+{
+  "schema": "am255/empty-reference-config-diagnostic-v1",
+  "date": "2026-11-07",
+  "scope": "Separate new empty owned instance, exact pinned reference image/startup flags; no corpus/model/oracle or retry of the failed50k study",
+  "image": {
+    "Image": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+    "ImageDigest": "sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+    "ImageName": "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+    "Path": "/usr/lib/memgraph/memgraph",
+    "Args": [
+      "--telemetry-enabled=false",
+      "--storage-properties-on-edges=true",
+      "--storage-wal-enabled=true",
+      "--storage-snapshot-interval-sec=300",
+      "--storage-snapshot-on-exit=true",
+      "--log-level=WARNING",
+      "--also-log-to-stderr=true"
+    ]
+  },
+  "resources": {
+    "cpus": 2.0,
+    "memory_bytes": 12884901888,
+    "bind": "127.0.0.1 only"
+  },
+  "observed_configuration": {
+    "diagnostic_only": true,
+    "filter": "snapshot, storage access timeout, WAL, query/transaction timeout",
+    "matched_rows": 14,
+    "query": "SHOW CONFIG",
+    "rows": [
+      {
+        "current_value": "true",
+        "default_value": "true",
+        "description": "Controls whether .old dir will be used to store latest snapshot and WAL files.",
+        "name": "storage_backup_dir_enabled"
+      },
+      {
+        "current_value": "1000000",
+        "default_value": "1000000",
+        "description": "The number of edges and vertices stored in a batch in a snapshot file.",
+        "name": "storage_items_per_batch"
+      },
+      {
+        "current_value": "false",
+        "default_value": "false",
+        "description": "If true, snapshots will be created using --storage-snapshot-thread-count number of treads.",
+        "name": "storage_parallel_snapshot_creation"
+      },
+      {
+        "current_value": "true",
+        "default_value": "false",
+        "description": "Controls whether the storage creates another snapshot on exit.",
+        "name": "storage_snapshot_on_exit"
+      },
+      {
+        "current_value": "3",
+        "default_value": "3",
+        "description": "The number of snapshots that should always be kept.",
+        "name": "storage_snapshot_retention_count"
+      },
+      {
+        "current_value": "12",
+        "default_value": "12",
+        "description": "The number of threads used to create snapshots.",
+        "name": "storage_snapshot_thread_count"
+      },
+      {
+        "current_value": "true",
+        "default_value": "false",
+        "description": "Controls whether the storage uses write-ahead-logging. To enable WAL periodic snapshots must be enabled.",
+        "name": "storage_wal_enabled"
+      },
+      {
+        "current_value": "100000",
+        "default_value": "100000",
+        "description": "Issue a 'fsync' call after this amount of transactions are written to the WAL file. Set to 1 for fully synchronous operation.",
+        "name": "storage_wal_file_flush_every_n_tx"
+      },
+      {
+        "current_value": "20480",
+        "default_value": "20480",
+        "description": "Minimum file size of each WAL file.",
+        "name": "storage_wal_file_size_kib"
+      },
+      {
+        "current_value": "SNAPSHOT_ISOLATION",
+        "default_value": "SNAPSHOT_ISOLATION",
+        "description": "Default isolation level used for the transactions. Allowed values: SNAPSHOT_ISOLATION, READ_COMMITTED, READ_UNCOMMITTED",
+        "name": "isolation_level"
+      },
+      {
+        "current_value": "600",
+        "default_value": "600",
+        "description": "Maximum allowed query execution time. Queries exceeding this limit will be aborted. Value of 0 means no limit.",
+        "name": "query_execution_timeout_sec"
+      },
+      {
+        "current_value": "1",
+        "default_value": "1",
+        "description": "Query's storage level access timeout in seconds.",
+        "name": "storage_access_timeout_sec"
+      },
+      {
+        "current_value": "300",
+        "default_value": "",
+        "description": "Define periodic snapshot schedule via cron format or as a period in seconds.",
+        "name": "storage_snapshot_interval"
+      },
+      {
+        "current_value": "300",
+        "default_value": "300",
+        "description": "Storage snapshot creation interval (in seconds). Set to 0 to disable periodic snapshot creation.",
+        "name": "storage_snapshot_interval_sec"
+      }
+    ],
+    "total_rows": 96
+  },
+  "cleanup": {
+    "borrowed_artifacts_untouched": true,
+    "forensic_erasure_claim": false,
+    "resources": [
+      {
+        "absent": true,
+        "resource": {
+          "id": "806c63dd20445bc719f99570453c10f7034a64f23ee01c8a7e99b8c5b586062b",
+          "name": "am255-independent-2e896d4155b8-9e9297e2",
+          "type": "container"
+        }
+      },
+      {
+        "absent": true,
+        "resource": {
+          "created": "2026-11-06T22:26:42.886284092-08:00",
+          "name": "am255-independent-2e896d4155b8-9e9297e2-data",
+          "type": "volume"
+        }
+      },
+      {
+        "absent": true,
+        "resource": {
+          "created": "2026-11-06T22:26:43.090542587-08:00",
+          "name": "am255-independent-2e896d4155b8-9e9297e2-logs",
+          "type": "volume"
+        }
+      }
+    ],
+    "status": "disposed"
+  },
+  "primary_source": {
+    "url": "https://github.com/memgraph/memgraph/blob/0e77b786fc03fe4f92a18b9730940e11c62a0c32/src/flags/run_time_configurable.cpp",
+    "storage_access_timeout_sec_default": 1,
+    "allowed_range": [
+      1,
+      1000000
+    ]
+  },
+  "interpretation": {
+    "failed_instance_effective_setting": "Unknown; cannot retroactively assign this new instance observation to the disposed failed instance",
+    "failure_cause": "Not established; default1-second access timeout is a diagnostic fact, not proof of snapshot overlap or root cause",
+    "profile_changed": false,
+    "retry_or_tuning_performed": false,
+    "future_amendment": "Any reference-profile or executor change requires independent technical review, new immutable bindings and a fresh freeze; original negative attempt preserved",
+    "erasure": "Owned container/two volumes absent; no forensic/media/provider backup erasure claim"
+  },
+  "raw_private_bindings": {
+    "scope.json": "3cc33f83d98b7f0a604a8a7bf3f18ed9a112cddfb4b33ee10aee21fb0fdebb0b",
+    "instance.json": "810d73f4cfe61ee19581f4eb56ad6cf1eac5dd883554abe2ed6c4a66b8708319",
+    "show-config-filtered.json": "354cc7c3d7238aa56897c1b8e2604389ff9ff48d1420581b711ae840ca45c46b",
+    "cleanup.json": "0a23942c6f770a8618d1eeb39e6443061cc27df02c400773c05e878637105cb2",
+    "version.json": "5d7080e4a553fa163506d98a7f58d2e18320029cac9ab56155d14fe8c01f39eb",
+    "resources.json": "7e29a281ad7b657a16c2cbd0ce17a21693aa339064e888f7afd942ad4a706a45"
+  },
+  "probe_script_sha256": "69720d7141c22fc8d1fb107d6f23a8af2a9e2f9212b8d10e8fd4708e3cb305a2"
+}

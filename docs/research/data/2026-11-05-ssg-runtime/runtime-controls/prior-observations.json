@@ -1,0 +1,154 @@
+{
+  "new_runtime_execution_performed": false,
+  "observations": [
+    {
+      "artifact_bytes": 1069,
+      "artifact_path": "/tmp/am-v15-delivery/reference-models.json",
+      "artifact_sha256": "01540eb6cca564cc22e4f460818c38c6abf67ae81efe36de77321475b5928b43",
+      "metadata_ids": [
+        "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+      ],
+      "weight_identity_assurance": "metadata alias only; not independently verified weights"
+    },
+    {
+      "artifact_bytes": 1019,
+      "artifact_path": "/tmp/am-v15-delivery/alternate-models.json",
+      "artifact_sha256": "23b3d9aa0cc9ed2d66ac9db9b57deb0f8569d8c7b99b7dc1972e8c72cc05333a",
+      "metadata_ids": [
+        "am255-qwen06-q8-06507c7b"
+      ],
+      "weight_identity_assurance": "metadata alias only; not independently verified weights"
+    },
+    {
+      "artifact_bytes": 92312,
+      "artifact_path": "/tmp/am-v15-delivery/reference-embedding-smoke.json",
+      "artifact_sha256": "46b06cf7ae76cfd17bed062b4af58ab9b18dd23f485b9bc2ff257c38848eca89",
+      "dimensions": [
+        4096
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "usage": {
+        "prompt_tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "artifact_bytes": 45646,
+      "artifact_path": "/tmp/am-v15-delivery/alternate-embedding-smoke.json",
+      "artifact_sha256": "7378e2f8b9e7aacdbb31fa44bda5344415bc6cf46afffed76701ce1b1bf0bc85",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "model": "am255-qwen06-q8-06507c7b",
+      "usage": {
+        "prompt_tokens": 23,
+        "total_tokens": 23
+      }
+    },
+    {
+      "artifact_bytes": 134210,
+      "artifact_path": "/tmp/am-v15-delivery/embedding-api-controls.json",
+      "artifact_sha256": "8eaf9bfcfafad1355de06139c0f38b49e3a62889de8a621de577da62883c8a6c",
+      "over_context": {
+        "alternate-over-context": {
+          "error": {
+            "error": {
+              "code": 400,
+              "message": "request (4502 tokens) exceeds the available context size (4096 tokens), try increasing it",
+              "n_ctx": 4096,
+              "n_prompt_tokens": 4502,
+              "type": "exceed_context_size_error"
+            }
+          },
+          "http_status": 400,
+          "seconds": 0.003753957978915423
+        },
+        "reference-over-context": {
+          "error": {
+            "error": {
+              "code": 400,
+              "message": "request (9002 tokens) exceeds the available context size (8192 tokens), try increasing it",
+              "n_ctx": 8192,
+              "n_prompt_tokens": 9002,
+              "type": "exceed_context_size_error"
+            }
+          },
+          "http_status": 400,
+          "seconds": 0.004791540966834873
+        }
+      },
+      "unknown_model": {
+        "dimension": 4096,
+        "model": "not-a-real-model",
+        "usage": {
+          "prompt_tokens": 4,
+          "total_tokens": 4
+        }
+      }
+    },
+    {
+      "argv": [
+        "env",
+        "SSG_HOME=/opt/ssg",
+        "SSG_BOLT=127.0.0.1:17690",
+        "SSG_CACHE_DIR=/tmp/am-v15-delivery/ssg-cache",
+        "/tmp/am-v15-delivery/ssg-target/release/ssg",
+        "build"
+      ],
+      "artifact_bytes": 521,
+      "artifact_path": "/tmp/am-v15-delivery/ssg-build-reference.json",
+      "artifact_sha256": "20de7afb7ff1bcf92a2bb94ce807fbed84d26809d9ea1898b059f51530f1d617",
+      "exit": 0,
+      "started_at": "2026-11-05T04:04:27.714471+00:00",
+      "stderr": "",
+      "stdout": "build c7ad8af3b0ec loaded: 974 units (44 reviewed, 930 proposed), 11 queries, 62251 advisories; graph 84277 nodes, 103339 edges; embedded 0/63225, 0 similar-unit edges\n"
+    },
+    {
+      "argv": [
+        "env",
+        "SSG_HOME=/opt/ssg",
+        "SSG_BOLT=127.0.0.1:17690",
+        "SSG_CACHE_DIR=/tmp/am-v15-delivery/ssg-cache",
+        "/tmp/am-v15-delivery/ssg-target/release/ssg",
+        "build"
+      ],
+      "artifact_bytes": 524,
+      "artifact_path": "/tmp/am-v15-delivery/ssg-graph-reference-rebuild.json",
+      "artifact_sha256": "129f7806bd28481d52ab924b3e99489ea06640ec0ad00dcea833dcef210b119d",
+      "exit": 0,
+      "started_at": "2026-11-05T04:05:14.047646+00:00",
+      "stderr": "",
+      "stdout": "build c7ad8af3b0ec unchanged: 974 units (44 reviewed, 930 proposed), 11 queries, 62251 advisories; graph 84277 nodes, 103339 edges; embedded 0/63225, 0 similar-unit edges\n"
+    },
+    {
+      "argv": [
+        "/tmp/am-v15-delivery/llama-reference-build/bin/llama-server",
+        "--version"
+      ],
+      "artifact_bytes": 1459,
+      "artifact_path": "/tmp/am-v15-delivery/reference-server-version.json",
+      "artifact_sha256": "467f25f5c65e42e8919f92ee74baf98708f0126952913d399b87fbb882646956",
+      "exit": 0,
+      "started_at": "2026-11-05T04:11:30.282692+00:00",
+      "stderr": "ggml_metal_device_init: testing tensor API for f16 support\nggml_metal_device_init: testing tensor API for bfloat support\nggml_metal_library_init: using embedded metal library\nggml_metal_library_init: turbo3 sparse V dequant enabled (opt-out: TURBO_SPARSE_V=0)\nggml_metal_library_init: loaded in 14.558 sec\nggml_metal_rsets_init: creating a residency set collection (keep_alive = 180 s)\nggml_metal_device_init: GPU name:   MTL0 (Apple M5 Max)\nggml_metal_device_init: GPU family: MTLGPUFamilyApple10  (1010)\nggml_metal_device_init: GPU family: MTLGPUFamilyCommon3 (3003)\nggml_metal_device_init: GPU family: MTLGPUFamilyMetal4  (5002)\nggml_metal_device_init: simdgroup reduction   = true\nggml_metal_device_init: simdgroup matrix mul. = true\nggml_metal_device_init: has unified memory    = true\nggml_metal_device_init: has bfloat            = true\nggml_metal_device_init: has tensor            = true\nggml_metal_device_init: use residency sets    = true\nggml_metal_device_init: use shared buffers    = true\nggml_metal_device_init: recommendedMaxWorkingSetSize  = 115448.73 MB\nversion: 9341 (a578bb6b9)\nbuilt with AppleClang 21.0.0.21000401 for Darwin arm64\n",
+      "stdout": ""
+    }
+  ],
+  "read_authorities": {
+    "issue255": {
+      "path": "/tmp/am-v15-delivery/issue-255.md",
+      "sha256": "d7df9dd5d221f0d38f491a4a266403ab56b1f20fa1c0fc8c101d1e5e643afbd2"
+    },
+    "parent_contract": {
+      "path": "/opt/agent-memory-worktrees/v015-delivery/docs/design/v0.0.16-graph-embedding-execution.md",
+      "sha256": "4f86e071b8f688fd7f5d118ca547af641d0c6f6a261b9b0c7fc233e37174e385"
+    },
+    "parent_scale_recipe": {
+      "path": "/opt/agent-memory-worktrees/v015-delivery/docs/research/data/2026-11-05-ssg-runtime/qualify.py",
+      "sha256": "58e90310cdeddbc95b48aa0505b70e2a10ada8bff42a77032fe1926398829bb7"
+    }
+  },
+  "resource_boundary": "No service startup, model calls, database calls or performance run in this subtask. Prior parent artifacts are read-only inherited evidence.",
+  "schema": "am255/inherited-actual-observations-v1"
+}

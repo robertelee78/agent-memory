@@ -1,0 +1,64 @@
+{
+  "body": {
+    "data": [
+      {
+        "aliases": [
+          "qwen3-embedding-06b-q8_0-06507c7b4268"
+        ],
+        "created": 1793997565,
+        "id": "qwen3-embedding-06b-q8_0-06507c7b4268",
+        "meta": {
+          "n_ctx": 4096,
+          "n_ctx_train": 32768,
+          "n_embd": 1024,
+          "n_params": 595776512,
+          "n_vocab": 151669,
+          "size": 633205056,
+          "vocab_type": 2
+        },
+        "object": "model",
+        "owned_by": "llamacpp",
+        "tags": []
+      }
+    ],
+    "models": [
+      {
+        "capabilities": [
+          "completion"
+        ],
+        "description": "",
+        "details": {
+          "families": [
+            ""
+          ],
+          "family": "",
+          "format": "gguf",
+          "parameter_size": "",
+          "parent_model": "",
+          "quantization_level": ""
+        },
+        "digest": "",
+        "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+        "modified_at": "",
+        "name": "qwen3-embedding-06b-q8_0-06507c7b4268",
+        "parameters": "",
+        "size": "",
+        "tags": [
+          ""
+        ],
+        "type": "model"
+      }
+    ],
+    "object": "list"
+  },
+  "duration_seconds": 0.0028519630432128906,
+  "headers": {
+    "Access-Control-Allow-Origin": "",
+    "Connection": "close",
+    "Content-Length": "676",
+    "Content-Type": "application/json; charset=utf-8",
+    "Server": "llama.cpp"
+  },
+  "raw_body": "{\"models\":[{\"name\":\"qwen3-embedding-06b-q8_0-06507c7b4268\",\"model\":\"qwen3-embedding-06b-q8_0-06507c7b4268\",\"modified_at\":\"\",\"size\":\"\",\"digest\":\"\",\"type\":\"model\",\"description\":\"\",\"tags\":[\"\"],\"capabilities\":[\"completion\"],\"parameters\":\"\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"\",\"families\":[\"\"],\"parameter_size\":\"\",\"quantization_level\":\"\"}}],\"object\":\"list\",\"data\":[{\"id\":\"qwen3-embedding-06b-q8_0-06507c7b4268\",\"aliases\":[\"qwen3-embedding-06b-q8_0-06507c7b4268\"],\"tags\":[],\"object\":\"model\",\"created\":1793997565,\"owned_by\":\"llamacpp\",\"meta\":{\"vocab_type\":2,\"n_vocab\":151669,\"n_ctx\":4096,\"n_ctx_train\":32768,\"n_embd\":1024,\"n_params\":595776512,\"size\":633205056}}]}",
+  "status": 200
+}

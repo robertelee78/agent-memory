@@ -1,0 +1,13 @@
+{
+  "body": {
+    "error": {
+      "code": 500,
+      "message": "\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.",
+      "type": "server_error"
+    }
+  },
+  "response_bytes": 191,
+  "response_sha256": "775e4c305a7d09cb46c9c8e3ad6733ea42e4c05db2a74ff615ee9d5bf9e7f0ab",
+  "seconds": 0.00420212495373562,
+  "status": 500
+}

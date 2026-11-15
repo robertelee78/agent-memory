@@ -1,0 +1,33 @@
+[package]
+name = "agent-memory"
+version = "0.0.15"
+edition = "2024"
+rust-version = "1.89"
+description = "Repository-owned Markdown memory for coding agents"
+repository = "https://github.com/robertelee78/agent-memory"
+publish = false
+
+[lib]
+name = "agent_memory"
+path = "src/lib.rs"
+
+[features]
+dev-tools = []
+
+[[bin]]
+name = "am"
+path = "src/main.rs"
+
+[[bin]]
+name = "am-dev"
+path = "src/bin/am_dev/main.rs"
+required-features = ["dev-tools"]
+
+[dependencies]
+libc = "0.2"
+sha2 = "0.11"
+flate2 = { version = "=1.1.11", default-features = false, features = ["rust_backend"] }
+
+[profile.release]
+panic = "abort"
+overflow-checks = true

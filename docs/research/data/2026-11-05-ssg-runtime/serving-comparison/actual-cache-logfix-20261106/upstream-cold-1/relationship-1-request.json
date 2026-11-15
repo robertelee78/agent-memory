@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-06T19:53:35.456199+00:00",
+  "body": {
+    "input": [
+      "Retry a temporary synthetic transport failure at most three times.\nRelated title: Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page.",
+      "Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page.\nRelated title: Retry a temporary synthetic transport failure at most three times.",
+      "Publish a synthetic generation only after every required vector and graph node is complete.\nRelated title: A synthetic privacy epoch fences stale builders before deleted content can be republished.",
+      "A synthetic privacy epoch fences stale builders before deleted content can be republished.\nRelated title: Publish a synthetic generation only after every required vector and graph node is complete.",
+      "The synthetic compiler pipeline parses input before lowering its intermediate representation.\nRelated title: Retry a temporary synthetic transport failure at most three times.",
+      "The synthetic cafeteria menu rotates fruit on Thursdays.\nRelated title: Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page."
+    ],
+    "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+  },
+  "name": "relationship-1",
+  "route": "/v1/embeddings"
+}

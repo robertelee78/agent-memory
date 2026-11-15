@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "rm",
+    "am255-compare-4b1dcdfdab96-mage-data"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t09a3471e4/m",
+  "exit": 0,
+  "seconds": 0.06834429199807346,
+  "started_at": "2026-11-06T19:48:14.464652+00:00",
+  "stderr": "",
+  "stdout": "am255-compare-4b1dcdfdab96-mage-data\n"
+}

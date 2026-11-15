@@ -1,0 +1,100 @@
+{
+  "schema": "agent-memory/ssg-runtime-operational-failure-v1",
+  "date": "2026-11-07",
+  "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20",
+  "freeze_sha256": "8f7e726c770a43a79ac47992a07412f83f2108f88bfb91fa220ca75f79467f8a",
+  "started_at": "2026-11-07T01:33:57.576423+00:00",
+  "exit": 1,
+  "elapsed_seconds": 9457.217916499998,
+  "scope": "Failed frozen reference-profile shared-host operational run, not quality/performance/G1/operator/legal/profile/release acceptance",
+  "raw_bindings": {
+    "255-a4ac326-allsize-actual-controller-20261107/completion.json": "9cf227ecc8645f18e7340fbb86fb49eef303f2ccc2ed49c455bf8bfccba4a953",
+    "255-a4ac326-allsize-actual-controller-20261107/stderr.txt": "8b80de1c2533c3d70589be4f133d3e3aa91df63df42efc3512f9d11e051fa504",
+    "255-a4ac326-allsize-actual-20261107/failure.json": "c95ed079527224d9396378a966487e20b01d344d1b3c0581516dad96303be11a",
+    "255-a4ac326-allsize-actual-20261107/manifest.json": "489bfa60e23a21518360cc090a6a04d97cbea2870a3b43134bcb85450e424c48",
+    "255-a4ac326-allsize-actual-20261107/sizes/50000/graph/ann-disposal-49.json": "71068da4e30ea3f632df842ec390c9f98f3c8dde819581d9d10b45ca0fd81077",
+    "255-a4ac326-allsize-actual-20261107/sizes/50000/graph/engine-22.json": "c16251b2577cc13bee2573aec5b92a8e1ba7da3f908bee88819f9ff314726755",
+    "255-numeric-investigation-20261107.txt": "65a736d879cd47248401c225c39705b54260b7cf834de7bcdfd298bb2894c6ae"
+  },
+  "size_observations": [
+    {
+      "size": 1000,
+      "canonical_generation_artifacts": 8,
+      "raw_observations": 189,
+      "missing_prerequisite_rows": 24
+    },
+    {
+      "size": 10000,
+      "canonical_generation_artifacts": 8,
+      "raw_observations": 189,
+      "missing_prerequisite_rows": 24
+    },
+    {
+      "size": 50000,
+      "canonical_generation_artifacts": 8,
+      "raw_observations": 48,
+      "missing_prerequisite_rows": 1
+    }
+  ],
+  "failure": {
+    "type": "Memgraph.TransientError",
+    "operation": "CREATE VECTOR INDEX",
+    "size": 50000,
+    "variant": "base",
+    "request_ordinal": 49,
+    "eligible_keys": 11,
+    "configured_capacity": 16,
+    "index": "am255_eligible_55e980fc3def68681c62",
+    "domain_sha256": "55e980fc3def68681c621c585eaa72bfb6133720770cc176aeb607030ab3f11b",
+    "message": "Cannot get unique access to the storage",
+    "periodic_snapshot_causation": "Unproven: the generic error names periodic snapshots as one possibility; WARNING-level retained logs do not establish an overlapping snapshot/storage holder.",
+    "effective_storage_access_timeout": "Not captured; no SHOW CONFIG receipt.",
+    "failed_domain_cleanup": {
+      "indexes_after_drop": [],
+      "label_count_after_removal": 0
+    }
+  },
+  "cleanup": {
+    "reported_top_level_status": "erasure-pending",
+    "all_three_owned_containers_absent": true,
+    "all_six_owned_volumes_absent": true,
+    "all_models_reaped_exit_zero": true,
+    "model_finalization_errors": [
+      null,
+      null,
+      null
+    ],
+    "forensic_erasure_claim": false,
+    "interpretation": "Physical owned-resource absence does not upgrade the retained aggregate erasure-pending status."
+  },
+  "numeric_investigation": {
+    "numpy": "2.2.6",
+    "backend": "Apple Accelerate, version not captured",
+    "actual_document_vectors_checked": [
+      1004,
+      10004,
+      50004
+    ],
+    "dimensions": 4096,
+    "actual_query_vectors_checked": [
+      73,
+      73,
+      43
+    ],
+    "all_retained_vectors_finite_and_nonzero": true,
+    "bounded_cosine_pairs_compared": 183036,
+    "max_abs_float64_matmul_vs_nonblas_einsum_difference": 1.6653345369377348e-15,
+    "selected_math_fsum_controls": "Agree within floating-point rounding",
+    "observation": "Matmul/dot raised floating-point flags despite finite numerically agreeing sampled outputs. Internal backend cause and all-ranking equivalence are not established.",
+    "warnings_suppressed": false,
+    "algorithm_or_cutoffs_changed": false
+  },
+  "limits": [
+    "Raw observations include unavailable/unexecuted prerequisites; counts are not quality passes.",
+    "Eight 50k canonical fixture-generation artifacts do not prove eight graph activations completed.",
+    "No scorer or held-out quality oracle was opened for this run or the numeric investigation.",
+    "Original launch-only record remains historical; this is the separately observed failed completion.",
+    "No retry, timeout increase, snapshot/WAL change, silent profile swap or model substitution was performed.",
+    "Any amended reference profile or executor protocol requires explicit review, new source/input binding and a fresh freeze; the failed attempt remains failed."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-06T19:56:08.421741+00:00",
+  "body": {
+    "input": [
+      "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: How many times may a transient failure be tried again?",
+      "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: Does an empty page end a scan if continuation remains?",
+      "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: When is an unfinished graph safe to activate?",
+      "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: What stops an old worker restoring removed guidance?"
+    ],
+    "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+  },
+  "name": "queries-0",
+  "route": "/v1/embeddings"
+}

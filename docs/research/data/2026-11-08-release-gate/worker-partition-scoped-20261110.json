@@ -1,0 +1,342 @@
+{
+  "schema": "agent-memory/scoped-worker-partition-qualification-v1",
+  "scope": "Only the two whole-file batches timed out in hosted run42692654431; not full final-source or platform qualification.",
+  "host": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "python": "3.15.0",
+    "implementation": "CPython"
+  },
+  "source": {
+    "partition_commit": "11c1dc4",
+    "refusal_test_repair_commit": "9ca3dd3",
+    "cache_free_git_transport_clone": true,
+    "no_runtime_changes_between_these_commits": true
+  },
+  "worker_deadline_seconds": 300,
+  "initial_run": {
+    "wall_seconds": 402.11,
+    "workers": 25,
+    "passed": 22,
+    "failed_names": [
+      "bank-transactions-case-14",
+      "bank-transactions-case-16",
+      "bank-transactions-case-17"
+    ],
+    "timed_out": 0,
+    "failure": "The obsolete audit-only private-file assertion rejected the legitimate source-barrier lock introduced by the current-writer fence. Canonical/foreign-occupant preservation assertions were not the failures."
+  },
+  "repair": "Remove the incidental exact security-audit-only file/schema whitelist and wording assertions. Retain refusal and canonical/foreign-occupant preservation, absent compatibility marker/held bank lock, and explicit absence of transaction journal and operation receipt. Do not whitelist the coordination filename or suppress the original failures.",
+  "corrected_run": {
+    "wall_seconds": 47.41,
+    "workers": 7,
+    "passed": 7,
+    "scope": "All seven existing methods using the repaired assertion, including the three initial failures."
+  },
+  "combined_distinct_complete_methods": 25,
+  "single_final_commit_full_matrix_pass": false,
+  "workers": [
+    {
+      "suite": "bank-transactions",
+      "source_commit": "9ca3dd3",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 3.751,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_preview_readonly_and_verified_write_router_last_preserves_code_index_and_external_state_boundary"
+      ],
+      "result_sha256": "9011a9ed7e781fd6981b67bb6193bfe34d12ea61b45a0fd609c368868a38255f",
+      "diagnostics_sha256": "f4c993ccf32cb773befefdbc4c7917b874b3a6e8a0e4717aa7333df90713ca9a"
+    },
+    {
+      "suite": "bank-transactions-case-02",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 67.099,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_every_interruption_boundary_refuses_normal_reads_and_converges_in_both_directions"
+      ],
+      "result_sha256": "7fc8fdc3e054cee7c74e43a235b06cafce6ef2c73e388ae93e7cd6b3f0c84d52",
+      "diagnostics_sha256": "51e962d06d4a818a49ae6c44a680da7c05c10a9130a86f1d0b67761fa2018c3c"
+    },
+    {
+      "suite": "bank-transactions-case-03",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 6.344,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_external_unchanged_read_set_edit_blocks_finish_and_rollback_without_overwrite"
+      ],
+      "result_sha256": "32388907fac9372cca81a60ad5b8aa16914157659658af828fa73902836e4fa8",
+      "diagnostics_sha256": "61762be2e91643961864039e4370c6b08c837133b70ecc21b2f3674c42686674"
+    },
+    {
+      "suite": "bank-transactions-case-04",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 3.536,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_recovery_preview_is_observed_and_a_subsequent_even_owned_version_change_refuses"
+      ],
+      "result_sha256": "69e54a18ed636dc89d2d0ea398265d3549886b9d40fc4ebd291eac601935454f",
+      "diagnostics_sha256": "faf876fb538c7e841e8b92aa0285db5c0efc8e7bf0ceaf271b56deb5f5d539c9"
+    },
+    {
+      "suite": "bank-transactions-case-05",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 9.949,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_missing_corrupt_or_changed_journal_is_not_guessed_or_reconstructed"
+      ],
+      "result_sha256": "b709e54d4695b24cd50dc99e5f33736ee852b21ccd65f7e0f9b70e88cc048237",
+      "diagnostics_sha256": "66da76102184f333353ff64b80d8aa5c7edf7c03d740da208f38e9ab1537bee2"
+    },
+    {
+      "suite": "bank-transactions-case-06",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 5.943,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_lost_response_after_receipt_finishes_cleanup_without_replacing_and_cannot_switch_to_rollback"
+      ],
+      "result_sha256": "543c163a3741fd33b86779d90dc387cea8469a4c3de5baeb976cba0d4b0fa717",
+      "diagnostics_sha256": "c61dc719bfd39785fb8ed02e6b8dafad7e5efcd3219c86ff51f75eee0bd4235f"
+    },
+    {
+      "suite": "bank-transactions-case-07",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 4.461,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_crash_after_marker_removal_replays_known_outcome_and_purges_leftover_backup"
+      ],
+      "result_sha256": "e9d8a2a2b5d53f43c5a5808acba7adc0ab0af00ace54859a71bbc28057df0ea6",
+      "diagnostics_sha256": "8cd18e373511952d29107dcfcef2e6fae968e1979c3aaf07d5b38275eee7764b"
+    },
+    {
+      "suite": "bank-transactions-case-08",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 9.847,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_recovery_itself_can_be_interrupted_and_resumed"
+      ],
+      "result_sha256": "fcb7eeda04b55aceada62ab64896d835b3c41ff9c35df01a8ee1523c5addd698",
+      "diagnostics_sha256": "18427c46ccd59f33be1375971ba0eea3d1109ba5f86745fc1f925a25131cff4a"
+    },
+    {
+      "suite": "bank-transactions-case-09",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 3.713,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_stale_proposals_unknown_markers_invalid_projection_and_symlinks_preserve_originals"
+      ],
+      "result_sha256": "6673b88fe32bb66a315a26dbc39d72398cfe96f1088e7ad5f9088a9e4389907e",
+      "diagnostics_sha256": "dfc01868f349b0effd9e000701c3cc0686eabf0a24e185cd74b06e103b40efa7"
+    },
+    {
+      "suite": "bank-transactions-case-10",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 5.473,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_exclusive_marker_creation_preserves_a_new_unknown_marker_and_readset_edit_at_write_boundary"
+      ],
+      "result_sha256": "0e024cafd602cd4905571a9470ce9e9cb63a76c6c3f1122e0aa97432bb0e3e03",
+      "diagnostics_sha256": "ddc786e054d0d900ba04d9129d56c04e1f9ab054f7c37e7983ef9e47e48fa6ec"
+    },
+    {
+      "suite": "bank-transactions-case-11",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 3.349,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_portable_copy_uses_same_protocol_and_memory_body_remains_unexecuted_data"
+      ],
+      "result_sha256": "54c617ef2f1bcc62ec94e6c5e20272b60f8a5443887cac5d160e03602da6777d",
+      "diagnostics_sha256": "641dd4dc47ee5b5f61481da65d1547710d9e7a4931b5eb36ccb4cf706fa3d569"
+    },
+    {
+      "suite": "bank-transactions-case-12",
+      "source_commit": "9ca3dd3",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 4.816,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_raw_crlf_router_rejected_before_preview_or_journal_even_if_changed_after_preview"
+      ],
+      "result_sha256": "5e3ee604e604b6bf4321d8bc20ca3bb5d8dd5670eec616c9d3383bb728f039a1",
+      "diagnostics_sha256": "c77cf1d1181c49da59f3a9c693ae83f4f3259a3ce2b3ac66b8a970674937fcec"
+    },
+    {
+      "suite": "bank-transactions-case-13",
+      "source_commit": "9ca3dd3",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 12.309,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_impossible_projection_and_leaf_directory_conversions_refuse_before_journaling"
+      ],
+      "result_sha256": "b8c58ad37313f2bd1dc6342d82f3d2213e888a7b9e0e5726533b386ee0791e4e",
+      "diagnostics_sha256": "f173e52902135413992eb6c040db4140a120c535ef5444192d98f2213c053d12"
+    },
+    {
+      "suite": "bank-transactions-case-14",
+      "source_commit": "9ca3dd3",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 3.107,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_noncanonical_physical_blocker_arriving_after_preview_is_checked_before_journal"
+      ],
+      "result_sha256": "45dc8fee4a976756d613ac3b0e370d555b99545b2925d267a105c81e7f778373",
+      "diagnostics_sha256": "2dc3ce1a454b62ed22b43fd3bd3903af1947e43ed869e50686fe258f1a9ed484"
+    },
+    {
+      "suite": "bank-transactions-case-15",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 2.877,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_external_omitted_context_directory_before_receipt_cannot_be_reported_as_a_usable_bank"
+      ],
+      "result_sha256": "5110b9c24f5a9b6008ed0c2a8b8e27215b46ec4b53b052d32dfcd94b0c193591",
+      "diagnostics_sha256": "2dc2778f825479800034da6be08f2fb6177d59d72a0077ca98705b12b64e2323"
+    },
+    {
+      "suite": "bank-transactions-case-16",
+      "source_commit": "9ca3dd3",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 16.763,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_case_unicode_parent_and_existing_occupant_aliases_reject_preview_and_forged_apply_without_loss"
+      ],
+      "result_sha256": "456437eaf538bf93885cfff31b2f0fba63803137d04ea05e3c3c067b27d0696c",
+      "diagnostics_sha256": "b34576eb585f17f24063e726d5d4fc74bd767a68d902d3b33fba1fca40244218"
+    },
+    {
+      "suite": "bank-transactions-case-17",
+      "source_commit": "9ca3dd3",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 3.233,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_alias_arriving_after_preview_is_not_inventoried_as_an_owned_target"
+      ],
+      "result_sha256": "e203141377f7d5d7b7d4d3a126c7a93b1ca80906bba559f022de98d143dcb818",
+      "diagnostics_sha256": "36fcfeb9c84b5f54d00ae70fa2c03df75f825ae85d48467f66d3b589d16625f0"
+    },
+    {
+      "suite": "bank-transactions-case-18",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 4.621,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_late_alias_at_replacement_boundary_stops_and_recovery_preserves_foreign_occupant"
+      ],
+      "result_sha256": "f043e74c972afdced525b4ec0b1c449b7086dcac27224e01586d7876235fe053",
+      "diagnostics_sha256": "dcd8222733a807585361ae5e9b25df68e2b0867d74ec354b08b651b0296a6f61"
+    },
+    {
+      "suite": "bank-transactions-case-19",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 7.952,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_alias_arriving_after_recovery_preview_cannot_be_overwritten_in_either_direction"
+      ],
+      "result_sha256": "be46cbdd49f13d91c185ec3004b73b60ce90245b5a9394882030b2ff3ecb79df",
+      "diagnostics_sha256": "960e0996e077cbe38594cc135f2f68f457c21f6333af3771e6a922272a2097df"
+    },
+    {
+      "suite": "bank-transactions-case-20",
+      "source_commit": "9ca3dd3",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 2.78,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_single_file_reader_and_writer_share_exact_component_spelling_validation"
+      ],
+      "result_sha256": "a74a3c138286d5054daf7666dc05da60f2a9ba759e3873f6b015f4047b0ce294",
+      "diagnostics_sha256": "7643c75740604093e2d5381979fa40e9288c639eb1f1a7610f1af24dc3754ebf"
+    },
+    {
+      "suite": "bank-transactions-case-21",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 3.973,
+      "selected": [
+        "contract_suite.BankTransactionsContract.test_bank_root_spelling_alias_refuses_before_lock_and_unique_unicode_target_still_works"
+      ],
+      "result_sha256": "b59bd1239473231529e767a106589cd444bffdd3a3cc575b7258dd121afd9c90",
+      "diagnostics_sha256": "79743102a6c7da8bccabf9d8f9edc25ea3b663bfcdde6cadaeb664f3ce8e4a28"
+    },
+    {
+      "suite": "quarantined-sharing-v2",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 45.425,
+      "selected": [
+        "contract_suite.QuarantinedSharingVersionTwoContract.test_local_unsafe_body_stays_local_while_safe_peer_learning_is_imported_and_recalled"
+      ],
+      "result_sha256": "b48d1d06fd2227f3711f7f812da546967c65a91eec4e3faffb847d52504778a4",
+      "diagnostics_sha256": "76620f1cfe7ae8932b0c02f0a1e1de80bdb953d1466bb4e4fe77d650b19d7a28"
+    },
+    {
+      "suite": "quarantined-sharing-v2-case-02",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 73.522,
+      "selected": [
+        "contract_suite.QuarantinedSharingVersionTwoContract.test_unsafe_authority_body_is_not_imported_and_independent_safe_local_delta_can_publish"
+      ],
+      "result_sha256": "2fad4f6eaae57a997f6b0dca6ca314fce7c6e66549822a6414ebfd2628899029",
+      "diagnostics_sha256": "62127a09d1b684015ba4aefc9ed66f1065dad6e6fb7be7fafe2666b5c3f448a2"
+    },
+    {
+      "suite": "quarantined-sharing-v2-case-03",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 90.191,
+      "selected": [
+        "contract_suite.QuarantinedSharingVersionTwoContract.test_withheld_replacement_also_holds_its_older_claim_during_useful_refresh"
+      ],
+      "result_sha256": "a35630c91fdac0fc3fbca8c270e48c24d91313ccb6a26aa624594c9a00fe7313",
+      "diagnostics_sha256": "125abb8f8625bc7e82e6fa8756604c0cf7e3822883ea7c05f371499dc0f62a81"
+    },
+    {
+      "suite": "quarantined-sharing-v2-case-04",
+      "source_commit": "11c1dc4",
+      "passed": true,
+      "tests": 1,
+      "reported_elapsed_seconds": 4.526,
+      "selected": [
+        "contract_suite.QuarantinedSharingVersionTwoContract.test_unsafe_structural_caption_still_refuses_without_disclosing_it"
+      ],
+      "result_sha256": "efd4b038ac502ff355912b07b61a621bbd6d66269ea3ba4a7b5e95e237ebbf54",
+      "diagnostics_sha256": "70513a466ae6d1b041dadae60256c280b4484f29f62f073d298c6dbe7dc91e0c"
+    }
+  ],
+  "maximum_reported_method_seconds": 90.191,
+  "release_acceptance": false
+}

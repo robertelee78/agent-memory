@@ -1,0 +1,12 @@
+{
+  "schema": "am255/retained-failed-attempt-v1",
+  "source_commit": "3cca42a1760fd8c72fb3549f66243c48601b1e14",
+  "argv": ["python3", "-B", "image_contents.py", "--bindings", "discovery-20261106/image-bindings.json", "--output", "amd64-contents-20261106", "--acquisition", ".acquired/amd64", "--reserved-host-slot"],
+  "observed_exit": 1,
+  "observed_duration_seconds": 22.0,
+  "tool_reported_exception": "TypeError: Object of type Header is not JSON serializable",
+  "exception_site": "image_contents.py scan() -> discover.save() -> json.dump(): Python distribution non-ASCII email metadata using email's compat32 policy produces Header objects",
+  "preserved": ["freeze.json", "execution-source.json", "core-acquire.json", "core/selected-texts.tar.gz", "core/contents.json (partial invalid JSON)", "exact acquired core layers until final owned disposal inventory"],
+  "not_a_platform_failure": "This is a collector serialization failure, not a graph/runtime or image acquisition failure. No amd64 binary executed.",
+  "correction": "Parse package and Python email metadata with email.policy.default. Retain all failed outputs. Freeze corrected parser before a new output directory; reuse only already acquired layers with all manifest/config/layer hashes rechecked, then acquire the still-missing exact MAGE layers. No model/server re-execution."
+}

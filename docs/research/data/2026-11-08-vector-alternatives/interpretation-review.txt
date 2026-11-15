@@ -1,0 +1,41 @@
+# Independent Review Verdict: **PASS**
+
+PASS for this evidence and its research recommendation, within the stated bounded-research scope. No corrections are required to the report. Negative/limiting findings in the report (50k recall degradation, unresolved 50k DDL cause, no semantic proof) are valid and properly retained.
+
+## Arithmetic and claims vs. actual outputs — all verified
+
+| Claim (report) | Evidence | Result |
+|---|---|---|
+| Mean candidate recall 0.975 / 0.8125 / 0.5375; ranges 0.9–1.0, 0.5–1.0, 0.2–0.8 | per-query arrays in `*-events.jsonl` and `observations.json` (7.8/8, 6.5/8, 4.3/8) | ✓ recomputed |
+| Medians 0.0698/0.3384/1.4368 ms exact; 0.0471/0.1038/0.1726 ms HNSW | recomputed from raw ns in events (e.g. 1k exact (66875+72791)/2 = 69833 ns; 50k HNSW (172583+172625)/2 = 172604 ns) | ✓ |
+| Build 43.693/1021.969/8567.414 ms; index 403,784/4,044,788/20,222,540 B | `built`/`saved` events: 43692875/1021968875/8567414042 ns | ✓ |
+| Max abs score error < 3e-8 | per-query maxima; overall max 2.969998e-8 (10k) | ✓ |
+| Exact search always contained oracle top-10 in 32 candidates | `exact_candidate_recall_at_10` = 1.0 in all 24 queries | ✓ |
+| Antiparallel preserved as raw distance 2 (signed −1) in both exact and approx | `controls` event rows: key 1 `raw_exact_distance`/`raw_approx_distance` = 2.0 | ✓ |
+| Save/restore identical; truncated index refused with `ValueError: Not a dense USearch index!` | `reload_identical:true` all queries; `corrupt_load` returncode 0, stdout matches, all sizes | ✓ |
+| No supervisor cap violations; peaks ≈49/69/167 MB | `supervisor.stop_reason:null`, peaks 48906240/68747264/167411712 B | ✓ |
+| Hash/chain integrity | manifests bind same data/query/source/design hashes as `observations.json`; 10k/50k `smoke_events_sha256` = 1k events hash `e287…0358`; identical `source_sha256`/`design_sha256` across all three cells | ✓ |
+
+## Sign-conversion mechanism vs. candidate selection — correctly distinguished
+
+Verified at primary source: `memgraph v3.10.1 src/storage/v2/indices/vector_index.cpp:455` applies `std::abs(SimilarityFromDistance(…, result_keys[i].distance))` during **result construction after** USearch returns candidates; `vector_index_utils.hpp` `SimilarityFromDistance` returns `1.0 - distance` for `cos_k` (so signed −1 → +1). The report's distinction — conversion corrupts reported similarity/thresholding downstream but does not itself prove ANN candidate selection used absolute cosine, and rescoring cannot recover unreturned candidates — is exactly right. Consistent with the retained core diagnostic (`diagnostic-20261106-opus/report.json`: `distance: 2.0, similarity: 1.0` for `investigation/synthetic`, with the diagnostic's own `ann_score_warning`). The report properly flags that the pinned binary was **not** rebuilt from the tag; source is "a mechanism consistent with" the observation, not proof of binary identity.
+
+## Memgraph/USearch relationship — correctly stated
+
+`vector_index.cpp` includes `usearch/index_dense.hpp`; `mg_vector_index_t = unum::usearch::index_dense_gt<…>` in `vector_index_utils.hpp`. The report correctly frames the standalone binding as a binding/version/architecture comparison **within the HNSW family**, not an independent algorithm win or SOTA claim.
+
+## Recommendation vs. observed failures — addresses them without overclaiming
+
+- The standalone path is a **measured counterexample** to forced antiparallel high scores (raw distance 2.0 preserved) — this answers the user's need for something that avoids the observed failure, not mere documentation of it.
+- The report simultaneously shows the swap alone is insufficient (fixed HNSW recall fell to 0.2–0.8 at 50k, no post-hoc retuning), and its recommendation (exact-first, approximation must earn recall within budget; AM-specific qualification required) follows from the data rather than exceeding it.
+- No cost/semantic/lifecycle/G1/licensing/production claims; 50k DDL cause explicitly left unestablished; DDL/lock non-exposure of a standalone index noted as untested separation, with new ownership/rebuild/disposal obligations acknowledged.
+
+## Findings (non-blocking)
+
+1. **Low — `experiment.py:274`**: `hnsw_reranked_recall_at_10` equals `hnsw_candidate_recall_at_10` by construction (exact oracle rescoring of returned candidates). Already flagged in `execution-review.txt` limit 1; the report correctly omits reranked recall from its table and raw output is retained. No correction needed.
+2. **Low — `experiment.py:267` area**: the "exact pass" criterion is oracle-top-10 containment in 32 candidates, not library exact top-10 ordering. Report wording ("contained the oracle top10 within its32 candidates") matches what was measured exactly. No correction needed.
+3. **Informational**: recall is not comparable across sizes (different query bytes) and 8-query single-run medians are not percentiles — both disclosed in the report and `observations.json.scope`.
+
+## Scope preservation
+
+This PASS covers only the bounded synthetic numeric evidence and the research recommendation. **Not granted here**: compatibility acceptance, full G1 acceptance, AM profile promotion, operator approval, legal/licensing clearance, or v0.0.15 release acceptance. No claim is made or endorsed that USearch is a unique SOTA algorithm, that eight synthetic queries qualify AM performance, that the binary was rebuilt from the cited tag, or that the historical 50k DDL failure cause is established. Limits enumerated in the report and `observations.json` are accurate and non-blocking for research-conclusion purposes.

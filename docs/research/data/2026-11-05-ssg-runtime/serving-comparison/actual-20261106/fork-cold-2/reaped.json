@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-06T19:16:23.854628+00:00",
+  "exit": 0,
+  "only_owned_popen_signaled": true,
+  "pid": 25998,
+  "reaped": true,
+  "stderr_sha256": "660a35bca452fbfbda81b8ef91a22e35a7e10860ee6224178f4d96fd9e84c839",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

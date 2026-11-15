@@ -1,0 +1,14 @@
+{
+ "argv": [
+  "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+  "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses/gguf_general.py",
+  "/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf",
+  "/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.172,
+ "started_at": "2026-11-05T16:52:22.616242+00:00",
+ "stderr": "",
+ "stdout": "[{\"general\": {\"general.architecture\": \"qwen3\", \"general.base_model.0.name\": \"Qwen3 0.6B Base\", \"general.base_model.0.organization\": \"Qwen\", \"general.base_model.0.repo_url\": \"https://huggingface.co/Qwen/Qwen3-0.6B-Base\", \"general.base_model.count\": 1, \"general.basename\": \"qwen3-embedding\", \"general.file_type\": 7, \"general.license\": \"apache-2.0\", \"general.name\": \"Qwen3 Embedding 0.6b\", \"general.quantization_version\": 2, \"general.size_label\": \"0.6B\", \"general.tags\": {\"array_type\": 8, \"count\": 5}, \"general.type\": \"model\"}, \"gguf_version\": 3, \"kv_count\": 36, \"path\": \"/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf\"}, {\"general\": {\"general.architecture\": \"qwen3\", \"general.base_model.0.name\": \"Qwen3 8B Base\", \"general.base_model.0.organization\": \"Qwen\", \"general.base_model.0.repo_url\": \"https://huggingface.co/Qwen/Qwen3-8B-Base\", \"general.base_model.count\": 1, \"general.basename\": \"Qwen3-Embedding\", \"general.file_type\": 7, \"general.license\": \"apache-2.0\", \"general.name\": \"Qwen3 Embedding 8B\", \"general.quantization_version\": 2, \"general.size_label\": \"8B\", \"general.tags\": {\"array_type\": 8, \"count\": 5}, \"general.type\": \"model\"}, \"gguf_version\": 3, \"kv_count\": 36, \"path\": \"/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf\"}]\n"
+}

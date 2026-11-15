@@ -1,0 +1,25 @@
+{
+  "model_records": [
+    {
+      "type": "model_change",
+      "id": "ab01a0f0",
+      "parentId": null,
+      "timestamp": "2026-11-06T22:41:52.718Z",
+      "runtime": {
+        "version": "18.16.0"
+      },
+      "model": "anthropic/claude-fable-5",
+      "resolvedModelIsFallback": false
+    }
+  ],
+  "reviewed_sha256": {
+    "docs/adr/0025-source-bound-sharing-performance.md": "8be3332b1be22d7ae50bc35c953c46eec3f7b2a167a7ac09e8d63925412d06ae",
+    "docs/research/2026-11-06-sharing-performance-rca.md": "b1b2d0a04f6d14a6adb1988cee25f40b96852fbc4c684c2815998a137c0a8a75",
+    "docs/design/v0.0.15-209-checked-page-export.md": "d5ac79ff95252f36e3571e78001ef455cade2522d88541233c3aa65d7f052994",
+    "docs/research/data/2026-11-06-sharing-performance-profiles.json": "9d30f7a271efd77d8de35985eb4a7e50e2bd6b39ba62532be0bae22bef88ca94"
+  },
+  "verdict": "PASS",
+  "blockers": [],
+  "scope": "Technical design only; no operator approval or implementation acceptance",
+  "post_review_changes": "Only ADR review-status/link and additional durable supplementary counts/review records; no normative design change."
+}

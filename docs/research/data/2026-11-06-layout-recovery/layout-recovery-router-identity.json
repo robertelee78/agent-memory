@@ -1,0 +1,21 @@
+{
+  "source_commit": "348b19911962495537ca029c9546e31ea5bf99dd",
+  "source_root": "/private/tmp/am-v15-delivery/244-reconciliation-batched-source",
+  "timeout_seconds": 300,
+  "started_at": "2026-11-06T23:49:16.088507+00:00",
+  "passed": true,
+  "command": [
+    "/tmp/am-v15-delivery/qualification-venv/bin/python",
+    "-I",
+    "-B",
+    "/private/tmp/am-v15-delivery/244-reconciliation-batched-source/scripts/run_contract_suite.py",
+    "/private/tmp/am-v15-delivery/244-reconciliation-batched-source/tests/contracts/test_layout_recovery_reconciliation.py",
+    "--suite",
+    "layout-recovery-router-identity"
+  ],
+  "exit": 0,
+  "stdout": "{\"case_selection\": {\"batch\": \"layout-recovery-router-identity\", \"complete\": [\"contract_suite.RecoveryReconciliationContract.test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits\", \"contract_suite.RecoveryReconciliationContract.test_retained_rollback_repair_handoff_keeps_both_independent_obligations\", \"contract_suite.RecoveryReconciliationContract.test_standalone_receipt_retry_finishes_exact_linkage_and_retirement\", \"contract_suite.RecoveryReconciliationContract.test_unfinished_resolution_excludes_new_resolutions_nested_admission_and_revision\", \"contract_suite.RecoveryReconciliationContract.test_unfinished_rolled_back_resolution_excludes_outer_repair_handoff\"], \"selected\": [\"contract_suite.RecoveryReconciliationContract.test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits\"]}, \"errors\": 0, \"expected_failures\": 0, \"failures\": 0, \"passed\": true, \"skipped\": 0, \"tests\": 1, \"unexpected_successes\": 0}\n",
+  "stderr": "test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits (contract_suite.RecoveryReconciliationContract.test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 7.750s\n\nOK\n",
+  "timed_out": false,
+  "elapsed_seconds": 7.833307791966945
+}

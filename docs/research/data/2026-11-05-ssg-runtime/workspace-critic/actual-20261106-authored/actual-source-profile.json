@@ -1,0 +1,9 @@
+{
+  "advisories_included": false,
+  "all_input_bytes_match_frozen_source": true,
+  "input_counts": {
+    "expertise": 974,
+    "queries": 11
+  },
+  "ssg_home": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic/actual-20261106-authored/scratch/ssg-source-view"
+}

@@ -1,0 +1,17 @@
+{
+  "container_absent": true,
+  "container_created": null,
+  "guarantee_limits": "Engine-visible absence, tmpfs config and local scratch removal only; not forensic RAM/VM swap/crash-dump/backup erasure.",
+  "loopback_listener_absent": true,
+  "precreation_absence_proven": true,
+  "scratch_absent": true,
+  "scratch_inventory": [
+    {
+      "bytes": 32,
+      "path": "owner",
+      "sha256": "f3169378a10fd697be5d5b4444c09d743b94dd8d8e238d02ef49d8e03b07a515"
+    }
+  ],
+  "slot_released": true,
+  "synthetic_raw_evidence_retained": true
+}

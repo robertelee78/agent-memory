@@ -1,0 +1,46 @@
+{
+  "earlier_cells_byte_value_equal": true,
+  "earlier_observed_cells": 4,
+  "model_graph_endpoint_service_calls": 0,
+  "new_independent_review_and_full_closure_freeze_required": true,
+  "partial_response_file_retained_but_not_published_as_verified": true,
+  "partial_size": {
+    "documents_complete": false,
+    "global_forbidden_source_keys_in_retained_attempts": [],
+    "interpretation": "Bound request payloads include uncertain transport; incomplete size cells remain unexecuted, not no-send or erasure claims",
+    "pending_batches": 1250,
+    "query_tokenization_attempts": [],
+    "retained_requests": 0,
+    "retained_tokenization_requests": 1,
+    "size": 10000,
+    "transport_outcome_unconfirmed_requests": 0,
+    "unconfirmed_tokenization_transports": 1
+  },
+  "passed": true,
+  "schema": "am255/partial-tokenizer-response-scorer-control-v1",
+  "scope": "Exact controller document-loop AST, actual Model.embed/retain/finalize_size and real filesystem fsync failure, actual native10k source plan/provider gates and actual scorer CLI. Explicit controlled transport/liveness, zero real resources or inference. Not 10k quality/runtime acceptance.",
+  "scorer": {
+    "exit": 0,
+    "report_sha256": "a57398200c8b544c9073435ea4aa0baafdc2e5517d4d11572051f1f47badfa1c",
+    "stderr": "",
+    "argv_sha256": "502e94a04a533af32c8b85d61f769b74c8375776dd0efe56e37fa97ec4ee42ad",
+    "private_argv_retained": true,
+    "stdout_sha256": "08522be4103dd3b1be8c8bd8ceb16cae306162cdd9da98fd719ad40b2f4f1886",
+    "reported_status": "raw-research-report-not-acceptance"
+  },
+  "source_commit": "1e83e2b566032e5bf57c6fc6f26721f956f1526e",
+  "source_hashes": {
+    "authored-inputs-20261106.json": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
+    "compile_inputs.py": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+    "execute.py": "42c2872b8044bf485fce0b64ddaa6e36a925094ba0f68192d7bdcd87a70cccbe",
+    "execution-io.json": "2ffa6aae2073991514194202f467ab3b75ab090b8598210e3eaa8c1cab03dbbe",
+    "executor_native.py": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+    "executor_runtime.py": "83c1eed9a7b150cb7018a5eaccb74683856901409bcaf21cb089805780f8c200",
+    "score.py": "b63174c202148abfc327bf2c415c91bcd64ee40e63b8cdcb21aed9d46d0c20a3",
+    "scorer-map-20261106.json": "b4d7bfde73ca473c90d1a75239b0daf39e10942887465a02f74484aa09cc3f37",
+    "spec.json": "f5efd0b189747f6e2f5e9a5f6fd83e24a19f9cf6e76a7b4a0a083ef864288ad7"
+  },
+  "source_ref": "refs/heads/research/255-response-durability-source-20261108",
+  "raw_receipt_sha256": "7b595a0e3f8392b0fedd2e55d47545207f82d1603e12bb7b1feda873d3b1703c",
+  "source_ref_scope": "Retained immutable local source reference; exact source commit is reachable on the public integration branch."
+}

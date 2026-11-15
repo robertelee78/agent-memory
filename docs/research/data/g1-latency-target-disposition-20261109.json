@@ -1,0 +1,22 @@
+{
+  "schema": "am255/operator-latency-target-disposition-v1",
+  "date": "2026-11-09",
+  "authority": "Operator selected Adopt proposed gates in the one-question PM round in this session.",
+  "work_key": "robertelee78/agent-memory:ADR-0024:ssg-runtime-qualification",
+  "source_proposal": "independent-suite/suite.json#/proposals/latency_resource_targets",
+  "disposition": "Adopt the explicitly presented latency gates before new named-scale measurement. Misses remain failures, not grounds to raise targets or shrink the study.",
+  "approved_latency_gates": {
+    "semantic_recall_end_to_end_warm_p95_seconds": {"1000": 2.0, "10000": 3.0, "50000": 5.0},
+    "eligible_exact_cosine_p95_ms": {"10000": 100, "50000": 400}
+  },
+  "measurement_scope": "Apply only to the matching measured operation, profile and named size. A component-only study cannot qualify end-to-end recall latency.",
+  "not_approved_by_this_choice": [
+    "Any claim that these targets have been met",
+    "Quality thresholds, a calibrated semantic cutoff, or an opened holdout as fresh independent evidence",
+    "Other template/query-embedding targets, memory/disk/spend limits or maintenance/provider ceilings",
+    "Production deployment, license clearance, managed embedding software/model selection, or full G1 acceptance",
+    "A change to existing experiment/controller deadlines or corpus coverage"
+  ],
+  "performance_pass": false,
+  "production_approval": false
+}

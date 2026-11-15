@@ -1,0 +1,43 @@
+{
+  "alternate": {
+    "alias": "qwen3-embedding-06b-q8_0-06507c7b4268",
+    "binary": "/opt/homebrew/Cellar/llama.cpp/9360/bin/llama-server",
+    "binary_sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203",
+    "bytes": 639150592,
+    "context": 4096,
+    "dimension": 1024,
+    "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+    "version": {
+      "argv": [
+        "/opt/homebrew/Cellar/llama.cpp/9360/bin/llama-server",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.1943453330313787,
+      "stderr": "version: 9360 (6b4e4bd58)\nbuilt with AppleClang 21.0.0.21000099 for Darwin arm64\n",
+      "stdout": ""
+    },
+    "weight": "/private/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf"
+  },
+  "reference": {
+    "alias": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+    "binary": "/private/tmp/am-v15-delivery/llama-reference-build/bin/llama-server",
+    "binary_sha256": "b57ea6bb97b43a4f74b5a5ab71f1cc2ef292899d83c0e45ddfa9290b169598b5",
+    "bytes": 8047105824,
+    "context": 8192,
+    "dimension": 4096,
+    "sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb",
+    "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07",
+    "version": {
+      "argv": [
+        "/private/tmp/am-v15-delivery/llama-reference-build/bin/llama-server",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.6484997500083409,
+      "stderr": "ggml_metal_device_init: testing tensor API for f16 support\nggml_metal_device_init: testing tensor API for bfloat support\nggml_metal_library_init: using embedded metal library\nggml_metal_library_init: turbo3 sparse V dequant enabled (opt-out: TURBO_SPARSE_V=0)\nggml_metal_library_init: loaded in 0.044 sec\nggml_metal_rsets_init: creating a residency set collection (keep_alive = 180 s)\nggml_metal_device_init: GPU name:   MTL0 (Apple M5 Max)\nggml_metal_device_init: GPU family: MTLGPUFamilyApple10  (1010)\nggml_metal_device_init: GPU family: MTLGPUFamilyCommon3 (3003)\nggml_metal_device_init: GPU family: MTLGPUFamilyMetal4  (5002)\nggml_metal_device_init: simdgroup reduction   = true\nggml_metal_device_init: simdgroup matrix mul. = true\nggml_metal_device_init: has unified memory    = true\nggml_metal_device_init: has bfloat            = true\nggml_metal_device_init: has tensor            = true\nggml_metal_device_init: use residency sets    = true\nggml_metal_device_init: use shared buffers    = true\nggml_metal_device_init: recommendedMaxWorkingSetSize  = 115448.73 MB\nversion: 9341 (a578bb6b9)\nbuilt with AppleClang 21.0.0.21000401 for Darwin arm64\n",
+      "stdout": ""
+    },
+    "weight": "/private/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf"
+  }
+}

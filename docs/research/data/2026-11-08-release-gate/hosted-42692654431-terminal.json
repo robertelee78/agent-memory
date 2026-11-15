@@ -1,0 +1,191 @@
+{
+  "schema": "agent-memory/hosted-terminal-qualification-v1",
+  "run_id": 42692654431,
+  "url": "https://github.com/robertelee78/agent-memory/actions/runs/42692654431",
+  "conclusion": "failure",
+  "all_original_cells_required": true,
+  "suite_deadline_seconds": 300,
+  "job_deadline_minutes": 180,
+  "cells": [
+    {
+      "os": "ubuntu-latest",
+      "python": "3.11",
+      "observed_cell": {
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "os": "ubuntu-latest",
+        "python": "3.11",
+        "python_version": "3.11.18",
+        "system": "Linux"
+      },
+      "source_commit": "f148da42e0944adf323556685981b1545e0c8a9e",
+      "source_tree": "b69c530a90351b91440b343031d026d1f37b1aa8",
+      "source_fingerprint": "9fca46e2247ce5603f5dea37972d1b62aa84ec3b3828b06b8eb06f74775bc4d4",
+      "shards": [
+        {
+          "index": 0,
+          "passed": true,
+          "receipt_sha256": "0ba4a75df015b1388633c805fdf3606c9dd79e62dd84edd5d0f07125eb4feafb"
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "receipt_sha256": "ae760e859528c47449658b1783972f31dc644909abafaeedda7fe8b82b6c5a55"
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "receipt_sha256": "649494cf3c7ec0b0fb7f7c531cf4c93f38e7b87db5c792a6b112b6cde1a87e9f"
+        }
+      ],
+      "registered_rows": 441,
+      "passed_workers": 440,
+      "not_applicable": 1,
+      "failed_workers": 0,
+      "timed_out_workers": 0,
+      "failed_names": [],
+      "aggregate_pass": true,
+      "release_complete": true,
+      "aggregate_receipt_sha256": "c008444cbc55658907d1018f2c2901a145ec123a81edce6efd66ed0cda86991e",
+      "executed_test_count": 1262
+    },
+    {
+      "os": "ubuntu-latest",
+      "python": "3.15",
+      "observed_cell": {
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "os": "ubuntu-latest",
+        "python": "3.15",
+        "python_version": "3.15.2",
+        "system": "Linux"
+      },
+      "source_commit": "f148da42e0944adf323556685981b1545e0c8a9e",
+      "source_tree": "b69c530a90351b91440b343031d026d1f37b1aa8",
+      "source_fingerprint": "9fca46e2247ce5603f5dea37972d1b62aa84ec3b3828b06b8eb06f74775bc4d4",
+      "shards": [
+        {
+          "index": 0,
+          "passed": true,
+          "receipt_sha256": "61c07d3de700f497b8b5009407a22e37d13f9b61d2ccafef87dbd92fc455c9c7"
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "receipt_sha256": "9815d2d4859724ede063e2f0499e13d58a9580f39c9be9b1865d3bb1fd4e93a1"
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "receipt_sha256": "6477d5f8eed0034e61242af43c3c5d0cae5a529e4fb30177f99b1c02a5d6b9d2"
+        }
+      ],
+      "registered_rows": 441,
+      "passed_workers": 440,
+      "not_applicable": 1,
+      "failed_workers": 0,
+      "timed_out_workers": 0,
+      "failed_names": [],
+      "aggregate_pass": true,
+      "release_complete": true,
+      "aggregate_receipt_sha256": "d11b8ace67710db8222f9ba287fddef3384fc295b80d33d823941750eee01c15",
+      "executed_test_count": 1262
+    },
+    {
+      "os": "macos-latest",
+      "python": "3.11",
+      "observed_cell": {
+        "implementation": "CPython",
+        "machine": "arm64",
+        "os": "macos-latest",
+        "python": "3.11",
+        "python_version": "3.11.9",
+        "system": "Darwin"
+      },
+      "source_commit": "f148da42e0944adf323556685981b1545e0c8a9e",
+      "source_tree": "b69c530a90351b91440b343031d026d1f37b1aa8",
+      "source_fingerprint": "9fca46e2247ce5603f5dea37972d1b62aa84ec3b3828b06b8eb06f74775bc4d4",
+      "shards": [
+        {
+          "index": 0,
+          "passed": true,
+          "receipt_sha256": "4ea8c6c1dbd273066ed29843ee9a382e9887d2d7cb8147bf3f15cf195252fb3f"
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "receipt_sha256": "401fc1e4f2740bbd818a83593c36edc74463936c53990bc4d691479aeba7588e"
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "receipt_sha256": "e74ed2e25dc5f153319f1b03d74a8f4ff497961fbf96af8b7de9366109b87f55"
+        }
+      ],
+      "registered_rows": 441,
+      "passed_workers": 440,
+      "not_applicable": 1,
+      "failed_workers": 0,
+      "timed_out_workers": 0,
+      "failed_names": [],
+      "aggregate_pass": true,
+      "release_complete": true,
+      "aggregate_receipt_sha256": "16f0cf0aaf1445e2b625432e5e9b9ce44158c7939ff78d6c2b30eda6b96a753f",
+      "executed_test_count": 1262
+    },
+    {
+      "os": "macos-latest",
+      "python": "3.15",
+      "observed_cell": {
+        "implementation": "CPython",
+        "machine": "arm64",
+        "os": "macos-latest",
+        "python": "3.15",
+        "python_version": "3.15.2",
+        "system": "Darwin"
+      },
+      "source_commit": "f148da42e0944adf323556685981b1545e0c8a9e",
+      "source_tree": "b69c530a90351b91440b343031d026d1f37b1aa8",
+      "source_fingerprint": "9fca46e2247ce5603f5dea37972d1b62aa84ec3b3828b06b8eb06f74775bc4d4",
+      "shards": [
+        {
+          "index": 0,
+          "passed": false,
+          "receipt_sha256": "e97839a5a1861d4bd82850d991a47aa182a2a0ae14a5b8659213cfe3f9a3eb3f"
+        },
+        {
+          "index": 1,
+          "passed": false,
+          "receipt_sha256": "d8c22388ed483d52a801d8814f93758e78f5ce9d8ca9a96d11576f7bd4691d36"
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "receipt_sha256": "da62a2c3f87c5740c6bc32607e72094f1a635c78e59c85cd764e26b82a6d533d"
+        }
+      ],
+      "registered_rows": 441,
+      "passed_workers": 438,
+      "not_applicable": 1,
+      "failed_workers": 2,
+      "timed_out_workers": 2,
+      "failed_names": [
+        "quarantined-sharing-v2",
+        "bank-transactions"
+      ],
+      "aggregate_pass": false,
+      "release_complete": false,
+      "aggregate_receipt_sha256": "cabb1c7cf04cd002520919ec9e1241b6f8f91ed256f823c1bfb95f79f66f1abc",
+      "executed_test_count": 1237
+    }
+  ],
+  "root_cause": "MacOS/Python3.15 whole-file bank-transactions (21 methods) and quarantined-sharing-v2 (4 methods) each exceeded the unchanged 300-second worker deadline. Failed suite rows, not the collector error_suite diagnostic, identify the actual failures. No failing behavioral assertion was reported in those two captured workers.",
+  "repair": {
+    "source_commit": "11c1dc4",
+    "change": "Partition the same 25 existing complete discovered methods into 25 exhaustive nonoverlapping named workers; no changed assertions, omitted subcases, skips or increased deadlines.",
+    "runtime_qualification": "25 distinct complete methods passed across partition commit11c1dc4 and refusal-oracle repair9ca3dd3 on actual cache-free macOS/CPython3.15.0; seven affected methods passed after repair. No final single-commit matrix or runtime transfer claimed.",
+    "scoped_evidence": "worker-partition-scoped-20261110.json"
+  },
+  "full_release_gate_pass": false,
+  "transfer_limit": "Results apply only to the recorded commit/tree/fingerprint, not subsequent runtime, metadata or registry changes."
+}

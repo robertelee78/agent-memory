@@ -1,0 +1,981 @@
+{
+  "schema": "agent-memory/refresh-guard-mechanics-research-v1",
+  "observed_date": "2026-11-10",
+  "work_key": "robertelee78/agent-memory:ADR-0009:bounded-24-session-stress",
+  "acceptance": false,
+  "scope": "Measured internal guard mechanics, scoped public refresh successes/failures and exact design/document review; not full stress, platform, native, model quality or release acceptance.",
+  "retained_stress_failure": {
+    "source_commit": "b16e1ff3918afc3c8885e87b729ce26dfd0ea6b1",
+    "wall_seconds": 26990.36,
+    "commands": 625,
+    "success_exits": 618,
+    "expected_missing_page_refusal": 1,
+    "refresh_apply_300s_timeouts": 6,
+    "cleanup": "unknown",
+    "old_worlds_preserved": true,
+    "candidate_and_linux_stress_started": false
+  },
+  "readonly_forensics": {
+    "base_files": 10220,
+    "intended_files": 10289,
+    "changed_paths": 70,
+    "ordered_applied_prefixes": [
+      24,
+      24,
+      23,
+      27,
+      43,
+      44
+    ],
+    "all_router_states": "base",
+    "all_journals_retained": true,
+    "all_canonical_receipts_present": false,
+    "basis": "Prepared input hashes, journal proposal equality, original hash maps and actual changed path bytes; no candidate imports or mutations."
+  },
+  "component": {
+    "source_commit": "d96020632201d3f6723d5441f03e8f267eca3627",
+    "system": "Darwin",
+    "architecture": "arm64",
+    "python": "3.15.0",
+    "input_files": 10220,
+    "input_bytes": 10584148,
+    "changes_per_worker": 70,
+    "worker_deadline_seconds": 300,
+    "real_internal_replace_file": true,
+    "fresh_disposable_copy_per_worker": true,
+    "source_archive_unchanged": true,
+    "live_checkout_head_index_unchanged": false,
+    "live_checkout_change": "Parent committed documentation during independent archived-source measurement; before/after live snapshots clean, no runtime source change.",
+    "workers": [
+      {
+        "worker": "one-0",
+        "mutation_wall_seconds": 136.38030079205055,
+        "mutation_cpu_seconds": 136.24169799999999,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "6c0c179190f9528e93610d1cf576b408997cd1b6b77ca27e1942e73b174a0cb8",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 89.26978895789944,
+            "cpu_seconds": 89.18261400000009
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 47.00949407950975,
+            "cpu_seconds": 46.974979000000026
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.0020087059820070863,
+            "cpu_seconds": 0.0020179999999521137
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 136.34817729296628,
+            "cpu_seconds": 136.21009
+          }
+        }
+      },
+      {
+        "worker": "four-0",
+        "mutation_wall_seconds": 208.55515604198445,
+        "mutation_cpu_seconds": 208.459519,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "c855f2b9416bb48843fcf632b01dda0367b690e02c5bbf9c34a2b98761d991f1",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 147.94587767042685,
+            "cpu_seconds": 147.88062400000018
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 60.50669979117811,
+            "cpu_seconds": 60.49272000000006
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.002016958314925432,
+            "cpu_seconds": 0.002021000000026696
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 208.51686807814986,
+            "cpu_seconds": 208.42512299999993
+          }
+        }
+      },
+      {
+        "worker": "four-1",
+        "mutation_wall_seconds": 210.34453033294994,
+        "mutation_cpu_seconds": 210.245992,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "b2cf093405ea5bcab6f22c9df0ab1aab6717fb2b8fe00652f66a0dcf8985332f",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 148.85732654912863,
+            "cpu_seconds": 148.79433799999987
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 61.38582245528232,
+            "cpu_seconds": 61.370793000000035
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.0020022535463795066,
+            "cpu_seconds": 0.0020030000000481607
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 210.30838141264394,
+            "cpu_seconds": 210.213531
+          }
+        }
+      },
+      {
+        "worker": "four-2",
+        "mutation_wall_seconds": 211.40067787503358,
+        "mutation_cpu_seconds": 211.29861400000001,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "49a93766333a9e8995f1bb40cf9263c2a873f3ac5eef7211ef62dab974b24a03",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 149.3801482054405,
+            "cpu_seconds": 149.31431499999988
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 61.91996954136994,
+            "cpu_seconds": 61.904855999999924
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.0019100408535450697,
+            "cpu_seconds": 0.0019220000000412796
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 211.3682645399822,
+            "cpu_seconds": 211.26649600000005
+          }
+        }
+      },
+      {
+        "worker": "four-3",
+        "mutation_wall_seconds": 209.05596262495965,
+        "mutation_cpu_seconds": 208.939294,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "76e024a8d86ba6169e1ca5bc61a9b7414d9b6ba971b8b4b3bb3780ec4df82321",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 148.1389501647791,
+            "cpu_seconds": 148.07523400000002
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 60.78685746982228,
+            "cpu_seconds": 60.773417999999886
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.0019873747369274497,
+            "cpu_seconds": 0.0019919999999102878
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 208.98684066173155,
+            "cpu_seconds": 208.89738199999996
+          }
+        }
+      }
+    ],
+    "limits": [
+      "one-worker arm before four-worker arm; no randomization or significance claim",
+      "normal busy host; no quieting or controlled contention attribution",
+      "timers nested within replace_file, not independent additive percentages",
+      "excludes public apply validation/authority/lock/journal/receipt/readback",
+      "prior profiling diagnostic read discarded token-bearing receipt lines; no token values parsed, retained, emitted or used; extension did not repeat access"
+    ]
+  },
+  "design_reviews": [
+    {
+      "review": "fable-initial",
+      "model": "anthropic/claude-fable-5",
+      "artifact": "209-guard-cost-design-01-fable-review.md",
+      "sha256": "d697333d928a1cd8d51eba6ac0b6e1fd268a1741617706e9e643b5a45cacce64",
+      "verdict": "PASS_DESIGN_ONLY",
+      "plan_sha256": "63797c2b6bfb60e17d2e85a4dabd9203d67f7b8a75bac2c6dc041de4dcfea14d"
+    },
+    {
+      "review": "opus-initial",
+      "model": "anthropic/claude-opus-5-5",
+      "artifact": "209-guard-cost-design-01-opus-review.md",
+      "sha256": "4d51bf5ca6829d1f941f288a644799f55e54cf7195fe925cc5aeed037f6e8ece",
+      "verdict": "REQUEST_CHANGES_DESIGN_ONLY",
+      "plan_sha256": "63797c2b6bfb60e17d2e85a4dabd9203d67f7b8a75bac2c6dc041de4dcfea14d"
+    },
+    {
+      "review": "opus-corrected-ADR",
+      "model": "anthropic/claude-opus-5-5",
+      "artifact": "209-guard-cost-design-02-opus-closure-review.md",
+      "sha256": "6bcec46edc380c67ec399469819ec08a768520a440d744be15bcf316ea378619",
+      "verdict": "PASS_DESIGN_AND_DOCUMENT_CLOSURE_ONLY",
+      "plan_sha256": "d85a7630681c3652e89e38a990e0cfde142b54cb0dbef2b00db98985b9fbaba0"
+    },
+    {
+      "review": "fable-corrected-ADR",
+      "model": "anthropic/claude-fable-5",
+      "artifact": "209-guard-cost-design-02-fable-closure-review.md",
+      "sha256": "c5fd5b174a2f0cb943ec03dbc8e14d6c2f8dc69f5d09d64d97a7ca9c6263f8e1",
+      "verdict": "PASS_DESIGN_AND_DOCUMENT_CLOSURE_ONLY",
+      "plan_sha256": "d85a7630681c3652e89e38a990e0cfde142b54cb0dbef2b00db98985b9fbaba0"
+    }
+  ],
+  "document_sha256": {
+    "docs/adr/0026-source-bound-sharing-performance.md": "d070fa80aa70813f830ebaeb5fa3d5b23f5c63991e989d077f8f0d1810b32750",
+    "docs/research/2026-11-06-sharing-performance-rca.md": "63ee5285f1b03deba4ca6b8d22cf24c856472a8017d8f335a8071d0684a85798"
+  },
+  "scoped_source_qualification": {
+    "scope": "Scoped functional/source review; final full matrix and actual workload acceptance remain separate.",
+    "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+    "independent_opus_source_review": {
+      "verdict": "PASS",
+      "scope": "Source review of41a0911 plus actual8dabc28 ownership addendum; not qualification or release acceptance.",
+      "artifact": "209-guard-mechanics-8dabc28-Opus-source-addendum-01.md",
+      "sha256": "a71f5408739149334b5006f80831ec618eb537a14ac5034ccfa3e98c07f4efc1"
+    },
+    "macos_qualification": [
+      {
+        "source_commit": "41a0911608ecfddeceb931b0c87cd5b20e833f7d",
+        "workers": 25,
+        "tests": 69,
+        "wall_seconds": 350.99,
+        "worker_deadline_seconds": 300,
+        "rows": [
+          {
+            "suite": "bank-eligibility-writes",
+            "tests": 12,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "cb0ace75a90748a8e96128da6b6b2f64db7675bb8186c72b2044ff53e0fcadbb"
+          },
+          {
+            "suite": "bank-transactions-case-02",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "7fc8fdc3e054cee7c74e43a235b06cafce6ef2c73e388ae93e7cd6b3f0c84d52"
+          },
+          {
+            "suite": "bank-transactions-case-03",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "32388907fac9372cca81a60ad5b8aa16914157659658af828fa73902836e4fa8"
+          },
+          {
+            "suite": "bank-transactions-case-04",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "69e54a18ed636dc89d2d0ea398265d3549886b9d40fc4ebd291eac601935454f"
+          },
+          {
+            "suite": "bank-transactions-case-05",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "b709e54d4695b24cd50dc99e5f33736ee852b21ccd65f7e0f9b70e88cc048237"
+          },
+          {
+            "suite": "bank-transactions-case-06",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "543c163a3741fd33b86779d90dc387cea8469a4c3de5baeb976cba0d4b0fa717"
+          },
+          {
+            "suite": "bank-transactions-case-07",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "e9d8a2a2b5d53f43c5a5808acba7adc0ab0af00ace54859a71bbc28057df0ea6"
+          },
+          {
+            "suite": "bank-transactions-case-08",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "fcb7eeda04b55aceada62ab64896d835b3c41ff9c35df01a8ee1523c5addd698"
+          },
+          {
+            "suite": "bank-transactions-case-09",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "6673b88fe32bb66a315a26dbc39d72398cfe96f1088e7ad5f9088a9e4389907e"
+          },
+          {
+            "suite": "bank-transactions-case-10",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "0e024cafd602cd4905571a9470ce9e9cb63a76c6c3f1122e0aa97432bb0e3e03"
+          },
+          {
+            "suite": "bank-transactions-case-11",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "54c617ef2f1bcc62ec94e6c5e20272b60f8a5443887cac5d160e03602da6777d"
+          },
+          {
+            "suite": "bank-transactions-case-12",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "5e3ee604e604b6bf4321d8bc20ca3bb5d8dd5670eec616c9d3383bb728f039a1"
+          },
+          {
+            "suite": "bank-transactions-case-13",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "b8c58ad37313f2bd1dc6342d82f3d2213e888a7b9e0e5726533b386ee0791e4e"
+          },
+          {
+            "suite": "bank-transactions-case-14",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "45dc8fee4a976756d613ac3b0e370d555b99545b2925d267a105c81e7f778373"
+          },
+          {
+            "suite": "bank-transactions-case-15",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "5110b9c24f5a9b6008ed0c2a8b8e27215b46ec4b53b052d32dfcd94b0c193591"
+          },
+          {
+            "suite": "bank-transactions-case-16",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "456437eaf538bf93885cfff31b2f0fba63803137d04ea05e3c3c067b27d0696c"
+          },
+          {
+            "suite": "bank-transactions-case-17",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "e203141377f7d5d7b7d4d3a126c7a93b1ca80906bba559f022de98d143dcb818"
+          },
+          {
+            "suite": "bank-transactions-case-18",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "f043e74c972afdced525b4ec0b1c449b7086dcac27224e01586d7876235fe053"
+          },
+          {
+            "suite": "bank-transactions-case-19",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "be46cbdd49f13d91c185ec3004b73b60ce90245b5a9394882030b2ff3ecb79df"
+          },
+          {
+            "suite": "bank-transactions-case-20",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "a74a3c138286d5054daf7666dc05da60f2a9ba759e3873f6b015f4047b0ce294"
+          },
+          {
+            "suite": "bank-transactions-case-21",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "b59bd1239473231529e767a106589cd444bffdd3a3cc575b7258dd121afd9c90"
+          },
+          {
+            "suite": "bank-transactions",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "9011a9ed7e781fd6981b67bb6193bfe34d12ea61b45a0fd609c368868a38255f"
+          },
+          {
+            "suite": "bounded-bank-observation",
+            "tests": 15,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "6257bbf9949e213ebe7d4c39b33254d3af49c5e38ac4961486df5f1aeef74548"
+          },
+          {
+            "suite": "initialize-evidence",
+            "tests": 20,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "974de8583c841bcb454d89d0c89e6ca9c5e55d757efb77f4a221b4d7169ee39e"
+          },
+          {
+            "suite": "layout-recovery-preserve",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "1d8f0c0032e86ae34e6b356dd74205238521e47655e63e7bbdbe8d72907fb022"
+          }
+        ]
+      },
+      {
+        "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+        "workers": 1,
+        "tests": 16,
+        "wall_seconds": 2.34,
+        "worker_deadline_seconds": 300,
+        "rows": [
+          {
+            "suite": "bounded-bank-observation",
+            "tests": 16,
+            "passed": true,
+            "skipped": 0,
+            "receipt_sha256": "544be70b8e5c6c81d95f5c893e205987746dd10c2016b41a2d9b8848bfcf83f1"
+          }
+        ]
+      }
+    ],
+    "linux_qualification": {
+      "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+      "system": "Linux",
+      "architecture": "arm64",
+      "python": "3.15.2",
+      "workers": 25,
+      "tests": 70,
+      "wall_seconds": 152.35,
+      "worker_deadline_seconds": 300,
+      "scope": "Scoped functional closures only; not full original acceptance or hosted platform gate.",
+      "rows": [
+        {
+          "suite": "bank-eligibility-writes",
+          "tests": 12,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "cb0ace75a90748a8e96128da6b6b2f64db7675bb8186c72b2044ff53e0fcadbb"
+        },
+        {
+          "suite": "bank-transactions-case-02",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "7fc8fdc3e054cee7c74e43a235b06cafce6ef2c73e388ae93e7cd6b3f0c84d52"
+        },
+        {
+          "suite": "bank-transactions-case-03",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "32388907fac9372cca81a60ad5b8aa16914157659658af828fa73902836e4fa8"
+        },
+        {
+          "suite": "bank-transactions-case-04",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "69e54a18ed636dc89d2d0ea398265d3549886b9d40fc4ebd291eac601935454f"
+        },
+        {
+          "suite": "bank-transactions-case-05",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "b709e54d4695b24cd50dc99e5f33736ee852b21ccd65f7e0f9b70e88cc048237"
+        },
+        {
+          "suite": "bank-transactions-case-06",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "543c163a3741fd33b86779d90dc387cea8469a4c3de5baeb976cba0d4b0fa717"
+        },
+        {
+          "suite": "bank-transactions-case-07",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "e9d8a2a2b5d53f43c5a5808acba7adc0ab0af00ace54859a71bbc28057df0ea6"
+        },
+        {
+          "suite": "bank-transactions-case-08",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "fcb7eeda04b55aceada62ab64896d835b3c41ff9c35df01a8ee1523c5addd698"
+        },
+        {
+          "suite": "bank-transactions-case-09",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "6673b88fe32bb66a315a26dbc39d72398cfe96f1088e7ad5f9088a9e4389907e"
+        },
+        {
+          "suite": "bank-transactions-case-10",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "0e024cafd602cd4905571a9470ce9e9cb63a76c6c3f1122e0aa97432bb0e3e03"
+        },
+        {
+          "suite": "bank-transactions-case-11",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "54c617ef2f1bcc62ec94e6c5e20272b60f8a5443887cac5d160e03602da6777d"
+        },
+        {
+          "suite": "bank-transactions-case-12",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "5e3ee604e604b6bf4321d8bc20ca3bb5d8dd5670eec616c9d3383bb728f039a1"
+        },
+        {
+          "suite": "bank-transactions-case-13",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "b8c58ad37313f2bd1dc6342d82f3d2213e888a7b9e0e5726533b386ee0791e4e"
+        },
+        {
+          "suite": "bank-transactions-case-14",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "45dc8fee4a976756d613ac3b0e370d555b99545b2925d267a105c81e7f778373"
+        },
+        {
+          "suite": "bank-transactions-case-15",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "5110b9c24f5a9b6008ed0c2a8b8e27215b46ec4b53b052d32dfcd94b0c193591"
+        },
+        {
+          "suite": "bank-transactions-case-16",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "456437eaf538bf93885cfff31b2f0fba63803137d04ea05e3c3c067b27d0696c"
+        },
+        {
+          "suite": "bank-transactions-case-17",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "e203141377f7d5d7b7d4d3a126c7a93b1ca80906bba559f022de98d143dcb818"
+        },
+        {
+          "suite": "bank-transactions-case-18",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "f043e74c972afdced525b4ec0b1c449b7086dcac27224e01586d7876235fe053"
+        },
+        {
+          "suite": "bank-transactions-case-19",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "be46cbdd49f13d91c185ec3004b73b60ce90245b5a9394882030b2ff3ecb79df"
+        },
+        {
+          "suite": "bank-transactions-case-20",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "a74a3c138286d5054daf7666dc05da60f2a9ba759e3873f6b015f4047b0ce294"
+        },
+        {
+          "suite": "bank-transactions-case-21",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "b59bd1239473231529e767a106589cd444bffdd3a3cc575b7258dd121afd9c90"
+        },
+        {
+          "suite": "bank-transactions",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "9011a9ed7e781fd6981b67bb6193bfe34d12ea61b45a0fd609c368868a38255f"
+        },
+        {
+          "suite": "bounded-bank-observation",
+          "tests": 16,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "544be70b8e5c6c81d95f5c893e205987746dd10c2016b41a2d9b8848bfcf83f1"
+        },
+        {
+          "suite": "initialize-evidence",
+          "tests": 20,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "974de8583c841bcb454d89d0c89e6ca9c5e55d757efb77f4a221b4d7169ee39e"
+        },
+        {
+          "suite": "layout-recovery-preserve",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "1d8f0c0032e86ae34e6b356dd74205238521e47655e63e7bbdbe8d72907fb022"
+        }
+      ]
+    },
+    "actual_smokes": [
+      {
+        "artifact": "leaf-stream-ownership-before-41a0911-01.json",
+        "receipt_sha256": "8371435b942f62b5a9599db15526693f6965381bfc2123e0f11a8372303caa56",
+        "result": {
+          "source_commit": "41a0911608ecfddeceb931b0c87cd5b20e833f7d",
+          "reader_refused": true,
+          "unrelated_descriptor_survived": false,
+          "canonical_source_preserved": true,
+          "no_governed_write_or_admission": true,
+          "test_only_constructor_failure_injection": true,
+          "acceptance": false
+        }
+      },
+      {
+        "artifact": "leaf-stream-ownership-after-8dabc28-01.json",
+        "receipt_sha256": "ba3695ffdbefba25b25972bd71107423b3e95b74b376ffb747663f55634da43f",
+        "result": {
+          "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+          "reader_refused": true,
+          "unrelated_descriptor_survived": true,
+          "canonical_source_preserved": true,
+          "no_governed_write_or_admission": true,
+          "test_only_constructor_failure_injection": true,
+          "acceptance": false
+        }
+      },
+      {
+        "artifact": "receipt.json",
+        "receipt_sha256": "875173db2a249037d656e4b13b361f2220f91ad31d85952e059b1119e26a3267",
+        "result": {
+          "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+          "surface": "actual installed am admission/apply and bank/recover-layout/recover-nested",
+          "controlled_synthetic_attestations": true,
+          "fault_exit": 1,
+          "source_classes": [
+            "verified-repository"
+          ],
+          "semantic_recovery_complete": true,
+          "historical_replay_verified": true,
+          "already_applied": true,
+          "audit_bytes_unchanged": true,
+          "canonical_bytes_unchanged_on_replay": true,
+          "feature_index_head_preserved": true,
+          "release_acceptance": false
+        }
+      }
+    ]
+  },
+  "public_refresh_diagnostic": {
+    "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+    "input_base_files": 10220,
+    "input_final_files": 10289,
+    "changed_paths": 70,
+    "fixture_only": true,
+    "selection_policy": "Broad controlled archive-partition selectors; 144 sources and 10281pairs, not original stress456pairs.",
+    "single": {
+      "commands": [
+        {
+          "label": "inspect",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 24.71050520904828,
+          "child_cpu_s": 23.92
+        },
+        {
+          "label": "selected",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 61.4068712919252,
+          "child_cpu_s": 60.48
+        },
+        {
+          "label": "meaningful-selection",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 66.64366287493613,
+          "child_cpu_s": 64.11
+        },
+        {
+          "label": "review",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 82.29716233292129,
+          "child_cpu_s": 80.33
+        },
+        {
+          "label": "refresh-prepare",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 160.33854812500067,
+          "child_cpu_s": 157.29000000000002
+        },
+        {
+          "label": "refresh-apply",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 257.14957624999806,
+          "child_cpu_s": 252.22999999999996
+        }
+      ],
+      "refresh_applied": true,
+      "remote_freshness_verified": true,
+      "qualified_exact_id_recall_returned": true,
+      "whole_bank_authority_journal_and_feature_preservation_rechecked": true,
+      "independent_git_files": 3514,
+      "pack_files": 217,
+      "read_only_verification_sha256": "d5970a0b71126eb0909ea3fde7685d251fec8997ad92d2f3046be4b54f27d0b8",
+      "apparatus_failures_retained": [
+        "summary NameError before review/prepare/apply",
+        "summary TypeError after public success",
+        "readonly verifier initially used wrong nested record ID field"
+      ],
+      "public_commands_reissued_for_summary_repairs": 0
+    },
+    "four_concurrent": {
+      "all_applies_timed_out_at_300s": true,
+      "rows": [
+        {
+          "world": 0,
+          "prepare_exit": 0,
+          "prepare_wall_s": 177.2688840420451,
+          "apply_error": "TimeoutExpired",
+          "apply_wall_s": 300.04548370896373,
+          "apply_cpu": "unavailable: timeout handler did not record child CPU",
+          "marker_phase": "applying",
+          "changed_count": 70,
+          "applied_count": 70,
+          "ordered_applied_prefix": 70,
+          "remaining_count": 0,
+          "router_state": "intended",
+          "unchanged_paths_match_base": true,
+          "receipt_exists": false,
+          "refresh_output_exists": false
+        },
+        {
+          "world": 1,
+          "prepare_exit": 0,
+          "prepare_wall_s": 177.24387066601776,
+          "apply_error": "TimeoutExpired",
+          "apply_wall_s": 300.0399552079616,
+          "apply_cpu": "unavailable: timeout handler did not record child CPU",
+          "marker_phase": "applying",
+          "changed_count": 70,
+          "applied_count": 70,
+          "ordered_applied_prefix": 70,
+          "remaining_count": 0,
+          "router_state": "intended",
+          "unchanged_paths_match_base": true,
+          "receipt_exists": false,
+          "refresh_output_exists": false
+        },
+        {
+          "world": 2,
+          "prepare_exit": 0,
+          "prepare_wall_s": 175.70320345798973,
+          "apply_error": "TimeoutExpired",
+          "apply_wall_s": 300.04443424998317,
+          "apply_cpu": "unavailable: timeout handler did not record child CPU",
+          "marker_phase": "applying",
+          "changed_count": 70,
+          "applied_count": 70,
+          "ordered_applied_prefix": 70,
+          "remaining_count": 0,
+          "router_state": "intended",
+          "unchanged_paths_match_base": true,
+          "receipt_exists": false,
+          "refresh_output_exists": false
+        },
+        {
+          "world": 3,
+          "prepare_exit": 0,
+          "prepare_wall_s": 177.98721462499816,
+          "apply_error": "TimeoutExpired",
+          "apply_wall_s": 300.0470605000155,
+          "apply_cpu": "unavailable: timeout handler did not record child CPU",
+          "marker_phase": "applying",
+          "changed_count": 70,
+          "applied_count": 70,
+          "ordered_applied_prefix": 70,
+          "remaining_count": 0,
+          "router_state": "intended",
+          "unchanged_paths_match_base": true,
+          "receipt_exists": false,
+          "refresh_output_exists": false
+        }
+      ],
+      "phase_evidence_sha256": "cc86e3eb5496c5dbe5c1e92f61776de3f6283acff0f23f9ab86d0d2f3d2bd706",
+      "exact_timeout_stack": "unknown; all intended path hashes present while marker still applying, no receipt/output",
+      "host_load_and_apply_cpu": "unavailable",
+      "detached_descendants": "unknown",
+      "worlds_preserved": true,
+      "no_retry_or_recovery": true
+    },
+    "acceptance": false,
+    "original_stress_attribution": "Dense selectors differ from original. A separate original-selector diagnostic passed narrowly with different checkout state; see original_selector_four for exact scope."
+  },
+  "original_selector_four": {
+    "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+    "actual_selectors_match_original_controller": true,
+    "frontier_sources": 138,
+    "required_pairs": 444,
+    "original_frontier_sources": 144,
+    "original_required_pairs": 456,
+    "fixture_difference": "Reconstruction committed all10220basefiles; originalHEADheld10217 and partition0 index/record/history were uncommitted already-landed working files. Six sourcecomponents/twelvepairs therefore not in reconstructedchangedfrontier.",
+    "input_base_files": 10220,
+    "input_final_files": 10289,
+    "changed_paths": 70,
+    "stage_wall_seconds": {
+      "inspect": [
+        28.669,
+        28.565,
+        28.652,
+        27.709
+      ],
+      "selected": [
+        69.19,
+        68.629,
+        69.14,
+        68.898
+      ],
+      "review": [
+        90.693,
+        91.201,
+        90.561,
+        90.29
+      ],
+      "prepare": [
+        173.189,
+        173.361,
+        170.536,
+        170.437
+      ],
+      "apply": [
+        293.341,
+        294.037,
+        292.059,
+        293.449
+      ]
+    },
+    "stage_child_cpu_seconds": {
+      "inspect": [
+        27.79,
+        27.67,
+        27.78,
+        26.84
+      ],
+      "selected": [
+        67.88,
+        67.34,
+        67.85,
+        67.66
+      ],
+      "review": [
+        87.21,
+        86.99,
+        87.0,
+        85.74
+      ],
+      "prepare": [
+        168.24,
+        168.41,
+        165.63,
+        165.57
+      ],
+      "apply": [
+        287.94,
+        288.59,
+        286.73,
+        288.03
+      ]
+    },
+    "apply_start_spread_ms": 42.124,
+    "per_public_command_deadline_seconds": 300,
+    "all_four_applies_completed": true,
+    "all_receipts_finished_verified_and_current": true,
+    "exact_single_recall_record_and_body_verified": true,
+    "full_bank_authority_remote_index_head_and_feature_preservation_verified": true,
+    "journals_and_markers_absent_after_success": true,
+    "host_load": "unsampled",
+    "minimum_deadline_headroom_seconds": 5.963000000000022,
+    "raw_summary_sha256": "67437b53dab6140d6127f87b5b7e0569c8f55f4c5b414070cf178c8b89a159f9",
+    "actual_Opus_diagnostic_review": {
+      "verdict": "PASS bounded diagnostic only",
+      "receipt_sha256": "b03686cbc9bfcab408f9f88faed5b8fe9e6683a9ba12c74d438a5bec4ff51bb4",
+      "risk": "CPU-bound292\u2013294s,6\u20138sheadroom; no full-stress readiness, latency distribution or later-source transfer. The reconstructedcheckoutdiffers from original. Densefailurecannotbe attributedsolelyto paircount withoutsampledload."
+    },
+    "acceptance": false,
+    "final_source_applicability": "Pending separate review after ownedGUIDE/governedplanning/attestation fixes; no fullstress started."
+  },
+  "remaining": [
+    "fresh complete final-source four-cell matrix",
+    "fresh comparable full S0/C source/runtime protocol and technical authorization",
+    "all original functional/performance/platform/native/task acceptance and signed delivery"
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "schema": "agent-memory/omp-owned-instruction-carrier-research-v1",
+  "date": "2026-11-07",
+  "scope": "Actual receipt-owned native full-skill read carrier measurement only; not new instruction-context implementation or full #249 qualification",
+  "native_version": "18.16.0",
+  "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "model": "openai-codex/gpt-6.1-sol",
+  "display_event_content_retained": false,
+  "full_native_qualification": false,
+  "copy": {
+    "source_commit": "90d822b42e41b96b27682ebca2bcf405c6a26bfc",
+    "artifact_digest": "c8c4a03280d7c34e2eb975dfc4157a8a5999409790a0973a5d020ea3166a55b5",
+    "receipt_sha256": "210eebb06088fba1eea06e45aad5f93fc52196d71a95efcf828ec2d8bf40dd99",
+    "target_kind": "copy",
+    "header_and_resolved_path": "logical installed SKILL.md path",
+    "shape_sha256": "17d502ba3704d37037011597c661b00b071a446ebbf98b3914058d319c310459",
+    "measured_shape": {
+      "unique_invocation": true,
+      "invocation_tool_is_read": true,
+      "invocation_argument_keys": [
+        "i",
+        "path"
+      ],
+      "invocation_path_is_exact_skill_uri": true,
+      "header_exact_skill_file_path": true,
+      "body_equals_raw_manual": false,
+      "body_equals_manual_without_final_newlines": true,
+      "body_equals_yaml_removed": false,
+      "body_equals_yaml_removed_without_final_newlines": false,
+      "manual_has_yaml_frontmatter": true,
+      "manual_line_count": 154,
+      "body_line_count": 154,
+      "details_display_text_equals_full_text": false,
+      "details_display_text_equals_body": true,
+      "details_content_type": "text/markdown",
+      "details_total_lines": 154,
+      "details_display_start_line": 1,
+      "details_row_prefixes": false,
+      "details_meta_source_type": "internal",
+      "details_meta_source_value_is_skill_uri": true,
+      "details_meta_source_value_is_installed_path": false,
+      "native_entry_was_error": false,
+      "scope": "In-process structural/exact-byte comparison only. No content, unsafe-source hash or retrospective gap waiver."
+    }
+  },
+  "link": {
+    "source_commit": "27aa667d4d9e225974f03f90e47bb878439b223b",
+    "artifact_digest": "c8c4a03280d7c34e2eb975dfc4157a8a5999409790a0973a5d020ea3166a55b5",
+    "receipt_sha256": "3995a6d2ad0b1b38d7c1e42084c0110e3ba09c923ff6861f9378b7bf54ca516d",
+    "manual_file_sha256": "8b184a95d69d8afd917c3310fae041146fccc8673bc3aa857521b4494db193b7",
+    "target_kind": "link",
+    "header_and_resolved_path": "logical installed SKILL.md path, not canonical linked target",
+    "native_exit": 0,
+    "shape_sha256": "48e3195afea7ef4aad54c7af6791463b363ec34932aa2548a460c3d2a7671c2e",
+    "measured_shape": {
+      "full_native_qualification": false,
+      "display_event_retained": false,
+      "approval_mode": "native-existing-default",
+      "model": "openai-codex/gpt-6.1-sol",
+      "failures": [],
+      "native_wait_returncode": 0,
+      "native_entry_id": "b41351a6",
+      "unique_invocation": true,
+      "invocation_link_unique": true,
+      "invocation_entry_id": "3e5f9906",
+      "invocation_argument_keys": [
+        "i",
+        "path"
+      ],
+      "invocation_path_exact": true,
+      "tool_name": "read",
+      "is_error": false,
+      "result_message_keys": [
+        "content",
+        "details",
+        "isError",
+        "role",
+        "timestamp",
+        "toolCallId",
+        "toolName"
+      ],
+      "content_count": 1,
+      "content_block_keys": [
+        "text",
+        "type"
+      ],
+      "details_keys": [
+        "contentType",
+        "displayContent",
+        "meta",
+        "resolvedPath",
+        "rowPrefixes",
+        "totalLines"
+      ],
+      "display_keys": [
+        "lineNumbers",
+        "startLine",
+        "text"
+      ],
+      "meta_keys": [
+        "source"
+      ],
+      "source_keys": [
+        "type",
+        "value"
+      ],
+      "header_matches_logical": true,
+      "header_matches_canonical": false,
+      "resolvedPath_matches_logical": true,
+      "resolvedPath_matches_canonical": false,
+      "body_exact_manual_without_terminal_LF": true,
+      "display_text_exact_body": true,
+      "display_line_numbers_exact": true,
+      "display_start_line": 1,
+      "content_type": "text/markdown",
+      "total_lines": 154,
+      "manual_line_count": 154,
+      "row_prefixes": false,
+      "meta_source": {
+        "type": "internal",
+        "value": "skill://agent-memory"
+      },
+      "model_changes": [
+        {
+          "model": "openai-codex/gpt-6.1-sol",
+          "resolvedModelIsFallback": false
+        }
+      ],
+      "receipt_unchanged": true,
+      "manual_unchanged": true,
+      "native_exit_final": 0
+    }
+  },
+  "limits": [
+    "The native tool result and model input were not rewritten.",
+    "Existing unsafe gaps remain unresolved; this is not retrospective source completion.",
+    "Copy and link used separate owned disposable installations; link preflight at an advanced integration ref did not launch a native process.",
+    "No raw native manual body, transcript, display-event content or unsafe native-content hash is published.",
+    "The 154-line measurement describes the measured artifact only; implementation must derive lengths from the exact receipt-owned manual, not pin an incidental line count."
+  ]
+}

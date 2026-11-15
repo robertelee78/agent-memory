@@ -1,0 +1,97 @@
+{
+  "schema": "am255/runtime-controls-execution-v1",
+  "scope": "Research-only synthetic source/graph/API qualification, not AM v0.0.16 implementation or acceptance",
+  "execution_status": "not-executed; awaiting parent-reserved host slot",
+  "authority": {
+    "issue": 255,
+    "ssg_commit": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+    "am_parent_baseline": "175d21fa26bbef41f8ec859b463876934e16db79",
+    "reference_llama_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07",
+    "reference_build": 9341,
+    "alternate_build": 9360,
+    "actual_read_authority_hashes": "prior-observations.json"
+  },
+  "prerequisites": [
+    "Main has explicitly reserved this host after #209 diagnostics and before #206 timing; the command-line flag is not independent proof of that reservation",
+    "The full authored controller directory is integrated at the exact parent path in argv",
+    "Existing private qualification-venv supplies neo4j==5.28.2; controllers themselves use stdlib math and no numpy import",
+    "Both exact weights, native executable builds and SSG executable already exist at host-config.json paths; no downloads or builds occur",
+    "The pinned MAGE image is already present in the selected engine; no automatic pull",
+    "Operator/counsel deployment permission remains independently scoped to non-production research; these recipes do not grant distribution/hosted permission"
+  ],
+  "macos_arm64_serial_command": {
+    "cwd": "/opt/agent-memory-worktrees/v015-delivery",
+    "argv": [
+      "/tmp/am-v15-delivery/qualification-venv/bin/python",
+      "-B",
+      "/opt/agent-memory-worktrees/v015-delivery/docs/research/data/2026-11-05-ssg-runtime/runtime-controls/managed_endpoints.py",
+      "--config",
+      "/opt/agent-memory-worktrees/v015-delivery/docs/research/data/2026-11-05-ssg-runtime/runtime-controls/host-config.json",
+      "--output",
+      "/tmp/am-v15-delivery/runtime-controls-actual-20261105",
+      "--with-graph",
+      "--reserved-host-slot"
+    ],
+    "timeout_seconds": 3600,
+    "expected_exit": 0,
+    "expected_artifacts": [
+      "actual-artifacts.json",
+      "source-bindings.json",
+      "report.json",
+      "artifact-inventory.json",
+      "reference/qualification/report.json",
+      "alternate/qualification/report.json",
+      "ambiguous/qualification/report.json",
+      "nonembedding/qualification/report.json",
+      "key-protected/qualification/report.json",
+      "graph-controls/report.json",
+      "graph-controls/cleanup.json",
+      "graph-controls/vector-erasure.json"
+    ]
+  },
+  "bounds": {
+    "endpoint_profiles": 5,
+    "simultaneous_managed_model_servers": 1,
+    "model_server_threads": 4,
+    "endpoint_timeout_seconds": 120,
+    "maximum_response_bytes": 33554432,
+    "tested_batch_inputs": [1, 4, 8],
+    "maximum_declared_context_tokens": 32768,
+    "probe_inputs_per_fill": 4,
+    "probe_repeats": 3,
+    "candidate_records": 4,
+    "maximum_graph_containers_concurrently": 2,
+    "graph_memory_limit_each": "2g",
+    "graph_cpu_limit_each": 2,
+    "graph_builder_finish_timeout_seconds": 240,
+    "graph_boundary_wait_timeout_seconds": 180,
+    "model_server_readiness_timeout_seconds": 180,
+    "similarity_control": "One explicitly inferred candidate-local edge; not all-pairs scale acceptance"
+  },
+  "expected_public_outcome_checks": [
+    {"cell": "real-single-model-discovery", "check": "reference and alternate report discovered_model equals the sole /models data ID; actual shape/count/unique-index/finite/nonzero checks succeed", "class": "actual-endpoint"},
+    {"cell": "unknown-alias", "check": "reference raw HTTP may accept and echo an unknown model, as previously observed; independent metadata selection refuses model-not-in-independent-metadata, never asserts verified weights from echo", "class": "actual-endpoint-plus-adapter-policy"},
+    {"cell": "real-ambiguous-router", "check": "actual llama.cpp router /v1/models advertises more than one unique ID; public_outcome is refused/ambiguous-model-discovery, matched true, no embedding request sent", "class": "actual-endpoint"},
+    {"cell": "real-nonembedding", "check": "actual llama.cpp non-embedding/pooling-none server returns an embedding capability error; public_outcome incompatible exit 1. This is not a claim about a separately qualified chat-weight model", "class": "actual-endpoint"},
+    {"cell": "optional-key", "check": "real key-protected embedding with key succeeds; same route without key returns 401 or 403; private credentials and owned server logs are unlinked after shutdown", "class": "actual-endpoint"},
+    {"cell": "limits", "check": "1/4/8 small actual batches cover all integer indices at expected dimensions. Actual configured-context overrun receives explicit refusal; absent tokenizer/context evidence is unverified, not a no-truncation pass", "class": "actual-endpoint"},
+    {"cell": "malformed-shape", "check": "duplicate/missing/extra/boolean index, wrong dimension/model and NaN mutations of a real response are refused", "class": "protocol-simulation-only"},
+    {"cell": "probe-fill", "check": "report actual probe tokens/time, three-repeat coordinate/cosine deviations and tiny-fill overhead. Diagnostic 1e-5 limits are not immutable-weight or latency proof", "class": "actual-endpoint-measurement"},
+    {"cell": "own-neighbor", "check": "compare exact own-text and with-neighbor rankings over the same six synthetic documents and four pre-authored query labels; retain both rendered hashes and real responses", "class": "actual-endpoint-measurement-not-independent-full-quality-suite"},
+    {"cell": "SSG-named-read", "check": "actual SSG class query returns one synthetic truth with source digest; source drift exits 11, template drift exits 3, actual write EXPLAIN plan rejected exit 3, forced rebuild restores query exit 0", "class": "actual-SSG-and-real-graph"},
+    {"cell": "SSG-workspace", "check": "actual SSG workspace up refuses equal shared/workspace addresses exit 3 before any Docker execution; intentionally empty executable PATH prevents accidental service adoption", "class": "actual-CLI-guard-not-workspace-loader-quality"},
+    {"cell": "process-faults", "check": "each graph-fill/vector-fill/index-creation/similarity/pointer-before/pointer-after checkpoint is reached by a real child; SIGKILL yields -9, old qualified active stays pinned except complete pointer-after candidate; graph-fill transaction rolls back", "class": "actual-builder-crash-at-durable-boundaries"},
+    {"cell": "database-crash", "check": "SIGKILL the inactive partially vector-filled candidate database, restart that exact owned container, observe recovery and unchanged qualified active graph", "class": "actual-database-process-crash-not-power-loss"},
+    {"cell": "physical-domain", "check": "foreign project and each candidate have distinct exact container IDs/data volumes; foreign canary never appears in active query; wrong project refuses and wrong checkout bank-state is stale", "class": "actual-physical-instance-isolation"},
+    {"cell": "delete-and-revoke", "check": "paused actual stale builders fail publication after source/privacy deletion and separately after consent-only epoch change with unchanged bank state; old reader stale, then unavailable after routing removal", "class": "actual-scratch-fencing-not-production-authority"},
+    {"cell": "erasure", "check": "observe real snapshot and WAL file inventory before disposal; exact owned whole data/log volumes absent after disposal; old local vector batches and builder logs removed; permitted post-delete rebuild has zero deleted canary bodies", "class": "actual-owned-logical-store-disposal-not-forensic-media-erasure"},
+    {"cell": "cleanup", "check": "graph cleanup status qualified with every inventoried resource absent; unrelated original container IDs preserved; unknown/recycled ownership produces erasure-pending, never a wipe", "class": "actual-owned-resource-boundary"}
+  ],
+  "remaining_unavailable_profiles": [
+    "Native Linux arm64 model-server/controllers execution requires the pinned CPU native builds, weights and private path-adjusted backend=cpu config on that host; macOS Metal results do not qualify it",
+    "Linux amd64 and other architectures are not exercised",
+    "A separately deployed real chat-weight model is not supplied; the runnable actual non-embedding server capability-refusal cell does not invent a chat-model compatibility pass",
+    "Power-loss/fsync hardware durability, interruption inside the index engine, hostile provider weight attestation, external backups and provider-side erasure are outside these observed scratch cells",
+    "Operator performance/resource disposition, full independent query/relationship suites, exact image legal/BOM disposition and 1k/10k/50k clean scale results remain separately owned parent deliverables"
+  ]
+}

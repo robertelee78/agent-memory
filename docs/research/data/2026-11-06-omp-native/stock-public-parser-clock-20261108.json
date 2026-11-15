@@ -1,0 +1,357 @@
+{
+  "schema": "agent-memory/native249-public-parser-clock-qualification-v1",
+  "binary_version": "omp/18.16.0",
+  "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "native_exit": 0,
+  "prompt_commands_submitted": 0,
+  "provider_credentials_requested": false,
+  "approval_mode": "native-default-unchanged",
+  "qualification": {
+    "public_parser_callable": true,
+    "seven_synthetic_controls_recorded": true,
+    "strict_fixture_controls_accepted_only_valid": true,
+    "all_synthetic_parser_call_inventories_equal": true,
+    "actual_committed_old_file_read": true,
+    "old_parser_call_inventory_equal": true,
+    "actual_native_tail_observed": true,
+    "three_nonce_bound_clock_brackets": false,
+    "model_free": true,
+    "no_native_signal_sent": true,
+    "scope": "macOS arm64 actual stock RPC fixture only; not Linux, warm latency, or full #249 source coverage",
+    "clock_samples_recorded": 3,
+    "clock_shared_epoch_qualified": false
+  },
+  "public_exports": {
+    "parseSessionContent": "function",
+    "CURRENT_SESSION_VERSION": 3,
+    "isPersistenceTruncatedString": "undefined",
+    "isBlobRef": "undefined"
+  },
+  "synthetic_controls": [
+    {
+      "label": "valid",
+      "shape": {
+        "keys": [
+          "entries",
+          "invalidHeader",
+          "malformedRecords",
+          "sourceSize",
+          "titleSlot"
+        ],
+        "entries_array": true,
+        "entry_types": [
+          "session",
+          "message"
+        ],
+        "entry_ids": [
+          "11111111-1111-4111-8111-111111111111",
+          "synthetic-user"
+        ],
+        "malformedRecords": 0,
+        "invalidHeader": false,
+        "sourceSize": 378,
+        "header_count": 1
+      },
+      "strict_fixture_qualifier_accepts": true,
+      "parser_call_fs_inventory_equal": true,
+      "raw_body_hash_or_spool": false
+    },
+    {
+      "label": "malformed",
+      "shape": {
+        "keys": [
+          "entries",
+          "invalidHeader",
+          "malformedRecords",
+          "sourceSize",
+          "titleSlot"
+        ],
+        "entries_array": true,
+        "entry_types": [
+          "session",
+          "message"
+        ],
+        "entry_ids": [
+          "11111111-1111-4111-8111-111111111111",
+          "synthetic-user"
+        ],
+        "malformedRecords": 1,
+        "invalidHeader": false,
+        "sourceSize": 389,
+        "header_count": 1
+      },
+      "strict_fixture_qualifier_accepts": false,
+      "parser_call_fs_inventory_equal": true,
+      "raw_body_hash_or_spool": false
+    },
+    {
+      "label": "truncated",
+      "shape": {
+        "keys": [
+          "entries",
+          "invalidHeader",
+          "malformedRecords",
+          "sourceSize",
+          "titleSlot"
+        ],
+        "entries_array": true,
+        "entry_types": [
+          "session"
+        ],
+        "entry_ids": [
+          "11111111-1111-4111-8111-111111111111"
+        ],
+        "malformedRecords": 1,
+        "invalidHeader": false,
+        "sourceSize": 371,
+        "header_count": 1
+      },
+      "strict_fixture_qualifier_accepts": false,
+      "parser_call_fs_inventory_equal": true,
+      "raw_body_hash_or_spool": false
+    },
+    {
+      "label": "multiheader",
+      "shape": {
+        "keys": [
+          "entries",
+          "invalidHeader",
+          "malformedRecords",
+          "sourceSize",
+          "titleSlot"
+        ],
+        "entries_array": true,
+        "entry_types": [
+          "session",
+          "message",
+          "session"
+        ],
+        "entry_ids": [
+          "11111111-1111-4111-8111-111111111111",
+          "synthetic-user",
+          "22222222-2222-4222-8222-222222222222"
+        ],
+        "malformedRecords": 0,
+        "invalidHeader": false,
+        "sourceSize": 545,
+        "header_count": 2
+      },
+      "strict_fixture_qualifier_accepts": false,
+      "parser_call_fs_inventory_equal": true,
+      "raw_body_hash_or_spool": false
+    },
+    {
+      "label": "wrong_header_id",
+      "shape": {
+        "keys": [
+          "entries",
+          "invalidHeader",
+          "malformedRecords",
+          "sourceSize",
+          "titleSlot"
+        ],
+        "entries_array": true,
+        "entry_types": [
+          "session",
+          "message"
+        ],
+        "entry_ids": [
+          "22222222-2222-4222-8222-222222222222",
+          "synthetic-user"
+        ],
+        "malformedRecords": 0,
+        "invalidHeader": false,
+        "sourceSize": 378,
+        "header_count": 1
+      },
+      "strict_fixture_qualifier_accepts": false,
+      "parser_call_fs_inventory_equal": true,
+      "raw_body_hash_or_spool": false
+    },
+    {
+      "label": "wrong_header_cwd",
+      "shape": {
+        "keys": [
+          "entries",
+          "invalidHeader",
+          "malformedRecords",
+          "sourceSize",
+          "titleSlot"
+        ],
+        "entries_array": true,
+        "entry_types": [
+          "session",
+          "message"
+        ],
+        "entry_ids": [
+          "11111111-1111-4111-8111-111111111111",
+          "synthetic-user"
+        ],
+        "malformedRecords": 0,
+        "invalidHeader": false,
+        "sourceSize": 373,
+        "header_count": 1
+      },
+      "strict_fixture_qualifier_accepts": false,
+      "parser_call_fs_inventory_equal": true,
+      "raw_body_hash_or_spool": false
+    },
+    {
+      "label": "wrong_header_version",
+      "shape": {
+        "keys": [
+          "entries",
+          "invalidHeader",
+          "malformedRecords",
+          "sourceSize",
+          "titleSlot"
+        ],
+        "entries_array": true,
+        "entry_types": [
+          "session",
+          "message"
+        ],
+        "entry_ids": [
+          "11111111-1111-4111-8111-111111111111",
+          "synthetic-user"
+        ],
+        "malformedRecords": 0,
+        "invalidHeader": false,
+        "sourceSize": 379,
+        "header_count": 1
+      },
+      "strict_fixture_qualifier_accepts": false,
+      "parser_call_fs_inventory_equal": true,
+      "raw_body_hash_or_spool": false
+    }
+  ],
+  "committed_old_reader": [
+    {
+      "old_session": "01a1b8f0-d2d2-7724-907c-2a8108bdc3bf",
+      "new_session": "01a1b8f0-d3b5-7715-96b3-ddc795795fad",
+      "parser_shape": {
+        "keys": [
+          "entries",
+          "invalidHeader",
+          "malformedRecords",
+          "sourceSize",
+          "titleSlot"
+        ],
+        "entries_array": true,
+        "entry_types": [
+          "session",
+          "model_change",
+          "thinking_level_change",
+          "custom_message",
+          "custom_message"
+        ],
+        "entry_ids": [
+          "01a1b8f0-d2d2-7724-907c-2a8108bdc3bf",
+          "1f3fbfb7",
+          "60257c48",
+          "4a7f8b31",
+          "5242bed2"
+        ],
+        "malformedRecords": 0,
+        "invalidHeader": false,
+        "sourceSize": 1360,
+        "header_count": 1
+      },
+      "parser_call_fs_inventory_equal": true,
+      "parent_identity_stable": true,
+      "exact_known_file": true,
+      "native_id_anchors_present": true,
+      "additional_native_ids": [
+        "5242bed2"
+      ],
+      "projection_helper_exit": 0,
+      "projection": {
+        "schema": "agent-memory/parser-projection-probe-v1",
+        "entries": [
+          {
+            "native_entry_id": "4a7f8b31",
+            "carrier": "custom_message",
+            "snapshot_role": null,
+            "projected": true,
+            "gap": null,
+            "canonical_writes_performed": false
+          },
+          {
+            "native_entry_id": "5242bed2",
+            "carrier": "custom_message",
+            "snapshot_role": null,
+            "projected": true,
+            "gap": null,
+            "canonical_writes_performed": false
+          }
+        ],
+        "raw_or_projected_body_retained": false,
+        "canonical_writes_performed": false
+      },
+      "raw_or_learning_body_retained": false
+    }
+  ],
+  "clock_samples": [
+    {
+      "sample": 0,
+      "nonce": "a4b4fb8d-66e9-42a3-9046-1ad4326ff88a",
+      "native_before_ns": "995696959",
+      "native_after_ns": "1010066792",
+      "python_monotonic_ns": "517075064505250",
+      "inside_native_bracket": false,
+      "child_pid": 35840,
+      "child_exit": 0,
+      "child_output_monotonic_only": true,
+      "bun_version": "1.4.4",
+      "node_compat_version": "v26.3.0",
+      "platform": "darwin",
+      "arch": "arm64"
+    },
+    {
+      "sample": 1,
+      "nonce": "b25bd7b3-bfac-4358-868f-9d785716c920",
+      "native_before_ns": "1010233417",
+      "native_after_ns": "1023981542",
+      "python_monotonic_ns": "517075078475750",
+      "inside_native_bracket": false,
+      "child_pid": 35851,
+      "child_exit": 0,
+      "child_output_monotonic_only": true,
+      "bun_version": "1.4.4",
+      "node_compat_version": "v26.3.0",
+      "platform": "darwin",
+      "arch": "arm64"
+    },
+    {
+      "sample": 2,
+      "nonce": "8f3b4d03-cb52-4183-a477-95e27cdda733",
+      "native_before_ns": "1024118375",
+      "native_after_ns": "1037299292",
+      "python_monotonic_ns": "517075091803166",
+      "inside_native_bracket": false,
+      "child_pid": 35852,
+      "child_exit": 0,
+      "child_output_monotonic_only": true,
+      "bun_version": "1.4.4",
+      "node_compat_version": "v26.3.0",
+      "platform": "darwin",
+      "arch": "arm64"
+    }
+  ],
+  "python_runtime": {
+    "version": "3.13.12 (main, May 27 2026, 12:03:16) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "monotonic": "namespace(implementation='mach_absolute_time()', monotonic=True, adjustable=False, resolution=4.166666666666666e-08)"
+  },
+  "clock_verdict": "FAILED_SHARED_EPOCH; no absolute hrtime-to-Python-monotonic deadline permitted by this evidence",
+  "scope": "Model-free macOS arm64 stock RPC parser/committed writer-drain fixture only; not native journey/full source coverage, Linux, TUI, signal/fork lifecycle or warm latency. No native raw bodies or their hashes retained in this projection.",
+  "source_commit": "a8e6b386db9a8719831ef69f9af6dd17cf8f1e4c",
+  "raw_receipt_sha256": "3d9b1aa71d48b684bc995c537354bc363b045d33e3aa34a16a7424d895550b27",
+  "clock_offset_interval_observation": {
+    "lower_ns": "517074054503874",
+    "upper_ns": "517074067684791",
+    "nonempty": true,
+    "scope": "Offline arithmetic over these recorded single-point brackets only; not a four-timestamp handshake, elapsed-rate, Linux or wake qualification"
+  }
+}

@@ -1,0 +1,18 @@
+{
+ "argv": [
+  "docker",
+  "ps",
+  "-a",
+  "--no-trunc",
+  "--filter",
+  "name=am255-graph",
+  "--format",
+  "{{.Names}}\t{{.ID}}\t{{.Image}}\t{{.ImageID}}"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.076,
+ "started_at": "2026-11-05T16:52:20.098767+00:00",
+ "stderr": "",
+ "stdout": "am255-graph-20261105\t0d6ad2e3bdfe709df690f1f2c568686c0b93d9936fedd87b8ecbbc126706a251\tdocker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27\t44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9\nam255-graph-b-20261105\tf09dca5a73bc10da88c83ba25877f6720bec4c37db181a4e31650e3a403f56a4\tdocker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27\t44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9\n"
+}

@@ -1,0 +1,262 @@
+{
+  "schema": "agent-memory/scoped-release-repair-completion-v1",
+  "scope": "Source-bound focused results; not complete hosted matrix, native, full stress or release acceptance",
+  "fault_partitions": {
+    "source_commit": "20db4274d3e80ec8fc78268ea57532998a4fbeef",
+    "complete_workers": 48,
+    "all_passed": true,
+    "maximum_worker_seconds": 135.749826209,
+    "interruption_recover_retry_points": 390,
+    "groups": [
+      {
+        "group": "update-write-before",
+        "partitions": 8,
+        "observed": 41,
+        "actual_interruptions_recoveries_retries": 41,
+        "complete_disjoint": true,
+        "same_inventory_and_artifact": true
+      },
+      {
+        "group": "update-write-after",
+        "partitions": 8,
+        "observed": 41,
+        "actual_interruptions_recoveries_retries": 41,
+        "complete_disjoint": true,
+        "same_inventory_and_artifact": true
+      },
+      {
+        "group": "install-write-copy-before",
+        "partitions": 8,
+        "observed": 77,
+        "actual_interruptions_recoveries_retries": 77,
+        "complete_disjoint": true,
+        "same_inventory_and_artifact": true
+      },
+      {
+        "group": "install-write-copy-after",
+        "partitions": 8,
+        "observed": 77,
+        "actual_interruptions_recoveries_retries": 77,
+        "complete_disjoint": true,
+        "same_inventory_and_artifact": true
+      },
+      {
+        "group": "install-write-link-before",
+        "partitions": 8,
+        "observed": 77,
+        "actual_interruptions_recoveries_retries": 77,
+        "complete_disjoint": true,
+        "same_inventory_and_artifact": true
+      },
+      {
+        "group": "install-write-link-after",
+        "partitions": 8,
+        "observed": 77,
+        "actual_interruptions_recoveries_retries": 77,
+        "complete_disjoint": true,
+        "same_inventory_and_artifact": true
+      }
+    ],
+    "other_gate_control_fixture_failures_in_original53_retained": 2
+  },
+  "corrected_gate_controls": {
+    "scope": "Five complete changed gate/partition/public lifecycle consumers across dae0e99/f08354d; not fullmatrix/native/performance/release acceptance",
+    "workers": [
+      {
+        "name": "gate-diagnostics",
+        "passed": true,
+        "tests": 4
+      },
+      {
+        "name": "lifecycle-fault-partitions",
+        "passed": true,
+        "tests": 3
+      },
+      {
+        "name": "harness",
+        "passed": true,
+        "tests": 9
+      },
+      {
+        "name": "portable-lifecycle",
+        "passed": true,
+        "tests": 2
+      },
+      {
+        "name": "gate-shard-aggregation",
+        "passed": true,
+        "tests": 3
+      }
+    ],
+    "prior_aggregation_fixture_failure_retained": true
+  },
+  "nonobject_receipt_control": {
+    "source_commit": "6c01dabd1a5076b2fced15c2581ec11ebf676508",
+    "complete_workers": 1,
+    "methods": 9,
+    "passed": true,
+    "seconds": 56.293394792010076,
+    "prior_nonobject_fixture_was_only_empty_stdout": true,
+    "corrected_control_exercises_real_nonobject_receipt_refusal": true
+  },
+  "bank_batches": {
+    "source_commit": "3ce6f926c15eabffcb6248befcd658e309af0c9e",
+    "workers": 46,
+    "methods": 46,
+    "all_passed": true,
+    "maximum_worker_seconds": 115.82189712498803,
+    "groups": [
+      {
+        "path": "tests/contracts/test_refresh_receipt_snapshot.py",
+        "complete": 4,
+        "selected": 4,
+        "executed": 4,
+        "complete_equal_all": true,
+        "disjoint_complete": true
+      },
+      {
+        "path": "tests/contracts/test_portable_handoff.py",
+        "complete": 6,
+        "selected": 6,
+        "executed": 6,
+        "complete_equal_all": true,
+        "disjoint_complete": true
+      },
+      {
+        "path": "tests/contracts/test_consolidation.py",
+        "complete": 12,
+        "selected": 12,
+        "executed": 12,
+        "complete_equal_all": true,
+        "disjoint_complete": true
+      },
+      {
+        "path": "tests/contracts/test_memory_refresh.py",
+        "complete": 14,
+        "selected": 14,
+        "executed": 14,
+        "complete_equal_all": true,
+        "disjoint_complete": true
+      },
+      {
+        "path": "tests/contracts/test_known_hold_capacity.py",
+        "complete": 5,
+        "selected": 5,
+        "executed": 5,
+        "complete_equal_all": true,
+        "disjoint_complete": true
+      },
+      {
+        "path": "tests/contracts/test_known_holds_v2.py",
+        "complete": 5,
+        "selected": 5,
+        "executed": 5,
+        "complete_equal_all": true,
+        "disjoint_complete": true
+      }
+    ]
+  },
+  "root_independent_pack_validation": {
+    "source_commit": "b85bf055cf1c356494765d1516328246cca52409",
+    "fable_design_verdict": "PASS",
+    "actual_model": "anthropic/claude-fable-5",
+    "verdict_sha256": "27f65b9943444b70975bd27634e0efa8a86aee55d6553f62cb96eea335827200",
+    "session_sha256": "9d05275a4c1ba6794179e5f06c4f0f291266d32663a4f549bc902f535a04420a",
+    "diagnostic": {
+      "source_commit": "b85bf055cf1c356494765d1516328246cca52409",
+      "scope": "Small synthetic static-validation reuse and fresh-guard diagnostic; not performance/native qualification",
+      "checks": {
+        "different_root_identical_report": true,
+        "different_root_actually_reuses_static_validation": true,
+        "different_root_fresh_entry_and_exit_inventory": true,
+        "returned_mutation_isolated": true,
+        "invalid-bytes-refuses-twice": true,
+        "invalid-bytes-not-cached": true,
+        "unreadable-file-refuses-twice": true,
+        "unreadable-file-not-cached": true,
+        "symlink-refuses-twice": true,
+        "symlink-not-cached": true,
+        "added-unreachable-refuses-twice": true,
+        "added-unreachable-not-cached": true,
+        "removed-root-refuses-twice": true,
+        "removed-root-not-cached": true,
+        "oversized-file-refuses-twice": true,
+        "oversized-file-not-cached": true,
+        "unreadable-directory-refuses-twice": true,
+        "unreadable-directory-not-cached": true,
+        "valid_file_mode_change_misses_and_updates_report": true,
+        "after_yield_change_refuses": true,
+        "after_yield_failure_not_cached": true,
+        "restored_candidate_report_matches": true
+      },
+      "counts": {
+        "first_dispatch_calls": 77,
+        "second_dispatch_calls": 0
+      },
+      "fixture_cleaned": true,
+      "passed": true,
+      "seconds": 1.9504499159520492
+    },
+    "focused_workers": [
+      {
+        "suite": "portable-artifact",
+        "passed": true,
+        "methods": 8,
+        "seconds": 31.18330675002653
+      },
+      {
+        "suite": "mixed-managed-candidates",
+        "passed": true,
+        "methods": 1,
+        "seconds": 74.43065845803358
+      }
+    ],
+    "public_update_child_deadline_unchanged_seconds": 30,
+    "instrumented29_975_second_trace_not_performance_or_causal_proof": true,
+    "prior_diagnostic_refusal_type_mismatch_retained": true
+  },
+  "source_after": [
+    {
+      "source_commit": "3ca0e3fbdcc060b1aa57a4c2dd67ee8da74ee4b9",
+      "tracked_paths": 3478,
+      "portable_paths": 217,
+      "mismatches": [],
+      "extra_paths": [],
+      "ignored_extra_paths": [],
+      "all_tracked_bytes_types_executable_bits_match": true,
+      "no_extra_source_files": true
+    },
+    {
+      "source_commit": "3ce6f926c15eabffcb6248befcd658e309af0c9e",
+      "tracked_paths": 3478,
+      "portable_paths": 217,
+      "mismatches": [],
+      "extra_paths": [],
+      "ignored_extra_paths": [],
+      "all_tracked_bytes_types_executable_bits_match": true,
+      "no_extra_source_files": true
+    },
+    {
+      "source_commit": "6c01dabd1a5076b2fced15c2581ec11ebf676508",
+      "tracked_paths": 3480,
+      "portable_paths": 217,
+      "mismatches": [],
+      "extra_paths": [],
+      "ignored_extra_paths": [],
+      "all_tracked_bytes_types_executable_bits_match": true,
+      "no_extra_source_files": true
+    },
+    {
+      "source_commit": "b85bf055cf1c356494765d1516328246cca52409",
+      "tracked_paths": 3480,
+      "portable_paths": 217,
+      "mismatches": [],
+      "extra_paths": [],
+      "ignored_extra_paths": [],
+      "all_tracked_bytes_types_executable_bits_match": true,
+      "no_extra_source_files": true
+    }
+  ],
+  "worker_deadline_seconds": 300,
+  "hosted_job_deadline_minutes": 180
+}

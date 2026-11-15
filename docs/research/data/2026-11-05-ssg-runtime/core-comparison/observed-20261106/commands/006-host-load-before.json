@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "uptime"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.005511041963472962,
+  "started_at": "2026-11-06T19:23:16.350429+00:00",
+  "stderr": "",
+  "stdout": "11:23  up 4 days, 16:45, 2 users, load averages: 3.80 4.96 5.54\n"
+}

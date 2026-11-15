@@ -1,0 +1,66 @@
+[
+  {
+    "argv": [
+      "podman",
+      "ps",
+      "-a",
+      "--format",
+      "{{.Names}}"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.07404716702876613,
+    "exit": 0,
+    "name": "container-absence-list",
+    "stderr": "",
+    "stdout": "c2e-spike-mw\nc2e-8426\nc2e-8426-x64\nc2e-mw-fidelity\nc2e-8426-steerval\nc2e-8426-steervalb2\nc2e-8426-steervalb3\nc2e-8426-steervalb4\nc2e-8426-steervalb\nc2e-cascade-71affca465b1bff2\nc2e-spike-r7a\nc2e-spike-r7a-mw\nc2e-spike-r7b-mw\nc2e-cascade-4d49b05e97b175c1\nc2e-spike-r10t-mw\nc2e-spike-r11t-mw\nphp2shell-lab\nphp2shell-gdb\nvox-owner-linux-20261031-7oam1dbj\nvox-owner-linux-20261031-7oam1dbj-builder\nvox-owner-linux-20261031-7oam1dbj-init\nr11-obs\nlane-runner-twin\nvox-owner-linux-ubuntu2404-v0414-smoke\nt11-target\nt11b\nt308\nc2e-cascade-81c5d5c2f1e6ce71\nc2e-cascade-984277b6f36dc013\nc2e-cascade-984277b6f36dc013-c2e-steer-twin\nc2e-corpus-lint-death-33482\nc2e-corpus-lint-death-59663\nc2e-cascade-6eb1ff088e5b7cec-c2e-steer-twin\nc2e-cascade-e73e7adcdcd8ee60\nc2e-cascade-e73e7adcdcd8ee60-c2e-steer-twin\nc2e-cascade-3a8e5abb8d1bd717-c2e-steer-twin\nc2e-cascade-9749124493dc9ce8-c2e-steer-twin\nc2e-cascade-ae112aaadd457623-c2e-steer-twin\nc2e-cascade-9b62e70925db6ce7-c2e-steer-twin\nc2e-cascade-d8826b522c53f8cc-c2e-steer-twin\nc2e-cascade-1d5f8a17c2022627-c2e-steer-twin\nc2e-cascade-9ba1967c397ab0e6-c2e-steer-twin\nc2e-cascade-d1544dad5b1f34b9-c2e-steer-twin\nc2e-cascade-e0a733bf1021998c-c2e-steer-twin\nc2e-minimal\nc2e-pipemin\nc2e-pristine\nc2e-harness-lab\nphp2shell-lab-local\nc2e-cascade-4fd659f50dc2207b\nc2e-cascade-5258e2f3fd226b42\nmin6-probe\nam255-graph-20261105\nam255-graph-b-20261105\nc2e-cascade-5c3c456225788d1d\n"
+  },
+  {
+    "argv": [
+      "podman",
+      "run",
+      "-d",
+      "--rm",
+      "--pull=never",
+      "--name",
+      "am255-workspace-critic",
+      "--label",
+      "org.agent-memory.workspace-critic=a04ee294f6864d8dbda5decef1b0892f",
+      "--cpus=2",
+      "--memory=2g",
+      "-p",
+      "127.0.0.1:17749:7687",
+      "--tmpfs",
+      "/var/lib/memgraph:rw,mode=0700,uid=101,gid=103",
+      "--tmpfs",
+      "/var/log/memgraph:rw,mode=0700,uid=101,gid=103",
+      "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+      "--telemetry-enabled=false",
+      "--storage-properties-on-edges=true",
+      "--storage-wal-enabled=false",
+      "--storage-snapshot-interval-sec=0",
+      "--storage-snapshot-on-exit=false",
+      "--log-level=WARNING"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.06798395898658782,
+    "exit": 125,
+    "name": "owned-create",
+    "stderr": "Error: unknown mount option \"uid=101\": invalid mount option\n",
+    "stdout": ""
+  },
+  {
+    "argv": [
+      "podman",
+      "ps",
+      "-a",
+      "--format",
+      "{{.Names}}"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.07451949996175244,
+    "exit": 0,
+    "name": "cleanup-authoritative-list",
+    "stderr": "",
+    "stdout": "c2e-spike-mw\nc2e-8426\nc2e-8426-x64\nc2e-mw-fidelity\nc2e-8426-steerval\nc2e-8426-steervalb2\nc2e-8426-steervalb3\nc2e-8426-steervalb4\nc2e-8426-steervalb\nc2e-cascade-71affca465b1bff2\nc2e-spike-r7a\nc2e-spike-r7a-mw\nc2e-spike-r7b-mw\nc2e-cascade-4d49b05e97b175c1\nc2e-spike-r10t-mw\nc2e-spike-r11t-mw\nphp2shell-lab\nphp2shell-gdb\nvox-owner-linux-20261031-7oam1dbj\nvox-owner-linux-20261031-7oam1dbj-builder\nvox-owner-linux-20261031-7oam1dbj-init\nr11-obs\nlane-runner-twin\nvox-owner-linux-ubuntu2404-v0414-smoke\nt11-target\nt11b\nt308\nc2e-cascade-81c5d5c2f1e6ce71\nc2e-cascade-984277b6f36dc013\nc2e-cascade-984277b6f36dc013-c2e-steer-twin\nc2e-corpus-lint-death-33482\nc2e-corpus-lint-death-59663\nc2e-cascade-6eb1ff088e5b7cec-c2e-steer-twin\nc2e-cascade-e73e7adcdcd8ee60\nc2e-cascade-e73e7adcdcd8ee60-c2e-steer-twin\nc2e-cascade-3a8e5abb8d1bd717-c2e-steer-twin\nc2e-cascade-9749124493dc9ce8-c2e-steer-twin\nc2e-cascade-ae112aaadd457623-c2e-steer-twin\nc2e-cascade-9b62e70925db6ce7-c2e-steer-twin\nc2e-cascade-d8826b522c53f8cc-c2e-steer-twin\nc2e-cascade-1d5f8a17c2022627-c2e-steer-twin\nc2e-cascade-9ba1967c397ab0e6-c2e-steer-twin\nc2e-cascade-d1544dad5b1f34b9-c2e-steer-twin\nc2e-cascade-e0a733bf1021998c-c2e-steer-twin\nc2e-minimal\nc2e-pipemin\nc2e-pristine\nc2e-harness-lab\nphp2shell-lab-local\nc2e-cascade-4fd659f50dc2207b\nc2e-cascade-5258e2f3fd226b42\nmin6-probe\nam255-graph-20261105\nam255-graph-b-20261105\nc2e-cascade-5c3c456225788d1d\n"
+  }
+]

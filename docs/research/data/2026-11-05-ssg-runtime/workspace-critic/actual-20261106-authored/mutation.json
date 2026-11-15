@@ -1,0 +1,5 @@
+{
+  "app_sha256_after": "81db044bc9fc5b6fad73e4723ed87559917a6c09c66cd49b44fceb5026f346ae",
+  "operation": "Replace both return eval(text) lines with return text",
+  "refingerprinted": false
+}

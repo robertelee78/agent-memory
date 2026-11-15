@@ -1,0 +1,111 @@
+{
+  "attempts": [
+    {
+      "error": "URLError"
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.004658833029679954,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.004524708958342671,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.0092869580257684,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.005528624984435737,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.004886874987278134,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": {
+        "code": 503,
+        "message": "Loading model",
+        "type": "unavailable_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 75,
+      "response_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+      "seconds": 0.004131083027459681,
+      "status": 503,
+      "usage": null
+    },
+    {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 15,
+      "response_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "seconds": 0.004207124991808087,
+      "status": 200,
+      "usage": null
+    }
+  ],
+  "seconds": 1.4784034169861116,
+  "successful_health": {
+    "body": {
+      "status": "ok"
+    },
+    "response_bytes": 15,
+    "response_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+    "seconds": 0.004207124991808087,
+    "status": 200
+  }
+}

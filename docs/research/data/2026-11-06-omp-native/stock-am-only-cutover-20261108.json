@@ -1,0 +1,222 @@
+{
+  "schema": "agent-memory/stock-omp-am-only-cutover-observations-v1",
+  "issue": "https://github.com/robertelee78/agent-memory/issues/249",
+  "status": "Executing / At risk; not acceptance or release",
+  "operator_constraint": "Stock regularly updated omp; AM-only implementation. No native runtime/source/installation modifications.",
+  "source_bindings": [
+    {
+      "commit": "7d2ab819f47d0e950931abcdbebb62574424f8e0",
+      "archive_sha256": "ffe21c65a2ab2ef2fe1ecc18435e8f7831eff9698766f7380c4e558f039c3ecf"
+    },
+    {
+      "commit": "78a65a419451db704cd3723e482618b95e98042f",
+      "archive_sha256": "dfa329e2a2937e9557cdaa5131cbb136e836744ec919cb910b74581d64040899"
+    },
+    {
+      "commit": "4694a725c562271245704f11178ac6fcc2bfbf32",
+      "archive_sha256": "a47524d15669198a4c5884bf06ebef75fb1cbf7d835c3e344b5db0fd3ab9cd1c"
+    }
+  ],
+  "observations": [
+    {
+      "raw_private_copy": "native-public-worker-old-consumer-3753eae.raw.json",
+      "raw_sha256": "cc3cd9790364ebf98195657e745717afd9dc9eaad7805dacdb262ed2bbccb38a",
+      "source_commit": "3753eae39cf15cec4490536cf71ca42b6f805e14",
+      "seconds": 81.60815191699658,
+      "scope": "Actual copied/receipt-bound AM finite worker and public source assessment/drain; frozen historical reader. No omp launch, prompt, native UI, clock/p99 or platform acceptance.",
+      "passed": true,
+      "route": "am",
+      "old_reader_refused_new_marker": true,
+      "old_consumer_result": {
+        "old_inventory_sha256": "0e33a328776f7865ee4f0b3175f97ddd7c3ec15bcf80b52b5edacca0237294af",
+        "old_proof_matches": true,
+        "old_required_capabilities": [],
+        "marker_absent": true,
+        "retained_stream_instances": 1
+      },
+      "preserved": true
+    },
+    {
+      "raw_private_copy": "native-hook-helper-old-consumer-7d2ab81.raw.json",
+      "raw_sha256": "becb00383b90d2ff8cb75c5836535cc0cfc8fc93b10de60803108becd5db95c0",
+      "source_commit": "7d2ab819f47d0e950931abcdbebb62574424f8e0",
+      "seconds": 97.07075979094952,
+      "scope": "Actual copied/receipt-bound AM finite worker and public source assessment/drain; frozen historical reader. No omp launch, prompt, native UI, clock/p99 or platform acceptance.",
+      "passed": true,
+      "route": "hook-helper",
+      "old_reader_refused_new_marker": true,
+      "old_consumer_result": {
+        "old_inventory_sha256": "8deed488d3c5450eb90e0f856cc1752bb0b9ef88a7d04e0c1e3757c24552e0f4",
+        "old_proof_matches": true,
+        "old_required_capabilities": [],
+        "marker_absent": true,
+        "retained_stream_instances": 1
+      },
+      "preserved": true
+    },
+    {
+      "raw_private_copy": "native-lifecycle-before-3753eae.raw.json",
+      "raw_sha256": "f552836fbb1b16093a84aeffd56e511c53b4d491faea4dd13146799e51410253",
+      "source_commit": "3753eae39cf15cec4490536cf71ca42b6f805e14",
+      "seconds": 89.29598520800937,
+      "scope": "Registered offline contract worker; no native/provider/platform qualification",
+      "suite": "omp-stored-source-lifecycle",
+      "exit": 1,
+      "counts": {
+        "errors": 3,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": false,
+        "skipped": 0,
+        "tests": 6,
+        "unexpected_successes": 0
+      },
+      "worker_deadline_seconds": 300
+    },
+    {
+      "raw_private_copy": "comparison-request-before-3753eae.raw.json",
+      "raw_sha256": "59ad27ac0e2e870d9687dd501cb57192d16a0de56786008cac98e82a0a9f733a",
+      "source_commit": "3753eae39cf15cec4490536cf71ca42b6f805e14",
+      "seconds": 68.17570575000718,
+      "scope": "Registered offline contract worker; no native/provider/platform qualification",
+      "suite": "layout-comparison-byte-boundaries",
+      "exit": 1,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 1,
+        "passed": false,
+        "skipped": 0,
+        "tests": 5,
+        "unexpected_successes": 0
+      },
+      "worker_deadline_seconds": 300
+    },
+    {
+      "raw_private_copy": "native-lifecycle-after-7d2ab81.raw.json",
+      "raw_sha256": "3f91148c97fead547a0af8710e61c8640af0147b904d067ca94c38cdf641280c",
+      "source_commit": "7d2ab819f47d0e950931abcdbebb62574424f8e0",
+      "seconds": 121.61023895791732,
+      "scope": "Registered offline contract worker; no native/provider/platform qualification",
+      "suite": "omp-stored-source-lifecycle",
+      "exit": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 6,
+        "unexpected_successes": 0
+      },
+      "worker_deadline_seconds": 300
+    },
+    {
+      "raw_private_copy": "comparison-request-after-7d2ab81.raw.json",
+      "raw_sha256": "7b0bf575f9b9579ab7a36a3c953156d88d6c94ce92d5a05f05ce63a28b5dca32",
+      "source_commit": "7d2ab819f47d0e950931abcdbebb62574424f8e0",
+      "seconds": 62.495996374986134,
+      "scope": "Registered offline contract worker; no native/provider/platform qualification",
+      "suite": "layout-comparison-byte-boundaries",
+      "exit": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 5,
+        "unexpected_successes": 0
+      },
+      "worker_deadline_seconds": 300
+    },
+    {
+      "raw_private_copy": "native-finite-stream-66.raw.json",
+      "raw_sha256": "afcbb45da1ac2d7cb8258c677f9ddaedbd87904d05cc1218433bf14391375795",
+      "source_commit": "7f328e1e25c1238404a155aa2152fb5246a79527",
+      "seconds": 0.8418917920207605,
+      "scope": "Registered offline contract worker; no native/provider/platform qualification",
+      "suite": "omp-finite-stream",
+      "exit": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 66,
+        "unexpected_successes": 0
+      },
+      "worker_deadline_seconds": 300,
+      "binding_limit": "Exact worker runtime/test bytes unchanged, but another integration file changed during the wider original batch; not an immutable composed-source pass."
+    }
+  ],
+  "independent_reviews": [
+    {
+      "model": "anthropic/claude-opus-5-5",
+      "commit": "7d2ab819f47d0e950931abcdbebb62574424f8e0",
+      "verdict": "Scoped source PASS for C/L seal/wake repairs, checked native-ID authority, public observer refusal and bank discovery; smoke leaf P2 remained"
+    },
+    {
+      "model": "anthropic/claude-opus-5-5",
+      "commit": "78a65a419451db704cd3723e482618b95e98042f",
+      "verdict": "Scoped source PASS, no P1/P2, for public-leaf resolution, canonical path comparison, regression registration and lifecycle documentation"
+    },
+    {
+      "model": "anthropic/claude-opus-5-5",
+      "commit": "4694a725c562271245704f11178ac6fcc2bfbf32",
+      "verdict": "Exhaustive disjoint batch source PASS: exactly 32 cases in 8 batches; no missing/extra/duplicate; tests and limits unchanged"
+    }
+  ],
+  "authority_profile_diagnostic": {
+    "source_commit": "7d2ab819f47d0e950931abcdbebb62574424f8e0",
+    "tests": 3,
+    "passed": true,
+    "seconds": 219.322,
+    "identity_git_calls": 20748,
+    "private_enrollment_context_constructions": 464,
+    "observe_calls": 17,
+    "git_cumulative_seconds": 174.1,
+    "scope": "cProfile instrumentation overhead and selected diagnostic cases only; neither full-suite nor acceptable latency qualification",
+    "retained_tool_output_sha256": "d961648d3d4e1b2067287df17573873d40ee6f9c91af9c1e222e11a88e7266fb"
+  },
+  "not_qualified": [
+    "complete composed worker results at 4694a72 (running when recorded)",
+    "actual stock omp TypeScript event path and launch",
+    "warm/p99 latency and wake margin",
+    "macOS/Linux clock-rate bound",
+    "old-reader main-thread blocking cap",
+    ">=256 KiB shutdown flush",
+    "native fork/transition/TUI journeys",
+    "Linux and full original matrix"
+  ],
+  "historical_evidence_policy": "Pre-cutover native evidence is retained but does not qualify the replacement transport.",
+  "observed_failures": [
+    {
+      "source_commit": "7f328e1e25c1238404a155aa2152fb5246a79527",
+      "route": "public am omp-boundary --stream",
+      "failure": "StringIO stdout has no binary buffer; before OPEN; fixed by console routing in 3753eae",
+      "scope": "Not the separate native hook spawn route"
+    },
+    {
+      "source_commit": "7f328e1e25c1238404a155aa2152fb5246a79527",
+      "suite": "omp-stored-authority-v2",
+      "failure": "Worker deadline exceeded",
+      "worker_deadline_seconds": 300,
+      "case_outputs_available": false,
+      "scope": "Original runner lost detailed case output; no individual outcome inferred"
+    },
+    {
+      "source_commit": "3753eae39cf15cec4490536cf71ca42b6f805e14",
+      "suite": "omp-stored-source-lifecycle",
+      "failure": "Six tests, three errors: recovery activated zero banks and expected bank markers were absent",
+      "diagnosis": "Project-registry locations are common Git metadata directories, not checkout roots; expand actual worktrees."
+    },
+    {
+      "source_commit": "3753eae39cf15cec4490536cf71ca42b6f805e14",
+      "suite": "layout-comparison-byte-boundaries",
+      "failure": "Five tests, one failure: comparison fixture violated separate candidate security-content bound before raw request-byte bound",
+      "correction": "Use legal JSON whitespace at 65536/65537 raw public-input bytes; no production limit changed."
+    }
+  ]
+}

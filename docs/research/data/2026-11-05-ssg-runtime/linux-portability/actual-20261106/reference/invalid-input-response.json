@@ -1,0 +1,19 @@
+{
+  "body": {
+    "error": {
+      "code": 500,
+      "message": "\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.",
+      "type": "server_error"
+    }
+  },
+  "duration_seconds": 0.0012009143829345703,
+  "headers": {
+    "Access-Control-Allow-Origin": "",
+    "Connection": "close",
+    "Content-Length": "191",
+    "Content-Type": "application/json; charset=utf-8",
+    "Server": "llama.cpp"
+  },
+  "raw_body": "{\"error\":{\"code\":500,\"message\":\"\\\"prompt\\\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.\",\"type\":\"server_error\"}}",
+  "status": 500
+}

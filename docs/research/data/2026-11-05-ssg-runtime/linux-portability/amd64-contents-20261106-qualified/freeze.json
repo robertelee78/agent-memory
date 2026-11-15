@@ -1,0 +1,8 @@
+{
+  "bindings_sha256": "fd06a5066222f413794d92c8db2bb98249bc4aa4005d2049cde5490d9db796ed",
+  "executed_source_commit": "79196277e281f9bfa3faa96cc76fc19dee62c666",
+  "helper_sha256": "055173938c8b33761d7d987a75c69327240bf0ccf1a39b6148614ecd1294a595",
+  "scope": "Exact amd64 core/MAGE image contents only; zero native/emulated graph execution",
+  "script_sha256": "855832a3e47ee0a403978c480e66ecf361fb02ba5a708527ea85ecac42da6c6a",
+  "start_unix": 1793997911.872276
+}

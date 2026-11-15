@@ -1,0 +1,98 @@
+{
+  "commit": "e76f4612b9f2a63eae5d43625275d108beeb856d",
+  "confidence": "low",
+  "entries": 3,
+  "entries_excluded_by_trust": 1,
+  "hops": 0,
+  "reached": [
+    {
+      "entries_reaching": 1,
+      "entry": {
+        "callable": "app.constant",
+        "file": "app.py",
+        "line": 18,
+        "registered_by": [
+          "cgg:flask",
+          "framework/flask"
+        ],
+        "trust": [
+          "network"
+        ]
+      },
+      "guards_on_route": [],
+      "hops": 0,
+      "route": [
+        {
+          "callable": "app.constant",
+          "calls_next_at": 19,
+          "file": "app.py",
+          "lines": [
+            18,
+            19
+          ]
+        }
+      ],
+      "sink": {
+        "callee": [
+          "<stdlib>::eval"
+        ],
+        "classes": [
+          "class/code-injection"
+        ],
+        "facet": "lang/python/sink/eval-exec",
+        "file": "app.py",
+        "grants": [
+          "capability/code-execution"
+        ],
+        "line": 19,
+        "match": [
+          "simple"
+        ],
+        "package": [
+          "lang/python"
+        ],
+        "requires": [
+          "capability/controls-code-text"
+        ],
+        "title": "eval / exec / compile run Python source; restricting __builtins__ is not a sandbox",
+        "version": [
+          ""
+        ]
+      },
+      "sources_on_route": [],
+      "weakest_edge": "high"
+    }
+  ],
+  "repo": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic/actual-20261106-authored/scratch/repo",
+  "sink_sites": 4,
+  "trust": "all but test",
+  "unreached": [
+    {
+      "callee": [
+        "<stdlib>::eval"
+      ],
+      "caller": "app.evaluate_text",
+      "facet": "lang/python/sink/eval-exec",
+      "file": "app.py",
+      "line": 9
+    },
+    {
+      "callee": [
+        "<stdlib>::eval"
+      ],
+      "caller": "app.orphan",
+      "facet": "lang/python/sink/eval-exec",
+      "file": "app.py",
+      "line": 28
+    },
+    {
+      "callee": [
+        "<stdlib>::eval"
+      ],
+      "caller": "test_routes.test_only",
+      "facet": "lang/python/sink/eval-exec",
+      "file": "tests/test_routes.py",
+      "line": 9
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+<!-- agent-memory:activation:begin -->
+When the repository has memory-bank/MEMORY.md, load the agent-memory skill and run `am recall QUERY` before relying on assumptions. Saving memory needs the user's own explicit yes: when a fix is confirmed, a decision is made or a task is done, propose one short memory and ask "Save this to project memory?". Agreeing a decision ("that's final", "we decided") is not permission to save. Only after a separate yes: `am remember --kind decision --title "…" --body "…"`.
+<!-- agent-memory:activation:end -->

@@ -1,0 +1,1605 @@
+{
+  "cache_evidence": {
+    "frozen_profile": {
+      "cli": [
+        "--cache-ram",
+        "0",
+        "--log-verbosity",
+        "5"
+      ],
+      "not_prompt_cache_disabled": true,
+      "per_request_settings": {
+        "cache_prompt": "omitted on every embedding request; not assumed honored"
+      },
+      "purpose": "Pre-output diagnostic serving configuration only; not a managed profile or ADR freeze",
+      "ram_prompt_cache": "disabled by explicit CLI; must be confirmed by actual server log",
+      "request_sequence": "three probe batches; two query batches; two own batches; two relationship batches; tokenize short/over_context/aggregate_budget; short; over-context diagnostic; unknown alias single; known alias single; empty and malformed diagnostics; batch1/4/8/9 diagnostics",
+      "slot_local_prefix_reuse": "enabled task default; must retain actual prefix/evaluated-token logs per successful embedding row",
+      "source_evidence": {
+        "default_lines": "52; bool cache_prompt = true",
+        "default_path": "tools/server/server-task.h",
+        "default_sha256": "d41d2c681a3a3e02b4826decbd592769690cc6acc45477cdc6dea15790b6c92a",
+        "embedding_handler_lines": "4452-4547; tasks created directly at4512, only res_type/embd_normalize set at4518-4519; body.cache_prompt never parsed here",
+        "limit": "Direct source evidence is for the reference fork; upstream behavior must be established from new actual logs, not inferred from an accepted unknown HTTP field",
+        "path": "tools/server/server-context.cpp",
+        "ram_cache_lines": "958-969; --cache-ram0 disables the RAM prompt cache object, not slot-local reuse",
+        "sha256": "4c8bee10fa5629fb35d1f80c50ef56d9d0d04219c8afc6950bdf76684d4afb2b",
+        "slot_cache_lines": "2473-2475; task.params.cache_prompt enables longest-common-prefix reuse",
+        "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07"
+      }
+    },
+    "logged_completed_prompts": 69,
+    "per_request_cache_field_support_claimed": false,
+    "ram_cache_disabled_log_confirmed": true,
+    "requests": [
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 9,
+            "task_id": 0,
+            "total_tokens": 9
+          },
+          {
+            "evaluated_batch_tokens": 8,
+            "task_id": 1,
+            "total_tokens": 10
+          },
+          {
+            "evaluated_batch_tokens": 8,
+            "task_id": 2,
+            "total_tokens": 10
+          },
+          {
+            "evaluated_batch_tokens": 11,
+            "task_id": 3,
+            "total_tokens": 13
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+        "name": "probes-0",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 0
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 1
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 2
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 3
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 7,
+            "task_id": 8,
+            "total_tokens": 9
+          },
+          {
+            "evaluated_batch_tokens": 8,
+            "task_id": 9,
+            "total_tokens": 10
+          },
+          {
+            "evaluated_batch_tokens": 8,
+            "task_id": 10,
+            "total_tokens": 10
+          },
+          {
+            "evaluated_batch_tokens": 11,
+            "task_id": 11,
+            "total_tokens": 13
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+        "name": "probes-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 8
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 9
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 10
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 11
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 7,
+            "task_id": 16,
+            "total_tokens": 9
+          },
+          {
+            "evaluated_batch_tokens": 8,
+            "task_id": 17,
+            "total_tokens": 10
+          },
+          {
+            "evaluated_batch_tokens": 8,
+            "task_id": 18,
+            "total_tokens": 10
+          },
+          {
+            "evaluated_batch_tokens": 11,
+            "task_id": 19,
+            "total_tokens": 13
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+        "name": "probes-2",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 16
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 17
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 18
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 19
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 26,
+            "task_id": 24,
+            "total_tokens": 26
+          },
+          {
+            "evaluated_batch_tokens": 12,
+            "task_id": 25,
+            "total_tokens": 26
+          },
+          {
+            "evaluated_batch_tokens": 10,
+            "task_id": 26,
+            "total_tokens": 24
+          },
+          {
+            "evaluated_batch_tokens": 10,
+            "task_id": 27,
+            "total_tokens": 24
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "ddfe62792c525c178ddbbbc5ced31c76b394bc406c28b664c3880bddb2b22d59",
+        "name": "queries-0",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 24
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 25
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 26
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 27
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 12,
+            "task_id": 32,
+            "total_tokens": 26
+          },
+          {
+            "evaluated_batch_tokens": 12,
+            "task_id": 33,
+            "total_tokens": 26
+          },
+          {
+            "evaluated_batch_tokens": 10,
+            "task_id": 34,
+            "total_tokens": 24
+          },
+          {
+            "evaluated_batch_tokens": 10,
+            "task_id": 35,
+            "total_tokens": 24
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "ddfe62792c525c178ddbbbc5ced31c76b394bc406c28b664c3880bddb2b22d59",
+        "name": "queries-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 32
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 33
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 34
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 35
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 12,
+            "task_id": 40,
+            "total_tokens": 12
+          },
+          {
+            "evaluated_batch_tokens": 19,
+            "task_id": 41,
+            "total_tokens": 19
+          },
+          {
+            "evaluated_batch_tokens": 16,
+            "task_id": 42,
+            "total_tokens": 16
+          },
+          {
+            "evaluated_batch_tokens": 16,
+            "task_id": 43,
+            "total_tokens": 16
+          },
+          {
+            "evaluated_batch_tokens": 13,
+            "task_id": 44,
+            "total_tokens": 13
+          },
+          {
+            "evaluated_batch_tokens": 9,
+            "task_id": 45,
+            "total_tokens": 11
+          }
+        ],
+        "expected_rows": 6,
+        "input_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+        "name": "own-0",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 40
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 41
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 42
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 43
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 44
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 45
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 12,
+            "task_id": 52,
+            "total_tokens": 12
+          },
+          {
+            "evaluated_batch_tokens": 19,
+            "task_id": 53,
+            "total_tokens": 19
+          },
+          {
+            "evaluated_batch_tokens": 16,
+            "task_id": 54,
+            "total_tokens": 16
+          },
+          {
+            "evaluated_batch_tokens": 16,
+            "task_id": 55,
+            "total_tokens": 16
+          },
+          {
+            "evaluated_batch_tokens": 13,
+            "task_id": 56,
+            "total_tokens": 13
+          },
+          {
+            "evaluated_batch_tokens": 9,
+            "task_id": 57,
+            "total_tokens": 11
+          }
+        ],
+        "expected_rows": 6,
+        "input_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+        "name": "own-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 52
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 53
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 54
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 55
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 56
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 57
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 33,
+            "task_id": 64,
+            "total_tokens": 33
+          },
+          {
+            "evaluated_batch_tokens": 33,
+            "task_id": 65,
+            "total_tokens": 33
+          },
+          {
+            "evaluated_batch_tokens": 34,
+            "task_id": 66,
+            "total_tokens": 34
+          },
+          {
+            "evaluated_batch_tokens": 34,
+            "task_id": 67,
+            "total_tokens": 34
+          },
+          {
+            "evaluated_batch_tokens": 27,
+            "task_id": 68,
+            "total_tokens": 27
+          },
+          {
+            "evaluated_batch_tokens": 30,
+            "task_id": 69,
+            "total_tokens": 32
+          }
+        ],
+        "expected_rows": 6,
+        "input_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+        "name": "relationship-0",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 64
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 65
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 66
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 67
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 68
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 69
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 33,
+            "task_id": 76,
+            "total_tokens": 33
+          },
+          {
+            "evaluated_batch_tokens": 33,
+            "task_id": 77,
+            "total_tokens": 33
+          },
+          {
+            "evaluated_batch_tokens": 34,
+            "task_id": 78,
+            "total_tokens": 34
+          },
+          {
+            "evaluated_batch_tokens": 34,
+            "task_id": 79,
+            "total_tokens": 34
+          },
+          {
+            "evaluated_batch_tokens": 27,
+            "task_id": 80,
+            "total_tokens": 27
+          },
+          {
+            "evaluated_batch_tokens": 30,
+            "task_id": 81,
+            "total_tokens": 32
+          }
+        ],
+        "expected_rows": 6,
+        "input_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+        "name": "relationship-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 76
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 77
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 78
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 79
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 80
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 81
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 17,
+            "task_id": 88,
+            "total_tokens": 17
+          }
+        ],
+        "expected_rows": 1,
+        "input_sha256": "19daa4f80c0a6768cb985ef42753d1da820991fa2c1efa540ea8f291c1f77395",
+        "name": "short",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 88
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 7,
+            "task_id": 93,
+            "total_tokens": 9
+          }
+        ],
+        "expected_rows": 1,
+        "input_sha256": "629a5b40a36f89f12b57814372529d64e625643b1fa1265d1cf00770ddafb44a",
+        "name": "unknown-model",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 93
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 1,
+            "task_id": 95,
+            "total_tokens": 9
+          }
+        ],
+        "expected_rows": 1,
+        "input_sha256": "629a5b40a36f89f12b57814372529d64e625643b1fa1265d1cf00770ddafb44a",
+        "name": "known-single",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 8,
+            "memory_start": 8,
+            "task_id": 95
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 5,
+            "task_id": 97,
+            "total_tokens": 7
+          }
+        ],
+        "expected_rows": 1,
+        "input_sha256": "64bca61363f233e9192b97035c9f2e5bfbd8f2033462005c76479fd40c0378e9",
+        "name": "batch-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 97
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 1,
+            "task_id": 99,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 100,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 101,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 102,
+            "total_tokens": 7
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "a6790f7e651f2c9264b1455b82ebe4ec0267295f2d37f4901e9025e9d0e355c8",
+        "name": "batch-4",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 6,
+            "memory_start": 6,
+            "task_id": 99
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 100
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 101
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 102
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 107,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 108,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 109,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 110,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 111,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 112,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 113,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 114,
+            "total_tokens": 7
+          }
+        ],
+        "expected_rows": 8,
+        "input_sha256": "8b3656c4b3a0b1ae30236d6e61c9daacd87863dbd8c3735f60549cf8d5bb9cd5",
+        "name": "batch-8",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 107
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 108
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 109
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 110
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 111
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 112
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 113
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 114
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 123,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 124,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 125,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 126,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 127,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 128,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 129,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 130,
+            "total_tokens": 7
+          },
+          {
+            "evaluated_batch_tokens": 2,
+            "task_id": 131,
+            "total_tokens": 7
+          }
+        ],
+        "expected_rows": 9,
+        "input_sha256": "e182b7a36acb3e7374465b6b13d336909dc8e2292bc40d8bcfbde6614ca1bf97",
+        "name": "batch-9",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 123
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 124
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 125
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 126
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 127
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 128
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 129
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 130
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 131
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      }
+    ],
+    "scope": "Reference embedding source does not parse cache_prompt; field deliberately absent on both servers. RAM cache disabled does not disable slot-local reuse. Actual prefix/evaluated-token logs define upstream behavior independently.",
+    "slot_prefix_reuse_observed": true,
+    "successful_embedding_rows": 69
+  },
+  "costs": {
+    "own_fill_tokens": {
+      "prompt_tokens": 87,
+      "total_tokens": 87
+    },
+    "own_six_document_fill_seconds": 0.38671691599301994,
+    "performance_acceptance": false,
+    "probe_fraction_of_tiny_own_fill": 0.4250113986044943,
+    "probe_mean_seconds": 0.16435909733021012,
+    "probe_tokens": {
+      "prompt_tokens": 42,
+      "total_tokens": 42
+    },
+    "relationship_fill_tokens": {
+      "prompt_tokens": 193,
+      "total_tokens": 193
+    },
+    "relationship_six_document_fill_seconds": 0.5183688329998404,
+    "startup_seconds": 0.8421232919790782
+  },
+  "identity": {
+    "catalog": [
+      "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+    ],
+    "dimension": 4096,
+    "identity_authority": "Owned launch + exact weight/binary/observed dependency closure; not response model echo",
+    "metadata_unknown_refusal": "model-not-in-independent-metadata",
+    "observed_closure_sha256": "3eb64fca868caab0e1690902d0b542f2eb958e7ed1a96d72eebfe429dae59048",
+    "same_document_query_model": true,
+    "unknown_alias_http": 200,
+    "unknown_alias_in_catalog": false,
+    "unknown_alias_is_identity_proof": false,
+    "unknown_alias_vector_comparison": {
+      "dimension": 4096,
+      "exact_coordinates_equal": false,
+      "max_abs_coordinate": 3.5964767448604107e-06,
+      "max_cosine_distance": 8.601332979196741e-10,
+      "rows": 1
+    }
+  },
+  "kind": "fork",
+  "launch": 2,
+  "limits": {
+    "batch_statuses": {
+      "1": 200,
+      "4": 200,
+      "8": 200,
+      "9": 200
+    },
+    "empty_input_status": 500,
+    "invalid_input_status": 500,
+    "maintenance_policy": {
+      "aggregate_would_refuse": "maintenance-aggregate-token-limit",
+      "evidence_class": "Offline draft policy using actual tokenizer; would refuse, not an implemented AM client or blocked request",
+      "large_aggregate_embedding_request_sent": false,
+      "nine_input_embedding_request_sent": true,
+      "nine_inputs_would_refuse": "maintenance-batch-input-limit",
+      "two_input_aggregate_tokens": 8322
+    },
+    "over_context_refused": true,
+    "scope": "Observed short batches and one over-context input; no maximum-batch or universal no-truncation proof",
+    "token_counts": {
+      "aggregate_budget": 4161,
+      "over_context": 8265,
+      "short": 17
+    }
+  },
+  "own_to_relationship": {
+    "ranks": {
+      "changed_query_orders": 4,
+      "changed_top1": 0,
+      "max_rank_displacement": 4,
+      "max_score_drift": 0.391129522544578
+    },
+    "repeated_ranks": {
+      "own": {
+        "changed_query_orders": 0,
+        "changed_top1": 0,
+        "max_rank_displacement": 0,
+        "max_score_drift": 0.0
+      },
+      "relationship": {
+        "changed_query_orders": 0,
+        "changed_top1": 0,
+        "max_rank_displacement": 0,
+        "max_score_drift": 0.0
+      }
+    },
+    "vectors": {
+      "dimension": 4096,
+      "exact_coordinates_equal": false,
+      "max_abs_coordinate": 0.07351989112794399,
+      "max_cosine_distance": 0.25695943188125037,
+      "rows": 6
+    }
+  },
+  "path": "fork-cold-2",
+  "rankings": {
+    "own": [
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "retry",
+        "order": [
+          "retry",
+          "deletion",
+          "pagination",
+          "publication",
+          "unrelated",
+          "orientation"
+        ],
+        "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.36681384968376196,
+          "orientation": 0.19221125262573313,
+          "pagination": 0.2849750467119128,
+          "publication": 0.24885941449070112,
+          "retry": 0.7073645502864122,
+          "unrelated": 0.20140697379750885
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "pagination",
+        "order": [
+          "pagination",
+          "deletion",
+          "publication",
+          "orientation",
+          "retry",
+          "unrelated"
+        ],
+        "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.31544694618684554,
+          "orientation": 0.2347638587817997,
+          "pagination": 0.6363996037752431,
+          "publication": 0.27768912055743095,
+          "retry": 0.18175845682040856,
+          "unrelated": 0.14664070445675015
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "publication",
+        "order": [
+          "publication",
+          "deletion",
+          "orientation",
+          "pagination",
+          "retry",
+          "unrelated"
+        ],
+        "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.39511848987295,
+          "orientation": 0.2674924856935037,
+          "pagination": 0.2502906900155662,
+          "publication": 0.49773400521469446,
+          "retry": 0.20955364784737548,
+          "unrelated": 0.19733179941796386
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "deletion",
+        "order": [
+          "deletion",
+          "publication",
+          "retry",
+          "pagination",
+          "unrelated",
+          "orientation"
+        ],
+        "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.439841846041951,
+          "orientation": 0.1889572705343791,
+          "pagination": 0.19668074309703676,
+          "publication": 0.24149312292115277,
+          "retry": 0.20702528666069428,
+          "unrelated": 0.19396748984793843
+        }
+      }
+    ],
+    "relationship": [
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "retry",
+        "order": [
+          "retry",
+          "orientation",
+          "pagination",
+          "unrelated",
+          "deletion",
+          "publication"
+        ],
+        "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.3218969950586659,
+          "orientation": 0.5833407751703111,
+          "pagination": 0.5526831112099309,
+          "publication": 0.3154489226889809,
+          "retry": 0.6850974384018857,
+          "unrelated": 0.32691421073986093
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "pagination",
+        "order": [
+          "pagination",
+          "unrelated",
+          "retry",
+          "publication",
+          "deletion",
+          "orientation"
+        ],
+        "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.30947504334058334,
+          "orientation": 0.27661657407359735,
+          "pagination": 0.5894138229191328,
+          "publication": 0.3110653532801808,
+          "retry": 0.4914512752858744,
+          "unrelated": 0.5221734229332977
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "publication",
+        "order": [
+          "publication",
+          "deletion",
+          "orientation",
+          "unrelated",
+          "pagination",
+          "retry"
+        ],
+        "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.5017000215828133,
+          "orientation": 0.30704014735298396,
+          "pagination": 0.2686044935090921,
+          "publication": 0.5155471033591814,
+          "retry": 0.2628786640998109,
+          "unrelated": 0.3010939401245057
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "deletion",
+        "order": [
+          "deletion",
+          "publication",
+          "unrelated",
+          "orientation",
+          "retry",
+          "pagination"
+        ],
+        "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.3944630306306713,
+          "orientation": 0.2744336721881052,
+          "pagination": 0.24695615522976658,
+          "publication": 0.37037407724863347,
+          "retry": 0.2576334061803915,
+          "unrelated": 0.28351091830279473
+        }
+      }
+    ]
+  },
+  "repeated": {
+    "own": [
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": true,
+        "max_abs_coordinate": 0.0,
+        "max_cosine_distance": 0.0,
+        "rows": 6
+      }
+    ],
+    "probes": [
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": false,
+        "max_abs_coordinate": 9.326823055744171e-05,
+        "max_cosine_distance": 3.28853894560055e-07,
+        "rows": 4
+      },
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": false,
+        "max_abs_coordinate": 9.326823055744171e-05,
+        "max_cosine_distance": 3.28853894560055e-07,
+        "rows": 4
+      }
+    ],
+    "queries": [
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": true,
+        "max_abs_coordinate": 0.0,
+        "max_cosine_distance": 0.0,
+        "rows": 4
+      }
+    ],
+    "relationship": [
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": true,
+        "max_abs_coordinate": 0.0,
+        "max_cosine_distance": 0.0,
+        "rows": 6
+      }
+    ]
+  },
+  "responses": {
+    "batch-1": {
+      "error": null,
+      "indices": [
+        0
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 88048,
+      "response_sha256": "6d12b2455ce80789996b3f2ee41b1dc02e111353f589e3da6218ca5982f4375c",
+      "seconds": 0.028428582998458296,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 7,
+        "total_tokens": 7
+      }
+    },
+    "batch-4": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352076,
+      "response_sha256": "4cd75eb66258b4f7c30df140a0b3d80b610d2b8a754ce18933b9ddccdc3f0bd8",
+      "seconds": 0.08187645900761709,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 28,
+        "total_tokens": 28
+      }
+    },
+    "batch-8": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 703972,
+      "response_sha256": "e28220f3369f0c1afcc65878a0d09645b6837ec827d5c8dd70ff0ae843a8a580",
+      "seconds": 0.15930504200514406,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 56,
+        "total_tokens": 56
+      }
+    },
+    "batch-9": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 792017,
+      "response_sha256": "90e750334b4c105c342df840ce25313451ca41e336ebaf43f5eaac9666f92d5a",
+      "seconds": 0.18046000000322238,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 63,
+        "total_tokens": 63
+      }
+    },
+    "empty-input": {
+      "error": {
+        "code": 500,
+        "message": "\"prompt\" must not be empty",
+        "type": "server_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 85,
+      "response_sha256": "8fb89c8161aa96cee2e0a56fe93656f37cdcc789759fd459a458cf112b9cf170",
+      "seconds": 0.004199667018838227,
+      "status": 500,
+      "usage": null
+    },
+    "invalid-input": {
+      "error": {
+        "code": 500,
+        "message": "\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.",
+        "type": "server_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 191,
+      "response_sha256": "775e4c305a7d09cb46c9c8e3ad6733ea42e4c05db2a74ff615ee9d5bf9e7f0ab",
+      "seconds": 0.003958333982154727,
+      "status": 500,
+      "usage": null
+    },
+    "known-single": {
+      "error": null,
+      "indices": [
+        0
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 88102,
+      "response_sha256": "4f5ab16424f080f9e7a9eebcf60349d1e466658cce9a10f03052dabefeb20658",
+      "seconds": 0.023703582992311567,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    "models": {
+      "error": null,
+      "indices": [
+        null
+      ],
+      "model": null,
+      "response_bytes": 674,
+      "response_sha256": "2c871d6b7a2348a54126a636538c9673208f05b8dde60c95963df369fe6d03ff",
+      "seconds": 0.004295999999158084,
+      "status": 200,
+      "usage": null
+    },
+    "over-context": {
+      "error": {
+        "code": 400,
+        "message": "request (8265 tokens) exceeds the available context size (8192 tokens), try increasing it",
+        "n_ctx": 8192,
+        "n_prompt_tokens": 8265,
+        "type": "exceed_context_size_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 195,
+      "response_sha256": "77c119dd82048d38fec651284907fa86f3441063748074a8502e1506efd0bc15",
+      "seconds": 0.012705834000371397,
+      "status": 400,
+      "usage": null
+    },
+    "own-0": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 528296,
+      "response_sha256": "2e9809ab852e7435b8f557f44fd0c36264ac1b0079cd44253ad48aced4919152",
+      "seconds": 0.38671691599301994,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 87,
+        "total_tokens": 87
+      }
+    },
+    "own-1": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 528296,
+      "response_sha256": "2e9809ab852e7435b8f557f44fd0c36264ac1b0079cd44253ad48aced4919152",
+      "seconds": 0.38589479197980836,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 87,
+        "total_tokens": 87
+      }
+    },
+    "probes-0": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352145,
+      "response_sha256": "b30cd89646c9a720212dd58526598dd4c2e49c9b8e3b789ebb1424b16e35e116",
+      "seconds": 0.19022250000853091,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 42,
+        "total_tokens": 42
+      }
+    },
+    "probes-1": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352088,
+      "response_sha256": "69ef44167afaf3c8759965073918522ef048c467ee81fc0ba1d7867a54f232bd",
+      "seconds": 0.1513796669896692,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 42,
+        "total_tokens": 42
+      }
+    },
+    "probes-2": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352088,
+      "response_sha256": "69ef44167afaf3c8759965073918522ef048c467ee81fc0ba1d7867a54f232bd",
+      "seconds": 0.1514751249924302,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 42,
+        "total_tokens": 42
+      }
+    },
+    "props": {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 4272,
+      "response_sha256": "62226f80146794ae1458257fc358e189732aaae74e7527cd29ed830baf28eb74",
+      "seconds": 0.004254542000126094,
+      "status": 200,
+      "usage": null
+    },
+    "queries-0": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352134,
+      "response_sha256": "b500acfd1796cb9927e0f54ab7856572490c9ccd9dc656fd0abc0ac43bb449a2",
+      "seconds": 0.261917874973733,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 100,
+        "total_tokens": 100
+      }
+    },
+    "queries-1": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352134,
+      "response_sha256": "b500acfd1796cb9927e0f54ab7856572490c9ccd9dc656fd0abc0ac43bb449a2",
+      "seconds": 0.2592041249736212,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 100,
+        "total_tokens": 100
+      }
+    },
+    "relationship-0": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 528109,
+      "response_sha256": "29eb43a38801159a2af5a27a3733aadf09a55a7e970571de99460c92dd55b5c7",
+      "seconds": 0.5183688329998404,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 193,
+        "total_tokens": 193
+      }
+    },
+    "relationship-1": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 528109,
+      "response_sha256": "29eb43a38801159a2af5a27a3733aadf09a55a7e970571de99460c92dd55b5c7",
+      "seconds": 0.5163315000245348,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 193,
+        "total_tokens": 193
+      }
+    },
+    "short": {
+      "error": null,
+      "indices": [
+        0
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 88159,
+      "response_sha256": "ee199f57ed9d21e4f5b5a44f3fda709bd3f9d47748c02e6d63a490fa7e9f2ea0",
+      "seconds": 0.06947520899120718,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 17,
+        "total_tokens": 17
+      }
+    },
+    "tokenize-aggregate_budget": {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 24979,
+      "response_sha256": "5004ed0364b982d0d6044427229cfe3350d9f780d0f2f67ca7fa316224fce2b7",
+      "seconds": 0.008622499997727573,
+      "status": 200,
+      "usage": null
+    },
+    "tokenize-over_context": {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 49590,
+      "response_sha256": "aaf6e5a5e4297ba02feccf0b90d679e42f1a0f14033464806a5dc8820c32cf45",
+      "seconds": 0.01809083396801725,
+      "status": 200,
+      "usage": null
+    },
+    "tokenize-short": {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 94,
+      "response_sha256": "abcacc5e6a2523ef1c7a663edf6095cfcbd9b507fa44e493a77c59f45e1713ed",
+      "seconds": 0.004302707966417074,
+      "status": 200,
+      "usage": null
+    },
+    "unknown-model": {
+      "error": null,
+      "indices": [
+        0
+      ],
+      "model": "am255-synthetic-unknown-weight-alias",
+      "response_bytes": 88073,
+      "response_sha256": "cdf58f3263bfe9bb9255b4c27cb471f5488c1cf7deb3334e27466e694b30a2e6",
+      "seconds": 0.03183516697026789,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 9,
+        "total_tokens": 9
+      }
+    }
+  }
+}

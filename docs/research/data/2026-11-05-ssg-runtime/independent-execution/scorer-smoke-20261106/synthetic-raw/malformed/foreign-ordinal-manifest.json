@@ -1,0 +1,173 @@
+{
+  "cleanup": {
+    "executed": false,
+    "prerequisite": "No model, graph, container, or model service was created; repository-local synthetic files retained"
+  },
+  "input_sha256": "1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2",
+  "io_sha256": "b771a629c02b19d5e306eac748eb975e904d3d96c0578fc51f13072a5f9a5ed4",
+  "qualification_scope": "EXPLICITLY SYNTHETIC scorer/math/integrity smoke only. Ranks and ANN rows are manually chosen scalar controls; no model/graph/retrieval/native quality qualification or production result.",
+  "schema": "am255/independent-raw-manifest-v1",
+  "sizes": [
+    {
+      "canonical_sha256": {
+        "synthetic-base": "66e81470aa7f2c50591d9e6478cee36da7ed927b2cf802eeefce9c10884e0994",
+        "synthetic-correction": "6e51634fc8aa9164c8aa956305cf37a8ef7122dc49eb2e8a2a76e7cdeb6fea85",
+        "synthetic-overlay-control": "66e81470aa7f2c50591d9e6478cee36da7ed927b2cf802eeefce9c10884e0994"
+      },
+      "costs": {},
+      "generation_artifacts": [
+        {
+          "canonical_sha256": "66e81470aa7f2c50591d9e6478cee36da7ed927b2cf802eeefce9c10884e0994",
+          "catalog": {
+            "path": "catalogs/synthetic-base.json",
+            "sha256": "40d339c210ef7b4f2c51250f12bcf312ac8e5edaebd00217e2f48e0c9fa2b455"
+          },
+          "generation_id": "synthetic-base",
+          "mutation": null,
+          "stage": null,
+          "variant": "base",
+          "vector_store": {
+            "path": "vectors/synthetic-base.json",
+            "sha256": "6717370a4ea57f9d25b180e32aa0b92a1852b0f0fff7fb86ed802e65475edca5"
+          }
+        },
+        {
+          "canonical_sha256": "66e81470aa7f2c50591d9e6478cee36da7ed927b2cf802eeefce9c10884e0994",
+          "catalog": {
+            "path": "catalogs/synthetic-overlay-control.json",
+            "sha256": "40d339c210ef7b4f2c51250f12bcf312ac8e5edaebd00217e2f48e0c9fa2b455"
+          },
+          "generation_id": "synthetic-overlay-control",
+          "mutation": null,
+          "stage": null,
+          "variant": "overlay",
+          "vector_store": {
+            "path": "vectors/synthetic-overlay-control.json",
+            "sha256": "6717370a4ea57f9d25b180e32aa0b92a1852b0f0fff7fb86ed802e65475edca5"
+          }
+        },
+        {
+          "canonical_sha256": "6e51634fc8aa9164c8aa956305cf37a8ef7122dc49eb2e8a2a76e7cdeb6fea85",
+          "catalog": {
+            "path": "catalogs/synthetic-correction.json",
+            "sha256": "6a326979d5ba803debadfb9e84f6a5e3554ffb3d67d78a3f4aaf69fc54f9fb74"
+          },
+          "generation_id": "synthetic-correction",
+          "mutation": "correct-retry-limit",
+          "stage": "after-rebuild",
+          "variant": "base",
+          "vector_store": {
+            "path": "vectors/synthetic-correction.json",
+            "sha256": "81e3578f25da3dc12e6eb802ad0211f64d2f7ba606b10c1d46695ce8d7664e03"
+          }
+        }
+      ],
+      "missing_prerequisites": [
+        "All real embeddings, graph, native qualification and retrieval-quality execution remain unexecuted"
+      ],
+      "observations": [
+        {
+          "case_ordinal": 102,
+          "path": "observations/base-001.json",
+          "sha256": "dc9e8edfa018b276da94c8ed7af90f2f92dd45bbb2679ca3e32635ed16ac2909",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 2,
+          "path": "observations/base-002.json",
+          "sha256": "fef132e521617e9fe8e19d16e202db109bfb577e503e21728947ae6e9fd5cae3",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 3,
+          "path": "observations/base-003.json",
+          "sha256": "799ee525429cd88737589d05e15b6a7785a194c340c24efb0d0f89d17dd3026f",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 4,
+          "path": "observations/base-004.json",
+          "sha256": "6bba8da558187c137f13d4857957fb3b3a8d273269eacd5d9bd5fd3e953870c6",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 77,
+          "path": "observations/base-077.json",
+          "sha256": "8be82d63c71f7814ebcce2df0b2a269b0e7b8647ece07a3f6897df8f6bdedd62",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 78,
+          "path": "observations/base-078.json",
+          "sha256": "4fd667d046f659378b8b4b4bb752f1f0668716c6f87925dec92e7d89dd9ff5f2",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 44,
+          "path": "observations/base-044.json",
+          "sha256": "de10a97e9b189483061426ff4061380d366c87823156e53f5f3db5af34d81564",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 74,
+          "path": "observations/base-074.json",
+          "sha256": "b6fc6401f604a2fed45c1aa782c1c8cd786348a737cdc22e80f1d183372b76b4",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 1,
+          "path": "observations/overlay-001.json",
+          "sha256": "80b887c834a4313bad62cb2946972bc622fea10b0af9be2e79ebb0108fee2112",
+          "variant": "overlay"
+        }
+      ],
+      "profile_sha256": "ebbe3638d181babf56b36018f1dc2c24fb218cd134f03bd64c746c23f4d0e63f",
+      "size": 1000
+    }
+  ],
+  "source_bindings": {
+    "authoring_am": {
+      "commit": "175d21fa26bbef41f8ec859b463876934e16db79",
+      "native_tree_sha256": "9bd89d0e341ee8984db9e5082936807a49f1368a05a40ce026193f7b34e88ef3"
+    },
+    "helpers": [
+      {
+        "path": "freeze/compile_inputs.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/compile_inputs.py",
+        "sha256": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9"
+      },
+      {
+        "path": "freeze/source_startup.py",
+        "repository_path": "skills/agent-memory/scripts/source_startup.py",
+        "sha256": "124aa791b1da7b236d859a1153dbd47f98d924ac713b53289e81d3c3da10bf01"
+      }
+    ],
+    "inputs": {
+      "path": "freeze/inputs.json",
+      "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/authored-inputs-20261106.json",
+      "sha256": "1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2"
+    },
+    "io": {
+      "path": "freeze/execution-io.json",
+      "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/execution-io.json",
+      "sha256": "b771a629c02b19d5e306eac748eb975e904d3d96c0578fc51f13072a5f9a5ed4"
+    },
+    "recipe": {
+      "commit": "dd48777f6406449b9598b460ff5c5b3a54042208",
+      "path": "freeze/score.py",
+      "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+      "sha256": "8127d1809ca95cf3410cd7a4282596ad321472f34aea0648cc8f5c3ca8b5c392"
+    },
+    "runtime_profile": {
+      "path": "freeze/profile.json",
+      "sha256": "ebbe3638d181babf56b36018f1dc2c24fb218cd134f03bd64c746c23f4d0e63f",
+      "source_commit": "dd48777f6406449b9598b460ff5c5b3a54042208"
+    },
+    "spec": {
+      "path": "freeze/spec.json",
+      "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/spec.json",
+      "sha256": "8c34c17b844bc9b80fe43bab20e88437f123fb1c17ab8ea1522f81d3986b4f44"
+    }
+  },
+  "spec_sha256": "8c34c17b844bc9b80fe43bab20e88437f123fb1c17ab8ea1522f81d3986b4f44"
+}

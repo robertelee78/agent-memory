@@ -1,0 +1,766 @@
+{
+  "frozen_profile": {
+    "cli": [
+      "--cache-ram",
+      "0",
+      "--log-verbosity",
+      "5"
+    ],
+    "not_prompt_cache_disabled": true,
+    "per_request_settings": {
+      "cache_prompt": "omitted on every embedding request; not assumed honored"
+    },
+    "purpose": "Pre-output diagnostic serving configuration only; not a managed profile or ADR freeze",
+    "ram_prompt_cache": "disabled by explicit CLI; must be confirmed by actual server log",
+    "request_sequence": "three probe batches; two query batches; two own batches; two relationship batches; tokenize short/over_context/aggregate_budget; short; over-context diagnostic; unknown alias single; known alias single; empty and malformed diagnostics; batch1/4/8/9 diagnostics",
+    "slot_local_prefix_reuse": "enabled task default; must retain actual prefix/evaluated-token logs per successful embedding row",
+    "source_evidence": {
+      "default_lines": "52; bool cache_prompt = true",
+      "default_path": "tools/server/server-task.h",
+      "default_sha256": "d41d2c681a3a3e02b4826decbd592769690cc6acc45477cdc6dea15790b6c92a",
+      "embedding_handler_lines": "4452-4547; tasks created directly at4512, only res_type/embd_normalize set at4518-4519; body.cache_prompt never parsed here",
+      "limit": "Direct source evidence is for the reference fork; upstream behavior must be established from new actual logs, not inferred from an accepted unknown HTTP field",
+      "path": "tools/server/server-context.cpp",
+      "ram_cache_lines": "958-969; --cache-ram0 disables the RAM prompt cache object, not slot-local reuse",
+      "sha256": "4c8bee10fa5629fb35d1f80c50ef56d9d0d04219c8afc6950bdf76684d4afb2b",
+      "slot_cache_lines": "2473-2475; task.params.cache_prompt enables longest-common-prefix reuse",
+      "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07"
+    }
+  },
+  "logged_completed_prompts": 69,
+  "per_request_cache_field_support_claimed": false,
+  "ram_cache_disabled_log_confirmed": true,
+  "requests": [
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 9,
+          "total_tokens": 9
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 11,
+          "total_tokens": 13
+        }
+      ],
+      "expected_rows": 4,
+      "name": "probes-0",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 487198,
+      "stderr_start": 122275
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 7,
+          "total_tokens": 9
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 11,
+          "total_tokens": 13
+        }
+      ],
+      "expected_rows": 4,
+      "name": "probes-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 852159,
+      "stderr_start": 487198
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 7,
+          "total_tokens": 9
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 8,
+          "total_tokens": 10
+        },
+        {
+          "evaluated_batch_tokens": 11,
+          "total_tokens": 13
+        }
+      ],
+      "expected_rows": 4,
+      "name": "probes-2",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 1217155,
+      "stderr_start": 852159
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 26,
+          "total_tokens": 26
+        },
+        {
+          "evaluated_batch_tokens": 12,
+          "total_tokens": 26
+        },
+        {
+          "evaluated_batch_tokens": 10,
+          "total_tokens": 24
+        },
+        {
+          "evaluated_batch_tokens": 10,
+          "total_tokens": 24
+        }
+      ],
+      "expected_rows": 4,
+      "name": "queries-0",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 1582712,
+      "stderr_start": 1217155
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 12,
+          "total_tokens": 26
+        },
+        {
+          "evaluated_batch_tokens": 12,
+          "total_tokens": 26
+        },
+        {
+          "evaluated_batch_tokens": 10,
+          "total_tokens": 24
+        },
+        {
+          "evaluated_batch_tokens": 10,
+          "total_tokens": 24
+        }
+      ],
+      "expected_rows": 4,
+      "name": "queries-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14
+        },
+        {
+          "cached_prefix_tokens": 14,
+          "memory_start": 14
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 1948379,
+      "stderr_start": 1582712
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 12,
+          "total_tokens": 12
+        },
+        {
+          "evaluated_batch_tokens": 19,
+          "total_tokens": 19
+        },
+        {
+          "evaluated_batch_tokens": 16,
+          "total_tokens": 16
+        },
+        {
+          "evaluated_batch_tokens": 16,
+          "total_tokens": 16
+        },
+        {
+          "evaluated_batch_tokens": 13,
+          "total_tokens": 13
+        },
+        {
+          "evaluated_batch_tokens": 9,
+          "total_tokens": 11
+        }
+      ],
+      "expected_rows": 6,
+      "name": "own-0",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 2496161,
+      "stderr_start": 1948379
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 12,
+          "total_tokens": 12
+        },
+        {
+          "evaluated_batch_tokens": 19,
+          "total_tokens": 19
+        },
+        {
+          "evaluated_batch_tokens": 16,
+          "total_tokens": 16
+        },
+        {
+          "evaluated_batch_tokens": 16,
+          "total_tokens": 16
+        },
+        {
+          "evaluated_batch_tokens": 13,
+          "total_tokens": 13
+        },
+        {
+          "evaluated_batch_tokens": 9,
+          "total_tokens": 11
+        }
+      ],
+      "expected_rows": 6,
+      "name": "own-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 3043868,
+      "stderr_start": 2496161
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 33,
+          "total_tokens": 33
+        },
+        {
+          "evaluated_batch_tokens": 33,
+          "total_tokens": 33
+        },
+        {
+          "evaluated_batch_tokens": 34,
+          "total_tokens": 34
+        },
+        {
+          "evaluated_batch_tokens": 34,
+          "total_tokens": 34
+        },
+        {
+          "evaluated_batch_tokens": 27,
+          "total_tokens": 27
+        },
+        {
+          "evaluated_batch_tokens": 30,
+          "total_tokens": 32
+        }
+      ],
+      "expected_rows": 6,
+      "name": "relationship-0",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 3592441,
+      "stderr_start": 3043868
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 33,
+          "total_tokens": 33
+        },
+        {
+          "evaluated_batch_tokens": 33,
+          "total_tokens": 33
+        },
+        {
+          "evaluated_batch_tokens": 34,
+          "total_tokens": 34
+        },
+        {
+          "evaluated_batch_tokens": 34,
+          "total_tokens": 34
+        },
+        {
+          "evaluated_batch_tokens": 27,
+          "total_tokens": 27
+        },
+        {
+          "evaluated_batch_tokens": 30,
+          "total_tokens": 32
+        }
+      ],
+      "expected_rows": 6,
+      "name": "relationship-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        },
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 4141123,
+      "stderr_start": 3592441
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 17,
+          "total_tokens": 17
+        }
+      ],
+      "expected_rows": 1,
+      "name": "short",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 0,
+          "memory_start": 0
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 4432339,
+      "stderr_start": 4340707
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 7,
+          "total_tokens": 9
+        }
+      ],
+      "expected_rows": 1,
+      "name": "unknown-model",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 4692686,
+      "stderr_start": 4518716
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 1,
+          "total_tokens": 9
+        }
+      ],
+      "expected_rows": 1,
+      "name": "known-single",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 8,
+          "memory_start": 8
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 4785507,
+      "stderr_start": 4692686
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 5,
+          "total_tokens": 7
+        }
+      ],
+      "expected_rows": 1,
+      "name": "batch-1",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 2,
+          "memory_start": 2
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 4878707,
+      "stderr_start": 4786664
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 1,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        }
+      ],
+      "expected_rows": 4,
+      "name": "batch-4",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 6,
+          "memory_start": 6
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 5243657,
+      "stderr_start": 4878707
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        }
+      ],
+      "expected_rows": 8,
+      "name": "batch-8",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 5972844,
+      "stderr_start": 5243657
+    },
+    {
+      "completed_prompts": [
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        },
+        {
+          "evaluated_batch_tokens": 2,
+          "total_tokens": 7
+        }
+      ],
+      "expected_rows": 9,
+      "name": "batch-9",
+      "prefix_splits": [
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        },
+        {
+          "cached_prefix_tokens": 5,
+          "memory_start": 5
+        }
+      ],
+      "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support",
+      "stderr_end": 6793203,
+      "stderr_start": 5972844
+    }
+  ],
+  "scope": "The embedding handler does not parse cache_prompt; the field is deliberately absent. RAM cache disabled does not disable slot-local prefix reuse. Actual prefix/evaluated-token logs define the effective cache path.",
+  "slot_prefix_reuse_observed": true,
+  "successful_embedding_rows": 69
+}

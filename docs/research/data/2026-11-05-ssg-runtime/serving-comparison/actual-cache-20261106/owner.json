@@ -1,0 +1,10 @@
+{
+  "kind": "same-weight-explicit-cache-serving-comparison",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "production": false,
+  "resources": [],
+  "root": "/Users/robert.lee/.omp/wt/td26e875e0/m/docs/research/data/2026-11-05-ssg-runtime/serving-comparison/actual-cache-20261106",
+  "run_id": "7e821d99619c4df2859238ecd558c20e",
+  "schema": "am255/runtime-controls-owner-v1",
+  "uid": 502
+}

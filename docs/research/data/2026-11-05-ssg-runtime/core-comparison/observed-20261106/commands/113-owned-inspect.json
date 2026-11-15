@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "inspect",
+    "am255-compare-5b6962955026-mage-logs"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 125,
+  "seconds": 0.06777045800117776,
+  "started_at": "2026-11-06T19:23:30.941435+00:00",
+  "stderr": "Error: no such volume \"am255-compare-5b6962955026-mage-logs\"\n",
+  "stdout": "[]\n"
+}

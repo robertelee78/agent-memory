@@ -1,0 +1,124 @@
+{
+  "schema": "agent-memory/owned-guide-scoped-qualification-v1",
+  "source_commit": "776e13cd93a3d5270a0e5ff0233af836defd0df4",
+  "base_commit": "acd50fc47aa7b2f7795df58dbbc1707c6c97c375",
+  "acceptance": false,
+  "actual_Opus_source_design_review": {
+    "verdict": "PASS",
+    "receipt_sha256": "87f450853708b707a192050ced0a82c1e9f11640f83cbbcfadf1e040207222b8"
+  },
+  "observed_before": {
+    "source": "e4b935c",
+    "copy_and_link_both_covered": false,
+    "gaps": [
+      "missing-stored-source",
+      "unsafe-representation"
+    ],
+    "receipt_sha256": "446e108b4edc8cf6376c7010daa2df4bcb035bd20db74a31199b706b9124d1c4"
+  },
+  "actual_observer_smoke": {
+    "receipt_sha256": "c5e3a039005c11e771a45f7854e3411c4d3302f647def6b30eecf959a51c8775",
+    "passed": true,
+    "rows": [
+      {
+        "body_free_metadata": true,
+        "expected": "covered",
+        "gaps": [],
+        "guide_bytes": 14047,
+        "guide_sha256": "7d6ce2ba27d0a6e587c7e780fd6d1b00eaba7c221c4ee4676503bdc4d0dc4c7b",
+        "lines": 247,
+        "mode": "copy",
+        "observed_covered": true,
+        "renderer_bytes": 14157,
+        "surrounding_source_and_retry_preserved": true
+      },
+      {
+        "body_free_metadata": true,
+        "expected": "covered",
+        "gaps": [],
+        "guide_bytes": 14047,
+        "guide_sha256": "7d6ce2ba27d0a6e587c7e780fd6d1b00eaba7c221c4ee4676503bdc4d0dc4c7b",
+        "lines": 247,
+        "mode": "link",
+        "observed_covered": true,
+        "renderer_bytes": 14157,
+        "surrounding_source_and_retry_preserved": true
+      }
+    ],
+    "seconds": 14.754626374924555,
+    "native_or_model": false
+  },
+  "scoped_workers": {
+    "host": "Darwin arm64",
+    "python": "3.13.12",
+    "worker_deadline_s": 300,
+    "wall_s": 157.67515912500676,
+    "workers": 7,
+    "methods": 20,
+    "rows": [
+      {
+        "suite": "omp-owned-instruction-metadata",
+        "exit": 0,
+        "wall_s": 12.545770249911584,
+        "passed": true,
+        "tests": 5
+      },
+      {
+        "suite": "omp-owned-instruction-capture",
+        "exit": 0,
+        "wall_s": 28.635696958051994,
+        "passed": true,
+        "tests": 3
+      },
+      {
+        "suite": "omp-owned-instruction-recovery",
+        "exit": 0,
+        "wall_s": 40.47479054098949,
+        "passed": true,
+        "tests": 5
+      },
+      {
+        "suite": "omp-owned-instruction-binding-races",
+        "exit": 0,
+        "wall_s": 19.707357582985424,
+        "passed": true,
+        "tests": 2
+      },
+      {
+        "suite": "omp-owned-guide-capture",
+        "exit": 0,
+        "wall_s": 18.603723915992305,
+        "passed": true,
+        "tests": 1
+      },
+      {
+        "suite": "omp-owned-guide-negative-controls",
+        "exit": 0,
+        "wall_s": 18.275062291999348,
+        "passed": true,
+        "tests": 2
+      },
+      {
+        "suite": "omp-owned-guide-binding-history",
+        "exit": 0,
+        "wall_s": 19.432587958988734,
+        "passed": true,
+        "tests": 2
+      }
+    ],
+    "source_before": {
+      "commit": "776e13cd93a3d5270a0e5ff0233af836defd0df4",
+      "files": 3514,
+      "all_git_blobs_types_executable_bits_match": true,
+      "cache_absent": true
+    },
+    "source_after": {
+      "commit": "776e13cd93a3d5270a0e5ff0233af836defd0df4",
+      "files": 3514,
+      "all_git_blobs_types_executable_bits_match": true,
+      "cache_absent": true
+    },
+    "summary_sha256": "e3cc46d97376dcf32c143b807a8a3d81ee4c0c958d254f2afeec13a83ae50088"
+  },
+  "scope": "Actual disposable installed copy/link observer APIs with exact public GUIDE renderer plus seven affected instruction contracts; no stock-native/platform/task/release acceptance, no cause attributed to unknown-after-start."
+}

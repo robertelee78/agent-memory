@@ -1,0 +1,10 @@
+{
+  "body": {
+    "input": {
+      "not": "text"
+    },
+    "model": "qwen3-embedding-06b-q8_0-06507c7b4268"
+  },
+  "method": "POST",
+  "url": "http://127.0.0.1:60006/v1/embeddings"
+}

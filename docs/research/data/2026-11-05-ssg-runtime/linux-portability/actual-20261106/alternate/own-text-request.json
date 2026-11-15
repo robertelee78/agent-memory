@@ -1,0 +1,16 @@
+{
+  "body": {
+    "encoding_format": "float",
+    "input": [
+      "Retry a temporary synthetic transport failure at most three times.",
+      "Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page.",
+      "Publish a synthetic generation only after every required vector and graph node is complete.",
+      "A synthetic privacy epoch fences stale builders before deleted content can be republished.",
+      "The synthetic compiler pipeline parses input before lowering its intermediate representation.",
+      "The synthetic cafeteria menu rotates fruit on Thursdays."
+    ],
+    "model": "qwen3-embedding-06b-q8_0-06507c7b4268"
+  },
+  "method": "POST",
+  "url": "http://127.0.0.1:60006/v1/embeddings"
+}

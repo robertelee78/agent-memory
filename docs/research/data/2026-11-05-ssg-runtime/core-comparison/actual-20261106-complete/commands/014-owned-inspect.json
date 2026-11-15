@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "inspect",
+    "am255-compare-d6ecc3dfbb7c-core-logs"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.07748008397174999,
+  "started_at": "2026-11-06T19:19:59.266919+00:00",
+  "stderr": "",
+  "stdout": "[\n     {\n          \"Name\": \"am255-compare-d6ecc3dfbb7c-core-logs\",\n          \"Driver\": \"local\",\n          \"Mountpoint\": \"/var/home/core/.local/share/containers/storage/volumes/am255-compare-d6ecc3dfbb7c-core-logs/_data\",\n          \"CreatedAt\": \"2026-11-06T11:19:59.260857889-08:00\",\n          \"Labels\": {\n               \"org.agent-memory.core-comparison\": \"d6ecc3dfbb7c4bb88e14f901752e7a15\"\n          },\n          \"Scope\": \"local\",\n          \"Options\": {},\n          \"MountCount\": 0,\n          \"NeedsCopyUp\": true,\n          \"NeedsChown\": true,\n          \"LockNumber\": 40\n     }\n]\n"
+}

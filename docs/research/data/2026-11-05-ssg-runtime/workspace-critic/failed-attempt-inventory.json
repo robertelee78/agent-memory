@@ -1,0 +1,130 @@
+{
+  "schema": "am255/workspace-failed-attempt-inventory-v1",
+  "scope": "Post-review byte inventory only; original failed raw files and pre-output freezes remain unchanged. Does not rerun a workload or attribute missing logs.",
+  "files": {
+    "freeze-attempt-1.json": {
+      "bytes": 4119,
+      "sha256": "f03b9b1fa85c36b40a5d01fbd27481777e1a0b0beb76035ecd1f7cc4d2b1942b"
+    },
+    "freeze-attempt-2.json": {
+      "bytes": 4121,
+      "sha256": "f32634298fbdc6d586c238f7051e9ffce1344941bc09a465c606caf012324415"
+    },
+    "freeze-attempt-3.json": {
+      "bytes": 4121,
+      "sha256": "2313a739566866aab9ad24cf7de21179487e2b3d2a16852b7abbac9d3c8c568d"
+    },
+    "freeze-attempt-4.json": {
+      "bytes": 4121,
+      "sha256": "d9ecd42bb803533e8329e78f41e5cba7aceee21be9528fabfa8fd4403e1c9817"
+    },
+    "actual-20261106/cleanup.json": {
+      "bytes": 541,
+      "sha256": "ea0342fd060e0562f3ffca23b1e43c11ae3e4498d751f371863c5080e1a3ece2"
+    },
+    "actual-20261106/commands.json": {
+      "bytes": 4780,
+      "sha256": "db2b5499acb7c237c7369b31901a9539fccac5da79f8d9db35fe43042bc0ca2d"
+    },
+    "actual-20261106/observations.json": {
+      "bytes": 1052,
+      "sha256": "021a4c7897f971012c80feb365286535548821e181dfa7a625c2ece8213b5b5a"
+    },
+    "actual-20261106/owner.json": {
+      "bytes": 109,
+      "sha256": "fa070bf854b78df55fce75e3daf7ce3e7fd37456a51a4c803c272cd01a49c1d4"
+    },
+    "actual-20261106/precreation.json": {
+      "bytes": 52,
+      "sha256": "23f0b12a9de361461bb43c926e7837494cc0fe9ceea769c513a9a4378ca47b89"
+    },
+    "actual-20261106-podman/cleanup.json": {
+      "bytes": 1073,
+      "sha256": "7e92fb38de8ba3cd3b917f370dc306e88be73ae0a4062ddd58bee0fab2b01aff"
+    },
+    "actual-20261106-podman/commands.json": {
+      "bytes": 23216,
+      "sha256": "bdf4f81bdf385448fa879950145b639580173e691a9794083a325be6175ee44d"
+    },
+    "actual-20261106-podman/container-inspect.json": {
+      "bytes": 11579,
+      "sha256": "7041838b4942a86eeb93a1805e1b0d45b251ed6b4045c0ed961cb5b440cb4a1f"
+    },
+    "actual-20261106-podman/observations.json": {
+      "bytes": 349,
+      "sha256": "4acd646047fb6993a4772314c9b245e52b844f7fb1afa18125cb4045d820fbbd"
+    },
+    "actual-20261106-podman/owner.json": {
+      "bytes": 109,
+      "sha256": "f764887758276e98f98ef32111e1d4d4f07c5b10e628d3ceadc4e9e0c0e75f0a"
+    },
+    "actual-20261106-podman/precreation.json": {
+      "bytes": 52,
+      "sha256": "23f0b12a9de361461bb43c926e7837494cc0fe9ceea769c513a9a4378ca47b89"
+    },
+    "actual-20261106-diagnostic/cleanup.json": {
+      "bytes": 1509,
+      "sha256": "e7b952f1d946341a0957164208137580ee8e16989463aa89827406a53ba9d324"
+    },
+    "actual-20261106-diagnostic/commands.json": {
+      "bytes": 40107,
+      "sha256": "d22b82ab224c8d3b9f17ddfc1d528744405ee2b5a87725f2b1482f100e783c43"
+    },
+    "actual-20261106-diagnostic/container-inspect.json": {
+      "bytes": 11470,
+      "sha256": "1d83fc48b8c2c6ee8283f99912caef748a0619854724bca69fae6ba006b06921"
+    },
+    "actual-20261106-diagnostic/observations.json": {
+      "bytes": 349,
+      "sha256": "17352249f249185c6c6630179ae2501acdc2813730f717d99ec62eb1e1e17bf9"
+    },
+    "actual-20261106-diagnostic/owner.json": {
+      "bytes": 109,
+      "sha256": "e1faf71b867d443162f8c14b582d2b9cf03db5be34bc6af44ad34b2ecb465213"
+    },
+    "actual-20261106-diagnostic/precreation.json": {
+      "bytes": 52,
+      "sha256": "23f0b12a9de361461bb43c926e7837494cc0fe9ceea769c513a9a4378ca47b89"
+    },
+    "actual-20261106-diagnostic/startup-probes.json": {
+      "bytes": 30647,
+      "sha256": "f44797ec0c527c3ab7ec35e90dfd6559c0f404b331ddf9e1340ca89938dcb26e"
+    },
+    "actual-20261106-final/actual-tmpfs-process-posture.json": {
+      "bytes": 6188,
+      "sha256": "38a54b13754cdf21ab8be607d607272c63f4b7da81dbeb897cde2491d447efe5"
+    },
+    "actual-20261106-final/bolt-ready.json": {
+      "bytes": 27,
+      "sha256": "30f4883fdf86395830868522f6fab822999cd3672f1c0824c1f17bea81d834af"
+    },
+    "actual-20261106-final/cleanup.json": {
+      "bytes": 6899,
+      "sha256": "5e0b6d788a1dab0b80c26d495185fade296adb2a8e0758f226a294f1280c9f6c"
+    },
+    "actual-20261106-final/commands.json": {
+      "bytes": 51076,
+      "sha256": "f0c15c8e2cc7b384dcba548bebfc79247edf2394434a38ad74e3536457a3bddd"
+    },
+    "actual-20261106-final/container-inspect.json": {
+      "bytes": 11589,
+      "sha256": "33b992b0dee625db8e0eb87d67fcd97fc09866d1beef42afed23ffb5db5a0155"
+    },
+    "actual-20261106-final/observations.json": {
+      "bytes": 470,
+      "sha256": "49252af26c637c1f7e8cba146253de3cb5feae4ca002a8dd9b48ff9182b24546"
+    },
+    "actual-20261106-final/owner.json": {
+      "bytes": 109,
+      "sha256": "2892ac8022c1d255e18021090f588dbe79bd2dbf2e377e47a3b8f083f31cfc17"
+    },
+    "actual-20261106-final/precreation.json": {
+      "bytes": 52,
+      "sha256": "23f0b12a9de361461bb43c926e7837494cc0fe9ceea769c513a9a4378ca47b89"
+    },
+    "actual-20261106-final/startup-probes.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  }
+}

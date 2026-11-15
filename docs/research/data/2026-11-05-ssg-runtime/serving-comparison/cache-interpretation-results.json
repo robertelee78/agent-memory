@@ -1,0 +1,732 @@
+{
+  "api": {
+    "empty_malformed_interpretation": "All profiles need draft client preflight for empty/non-string inputs and must treat every non-2xx or invalid vector response as failure. These500 responses contain no vectors/fail closed; they are not a server-cutover blocker or comparative evidence against upstream usability.",
+    "generic_byo_api": "URL plus optional key, plus explicit model only when discovery is ambiguous. Provider-specific cache fields are not universal requirements; the owned local launch is independently identity-bound, not identified by echoed alias.",
+    "invalid_responses": [
+      {
+        "http": 500,
+        "launch": "fork-cold-1",
+        "request": "empty-input",
+        "response_sha256": "8fb89c8161aa96cee2e0a56fe93656f37cdcc789759fd459a458cf112b9cf170",
+        "vectors_returned": 0
+      },
+      {
+        "http": 500,
+        "launch": "fork-cold-1",
+        "request": "invalid-input",
+        "response_sha256": "775e4c305a7d09cb46c9c8e3ad6733ea42e4c05db2a74ff615ee9d5bf9e7f0ab",
+        "vectors_returned": 0
+      },
+      {
+        "http": 500,
+        "launch": "fork-cold-2",
+        "request": "empty-input",
+        "response_sha256": "8fb89c8161aa96cee2e0a56fe93656f37cdcc789759fd459a458cf112b9cf170",
+        "vectors_returned": 0
+      },
+      {
+        "http": 500,
+        "launch": "fork-cold-2",
+        "request": "invalid-input",
+        "response_sha256": "775e4c305a7d09cb46c9c8e3ad6733ea42e4c05db2a74ff615ee9d5bf9e7f0ab",
+        "vectors_returned": 0
+      },
+      {
+        "http": 500,
+        "launch": "upstream-cold-1",
+        "request": "empty-input",
+        "response_sha256": "8fb89c8161aa96cee2e0a56fe93656f37cdcc789759fd459a458cf112b9cf170",
+        "vectors_returned": 0
+      },
+      {
+        "http": 500,
+        "launch": "upstream-cold-1",
+        "request": "invalid-input",
+        "response_sha256": "775e4c305a7d09cb46c9c8e3ad6733ea42e4c05db2a74ff615ee9d5bf9e7f0ab",
+        "vectors_returned": 0
+      },
+      {
+        "http": 500,
+        "launch": "upstream-cold-2",
+        "request": "empty-input",
+        "response_sha256": "8fb89c8161aa96cee2e0a56fe93656f37cdcc789759fd459a458cf112b9cf170",
+        "vectors_returned": 0
+      },
+      {
+        "http": 500,
+        "launch": "upstream-cold-2",
+        "request": "invalid-input",
+        "response_sha256": "775e4c305a7d09cb46c9c8e3ad6733ea42e4c05db2a74ff615ee9d5bf9e7f0ab",
+        "vectors_returned": 0
+      }
+    ],
+    "observations": {
+      "all_over_context_refused": true,
+      "empty_input_statuses": [
+        500,
+        500,
+        500,
+        500
+      ],
+      "malformed_input_statuses": [
+        500,
+        500,
+        500,
+        500
+      ],
+      "server_cutover_blocker_inferred_from_empty_malformed": false
+    },
+    "offline_policy": "Would refuse>8 rows,>8192 individual/aggregate tokens. No AM production client was implemented and no request was blocked; batch9 was actually sent and returned200 on every launch. Two4161-token inputs would exceed8322 aggregate; tokenized only, not submitted.",
+    "over_context": "8265 tokens versus8192 context; explicit400 on all four launches."
+  },
+  "cache": {
+    "actual_log_coverage": [
+      {
+        "decode_release_records": 69,
+        "launch": "fork-cold-1",
+        "prefix_records": 69,
+        "ram_disabled_confirmed": true,
+        "slot_reuse_observed": true,
+        "successful_rows": 69
+      },
+      {
+        "decode_release_records": 69,
+        "launch": "fork-cold-2",
+        "prefix_records": 69,
+        "ram_disabled_confirmed": true,
+        "slot_reuse_observed": true,
+        "successful_rows": 69
+      },
+      {
+        "decode_release_records": 69,
+        "launch": "upstream-cold-1",
+        "prefix_records": 69,
+        "ram_disabled_confirmed": true,
+        "slot_reuse_observed": true,
+        "successful_rows": 69
+      },
+      {
+        "decode_release_records": 69,
+        "launch": "upstream-cold-2",
+        "prefix_records": 69,
+        "ram_disabled_confirmed": true,
+        "slot_reuse_observed": true,
+        "successful_rows": 69
+      }
+    ],
+    "effective_profile": "RAM prompt-cache object disabled by actual logs in all four launches; slot-local prefix reuse remains enabled and observed. Do NOT describe this as prompt-cache-disabled. This is a diagnostic configuration, not a managed profile/ADR freeze.",
+    "explicit_cli": [
+      "--cache-ram",
+      "0",
+      "--log-verbosity",
+      "5"
+    ],
+    "interpretation": "Only probe row0 changes when the cache path changes0+9 to2+7. Same2+7 splits are exactly equal across probes1/probes2 and unknown-alias/repeated-row0; known-single uses8+1, confounding the alias comparison. Repeat drift is observed history dependence, not random restart noise. No specific kernel-level cause or unconditional cache-disabled repeatability is claimed.",
+    "per_request_cache_prompt": "Deliberately omitted; reference embedding handler ignores this field, as source-hash-bound in cache-probe-spec.json. HTTP200 is not proof of field support. No cache_prompt:false sent.",
+    "same_text_history_comparisons": [
+      {
+        "alias_comparison_confounded_by_cache_path": true,
+        "first_probe_row0": {
+          "cached_prefix_tokens": 0,
+          "evaluated_tokens": 9
+        },
+        "known_single_row0": {
+          "cached_prefix_tokens": 8,
+          "evaluated_tokens": 1
+        },
+        "launch": "fork-cold-1",
+        "repeat_probe_row0": {
+          "cached_prefix_tokens": 2,
+          "evaluated_tokens": 7
+        },
+        "rows_changed_first_to_repeat": [
+          0
+        ],
+        "same_split_probes1_equals_probes2": true,
+        "same_split_unknown_alias_equals_repeat_row0": true,
+        "unknown_vs_known_max_abs_coordinate": 3.5964767448604107e-06
+      },
+      {
+        "alias_comparison_confounded_by_cache_path": true,
+        "first_probe_row0": {
+          "cached_prefix_tokens": 0,
+          "evaluated_tokens": 9
+        },
+        "known_single_row0": {
+          "cached_prefix_tokens": 8,
+          "evaluated_tokens": 1
+        },
+        "launch": "fork-cold-2",
+        "repeat_probe_row0": {
+          "cached_prefix_tokens": 2,
+          "evaluated_tokens": 7
+        },
+        "rows_changed_first_to_repeat": [
+          0
+        ],
+        "same_split_probes1_equals_probes2": true,
+        "same_split_unknown_alias_equals_repeat_row0": true,
+        "unknown_vs_known_max_abs_coordinate": 3.5964767448604107e-06
+      },
+      {
+        "alias_comparison_confounded_by_cache_path": true,
+        "first_probe_row0": {
+          "cached_prefix_tokens": 0,
+          "evaluated_tokens": 9
+        },
+        "known_single_row0": {
+          "cached_prefix_tokens": 8,
+          "evaluated_tokens": 1
+        },
+        "launch": "upstream-cold-1",
+        "repeat_probe_row0": {
+          "cached_prefix_tokens": 2,
+          "evaluated_tokens": 7
+        },
+        "rows_changed_first_to_repeat": [
+          0
+        ],
+        "same_split_probes1_equals_probes2": true,
+        "same_split_unknown_alias_equals_repeat_row0": true,
+        "unknown_vs_known_max_abs_coordinate": 4.589557647705078e-06
+      },
+      {
+        "alias_comparison_confounded_by_cache_path": true,
+        "first_probe_row0": {
+          "cached_prefix_tokens": 0,
+          "evaluated_tokens": 9
+        },
+        "known_single_row0": {
+          "cached_prefix_tokens": 8,
+          "evaluated_tokens": 1
+        },
+        "launch": "upstream-cold-2",
+        "repeat_probe_row0": {
+          "cached_prefix_tokens": 2,
+          "evaluated_tokens": 7
+        },
+        "rows_changed_first_to_repeat": [
+          0
+        ],
+        "same_split_probes1_equals_probes2": true,
+        "same_split_unknown_alias_equals_repeat_row0": true,
+        "unknown_vs_known_max_abs_coordinate": 4.589557647705078e-06
+      }
+    ]
+  },
+  "cleanup": {
+    "newly_owned_launches": 13,
+    "receipts": [
+      {
+        "attempt": "actual-cache-20261106",
+        "exclusivity_after": {
+          "argv": [
+            "pgrep",
+            "-x",
+            "llama-server"
+          ],
+          "exit": 1,
+          "seconds": 0.041568375017959625,
+          "stderr": "",
+          "stdout": ""
+        },
+        "reaped": [
+          {
+            "at": "2026-11-06T19:49:48.291725+00:00",
+            "exit": 0,
+            "launch": "fork-cold-1",
+            "only_owned_popen_signaled": true,
+            "pid": 86707,
+            "reaped": true,
+            "stderr_sha256": "0dd5b3db789c3f0ab80acd425f6cc19e17c1275bf4f8be5de8e829b61111439e",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:49:53.506663+00:00",
+            "exit": 0,
+            "launch": "fork-cold-2",
+            "only_owned_popen_signaled": true,
+            "pid": 86713,
+            "reaped": true,
+            "stderr_sha256": "3f645c80d3dd1afc4ee840cc37e48febd2078fa0df90cfbcfd49e08a6ccce8ff",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:49:58.120468+00:00",
+            "exit": 0,
+            "launch": "upstream-cold-1",
+            "only_owned_popen_signaled": true,
+            "pid": 86770,
+            "reaped": true,
+            "stderr_sha256": "e05e6b721d6bccef33759763a170220ecee27ff365dec5868db7130517eff539",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      {
+        "attempt": "actual-cache-logfix-20261106",
+        "exclusivity_after": {
+          "argv": [
+            "pgrep",
+            "-x",
+            "llama-server"
+          ],
+          "exit": 1,
+          "seconds": 0.023929250019136816,
+          "stderr": "",
+          "stdout": ""
+        },
+        "reaped": [
+          {
+            "at": "2026-11-06T19:53:27.017783+00:00",
+            "exit": 0,
+            "launch": "fork-cold-1",
+            "only_owned_popen_signaled": true,
+            "pid": 4571,
+            "reaped": true,
+            "stderr_sha256": "11ec360da24462c64373b3e1bdf000f293673d5fe6bc5d517d3836b2cd550549",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:53:32.199967+00:00",
+            "exit": 0,
+            "launch": "fork-cold-2",
+            "only_owned_popen_signaled": true,
+            "pid": 5084,
+            "reaped": true,
+            "stderr_sha256": "c52f7d343eba8252ea834ec0e7fc24b28f6f33ce93714891a9c3c02b637e32ec",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:53:36.744796+00:00",
+            "exit": 0,
+            "launch": "upstream-cold-1",
+            "only_owned_popen_signaled": true,
+            "pid": 5707,
+            "reaped": true,
+            "stderr_sha256": "8bc541669b2fcba40cf164060e983f2369d95d64d5806e16d75b8f97f765dc90",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      {
+        "attempt": "actual-cache-finalized-20261106",
+        "exclusivity_after": {
+          "argv": [
+            "pgrep",
+            "-x",
+            "llama-server"
+          ],
+          "exit": 1,
+          "seconds": 0.025953707983717322,
+          "stderr": "",
+          "stdout": ""
+        },
+        "reaped": [
+          {
+            "at": "2026-11-06T19:56:01.544853+00:00",
+            "exit": 0,
+            "launch": "fork-cold-1",
+            "only_owned_popen_signaled": true,
+            "pid": 7935,
+            "reaped": true,
+            "stderr_sha256": "8f33bed5e34fd0b3c7968f5e175a08c75fc5e6f8599046f7e1756c7ed2f12c48",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:56:06.352807+00:00",
+            "exit": 0,
+            "launch": "fork-cold-2",
+            "only_owned_popen_signaled": true,
+            "pid": 7970,
+            "reaped": true,
+            "stderr_sha256": "170e80c744b2e94a74505695e9d2b0f0f36c58cf8c700fd2b59e597b666f931f",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:56:11.352989+00:00",
+            "exit": 0,
+            "launch": "upstream-cold-1",
+            "only_owned_popen_signaled": true,
+            "pid": 8075,
+            "reaped": true,
+            "stderr_sha256": "4d7156f67475ca656045ab35091e01e2917f23c2e10010665fda948372b9c375",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      },
+      {
+        "attempt": "actual-cache-observed-20261106",
+        "exclusivity_after": {
+          "argv": [
+            "pgrep",
+            "-x",
+            "llama-server"
+          ],
+          "exit": 1,
+          "seconds": 0.0494923330261372,
+          "stderr": "",
+          "stdout": ""
+        },
+        "reaped": [
+          {
+            "at": "2026-11-06T19:58:06.883557+00:00",
+            "exit": 0,
+            "launch": "fork-cold-1",
+            "only_owned_popen_signaled": true,
+            "pid": 9752,
+            "reaped": true,
+            "stderr_sha256": "9129f8ba36d4c32ef11a9c03c95b54a3e3970a2b318b4bb0e85ab55cbd585db9",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:58:12.074906+00:00",
+            "exit": 0,
+            "launch": "fork-cold-2",
+            "only_owned_popen_signaled": true,
+            "pid": 9780,
+            "reaped": true,
+            "stderr_sha256": "403705e567d37acb959d5828a198aafe048489ab63cf8429ab30e3b275f7e44b",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:58:16.647134+00:00",
+            "exit": 0,
+            "launch": "upstream-cold-1",
+            "only_owned_popen_signaled": true,
+            "pid": 9841,
+            "reaped": true,
+            "stderr_sha256": "9652b2e2ad7fe9c923d4b136e24f1bea467db118d8925c40ad6e98c3d2459fdc",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "at": "2026-11-06T19:58:21.322308+00:00",
+            "exit": 0,
+            "launch": "upstream-cold-2",
+            "only_owned_popen_signaled": true,
+            "pid": 9935,
+            "reaped": true,
+            "stderr_sha256": "62e5302ff663d8b900f52bd03c0a8be85fd00c52a8004572d2be576f91bd4c92",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      }
+    ],
+    "scope": "Every owned Popen reaped; each attempt retained final pgrep exit1/no llama-server matches; only owned children signaled. Exclusivity covers llama-server process name, not all host load."
+  },
+  "decision": "Diagnostic1e-5 is not upstream usability or eligibility acceptance; exceeded coordinate threshold is reported, never relaxed. Ordinary upstream remains a source/observed-closure-bound synthetic candidate, not an adopted profile. No G1, held-out/full quality, legal/distribution, Linux, clean-performance or AM production-client claim. Parent owns ADR/profile/fingerprint and persisted-vector rebuild/reuse decisions.",
+  "diagnostic_outcome": {
+    "coordinate_and_cosine_within_diagnostic": false,
+    "coordinate_within_1e_5": false,
+    "cosine_within_1e_5": true,
+    "cross_rank_orders_unchanged": true,
+    "eligibility_or_upstream_usability_verdict": false
+  },
+  "evidence_class": "Post-run interpretation of one completed source-frozen four-launch diagnostic execution; all failed predecessor attempts and old frozen/raw data retained separately",
+  "execution": {
+    "argv": [
+      "python3",
+      "-B",
+      "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/compare_serving.py",
+      "run",
+      "--output",
+      "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/actual-cache-observed-20261106"
+    ],
+    "completed": true,
+    "freeze": "cache-frozen-inputs-observed.json",
+    "frozen_at": "2026-11-06T19:57:47.227717+00:00",
+    "scope": "The executed source and all selected input/cache/artifact files were committed and checked against HEAD before output creation. Earlier attempt outputs existed and were inspected solely to correct the log parser; outputs_existed_at_freeze=false concerns this new target output, not historical attempts. Texts and1e-5 diagnostics remained unchanged; no held-out answers inspected.",
+    "source_bindings": {
+      "base_commit": "c267b0071d6869bb2e5fc1ea368cf6d38374b3cc",
+      "canonical_inputs_sha256": "5e7d61a18511bc8182685e04ae4777f260d737fe6e80ead901bb0be3ac0d9645",
+      "clone": "/Users/robert.lee/.omp/wt/td26e875e0/m",
+      "committed_source_paths_clean_before_outputs": true,
+      "common_sha256": "f08cb242284c91c8fb91445ff560bc2a1ea0e655844c66800eaa6c099cb9b6ab",
+      "contention": "Normal shared host load; graph comparison/other ordinary jobs may overlap. No clean timing reservation or OS cache purge.",
+      "execution_commit": "db0fd417be79c3ae0491b8b69b41b338c6d0871b",
+      "freeze_commit": "db0fd417be79c3ae0491b8b69b41b338c6d0871b",
+      "frozen_inputs_file_sha256": "7320c7ceaa44604085aaa435f9ffbe07dd4e185d77e0aa2805fc5b749588b393",
+      "host": {
+        "argv": [
+          "sysctl",
+          "hw.model",
+          "hw.memsize",
+          "hw.ncpu"
+        ],
+        "exit": 0,
+        "seconds": 0.0032192079816013575,
+        "stderr": "",
+        "stdout": "hw.model: Mac17,6\nhw.memsize: 137438953472\nhw.ncpu: 18\n"
+      },
+      "load_before": [
+        3.8291015625,
+        5.015625,
+        5.26611328125
+      ],
+      "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+      "pre_output_artifact_identity": "e3837ce97ca09bfe534b5fe29a5be7de0a106c5cf68de8abc3c37b76d95831ba",
+      "python": "3.13.12",
+      "script_sha256": "621c58ac9672a84b099d094e59658a263b733220d0ae5005ca1de4d12491f672",
+      "spec_sha256": "e115299b81c24247ca70156a2ce34e21b53ae6a49a027d467466c0a0c4a02c1d",
+      "started_at": "2026-11-06T19:57:57.757699+00:00"
+    },
+    "stdout": "Actual comparison: diagnostic-only; no eligibility or usability verdict\nCoordinate/cosine diagnostic: False rank unchanged: True\n",
+    "tool_reported_wall_seconds": 24.02
+  },
+  "identity": {
+    "candidate_identity": {
+      "installed_ggml": "0.22.0",
+      "observed_launch_closures": {
+        "fork-cold-1": "3eb64fca868caab0e1690902d0b542f2eb958e7ed1a96d72eebfe429dae59048",
+        "fork-cold-2": "3eb64fca868caab0e1690902d0b542f2eb958e7ed1a96d72eebfe429dae59048",
+        "upstream-cold-1": "53cd979703e2ba2182f36bc6be33be6f247ecccd562876afc338896e8a4c0c65",
+        "upstream-cold-2": "53cd979703e2ba2182f36bc6be33be6f247ecccd562876afc338896e8a4c0c65"
+      },
+      "status": "source-and-observed-kernel-closure-bound-synthetic-candidate-only",
+      "upstream_build": "9360"
+    },
+    "observed_kernel_binding": "Actual DYLD_PRINT_LIBRARIES records prove libexec CPU variants, BLAS and Metal modules were loaded; each local executable/dependency/backend path/hash must match pre-output pins, not only a guessed glob. Logs report MTL EMBED_LIBRARY=1, so the Metal-module hash includes the embedded kernel source/library. Both restarts have identical closure identities. OS shared-cache Metal/Accelerate/AGX images are bound by dyld UUID and frozen OS build; available system files are also hashed. This is a complete observed image identity, not byte hashes for inaccessible standalone shared-cache images or reproducible/cross-host driver attestation.",
+    "old_run_correction": "b9360 bottle built against ggml0.13.0, executed installed0.22.0; old Metal/CPU/BLAS modules were unhashed. No retroactive attestation.",
+    "upstream_actual_loaded_local_files": [
+      {
+        "bytes": 506672,
+        "dyld_uuid": "5EC46777-FC6B-39F8-BCF3-8219E096DA64",
+        "observed_path": "/opt/homebrew/Cellar/ggml/0.22.0/lib/libggml-base.0.22.0.dylib",
+        "path": "/opt/homebrew/Cellar/ggml/0.22.0/lib/libggml-base.0.22.0.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "9d96b2f3e580901342d5981ceb8c3899ef562c3fec119e7f631a35ebf6997914"
+      },
+      {
+        "bytes": 60272,
+        "dyld_uuid": "BCD16885-E62B-3EBD-BA5D-729C852EB510",
+        "observed_path": "/opt/homebrew/Cellar/ggml/0.22.0/lib/libggml.0.22.0.dylib",
+        "path": "/opt/homebrew/Cellar/ggml/0.22.0/lib/libggml.0.22.0.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "04e26574ebad49c5284f86bde3fd3935512988ab3d0b14fca1a83de8064fadfb"
+      },
+      {
+        "bytes": 58752,
+        "dyld_uuid": "96AC7965-76F6-3B60-AE6D-5B0F24677EE1",
+        "observed_path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-blas.so",
+        "path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-blas.so",
+        "pre_output_binding": "exact file hash",
+        "sha256": "cb0f72c3d4f66475143dde5974bec5e662e00ea0d8db65f12cb942ffe0112a3a"
+      },
+      {
+        "bytes": 534784,
+        "dyld_uuid": "B282F057-7DC2-309A-9168-9D136AD86427",
+        "observed_path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-cpu-apple_m1.so",
+        "path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-cpu-apple_m1.so",
+        "pre_output_binding": "exact file hash",
+        "sha256": "5582ec4e959ebfc3296ee8291ed1613a0e3b70017d5e7a629bd9d4fd32b5c26d"
+      },
+      {
+        "bytes": 551312,
+        "dyld_uuid": "0C0B6BCA-C191-3769-BC12-FCD3A17F57AB",
+        "observed_path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-cpu-apple_m2_m3.so",
+        "path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-cpu-apple_m2_m3.so",
+        "pre_output_binding": "exact file hash",
+        "sha256": "682271fef76e7f6808cda2db200bb5f75197ce82290b02d58daa2478f4ef6d08"
+      },
+      {
+        "bytes": 551296,
+        "dyld_uuid": "ADE72905-F70C-32DE-B6A3-3DA2F841ACB6",
+        "observed_path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-cpu-apple_m4.so",
+        "path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-cpu-apple_m4.so",
+        "pre_output_binding": "exact file hash",
+        "sha256": "8c34933269a116f6bcdd25174f6f456f926c6a73f88b02906251b4893e85a47f"
+      },
+      {
+        "bytes": 2036528,
+        "dyld_uuid": "981BED08-8D69-3271-AFC9-E0CF6278427A",
+        "observed_path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-metal.so",
+        "path": "/opt/homebrew/Cellar/ggml/0.22.0/libexec/libggml-metal.so",
+        "pre_output_binding": "exact file hash",
+        "sha256": "c6c848b8174821090bd22864e72861cd469ac3c0c03c2d6a0f872f252239a7d7"
+      },
+      {
+        "bytes": 725328,
+        "dyld_uuid": "E08ECA60-8306-3D5B-8A9C-5673087C6760",
+        "observed_path": "/opt/homebrew/Cellar/libomp/22.1.8/lib/libomp.dylib",
+        "path": "/opt/homebrew/Cellar/libomp/22.1.8/lib/libomp.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "07df38a5b4ffd405e614516cafa11abe20018e60c71167be0c2d5cd9e39718b6"
+      },
+      {
+        "bytes": 51424,
+        "dyld_uuid": "7A7F2329-F8AD-372A-A4CD-E0129AC67917",
+        "observed_path": "/opt/homebrew/Cellar/llama.cpp/9360/bin/llama-server",
+        "path": "/opt/homebrew/Cellar/llama.cpp/9360/bin/llama-server",
+        "pre_output_binding": "exact file hash",
+        "sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203"
+      },
+      {
+        "bytes": 4670336,
+        "dyld_uuid": "50C1BD42-1B2E-31E6-90EB-0A7027206EEE",
+        "observed_path": "/opt/homebrew/Cellar/llama.cpp/9360/lib/libllama-common.0.0.9360.dylib",
+        "path": "/opt/homebrew/Cellar/llama.cpp/9360/lib/libllama-common.0.0.9360.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "31d7f016c820794dc5d185451f01e0c04df2db13cd2fe611d0f156222465c5da"
+      },
+      {
+        "bytes": 8811056,
+        "dyld_uuid": "983A22D9-973B-302E-92D0-3BC7B9EA9FBD",
+        "observed_path": "/opt/homebrew/Cellar/llama.cpp/9360/lib/libllama-server-impl.dylib",
+        "path": "/opt/homebrew/Cellar/llama.cpp/9360/lib/libllama-server-impl.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "4cf4a497a4b18550ef402164c947da087a37078347eab76935248f05016bfb66"
+      },
+      {
+        "bytes": 2237376,
+        "dyld_uuid": "AF8C5306-9D40-3DD2-BED2-753FA9F24AA3",
+        "observed_path": "/opt/homebrew/Cellar/llama.cpp/9360/lib/libllama.0.0.9360.dylib",
+        "path": "/opt/homebrew/Cellar/llama.cpp/9360/lib/libllama.0.0.9360.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "e595b6a9286d2efaa93de1821261c35d90aea4494da6d66b1a5a6190083ef9d1"
+      },
+      {
+        "bytes": 789776,
+        "dyld_uuid": "EC8DBC33-6D88-3697-A872-D262767B436E",
+        "observed_path": "/opt/homebrew/Cellar/llama.cpp/9360/lib/libmtmd.0.0.9360.dylib",
+        "path": "/opt/homebrew/Cellar/llama.cpp/9360/lib/libmtmd.0.0.9360.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "795e4fd95a382c3d88ff83286d0c0f15b078350f553a67b24672d14f630883a0"
+      },
+      {
+        "bytes": 4872736,
+        "dyld_uuid": "B5FB28DB-1AC6-383C-9DDD-585812A35CE8",
+        "observed_path": "/opt/homebrew/Cellar/openssl@3/3.6.4/lib/libcrypto.3.dylib",
+        "path": "/opt/homebrew/Cellar/openssl@3/3.6.4/lib/libcrypto.3.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "bae675614cd791d37ec35416ea9f87edcc85407d020810504cf458119b63522c"
+      },
+      {
+        "bytes": 888928,
+        "dyld_uuid": "1B8AB7A7-AD95-3B41-85F2-FB21B66B6423",
+        "observed_path": "/opt/homebrew/Cellar/openssl@3/3.6.4/lib/libssl.3.dylib",
+        "path": "/opt/homebrew/Cellar/openssl@3/3.6.4/lib/libssl.3.dylib",
+        "pre_output_binding": "exact file hash",
+        "sha256": "c6ee373222087cf31bc2f3817537d268b3c23e56b7fadd44bbf5c2317caed349"
+      }
+    ],
+    "weight": "Same SHA-d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb 8B Q8_0 file for all four launches; one pre-launch file hash per run, not one per launch"
+  },
+  "observed": {
+    "cold_launches": 4,
+    "cost_scope": "Normal shared host/unpurged file cache; extra dyld/debug observability enabled. Elapsed and token counts only, not clean timing, speed ranking or performance acceptance.",
+    "costs": [
+      {
+        "launch": "fork-cold-1",
+        "own_fill_tokens": {
+          "prompt_tokens": 87,
+          "total_tokens": 87
+        },
+        "own_six_document_fill_seconds": 0.3906986250076443,
+        "performance_acceptance": false,
+        "probe_fraction_of_tiny_own_fill": 0.4268207435955142,
+        "probe_mean_seconds": 0.1667582776475077,
+        "probe_tokens": {
+          "prompt_tokens": 42,
+          "total_tokens": 42
+        },
+        "relationship_fill_tokens": {
+          "prompt_tokens": 193,
+          "total_tokens": 193
+        },
+        "relationship_six_document_fill_seconds": 0.5188540830276906,
+        "startup_seconds": 1.052016417030245
+      },
+      {
+        "launch": "fork-cold-2",
+        "own_fill_tokens": {
+          "prompt_tokens": 87,
+          "total_tokens": 87
+        },
+        "own_six_document_fill_seconds": 0.4097918329644017,
+        "performance_acceptance": false,
+        "probe_fraction_of_tiny_own_fill": 0.41804741632215286,
+        "probe_mean_seconds": 0.17131241700068736,
+        "probe_tokens": {
+          "prompt_tokens": 42,
+          "total_tokens": 42
+        },
+        "relationship_fill_tokens": {
+          "prompt_tokens": 193,
+          "total_tokens": 193
+        },
+        "relationship_six_document_fill_seconds": 0.5167166250175796,
+        "startup_seconds": 0.8471075000124983
+      },
+      {
+        "launch": "upstream-cold-1",
+        "own_fill_tokens": {
+          "prompt_tokens": 87,
+          "total_tokens": 87
+        },
+        "own_six_document_fill_seconds": 0.3610504579846747,
+        "performance_acceptance": false,
+        "probe_fraction_of_tiny_own_fill": 0.437455322885839,
+        "probe_mean_seconds": 0.15794344467576593,
+        "probe_tokens": {
+          "prompt_tokens": 42,
+          "total_tokens": 42
+        },
+        "relationship_fill_tokens": {
+          "prompt_tokens": 193,
+          "total_tokens": 193
+        },
+        "relationship_six_document_fill_seconds": 0.3736789579852484,
+        "startup_seconds": 1.0558728339965455
+      },
+      {
+        "launch": "upstream-cold-2",
+        "own_fill_tokens": {
+          "prompt_tokens": 87,
+          "total_tokens": 87
+        },
+        "own_six_document_fill_seconds": 0.3615547079825774,
+        "performance_acceptance": false,
+        "probe_fraction_of_tiny_own_fill": 0.43746192077066254,
+        "probe_mean_seconds": 0.1581664170177343,
+        "probe_tokens": {
+          "prompt_tokens": 42,
+          "total_tokens": 42
+        },
+        "relationship_fill_tokens": {
+          "prompt_tokens": 193,
+          "total_tokens": 193
+        },
+        "relationship_six_document_fill_seconds": 0.371016624965705,
+        "startup_seconds": 1.0593919159728102
+      }
+    ],
+    "cross_restart_baselines": "Exact coordinates for probes, queries, own and relationship on both binaries",
+    "cross_server_max_abs_coordinate": 0.00011330842971801758,
+    "cross_server_max_cosine_distance": 2.3421633865705616e-07,
+    "cross_server_max_score_drift": 0.00013965302161811355,
+    "cross_server_rank_changes": 0,
+    "dimensions": 4096,
+    "launches_per_binary": 2,
+    "repeat_max_abs_coordinate": {
+      "fork": 9.326823055744171e-05,
+      "upstream": 0.00012361444532871246
+    },
+    "settings": "same 8B, four generation/batch/HTTP threads, Metal MTL0, ctx8192, last pooling, batch/ubatch8192, parallel1, gpu-layers99, flash-attn off, fit off, offline; explicit RAM0 with slot reuse retained"
+  },
+  "parent_prose": "The corrected same-8B serving comparison retains two cold launches each for fork9341 and upstream b9360 built with ggml0.13.0 but executed with installed0.22.0. Unlike the old run, this execution pins and verifies actual dyld-loaded Metal/CPU/BLAS libexec modules and the full observed local dependency closure. Explicit --cache-ram0 disables RAM cache, not slot-local prefix reuse:69 rows per launch have task-bound prefix/decode/release evidence. Repeat drift follows0+9 versus2+7 cache splits; same-split vectors and cross-restart baselines are exact. Cross-server max-coordinate1.1330842971801758e-4 and repeat maxima9.326823055744171e-5/1.2361444532871246e-4 are diagnostic observations, not a verdict against upstream usability; cosine/ranks remain within the frozen diagnostics. Empty/malformed500 returns no vectors and belongs to a draft preflight for every profile. Offline policy would refuse batch9, but the diagnostic actually sent it and received200. Generic BYO remains URL+optional key(+model if ambiguous), with no universal cache extension. No AM production client/profileADR/G1/quality/legal/Linux/clean-performance acceptance; parent owns decisions.",
+  "raw_results": "actual-cache-observed-20261106/results.json",
+  "raw_results_sha256": "14a8069100be8601a95a33fa386141f3fa5114d9b6f5e351ae7f3a139514e753",
+  "retained_attempts": {
+    "actual_launches_each": 3,
+    "completed_launch_reports_each": 2,
+    "failure": "All reached upstream-cold-1, then the comparator rejected incomplete token-log coverage because it expected fork-specific n_tokens/prompt-processing-done wording. Upstream logs cached n_tokens and decode/release instead. No server/vector failure was established by these parser failures.",
+    "immutability": "Every old/raw/frozen receipt and each failed attempt remains untouched; successive freeze files and commits bind parser-only corrections. No texts, thresholds or intended cache behavior changed.",
+    "paths": [
+      "actual-cache-20261106",
+      "actual-cache-logfix-20261106",
+      "actual-cache-finalized-20261106"
+    ],
+    "superseded_explanation": "The early live-offset/logger-race explanation was unestablished and is superseded by the observed binary-specific log-schema mismatch. Final parser binds actual prefix/decode/release task IDs in finalized logs under parallel1."
+  },
+  "schema": "am255/explicit-cache-serving-interpretation-v1"
+}

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "exec",
+    "b4693cf2a509c4c828b0adb918facc0716525b23b54f9a6f632f43f17ec09b48",
+    "/release/llama-server",
+    "--version"
+  ],
+  "duration_seconds": 0.12670207023620605,
+  "exit": 0,
+  "start_unix": 1793997548.970836,
+  "stderr": "version: 9360 (6b4e4bd58)\nbuilt with GNU 14.2.0 for Linux aarch64\n",
+  "stdout": ""
+}
