@@ -9,6 +9,7 @@
 # refresh between two clones of a bare remote, the session-start hook,
 # status, doctor and uninstall. Needs bash 5 (EPOCHREALTIME) and git.
 set -euo pipefail
+[ -n "${EPOCHREALTIME:-}" ] || { echo "qa.sh needs bash 5 or newer (macOS: brew install bash)" >&2; exit 2; }
 
 src=$(cd "${1:?usage: qa.sh CHECKOUT [RESULTS_FILE]}" && pwd -P)
 results=${2:-/dev/stdout}
