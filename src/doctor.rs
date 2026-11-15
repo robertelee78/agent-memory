@@ -201,12 +201,17 @@ fn bank_health(report: &mut Report, deep: bool) {
     if !deep {
         return;
     }
-    for (name, _, _) in bank::CONTEXTS {
-        if !repo.bank.join(name).exists() {
-            report.problem(format!(
-                "Context file {name} is missing; `am init` creates the six context files."
-            ));
-        }
+    // The bank grows with the project: absent context files are normal.
+    let absent: Vec<&str> = bank::CONTEXTS
+        .iter()
+        .map(|(name, _, _)| *name)
+        .filter(|name| !repo.bank.join(name).exists())
+        .collect();
+    if !absent.is_empty() {
+        report.line(format!(
+            "Not written yet (fine; add them when there is something useful to say): {}",
+            absent.join(", ")
+        ));
     }
     let routed: BTreeSet<&str> = router.routes.iter().map(|r| r.path.as_str()).collect();
     let mut ids = BTreeSet::new();

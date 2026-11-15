@@ -118,6 +118,24 @@ pub fn read_optional(path: &Path) -> Result<Option<Vec<u8>>> {
     }
 }
 
+/// Largest bank file `am` reads; longer files are cut at this size.
+pub const MAX_READ: u64 = 1024 * 1024;
+
+/// A regular file's first `MAX_READ` bytes; `None` when absent, a link or
+/// not a regular file.
+pub fn read_regular(path: &Path) -> Option<Vec<u8>> {
+    if !path.symlink_metadata().ok()?.is_file() {
+        return None;
+    }
+    let mut raw = Vec::new();
+    std::fs::File::open(path)
+        .ok()?
+        .take(MAX_READ)
+        .read_to_end(&mut raw)
+        .ok()?;
+    Some(raw)
+}
+
 /// Replace `path` atomically: write a sibling temporary file, sync, rename.
 pub fn write_atomic(path: &Path, raw: &[u8], mode: u32) -> Result<()> {
     use std::os::unix::fs::OpenOptionsExt;

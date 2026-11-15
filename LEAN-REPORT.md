@@ -1,21 +1,22 @@
 # v0.0.15 lean `am` — rebuild report
 
 Branch `lean/v0.0.15`, built against [docs/design/v0.0.15-lean.md](docs/design/v0.0.15-lean.md).
-Nothing is committed.
+The first build is committed; the review fixes below are not.
 
 ## Line count (product)
 
 | | Before | After |
 | --- | ---: | ---: |
-| Rust `src/` (am + am-dev) | 133,453 | **5,183** |
+| Rust `src/` (am + am-dev) | 133,453 | **5,622** |
 | `tests/` | 189,253 (209 files) | 0 |
 | Skill pack `skills/agent-memory/` | 9,285 (71 files) | 648 (14 files) |
 | `install.sh` | 369 | 356 |
 
-Rust by file: `install/mod.rs` 1,315 · `install/release.rs` 753 · `share.rs` 507 ·
-`bank.rs` 455 · `json.rs` 451 · `memory.rs` 424 · `doctor.rs` 290 · `util.rs` 271 ·
-`main.rs` 242 · `repo.rs` 159 · `hook.rs` 57 · `lib.rs` 10 · `bin/am_dev/main.rs` 249.
-Dependencies: `sha2`, `flate2` (dropped `libc`, `sha1`, `regex`, `unicode-normalization`).
+Rust by file: `install/mod.rs` 1,419 · `install/release.rs` 782 · `share.rs` 678 ·
+`bank.rs` 456 · `json.rs` 451 · `memory.rs` 404 · `main.rs` 321 · `doctor.rs` 295 ·
+`util.rs` 289 · `repo.rs` 194 · `hook.rs` 74 · `lib.rs` 10 · `bin/am_dev/main.rs` 249.
+Dependencies: `sha2`, `flate2`, `libc` (only `geteuid` for the temp-dir check;
+already in the lockfile through `sha2`). Dropped `sha1`, `regex`, `unicode-normalization`.
 
 ## Build checks
 
@@ -36,50 +37,124 @@ Dependencies: `sha2`, `flate2` (dropped `libc`, `sha1`, `regex`, `unicode-normal
 ## User smoke test (macOS arm64, temp HOME)
 
 `scripts/qa.sh <worktree>` (new, kept in the repo) drives the real binary. Final
-run: **0 failures, 24 steps (21 `am` commands, 3 plain git commands) + 23 checks**.
+run after the review fixes: **0 failures, 39 steps (35 `am`, 4 plain git; 2 are
+expected refusals) + 41 checks**.
 
 | Step | Time |
 | --- | ---: |
-| `am install --development-source <worktree> --presets agents,codex,claude,opencode,omp --omp-agent-dir …` | 173 ms |
-| `am init` | 6 ms |
-| `am remember` (flags) | 15 ms |
-| `am remember` (duplicate → skipped) | 6 ms |
-| `am remember` (stdin JSON) | 19 ms |
-| `am recall` | 7 ms |
-| `am recall musl linker` | 6 ms |
-| `am share` (clone A → bare remote) | 170 ms |
-| `am refresh` (clone B) | 121 ms |
-| `git pull` (clone B, after refresh; fast-forward) | 41 ms |
-| `am remember` (clone B) | 15 ms |
-| `am share` (clone B) | 138 ms |
-| `am refresh` (clone A) | 92 ms |
-| `am share` (nothing new) | 82 ms |
-| `git pull` (clone A, after share and refresh; fast-forward) | 43 ms |
-| `am refresh` (clone C, own local commit) | 127 ms |
-| `git commit -m "Shared memory"` (clone C) | 13 ms |
-| `git pull --no-edit` (clone C, true merge) | 48 ms |
-| `am hook session-start --client claude` | 11 ms |
-| `am hook session-start --client omp` | 6 ms |
-| `am hook session-start` outside a repo | 2 ms |
-| `am status` | 6 ms |
-| `am doctor` | 6 ms |
+| `am install --development-source <worktree> --presets agents,codex,claude,opencode,omp …` (linked Claude settings, interrupted-install leftovers present) | 152 ms |
+| `am remember --help` | 3 ms |
+| `am init` / `am init` on the existing bank (no change) | 7 / 6 ms |
+| `am remember` (flags / duplicate / stdin JSON / internal heading) | 17 / 6 / 19 / 14 ms |
+| `am recall` / `am recall musl linker` | 7 / 7 ms |
+| `am share` (clone A → bare remote) | 151 ms |
+| `am refresh` (clone B) | 127 ms |
+| `git pull` (clone B, fast-forward) | 39 ms |
+| `am remember` / `am share` (clone B) | 14 / 124 ms |
+| `am refresh` (clone A) | 81 ms |
+| `am share` (nothing new) | 53 ms |
+| `git pull` (clone A, fast-forward) | 42 ms |
+| `am refresh` / `git commit` / `git pull --no-edit` (clone C, own commit) | 156 / – / 67 ms |
+| `am share` of an edited MEMORY.md row (A) → `am refresh` (B, own local row) | 140 / 93 ms |
+| `am refresh` with staged-only memory (B) — **refused** | 67 ms |
+| `am refresh` after `git add` (B) | 83 ms |
+| `am refresh` with `memory-bank/topics -> ../src` (D) — **refused** | 77 ms |
+| `am init` / `am share` with bank named `:` | 7 / 170 ms |
+| `am doctor` on a bank without four context files | 7 ms |
+| `am hook session-start` claude / omp / outside a repo | 15 / 7 / 2 ms |
+| `am status` / `am doctor` | 6 / 7 ms |
 | `am uninstall` | 7 ms |
+| v0.0.14 takeover (offline fixture, `~/.claude` linked) / uninstall | 31 / 16 ms |
 
-Checks that passed: `am` on PATH is the installed link; Claude and Codex
-`SessionStart` hooks registered; an existing Claude setting kept; omp extension
-written; skill linked; duplicate skipped; recall finds the note; after share
-only `memory-bank/` is staged in A and its HEAD did not move; remote `main` has
-the bank; B received A's note and A received B's; `MEMORY.md` links all three
-notes; after a plain `git pull` B and A are clean and at `origin/main`; C (with
-its own commit) merged cleanly and kept its work and the notes; hook emits
-`additionalContext`; uninstall removed the commands and omp extension, restored
-Claude settings, removed the Codex `hooks.json` that was absent before, and left
-banks untouched.
+Checks that passed include: installed link on PATH; Claude/Codex SessionStart
+hooks; the linked `settings.json` stays a link and keeps the user's setting;
+leftover `.<name>.am-<uuid>` temporaries removed; `am install -h` usage; init on
+an existing bank says so and changes nothing; harness recorded as `unknown`
+without `--harness`; text before an internal heading kept; share stages only
+`memory-bank/` and leaves HEAD; notes travel both ways; plain `git pull` clean;
+B took A's row edit and kept its own row; staged-only memory survives the
+refusal; nothing written into `src/` through the link; the `:` bank shared
+without the modified/new code files beside it; the hook asks before saving;
+uninstall restores Claude settings through the link, deletes the CLAUDE.md that
+held only the block and leaves no temporaries; takeover replaces Python hooks
+and wrappers, removes the old source, keeps `~/.claude` a link, and uninstall
+leaves only the user's CLAUDE.md text and setting.
 
 Every command is under the 200 ms target (share/refresh include local `git
-fetch`/`push` to the bare remote); the session-start hook is 2–11 ms (target 100 ms).
-`install` spends most of its time in `fsync` (F_FULLFSYNC on macOS) for the
-eight atomically replaced files.
+fetch`/`push`); the session-start hook is 2–15 ms (target 100 ms).
+
+Git calls (counted with a PATH shim): `am refresh` 4 when up to date, 10 with
+changes (config, symbolic-ref, fetch, cat-file ×3, status, diff, update-ref,
+reset); `am share` 14 with a new note (config, symbolic-ref, fetch, cat-file
+×2, status, read-tree, add, diff, write-tree, commit-tree, push, update-ref,
+reset), 9 with nothing new. Before: up to 19 (an extra `ls-remote` each run
+when `origin/HEAD` was unset, two `rev-parse`s, a pre-push update-ref/reset and
+a tree comparison). Five consecutive local shares: 117–136 ms (was 151–170 ms
+here, 226–263 ms in the live omp run); `push` itself dominates.
+
+## Review fixes (not committed)
+
+Batch 1 (real-use reports):
+1. Doctor no longer counts missing context files as problems; it lists them as
+   "not written yet (fine)". `am init` on an existing bank exits 0, says the bank
+   exists and changes nothing. QA: doctor on a four-file-short bank, init twice.
+2. Session-start text, activation block and SKILL.md now say saving needs a
+   separate explicit yes, that agreeing a decision is not permission, to ask
+   "Save this to project memory?", and give a valid `am remember --harness <client>
+   --kind … --title … --body …` example. Hook text stays ~900 bytes plus summary.
+3. `origin.harness` defaults to `unknown`; environment detection removed (env
+   variables leak into nested harnesses). The hook example passes the observed
+   client via `--harness`.
+4. `am <command> --help` / `-h` (and `am help <command>`) print that command's
+   usage and exit 0; argument errors point to it.
+5. Install and uninstall remove `.<name>.am-<uuid>` temporaries and `.am-old-*`
+   directories beside every target and the receipt, plus stale `.staging-*`
+   runtime roots. Uninstall deletes an activation file left with only
+   whitespace and a hook config left with only empty objects/arrays; install no
+   longer counts its own leftover hook group as the file's original shape.
+   QA seeds the leftovers; the report's kill -9 repro (1–10 ms) left nothing after
+   re-install + uninstall.
+6. Share/refresh git calls cut as listed above; timings above.
+
+Batch 2 (independent review):
+1. `Scratch::new` (downloads, signature checks) again requires every ancestor of
+   the spelled and physical `$TMPDIR`/`/tmp` to be root/user-owned and not
+   writable by others unless sticky — install.sh's rule.
+2. Every git call runs with `GIT_LITERAL_PATHSPECS=1`; QA shares a bank named
+   `:` next to modified and new code files and only `:/…` lands.
+3. Refresh refuses when the bank root or any component of a written path is a
+   symlink (remember checks `topics/` too); bank reads skip links and
+   non-regular files. QA: `topics -> ../src` refused, `src/` untouched.
+4. `git merge-file` codes 1–127 are conflicts; anything else (binary files) aborts
+   with nothing written. All merges are computed before any file is written.
+   Checked ad hoc: a binary-file clash left the local bytes intact.
+5. Refresh and share take the bank lock `remember` uses for the merge and
+   snapshot, and re-check each file (MEMORY.md included) before replacing it.
+6. Before staging, `git status --porcelain=v2` finds index entries that differ
+   from HEAD and the working tree; unless that blob is in the recorded or the
+   new shared commit, the command refuses. QA: refused, staged copy intact.
+7. Hook/recall reads are bounded (1 MiB per file, regular files only); titles
+   clipped; hook output capped at 8 KiB. Ad hoc: a 300 KB brief and a linked
+   `techContext.md -> /etc/passwd` gave 2.4 KB of context without the link.
+8. Bootstrap install refuses a release older than the installed version (v0.0.14
+   receipts keep the version under `source`). Not exercised: it needs a signed
+   release fixture.
+9. MEMORY.md merges per row against the base: one-sided changes win, both-sided
+   different changes keep yours and say so. QA: B took A's row edit; ad hoc:
+   conflicting edits kept B's row with the message.
+10. A title is stripped only when the body's first line is `# …`.
+11. Prior receipt targets match through resolved parents, so a takeover with
+   `~/.claude -> dotfiles/claude` works (QA fixture).
+12. Linked `settings.json`, `hooks.json` and guidance files are edited at their
+   targets and stay links (QA); a linked file is never deleted on release.
+13. QA steps added for each of the above; the v0.0.14 takeover runs offline from
+   a small generated fixture (receipt-v1, Python wrappers, skill link, activation
+   block, prompt/Stop entries, source tree) with no product overrides.
+
+All items were done with small changes; none needed new machinery. Batch-2 item 1
+is exercised only on the signed-release path (downloads and signature checks),
+which dev-source QA does not reach; macOS `$TMPDIR` and `/tmp` both pass the rule
+(checked with `stat -L`).
 
 ### Additional runs (ad hoc, temp HOME, fixtures removed afterwards)
 
@@ -164,8 +239,9 @@ eight atomically replaced files.
   (an undo log restores every replaced file, link and directory) and write the
   receipt last; there is no on-disk journal, so a `kill -9` mid-install can leave
   new targets without a receipt. A re-run adopts targets that already equal the
-  plan (links, the omp extension, activation blocks, hook entries) but refuses a
-  half-moved runtime directory until it is removed.
+  plan (links, the omp extension, activation blocks, hook entries) and removes
+  am temporaries and staging roots, but refuses a half-moved runtime directory
+  until it is removed.
 - **Refresh and `git pull` (fixed per Main's decision).** `am refresh` and a
   successful `am share` now stage the shared commit's `memory-bank/` in the
   index (`git reset -q <shared-commit> -- memory-bank`; index only, so local

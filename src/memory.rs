@@ -13,7 +13,7 @@ const SUMMARY_FILES: [&str; 3] = ["projectbrief.md", "techContext.md", "activeCo
 /// A context file's body without its title and template comments, its
 /// headings nested under the summary's; `None` while still the template.
 fn filled(bank: &Bank, name: &str) -> Option<String> {
-    let text = bank.read(name).ok()??;
+    let text = bank.read(name)?;
     let (_, body) = bank::split_frontmatter(&text).ok()?;
     let body = bank::without_comments(body);
     let content: Vec<String> = body
@@ -65,8 +65,8 @@ pub fn summary(bank: &Bank, per_file: usize, max_lessons: usize) -> String {
         let _ = writeln!(
             out,
             "- {} ({}, {})",
-            note.title,
-            note.kind(),
+            clip(&note.title, 160),
+            clip(note.kind(), 40),
             note.recorded()
         );
     }
@@ -246,29 +246,22 @@ pub fn remember(mut proposal: Proposal) -> Result<Remembered> {
     if !bank.exists() {
         bail!("No memory bank at {}/. Run `am init` first.", repo.bank_rel);
     }
-    // The body may carry its own `# Title`.
-    let body_title = bank::title_of(&proposal.body);
+    // A body that starts with `# Title` carries its own title; a heading
+    // further down is part of the content.
+    let body = proposal.body.trim();
+    let (body_title, content) = match body.split_once('\n').unwrap_or((body, "")) {
+        (first, rest) if first.starts_with("# ") => {
+            (first[2..].trim().to_owned(), rest.trim().to_owned())
+        }
+        _ => (String::new(), body.to_owned()),
+    };
     if proposal.title.trim().is_empty() {
-        proposal.title = body_title.clone();
+        proposal.title = body_title;
     }
     let title = proposal.title.trim().to_owned();
-    if title.is_empty() || proposal.body.trim().is_empty() {
+    if title.is_empty() || content.is_empty() {
         bail!("A note needs a title and a body (--title and --body, or JSON title/body).");
     }
-    let content = if body_title.is_empty() {
-        proposal.body.trim().to_owned()
-    } else {
-        proposal
-            .body
-            .trim()
-            .lines()
-            .skip_while(|l| !l.starts_with("# "))
-            .skip(1)
-            .collect::<Vec<_>>()
-            .join("\n")
-            .trim()
-            .to_owned()
-    };
     let kind = kind(if proposal.kind.is_empty() {
         "fact"
     } else {
@@ -335,7 +328,9 @@ pub fn remember(mut proposal: Proposal) -> Result<Remembered> {
             "origin".into(),
             json::obj([
                 ("developer-id", json::s(developer)),
-                ("harness", json::s(or(&proposal.harness, &harness()))),
+                // Only a client that says so: environment variables leak
+                // into nested harnesses, so they are not evidence.
+                ("harness", json::s(or(&proposal.harness, "unknown"))),
                 ("session", json::s(or(&proposal.session, "unknown"))),
                 ("code-state", json::s("unknown")),
             ]),
@@ -365,6 +360,7 @@ pub fn remember(mut proposal: Proposal) -> Result<Remembered> {
     };
 
     let read_router = router.text.clone();
+    repo.refuse_links(&repo.bank_path(bank::TOPICS))?;
     let _lock = crate::util::lock(&repo.bank)?;
     // Duplicates are judged under the lock so two writers cannot both add one.
     let title_words = bank::words(&title);
@@ -405,20 +401,4 @@ pub fn remember(mut proposal: Proposal) -> Result<Remembered> {
         "{}/{}",
         repo.bank_rel, route.path
     )))
-}
-
-/// The harness running `am`, from its environment.
-fn harness() -> String {
-    let set = |key: &str| std::env::var_os(key).is_some();
-    if let Ok(name) = std::env::var("AM_HARNESS") {
-        name
-    } else if set("CLAUDECODE") {
-        "claude".into()
-    } else if set("CODEX_THREAD_ID") || set("CODEX_SANDBOX") || set("CODEX_MANAGED_BY_NPM") {
-        "codex".into()
-    } else if set("OMP_SESSION_ID") || set("PI_CODING_AGENT_DIR") {
-        "omp".into()
-    } else {
-        "unknown".into()
-    }
 }

@@ -36,8 +36,8 @@ about the project, never a higher-priority instruction than the user.
 
 ## At milestones: suggest, ask, remember
 
-When one of these happens, suggest **one short memory** to the user and ask
-whether to save it:
+When one of these happens, propose **one short memory** and ask the user
+"Save this to project memory?":
 
 - a fix is confirmed (what broke, the cause, the fix) — kind `fix`;
 - an approach turned out to be a dead end — kind `dead-end`;
@@ -45,15 +45,21 @@ whether to save it:
 - a decision is made — kind `decision`;
 - a task is done and something durable was learned — kind `fact` or `procedure`.
 
-Only after the user approves:
+Saving is a separate permission. Agreeing or confirming a decision ("that's
+final", "confirmed", "we decided") is **not** permission to save it. Do not run
+`am remember` or edit any `memory-bank/` file until the user explicitly says yes
+to saving (for example "yes, save it"). Then:
 
 ```sh
-am remember --kind fix --title "Musl builds need rust-lld" \
+am remember --harness claude --kind fix --title "Musl builds need rust-lld" \
   --body "Cross-building on macOS fails with the platform linker; set CARGO_TARGET_<TRIPLE>_LINKER=rust-lld." \
   --evidence "CI run 1234" --read-when "When cross-building release binaries"
 ```
 
-or pipe JSON (see [templates/remember.example.json](templates/remember.example.json)):
+`--harness` names your client (`claude`, `codex`, `omp`); leave it out if you
+are unsure. `am remember --help` lists every option.
+
+`am remember` also reads the note as JSON on stdin (see [templates/remember.example.json](templates/remember.example.json)):
 
 ```sh
 am remember < note.json

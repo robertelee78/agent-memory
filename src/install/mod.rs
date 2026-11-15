@@ -550,6 +550,9 @@ fn edit_hooks(
     }
     let mut fields = Value::Object(Vec::new());
     if let Some(entry) = desired {
+        // An identical group left by an interrupted install is ours, not
+        // part of the file's original shape.
+        remove_group(&mut document, entry, HOOK_EVENT, None);
         let shape = obj([
             (
                 "event_present",
@@ -579,9 +582,7 @@ fn edit_hooks(
                 path.display()
             );
         };
-        if !groups.iter().any(|g| json::same(g, entry)) {
-            groups.push(entry.clone());
-        }
+        groups.push(entry.clone());
         fields = obj([
             ("event", s(HOOK_EVENT)),
             ("hook_entry", entry.clone()),
@@ -589,9 +590,43 @@ fn edit_hooks(
             ("originally_absent", Value::Bool(originally_absent)),
         ]);
     }
-    let empty = document.as_object().is_some_and(<[_]>::is_empty);
-    let bytes = (!(empty && originally_absent)).then(|| json::pretty_file(&document));
+    // Nothing but empty objects and arrays left once ours is removed: the
+    // file holds no user content, so release removes it.
+    let empty = desired.is_none() && no_content(&document)
+        || document.as_object().is_some_and(<[_]>::is_empty) && originally_absent;
+    let bytes = (!empty).then(|| json::pretty_file(&document));
     Ok((bytes, fields))
+}
+
+fn no_content(value: &Value) -> bool {
+    match value {
+        Value::Object(pairs) => pairs.iter().all(|(_, v)| no_content(v)),
+        Value::Array(items) => items.iter().all(no_content),
+        _ => false,
+    }
+}
+
+/// Remove `.<name>.am-*` temporary files and `.am-old-*` directories that
+/// an interrupted `am` left beside `path`.
+fn sweep_temps(path: &Path) {
+    let (Some(parent), Some(name)) = (path.parent(), path.file_name()) else {
+        return;
+    };
+    let prefix = format!(".{}.am-", name.to_string_lossy());
+    for entry in std::fs::read_dir(parent).into_iter().flatten().flatten() {
+        let file = entry.file_name().to_string_lossy().into_owned();
+        let Some(rest) = file.strip_prefix(&prefix) else {
+            continue;
+        };
+        if !crate::util::is_uuid(rest.strip_prefix("old-").unwrap_or(rest)) {
+            continue;
+        }
+        let stale = entry.path();
+        let _ = match entry.file_type() {
+            Ok(kind) if kind.is_dir() => std::fs::remove_dir_all(&stale),
+            _ => std::fs::remove_file(&stale),
+        };
+    }
 }
 
 // ------------------------------------------------------------ transactions
@@ -637,7 +672,16 @@ impl Journal {
         Ok(())
     }
     /// Replace a text file in place (atomically), remembering the old bytes.
+    /// A linked file (`~/.claude/settings.json -> dotfiles`) is edited at
+    /// its target so the link stays.
     fn write(&mut self, path: &Path, raw: Option<&[u8]>) -> Result<()> {
+        let resolved;
+        let path = if is_link(path) && raw.is_some() {
+            resolved = io_at(path.canonicalize(), path)?;
+            resolved.as_path()
+        } else {
+            path
+        };
         let old = read_optional(path)?;
         let mode = path
             .metadata()
@@ -798,9 +842,12 @@ fn plan(source: &Source, cfg: &Config, prior: Option<&Value>) -> Result<Vec<Item
         if items.iter().any(|i: &Item| i.path == path) {
             bail!("Two installation targets share {}", path.display());
         }
-        let index = prior_targets
-            .iter()
-            .position(|t| t.str("path") == Some(&*path.to_string_lossy()));
+        // Receipts may record a resolved parent (`~/.claude -> dotfiles`).
+        let here = resolve_parent(&path);
+        let index = prior_targets.iter().position(|t| {
+            t.str("path")
+                .is_some_and(|p| Path::new(p) == path || resolve_parent(Path::new(p)) == here)
+        });
         items.push(Item {
             prior: index.map(|i| prior_targets.remove(i)),
             path,
@@ -818,6 +865,14 @@ fn plan(source: &Source, cfg: &Config, prior: Option<&Value>) -> Result<Vec<Item
         }
     }
     Ok(items)
+}
+
+/// `path` with its parent directory resolved (links followed), when it exists.
+fn resolve_parent(path: &Path) -> PathBuf {
+    match (path.parent().map(Path::canonicalize), path.file_name()) {
+        (Some(Ok(parent)), Some(name)) => parent.join(name),
+        _ => path.to_path_buf(),
+    }
 }
 
 /// Check every item before any change; returns notes about targets left in place.
@@ -958,14 +1013,17 @@ fn apply(item: &mut Item, journal: &mut Journal) -> Result<Option<Value>> {
                         if let Some(rest) =
                             without_activation(&text, prior.str("block_hash").unwrap_or(""))
                         {
-                            let delete = rest.is_empty()
-                                && prior.get("originally_absent") == Some(&Value::Bool(true));
+                            // Only whitespace left: no user content to keep.
+                            // A linked file is emptied at its target instead.
+                            let delete = rest.trim().is_empty() && !is_link(&item.path);
                             journal.write(&item.path, (!delete).then_some(rest.as_bytes()))?;
                         }
                     }
                 }
                 "hook-config" => {
                     if let Ok((raw, _)) = edit_hooks(&item.path, Some(&prior), None) {
+                        // A linked config is kept (as `{}`) rather than unlinked.
+                        let raw = raw.or_else(|| is_link(&item.path).then(|| b"{}\n".to_vec()));
                         if read_optional(&item.path)? != raw {
                             journal.write(&item.path, raw.as_deref())?;
                         }
@@ -981,6 +1039,11 @@ fn apply(item: &mut Item, journal: &mut Journal) -> Result<Option<Value>> {
             Ok(None)
         }
     }
+}
+
+fn is_link(path: &Path) -> bool {
+    path.symlink_metadata()
+        .is_ok_and(|m| m.file_type().is_symlink())
 }
 
 fn item_already(path: &Path, want: &Want) -> bool {
@@ -1030,6 +1093,11 @@ fn activate(
         }
         return Ok(out);
     }
+    // Leftovers of an interrupted run (we hold the install lock).
+    for item in &items {
+        sweep_temps(&item.path);
+    }
+    sweep_temps(&locations.state.join("receipt.json"));
     let mut journal = Journal::default();
     let mut owned = Vec::new();
     let mut lines = Vec::new();
@@ -1117,12 +1185,33 @@ fn activate(
     Ok(out)
 }
 
+/// The version a receipt records (v0.0.14 keeps it under `source`).
+fn installed_version(receipt: &Value) -> Option<&str> {
+    receipt
+        .str("version")
+        .or_else(|| receipt.get("source").and_then(|s| s.str("version")))
+}
+
+/// Remove `.staging-<uuid>` runtime roots an interrupted install left.
+fn sweep_staging(data: &Path) {
+    for entry in std::fs::read_dir(data).into_iter().flatten().flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if name
+            .strip_prefix(".staging-")
+            .is_some_and(crate::util::is_uuid)
+        {
+            let _ = std::fs::remove_dir_all(entry.path());
+        }
+    }
+}
+
 /// `am install`.
 pub fn install(options: &Options) -> Result<String> {
     let locations = locations()?;
     io_at(std::fs::create_dir_all(&locations.state), &locations.state)?;
     let _lock = lock(&locations.state.join("lock"))?;
     let prior = read_receipt(&locations)?;
+    sweep_staging(&locations.data);
     let prior_kind = prior
         .as_ref()
         .and_then(|p| p.get("source"))
@@ -1134,6 +1223,16 @@ pub fn install(options: &Options) -> Result<String> {
         development_source(dir)?
     } else if let Some(binary) = &options.bootstrap_binary {
         let observed = release::probe()?;
+        let installed = prior
+            .as_ref()
+            .and_then(installed_version)
+            .unwrap_or("0.0.0");
+        let latest = &observed.manifest.version;
+        if release::version_key(latest) < release::version_key(installed) {
+            bail!(
+                "The latest release ({latest}) is older than the installed {installed}; nothing changed."
+            );
+        }
         let raw = release::bind_bootstrap(&observed.manifest, binary)?;
         release_source(&locations, &observed, &raw)?
     } else if rust_era && prior_kind == Some("development") {
@@ -1242,6 +1341,10 @@ pub fn uninstall(dry_run: bool) -> Result<String> {
             let _ = writeln!(out, "  {} {}", item.kind(), item.path.display());
         }
     } else {
+        for item in &items {
+            sweep_temps(&item.path);
+        }
+        sweep_staging(&locations.data);
         let mut journal = Journal::default();
         for item in &mut items {
             if let Err(e) = apply(item, &mut journal) {
@@ -1251,6 +1354,7 @@ pub fn uninstall(dry_run: bool) -> Result<String> {
         }
         journal.commit();
         let receipt = locations.state.join("receipt.json");
+        sweep_temps(&receipt);
         io_at(std::fs::remove_file(&receipt), &receipt)?;
         let _ = std::fs::remove_file(locations.state.join("lock"));
         let _ = std::fs::remove_dir(&locations.state);

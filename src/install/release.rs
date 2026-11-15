@@ -237,8 +237,9 @@ impl Manifest {
 /// A private temporary directory removed on drop.
 pub struct Scratch(pub PathBuf);
 impl Scratch {
+    /// A private directory under the protected temporary parent.
     pub fn new(prefix: &str) -> Result<Scratch> {
-        Scratch::under(&std::env::temp_dir(), prefix)
+        Scratch::under(&protected_temp()?, prefix)
     }
     pub fn under(parent: &Path, prefix: &str) -> Result<Scratch> {
         use std::os::unix::fs::DirBuilderExt;
@@ -257,6 +258,34 @@ impl Drop for Scratch {
             let _ = std::fs::remove_dir_all(&self.0);
         }
     }
+}
+
+/// The temporary parent (`$TMPDIR` when absolute, else `/tmp`), accepted
+/// only when every ancestor of both its spelling and its physical path is
+/// owned by root or this user and not writable by others unless sticky —
+/// the same rule as install.sh, so no other user can swap downloaded bytes.
+fn protected_temp() -> Result<PathBuf> {
+    use std::os::unix::fs::MetadataExt;
+    let spelled = std::env::var_os("TMPDIR")
+        .map(PathBuf::from)
+        .filter(|p| p.is_absolute())
+        .unwrap_or_else(|| PathBuf::from("/tmp"));
+    let physical = io_at(spelled.canonicalize(), &spelled)?;
+    // SAFETY: geteuid has no preconditions and cannot fail.
+    let uid = unsafe { libc::geteuid() };
+    for path in [&spelled, &physical] {
+        for node in path.ancestors() {
+            let meta = io_at(std::fs::metadata(node), node)?;
+            let open = meta.mode() & 0o022 != 0 && meta.mode() & 0o1000 == 0;
+            if !meta.is_dir() || (meta.uid() != 0 && meta.uid() != uid) || open {
+                bail!(
+                    "{} is not a protected temporary directory (each ancestor must be owned by root or you and not writable by others unless sticky). Set TMPDIR to a private directory and retry.",
+                    node.display()
+                );
+            }
+        }
+    }
+    Ok(physical)
 }
 
 /// Verify an SSH signature against the pinned release key.

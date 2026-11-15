@@ -98,20 +98,55 @@ impl Repo {
     pub fn bank_path(&self, relative: &str) -> String {
         format!("{}/{}", self.bank_rel, relative)
     }
+    /// Run git with stdin and extra environment, failing with git's message.
+    pub fn git_with(
+        &self,
+        args: &[&str],
+        env: &[(&str, &OsStr)],
+        input: Option<&[u8]>,
+    ) -> Result<Output> {
+        git_in(&self.root, args, env, input)
+    }
+    /// Refuse when any component of the repository-relative `rel` (the
+    /// bank root, a directory inside it or the file) is a symbolic link:
+    /// memory is never written through links.
+    pub fn refuse_links(&self, rel: &str) -> Result<()> {
+        let mut path = self.root.clone();
+        for part in rel.split('/').filter(|p| !p.is_empty()) {
+            path.push(part);
+            if path
+                .symlink_metadata()
+                .is_ok_and(|m| m.file_type().is_symlink())
+            {
+                bail!(
+                    "{} is a symbolic link; am does not write memory through links. Replace it with a real directory or file.",
+                    path.display()
+                );
+            }
+        }
+        Ok(())
+    }
 }
 
 pub fn git(root: &Path, args: &[&str]) -> Result<Output> {
+    git_in(root, args, &[], None)
+}
+
+/// Every pathspec is literal, so a bank named `:` or `*` selects only itself.
+fn git_in(
+    root: &Path,
+    args: &[&str],
+    env: &[(&str, &OsStr)],
+    input: Option<&[u8]>,
+) -> Result<Output> {
     let args: Vec<&OsStr> = args.iter().map(OsStr::new).collect();
-    run(
-        "git",
-        &args,
-        Some(root),
-        &[
-            ("GIT_TERMINAL_PROMPT", OsStr::new("0")),
-            ("GIT_OPTIONAL_LOCKS", OsStr::new("0")),
-        ],
-        None,
-    )
+    let mut all = vec![
+        ("GIT_TERMINAL_PROMPT", OsStr::new("0")),
+        ("GIT_OPTIONAL_LOCKS", OsStr::new("0")),
+        ("GIT_LITERAL_PATHSPECS", OsStr::new("1")),
+    ];
+    all.extend_from_slice(env);
+    run("git", &args, Some(root), &all, input)
 }
 
 fn valid_bank_root(value: &str) -> Result<&str> {

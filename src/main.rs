@@ -26,10 +26,69 @@ Installation:
   am update [--check]
   am uninstall [--dry-run]
   am --version
+
+Run am COMMAND --help for one command's usage.
 ";
+
+/// `am <command> --help`.
+const USAGES: [(&str, &str); 12] = [
+    (
+        "recall",
+        "Usage: am recall [QUERY] [--limit N]\n\nPrint the project summary (context files and lesson titles); with QUERY, also the\nN best-matching notes in full (default 5).",
+    ),
+    (
+        "remember",
+        "Usage: am remember --title TITLE --body BODY|- [--kind KIND] [OPTIONS]\n       am remember < note.json\n\nSave one note the user explicitly approved, link it in MEMORY.md and skip duplicates.\n\n  --kind KIND        fix, dead-end, correction, decision, fact, procedure or reference (default fact)\n  --evidence E       where the lesson comes from (repeatable)\n  --read-when TEXT   when a future agent should read it\n  --scope S          what it applies to (default repository)\n  --reason TEXT      why it was approved\n  --harness NAME     your client: claude, codex or omp (default unknown)\n  --session ID       the session id, if known\n  --body -           read the body from stdin\n\nExample:\n  am remember --kind decision --title \"Staging relay port\" --body \"The staging relay port is 7443.\"",
+    ),
+    (
+        "init",
+        "Usage: am init\n\nCreate memory-bank/ from the template. On a repository that already has a bank it\nchanges nothing.",
+    ),
+    (
+        "share",
+        "Usage: am share [-m MESSAGE]\n\nCommit only memory-bank/ changes on top of the shared branch and push them. A\nprotected branch gets a memory branch and a pull request. The shared bank is staged\nso a plain `git pull` works.",
+    ),
+    (
+        "refresh",
+        "Usage: am refresh\n\nMerge teammates' shared memory into this working tree, keeping your edits, and\nstage it. Code, HEAD and other index entries are untouched.",
+    ),
+    (
+        "status",
+        "Usage: am status\n\nInstalled? Hooks present? Bank healthy? Short form of am doctor.",
+    ),
+    (
+        "doctor",
+        "Usage: am doctor\n\nEvery installation and bank check, explained in plain words. Exits 1 when it finds\na problem. It never rewrites memory.",
+    ),
+    (
+        "install",
+        "Usage: am install [--development-source PATH] [--mode link|copy] [--presets all|none|LIST]\n                  [--target-dir PATH]... [--bin-dir PATH] [--no-guidance] [--omp-agent-dir PATH] [--dry-run]\n\nInstall or repair the skill, activation blocks, session-start hooks and the am command.\nPresets: agents, codex, claude, opencode (all) and omp (opt-in, needs --omp-agent-dir).\nA signed release installs through install.sh; --development-source installs a checkout\nwith a built target/release/am.",
+    ),
+    (
+        "update",
+        "Usage: am update [--check]\n\nInstall the newest signed release; --check only reports whether one is available.",
+    ),
+    (
+        "uninstall",
+        "Usage: am uninstall [--dry-run]\n\nRemove exactly the files the installation receipt owns. Memory banks are not touched.",
+    ),
+    (
+        "hook",
+        "Usage: am hook session-start --client claude|codex|omp\n\nPrint the session-start context for the client (run by the installed hooks).",
+    ),
+    ("help", "Usage: am help [COMMAND]"),
+];
+
+fn usage(command: &str) -> Option<&'static str> {
+    USAGES
+        .iter()
+        .find(|(name, _)| *name == command)
+        .map(|(_, text)| *text)
+}
 
 /// Simple flag reader over the remaining arguments.
 struct Args {
+    command: String,
     rest: Vec<String>,
 }
 
@@ -68,14 +127,15 @@ impl Args {
     }
     fn done(self) -> Result<Vec<String>> {
         if let Some(unknown) = self.rest.iter().find(|a| a.starts_with('-') && a.len() > 1) {
-            bail!("Unknown option {unknown}. Run am help.");
+            bail!("Unknown option {unknown}. Run am {} --help.", self.command);
         }
         Ok(self.rest)
     }
     fn none(self) -> Result<()> {
+        let command = self.command.clone();
         let rest = self.done()?;
         if let Some(extra) = rest.first() {
-            bail!("Unexpected argument {extra}. Run am help.");
+            bail!("Unexpected argument {extra:?}. Run am {command} --help.");
         }
         Ok(())
     }
@@ -113,7 +173,9 @@ fn remember(mut args: Args) -> Result<String> {
     args.none()?;
     let mut proposal = if from_stdin || (title.is_none() && body.is_none()) {
         if std::io::IsTerminal::is_terminal(&std::io::stdin()) {
-            bail!("Give --title and --body, or pipe the note as JSON on stdin. Run am help.");
+            bail!(
+                "Give --title and --body, or pipe the note as JSON on stdin. Run am remember --help."
+            );
         }
         Proposal::from_json(&memory::read_stdin()?)?
     } else {
@@ -150,6 +212,12 @@ fn remember(mut args: Args) -> Result<String> {
 fn init(args: Args) -> Result<String> {
     args.none()?;
     let repo = repo::Repo::current()?;
+    if bank::Bank::new(&repo.bank).exists() {
+        return Ok(format!(
+            "This project already has a memory bank at {}/; nothing was changed. Context files it lacks are optional: add them when there is something useful to say.",
+            repo.bank_rel
+        ));
+    }
     let remote = repo.remote_url().and_then(repo::canonical_remote);
     let written = bank::init(&repo.bank, &util::uuid4(), remote.as_deref(), &util::now())?;
     Ok(format!(
@@ -163,10 +231,21 @@ fn dispatch(argv: Vec<String>) -> Result<(String, i32)> {
     let mut iter = argv.into_iter();
     let command = iter.next().unwrap_or_else(|| "help".into());
     let mut args = Args {
+        command: command.clone(),
         rest: iter.collect(),
     };
+    if args.rest.iter().any(|a| a == "--help" || a == "-h") {
+        if let Some(text) = usage(&command) {
+            return Ok((text.to_owned(), 0));
+        }
+    }
     let text = match command.as_str() {
-        "help" | "--help" | "-h" => HELP.to_owned(),
+        "help" | "--help" | "-h" => match args.rest.first() {
+            Some(topic) => usage(topic)
+                .ok_or_else(|| Error::new(format!("Unknown command {topic:?}. Run am help.")))?
+                .to_owned(),
+            None => HELP.to_owned(),
+        },
         "--version" | "-V" | "version" => format!("am {}", release::VERSION),
         "status" | "doctor" => {
             args.none()?;
@@ -209,7 +288,7 @@ fn dispatch(argv: Vec<String>) -> Result<(String, i32)> {
             install::uninstall(dry_run)?
         }
         "hook" => {
-            let client = args.value("--client")?.unwrap_or_else(|| "claude".into());
+            let client = args.value("--client")?.unwrap_or_else(|| "unknown".into());
             let rest = args.done()?;
             if rest.first().map(String::as_str) != Some("session-start") {
                 bail!("Usage: am hook session-start --client claude|codex|omp");

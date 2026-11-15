@@ -2,7 +2,7 @@
 //! notes under `topics/` with record frontmatter.
 use crate::bail;
 use crate::json::{self, Value};
-use crate::util::{Error, Result, io_at, read_optional};
+use crate::util::{Error, Result, io_at, read_regular};
 use std::path::{Path, PathBuf};
 
 pub const ROUTER: &str = "MEMORY.md";
@@ -335,22 +335,28 @@ impl Bank {
     }
     pub fn router(&self) -> Result<Router> {
         let path = self.dir.join(ROUTER);
-        let raw = io_at(std::fs::read(&path), &path)?;
+        let raw = read_regular(&path).ok_or_else(|| {
+            Error::new(format!(
+                "{} is missing or not a regular file",
+                path.display()
+            ))
+        })?;
         let text = String::from_utf8(raw)
             .map_err(|_| Error::new(format!("{} is not UTF-8 text", path.display())))?;
         Router::parse(text)
     }
-    /// A bank file's text, `None` when absent.
-    pub fn read(&self, rel: &str) -> Result<Option<String>> {
-        Ok(read_optional(&self.dir.join(rel))?
-            .map(|raw| String::from_utf8_lossy(&raw).into_owned()))
+    /// A bank file's text; `None` when absent, a link or not a regular file.
+    pub fn read(&self, rel: &str) -> Option<String> {
+        read_regular(&self.dir.join(rel)).map(|raw| String::from_utf8_lossy(&raw).into_owned())
     }
     /// Every Markdown note under `topics/`, sorted by path. Unreadable notes
-    /// are returned as errors next to the good ones.
+    /// are returned as errors next to the good ones; links are skipped.
     pub fn notes(&self) -> (Vec<Note>, Vec<String>) {
         let mut notes = Vec::new();
         let mut problems = Vec::new();
-        let mut stack = vec![self.dir.join(TOPICS)];
+        let topics = self.dir.join(TOPICS);
+        let real_dir = topics.symlink_metadata().is_ok_and(|m| m.is_dir());
+        let mut stack = if real_dir { vec![topics] } else { Vec::new() };
         let mut files = Vec::new();
         while let Some(dir) = stack.pop() {
             let Ok(entries) = std::fs::read_dir(&dir) else {
@@ -374,8 +380,9 @@ impl Bank {
                 .unwrap_or(&path)
                 .to_string_lossy()
                 .into_owned();
-            let parsed = std::fs::read_to_string(&path)
-                .map_err(|e| e.to_string())
+            let parsed = read_regular(&path)
+                .ok_or_else(|| "cannot be read".to_owned())
+                .and_then(|raw| String::from_utf8(raw).map_err(|_| "is not UTF-8 text".to_owned()))
                 .and_then(|text| {
                     let (meta, body) = split_frontmatter(&text).map_err(|e| e.0)?;
                     Ok(Note {
@@ -394,15 +401,9 @@ impl Bank {
     }
 }
 
-/// Create the bank from the templates. Returns the files written.
+/// Create the bank from the templates; the caller checks it does not exist.
+/// Returns the files written.
 pub fn init(bank: &Path, project_id: &str, remote: Option<&str>, now: &str) -> Result<Vec<String>> {
-    let existing = Bank::new(bank);
-    if existing.exists() {
-        bail!(
-            "{} already exists; this project already has a memory bank.",
-            bank.join(ROUTER).display()
-        );
-    }
     io_at(std::fs::create_dir_all(bank.join(TOPICS)), bank)?;
     let mut written = Vec::new();
     for (name, template) in TEMPLATES {

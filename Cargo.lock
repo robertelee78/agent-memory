@@ -13,6 +13,7 @@ name = "agent-memory"
 version = "0.0.15"
 dependencies = [
  "flate2",
+ "libc",
  "sha2",
 ]
 

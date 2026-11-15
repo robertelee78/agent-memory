@@ -3,13 +3,15 @@
 use crate::bail;
 use crate::bank::{self, Router};
 use crate::repo::Repo;
-use crate::util::{Result, io_at, read_optional, run, uuid4, write_atomic};
-use std::collections::BTreeSet;
+use crate::util::{Result, io_at, lock, read_optional, run, uuid4, write_atomic};
+use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
 use std::path::Path;
 
 /// Per-worktree record of the remote commit whose memory is already here.
 const BASE_REF: &str = "refs/worktree/agent-memory/base";
+
+const STAGED: &str = "The shared memory is staged, so `git pull` works as usual; on a branch with its own commits, commit it first (git commit -m \"Shared memory\").";
 
 fn branch(repo: &Repo) -> Result<String> {
     if let Some(branch) = repo.configured_branch() {
@@ -31,6 +33,12 @@ fn branch(repo: &Repo) -> Result<String> {
         for line in listed.text().lines() {
             if let Some(rest) = line.strip_prefix("ref: refs/heads/") {
                 if let Some((name, _)) = rest.split_once('\t') {
+                    // Remember it like `git clone` does, so later runs skip the network.
+                    let _ = repo.git(&[
+                        "symbolic-ref",
+                        "refs/remotes/origin/HEAD",
+                        &format!("refs/remotes/origin/{name}"),
+                    ]);
                     return Ok(name.to_owned());
                 }
             }
@@ -44,11 +52,41 @@ fn branch(repo: &Repo) -> Result<String> {
     })
 }
 
-/// Fetch the shared branch; `None` while the remote branch does not exist.
-fn fetch(repo: &Repo, branch: &str) -> Result<Option<String>> {
+/// Object ids for revisions or `rev:path` specs in one `git cat-file --batch-check`.
+fn object_ids(repo: &Repo, specs: &[String]) -> Result<Vec<Option<String>>> {
+    let input: String = specs.iter().map(|s| format!("{s}\n")).collect();
+    let output = repo.git_with(&["cat-file", "--batch-check"], &[], Some(input.as_bytes()))?;
+    if !output.ok() {
+        bail!("git cat-file failed: {}", output.error_text());
+    }
+    let text = String::from_utf8_lossy(&output.stdout).into_owned();
+    Ok(text
+        .lines()
+        .map(|line| {
+            let fields: Vec<&str> = line.split(' ').collect();
+            match fields.as_slice() {
+                [oid, _, size] if size.parse::<u64>().is_ok() => Some((*oid).to_owned()),
+                _ => None,
+            }
+        })
+        .collect())
+}
+
+/// What the shared branch holds now and what this worktree last merged.
+struct Shared {
+    branch: String,
+    /// The fetched shared commit; `None` while the remote branch is absent.
+    theirs: Option<String>,
+    /// The shared commit whose memory is already here.
+    base: Option<String>,
+}
+
+/// Fetch the shared branch, then resolve it and the recorded base together.
+fn observe(repo: &Repo) -> Result<Shared> {
     if repo.remote_url().is_none() {
         bail!("This repository has no `origin` remote to share memory through.");
     }
+    let branch = branch(repo)?;
     let tracking = format!("refs/remotes/origin/{branch}");
     let fetched = repo.git(&[
         "fetch",
@@ -57,14 +95,16 @@ fn fetch(repo: &Repo, branch: &str) -> Result<Option<String>> {
         "origin",
         &format!("+refs/heads/{branch}:{tracking}"),
     ])?;
-    if !fetched.ok() {
-        let message = fetched.error_text();
-        if message.contains("couldn't find remote ref") {
-            return Ok(None);
-        }
-        bail!("Could not fetch origin/{branch}: {message}");
+    let exists = fetched.ok();
+    if !exists && !fetched.error_text().contains("couldn't find remote ref") {
+        bail!("Could not fetch origin/{branch}: {}", fetched.error_text());
     }
-    Ok(Some(repo.git_ok(&["rev-parse", "--verify", &tracking])?))
+    let ids = object_ids(repo, &[tracking, BASE_REF.to_owned()])?;
+    Ok(Shared {
+        theirs: if exists { ids[0].clone() } else { None },
+        base: ids.get(1).cloned().flatten(),
+        branch,
+    })
 }
 
 /// Blob contents for `rev:path` specs in one `git cat-file --batch`.
@@ -73,13 +113,7 @@ fn blobs(repo: &Repo, specs: &[String]) -> Result<Vec<Option<Vec<u8>>>> {
         return Ok(Vec::new());
     }
     let input: String = specs.iter().map(|s| format!("{s}\n")).collect();
-    let output = run(
-        "git",
-        &[OsStr::new("cat-file"), OsStr::new("--batch")],
-        Some(&repo.root),
-        &[],
-        Some(input.as_bytes()),
-    )?;
+    let output = repo.git_with(&["cat-file", "--batch"], &[], Some(input.as_bytes()))?;
     if !output.ok() {
         bail!("git cat-file failed: {}", output.error_text());
     }
@@ -107,17 +141,25 @@ fn blobs(repo: &Repo, specs: &[String]) -> Result<Vec<Option<Vec<u8>>>> {
     Ok(result)
 }
 
-/// Merge `MEMORY.md`: keep mine, add routes they added, drop routes they removed.
-fn merge_router(base: Option<&[u8]>, mine: &[u8], theirs: &[u8]) -> Result<Vec<u8>> {
+/// Three-way merge of `MEMORY.md` rows by path. Returns the text and the
+/// rows both sides changed differently (yours kept).
+fn merge_router(base: Option<&[u8]>, mine: &[u8], theirs: &[u8]) -> Result<(Vec<u8>, Vec<String>)> {
     let parse = |raw: &[u8]| Router::parse(String::from_utf8_lossy(raw).into_owned());
+    let rows = |router: &Router| -> BTreeMap<String, String> {
+        router
+            .routes
+            .iter()
+            .map(|r| (r.path.clone(), r.row()))
+            .collect()
+    };
     let mine = parse(mine)?;
     let theirs = parse(theirs)?;
-    let base_paths: BTreeSet<String> = match base {
-        Some(raw) => parse(raw)?.routes.into_iter().map(|r| r.path).collect(),
-        None => BTreeSet::new(),
+    let base_rows = match base {
+        Some(raw) => rows(&parse(raw)?),
+        None => BTreeMap::new(),
     };
-    let theirs_paths: BTreeSet<&str> = theirs.routes.iter().map(|r| r.path.as_str()).collect();
-    let mine_paths: BTreeSet<&str> = mine.routes.iter().map(|r| r.path.as_str()).collect();
+    let their_rows = rows(&theirs);
+    let mine_paths: BTreeSet<String> = mine.routes.iter().map(|r| r.path.clone()).collect();
     let stamp = [
         bank::meta_str(&mine.meta, "router-updated").unwrap_or(""),
         bank::meta_str(&theirs.meta, "router-updated").unwrap_or(""),
@@ -126,28 +168,42 @@ fn merge_router(base: Option<&[u8]>, mine: &[u8], theirs: &[u8]) -> Result<Vec<u
     .max()
     .unwrap_or("")
     .to_owned();
-    // Drop routes they removed.
-    let mut text: String = mine
-        .text
-        .split_inclusive('\n')
-        .filter(|line| {
-            bank::parse_route(line).is_none_or(|route| {
-                !(base_paths.contains(&route.path) && !theirs_paths.contains(route.path.as_str()))
-            })
-        })
-        .collect();
-    // Add routes they added.
+    let mut kept = Vec::new();
+    let mut text = String::new();
+    for line in mine.text.split_inclusive('\n') {
+        let Some(route) = bank::parse_route(line) else {
+            text.push_str(line);
+            continue;
+        };
+        let row = route.row();
+        match (base_rows.get(&route.path), their_rows.get(&route.path)) {
+            // They removed a row you left alone: drop it.
+            (Some(b), None) if *b == row => continue,
+            // Only they changed it: take theirs.
+            (Some(b), Some(t)) if *b == row && *t != row => {
+                text.push_str(t);
+                text.push('\n');
+                continue;
+            }
+            (b, Some(t)) if *t != row && b != Some(t) => kept.push(route.path.clone()),
+            _ => {}
+        }
+        text.push_str(line);
+    }
+    // Rows they added, or edited after you removed them.
     for route in &theirs.routes {
-        if !mine_paths.contains(route.path.as_str()) && !base_paths.contains(&route.path) {
+        let removed_unchanged = base_rows.get(&route.path) == Some(&route.row());
+        if !mine_paths.contains(&route.path) && !removed_unchanged {
             text = Router::parse(text)?.with_route(route, &stamp);
         }
     }
-    Ok(bank::with_router_time(&text, &stamp).into_bytes())
+    Ok((bank::with_router_time(&text, &stamp).into_bytes(), kept))
 }
 
 /// Three-way text merge with `git merge-file`; `Err(markers)` on conflict.
 fn merge_text(
     repo: &Repo,
+    path: &str,
     base: &[u8],
     mine: &[u8],
     theirs: &[u8],
@@ -181,8 +237,11 @@ fn merge_text(
     let output = output?;
     match output.code {
         0 => Ok(Ok(output.stdout)),
-        n if n > 0 => Ok(Err(output.stdout)),
-        _ => bail!("git merge-file failed: {}", output.error_text()),
+        1..=127 => Ok(Err(output.stdout)), // the number of conflicts
+        _ => bail!(
+            "git could not merge {path} ({}); nothing was changed. Merge it by hand, then run am again.",
+            output.error_text()
+        ),
     }
 }
 
@@ -190,17 +249,79 @@ fn merge_text(
 struct Merged {
     updated: Vec<String>,
     conflicts: Vec<String>,
+    /// MEMORY.md rows both sides changed; yours were kept.
+    kept_rows: Vec<String>,
 }
 
-/// Bring the bank changes in `theirs` (since the recorded base) into the
-/// working tree, keeping local edits.
-fn merge_into_worktree(repo: &Repo, theirs: &str) -> Result<Merged> {
-    let base = repo.git(&["rev-parse", "--verify", "--quiet", BASE_REF])?;
-    let base = if base.ok() {
-        Some(base.text())
-    } else {
-        let merge_base = repo.git(&["merge-base", "HEAD", theirs])?;
-        merge_base.ok().then(|| merge_base.text())
+/// Refuse when the index holds bank content found nowhere else: not in
+/// HEAD, not in the working tree and not in a shared commit.
+fn check_staged(repo: &Repo, command: &str, shared: &[&str]) -> Result<()> {
+    let pathspec = format!("{}/", repo.bank_rel);
+    let output = repo.git(&[
+        "status",
+        "--porcelain=v2",
+        "-z",
+        "--untracked-files=no",
+        "--no-renames",
+        "--",
+        &pathspec,
+    ])?;
+    if !output.ok() {
+        bail!("git status failed: {}", output.error_text());
+    }
+    let mut candidates = Vec::new();
+    for record in output.stdout.split(|b| *b == 0).filter(|r| !r.is_empty()) {
+        let record = String::from_utf8_lossy(record);
+        if record.starts_with("u ") {
+            bail!(
+                "Memory has an unfinished Git merge ({record}); finish it, then run am {command} again."
+            );
+        }
+        let fields: Vec<&str> = record.splitn(9, ' ').collect();
+        if let ["1", xy, _, _, _, _, _, index_oid, path] = fields.as_slice() {
+            let mut flags = xy.chars();
+            if flags.next() != Some('.') && flags.next() != Some('.') {
+                candidates.push((path.to_string(), index_oid.to_string()));
+            }
+        }
+    }
+    if candidates.is_empty() {
+        return Ok(());
+    }
+    let specs: Vec<String> = candidates
+        .iter()
+        .flat_map(|(path, _)| shared.iter().map(move |rev| format!("{rev}:{path}")))
+        .collect();
+    let ids = object_ids(repo, &specs)?;
+    let lost: Vec<&str> = candidates
+        .iter()
+        .enumerate()
+        .filter(|(i, (_, oid))| {
+            !ids[i * shared.len()..(i + 1) * shared.len()]
+                .iter()
+                .any(|id| id.as_deref() == Some(oid.as_str()))
+        })
+        .map(|(_, (path, _))| path.as_str())
+        .collect();
+    if !lost.is_empty() {
+        bail!(
+            "You staged memory changes that exist only in the Git index: {}. Commit them, or `git add`/`git restore --staged` them, then run am {command} again.",
+            lost.join(", ")
+        );
+    }
+    Ok(())
+}
+
+/// Bring the bank changes in `theirs` since `base` into the working tree,
+/// keeping local edits. The caller holds the bank lock. Nothing is written
+/// unless every file merges or gets conflict markers.
+fn merge_into_worktree(repo: &Repo, theirs: &str, base: Option<&str>) -> Result<Merged> {
+    let base = match base {
+        Some(base) => Some(base.to_owned()),
+        None => {
+            let merge_base = repo.git(&["merge-base", "HEAD", theirs])?;
+            merge_base.ok().then(|| merge_base.text())
+        }
     };
     let pathspec = format!("{}/", repo.bank_rel);
     let listed = match &base {
@@ -225,6 +346,10 @@ fn merge_into_worktree(repo: &Repo, theirs: &str) -> Result<Merged> {
         ])?,
     };
     let paths: Vec<&str> = listed.split('\0').filter(|p| !p.is_empty()).collect();
+    let mut merged = Merged::default();
+    if paths.is_empty() {
+        return Ok(merged);
+    }
     let mut specs = Vec::new();
     for path in &paths {
         specs.push(format!("{}:{path}", base.as_deref().unwrap_or("0000000")));
@@ -232,8 +357,9 @@ fn merge_into_worktree(repo: &Repo, theirs: &str) -> Result<Merged> {
     }
     let contents = blobs(repo, &specs)?;
     let router_path = repo.bank_path(bank::ROUTER);
-    let mut merged = Merged::default();
+    let mut writes = Vec::new();
     for (index, path) in paths.iter().enumerate() {
+        repo.refuse_links(path)?;
         let base_raw = if base.is_some() {
             contents[index * 2].as_deref()
         } else {
@@ -250,10 +376,12 @@ fn merge_into_worktree(repo: &Repo, theirs: &str) -> Result<Merged> {
         } else {
             match (mine.as_deref(), theirs_raw) {
                 (Some(mine), Some(theirs)) if *path == router_path => {
-                    Some(merge_router(base_raw, mine, theirs)?)
+                    let (text, kept) = merge_router(base_raw, mine, theirs)?;
+                    merged.kept_rows.extend(kept);
+                    Some(text)
                 }
                 (Some(mine), Some(theirs)) => {
-                    match merge_text(repo, base_raw.unwrap_or_default(), mine, theirs)? {
+                    match merge_text(repo, path, base_raw.unwrap_or_default(), mine, theirs)? {
                         Ok(clean) => Some(clean),
                         Err(marked) => {
                             merged.conflicts.push(path.to_string());
@@ -267,25 +395,27 @@ fn merge_into_worktree(repo: &Repo, theirs: &str) -> Result<Merged> {
                 (None, None) => None,
             }
         };
-        match result {
-            Some(raw) => {
-                if mine.as_deref() != Some(raw.as_slice()) {
-                    if let Some(parent) = file.parent() {
-                        io_at(std::fs::create_dir_all(parent), parent)?;
-                    }
-                    write_atomic(&file, &raw, 0o644)?;
-                    merged.updated.push(path.to_string());
-                }
-            }
-            None => {
-                if mine.is_some() {
-                    io_at(std::fs::remove_file(&file), &file)?;
-                    merged.updated.push(path.to_string());
-                }
-            }
+        if result != mine {
+            writes.push((path.to_string(), mine, result));
         }
     }
-    record_shared(repo, theirs)?;
+    for (path, mine, result) in writes {
+        let file = repo.root.join(&path);
+        // The lock keeps am writers out; this catches an editor's save.
+        if read_optional(&file)? != mine {
+            bail!("{path} changed while am was merging it; run am again.");
+        }
+        match result {
+            Some(raw) => {
+                if let Some(parent) = file.parent() {
+                    io_at(std::fs::create_dir_all(parent), parent)?;
+                }
+                write_atomic(&file, &raw, 0o644)?;
+            }
+            None => io_at(std::fs::remove_file(&file), &file)?,
+        }
+        merged.updated.push(path);
+    }
     Ok(merged)
 }
 
@@ -298,8 +428,6 @@ fn record_shared(repo: &Repo, commit: &str) -> Result<()> {
     Ok(())
 }
 
-const STAGED: &str = "The shared memory is staged, so `git pull` works as usual; on a branch with its own commits, commit it first (git commit -m \"Shared memory\").";
-
 fn conflict_help(conflicts: &[String]) -> String {
     format!(
         "Your memory and the shared memory both changed: {}. Edit the marked sections (<<<<<<< yours … >>>>>>> shared), then run am share again.",
@@ -307,16 +435,38 @@ fn conflict_help(conflicts: &[String]) -> String {
     )
 }
 
+fn kept_note(kept: &[String]) -> String {
+    format!(
+        "MEMORY.md rows changed both here and in the shared memory; yours were kept: {}",
+        kept.join(", ")
+    )
+}
+
+/// Lock the bank for a local merge, creating its directory if needed.
+fn lock_bank(repo: &Repo) -> Result<crate::util::Lock> {
+    repo.refuse_links(&repo.bank_rel)?;
+    io_at(std::fs::create_dir_all(&repo.bank), &repo.bank)?;
+    lock(&repo.bank)
+}
+
 /// `am refresh`.
 pub fn refresh() -> Result<String> {
     let repo = Repo::current()?;
-    let branch = branch(&repo)?;
-    let Some(theirs) = fetch(&repo, &branch)? else {
+    let shared = observe(&repo)?;
+    let branch = &shared.branch;
+    let Some(theirs) = shared.theirs.as_deref() else {
         return Ok(format!(
             "origin/{branch} does not exist yet; nothing to refresh."
         ));
     };
-    let merged = merge_into_worktree(&repo, &theirs)?;
+    if shared.base.as_deref() == Some(theirs) {
+        return Ok(format!("Memory is up to date with origin/{branch}."));
+    }
+    let _lock = lock_bank(&repo)?;
+    let known: Vec<&str> = shared.base.as_deref().into_iter().chain([theirs]).collect();
+    check_staged(&repo, "refresh", &known)?;
+    let merged = merge_into_worktree(&repo, theirs, shared.base.as_deref())?;
+    record_shared(&repo, theirs)?;
     let mut out = if merged.updated.is_empty() {
         format!("Memory is up to date with origin/{branch}.")
     } else {
@@ -326,6 +476,10 @@ pub fn refresh() -> Result<String> {
             merged.updated.join("\n  ")
         )
     };
+    if !merged.kept_rows.is_empty() {
+        out.push('\n');
+        out.push_str(&kept_note(&merged.kept_rows));
+    }
     if !merged.conflicts.is_empty() {
         out.push('\n');
         out.push_str(&conflict_help(&merged.conflicts));
@@ -339,10 +493,14 @@ fn has_markers(dir: &Path) -> Vec<String> {
     while let Some(dir) = stack.pop() {
         for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
             let path = entry.path();
-            if path.is_dir() {
+            let Ok(kind) = entry.file_type() else {
+                continue;
+            };
+            if kind.is_dir() {
                 stack.push(path);
-            } else if std::fs::read_to_string(&path)
-                .is_ok_and(|t| t.contains("\n<<<<<<< ") || t.starts_with("<<<<<<< "))
+            } else if kind.is_file()
+                && std::fs::read_to_string(&path)
+                    .is_ok_and(|t| t.contains("\n<<<<<<< ") || t.starts_with("<<<<<<< "))
             {
                 found.push(path.display().to_string());
             }
@@ -361,18 +519,34 @@ pub fn share(message: Option<&str>) -> Result<String> {
     if !marked.is_empty() {
         bail!("{}", conflict_help(&marked));
     }
-    let branch = branch(&repo)?;
     for _attempt in 0..3 {
-        let theirs = fetch(&repo, &branch)?;
-        if let Some(theirs) = &theirs {
-            let merged = merge_into_worktree(&repo, theirs)?;
+        let shared = observe(&repo)?;
+        let branch = &shared.branch;
+        let theirs = shared.theirs.as_deref();
+        let lock = lock_bank(&repo)?;
+        let known: Vec<&str> = shared.base.as_deref().into_iter().chain(theirs).collect();
+        check_staged(&repo, "share", &known)?;
+        let mut merged = Merged::default();
+        if let Some(theirs) = theirs.filter(|t| shared.base.as_deref() != Some(*t)) {
+            merged = merge_into_worktree(&repo, theirs, shared.base.as_deref())?;
             if !merged.conflicts.is_empty() {
+                record_shared(&repo, theirs)?;
                 bail!("{}", conflict_help(&merged.conflicts));
             }
         }
-        let Some(commit) = commit_bank(&repo, theirs.as_deref(), message)? else {
+        let snapshot = commit_bank(&repo, theirs, message)?;
+        drop(lock);
+        let notes = if merged.kept_rows.is_empty() {
+            String::new()
+        } else {
+            format!("\n{}", kept_note(&merged.kept_rows))
+        };
+        let Some(commit) = snapshot else {
+            if let Some(theirs) = theirs.filter(|t| shared.base.as_deref() != Some(*t)) {
+                record_shared(&repo, theirs)?;
+            }
             return Ok(format!(
-                "Nothing new to share; origin/{branch} has all of this memory."
+                "Nothing new to share; origin/{branch} has all of this memory.{notes}"
             ));
         };
         let pushed = repo.git(&[
@@ -386,7 +560,7 @@ pub fn share(message: Option<&str>) -> Result<String> {
         if pushed.ok() {
             record_shared(&repo, &commit)?;
             return Ok(format!(
-                "Shared memory to origin/{branch} (commit {short}).\n{STAGED}"
+                "Shared memory to origin/{branch} (commit {short}).\n{STAGED}{notes}"
             ));
         }
         let error = format!("{}\n{}", pushed.text(), pushed.error_text());
@@ -400,11 +574,11 @@ pub fn share(message: Option<&str>) -> Result<String> {
             .iter()
             .any(|word| error.contains(word))
         {
-            return propose(&repo, &branch, &commit);
+            return propose(&repo, branch, &commit);
         }
         bail!("Push to origin/{branch} failed: {}", error.trim());
     }
-    bail!("origin/{branch} kept moving while sharing; run am share again.")
+    bail!("The shared branch kept moving while sharing; run am share again.")
 }
 
 /// A commit holding the shared tree with this worktree's bank, or `None`
@@ -413,8 +587,7 @@ fn commit_bank(repo: &Repo, theirs: Option<&str>, message: Option<&str>) -> Resu
     let index = std::env::temp_dir().join(format!("am-index-{}", uuid4()));
     let env = [("GIT_INDEX_FILE", index.as_os_str())];
     let git = |args: &[&str]| -> Result<String> {
-        let args: Vec<&OsStr> = args.iter().map(OsStr::new).collect();
-        let output = run("git", &args, Some(&repo.root), &env, None)?;
+        let output = repo.git_with(args, &env, None)?;
         if !output.ok() {
             bail!(
                 "git failed while preparing the memory commit: {}",
@@ -429,17 +602,15 @@ fn commit_bank(repo: &Repo, theirs: Option<&str>, message: Option<&str>) -> Resu
             None => git(&["read-tree", "--empty"])?,
         };
         git(&["add", "-A", "--", &repo.bank_rel])?;
-        let tree = git(&["write-tree"])?;
-        if let Some(theirs) = theirs {
-            if git(&["rev-parse", &format!("{theirs}^{{tree}}")])? == tree {
-                return Ok(None);
-            }
-        }
         let changed = match theirs {
-            Some(theirs) => git(&["diff", "--cached", "--name-only", theirs])?,
+            Some(theirs) => git(&["diff", "--cached", "--name-only", "--no-renames", theirs])?,
             None => git(&["ls-files"])?,
         };
         let count = changed.lines().count();
+        if count == 0 {
+            return Ok(None);
+        }
+        let tree = git(&["write-tree"])?;
         let subject = message
             .map(str::to_owned)
             .unwrap_or_else(|| format!("memory: update {count} file(s) in {}", repo.bank_rel));
