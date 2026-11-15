@@ -1163,9 +1163,11 @@ fn private_plan_and_preview_keep_bodies_off_stdout() {
                 .contains("Stop after three attempts")
         );
         let stored = decode(&std::fs::read_to_string(output).unwrap());
+        // Baseline dict equality (test_consolidation.py:288) ignores key order.
+        let sorted = |value: &Value| json::encode(value, json::SORTED_ASCII).unwrap();
         assert_eq!(
-            get(get(&stored, "proposal"), "files"),
-            get(output_plan, "files")
+            sorted(get(get(&stored, "proposal"), "files")),
+            sorted(get(output_plan, "files"))
         );
         assert_eq!(world.state(&repo, &bank), before);
         let done = consolidation::apply(get(&preview, "proposal")).unwrap();

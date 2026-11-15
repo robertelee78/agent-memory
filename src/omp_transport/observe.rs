@@ -1934,12 +1934,12 @@ pub fn observe(
             &owned
         }
     };
-    let base = crate::omp_boundary::base(repo)?;
+    let base = source.base();
     let transport = turn_sources::private_lock(&base.join("omp-transport.lock"), false, false)?;
     let locks = Locks {
         source,
         transport: &transport,
-        base: &base,
+        base,
     };
     let mut output = None;
     let held = call.held_source;

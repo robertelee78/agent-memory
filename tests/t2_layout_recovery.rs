@@ -474,7 +474,14 @@ fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
         fs::File::open(&world.root).unwrap().sync_all().unwrap();
         return;
     }
+    launch_case(name, variant, &[]);
+}
+/// Run one case (or a baseline subTest selected by `extra`) as an owned child
+/// in its own fresh installed World with a realizable group.
+fn launch_case(name: &str, variant: &str, extra: &[(&str, &str)]) {
+    const COMPLETED: &str = "layout-consumer-completed";
     let mut guard = support::World::new().unwrap();
+    guard.realize_group().unwrap();
     let installed = support::installed_runtime::install(&guard.root, |argv| {
         guard
             .run_with(
@@ -496,6 +503,9 @@ fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
         .env
         .insert("AM_LAYOUT_ROOT".into(), guard.root.as_os_str().to_owned());
     guard.env.insert("AM_LAYOUT_VARIANT".into(), variant.into());
+    for (key, value) in extra {
+        guard.env.insert((*key).into(), (*value).into());
+    }
     let output = guard
         .run_with(
             [
@@ -507,7 +517,10 @@ fn isolated_variant(name: &str, variant: &str, body: impl FnOnce(&World)) {
             ],
             support::RunOptions {
                 check: false,
-                timeout: std::time::Duration::from_secs(120),
+                // A case bound, not a command bound: a case running baseline
+                // subTests launches each in its own World inside this one,
+                // and every command inside keeps its own 120 s bound.
+                timeout: std::time::Duration::from_secs(600),
                 ..support::RunOptions::default()
             },
         )
@@ -563,6 +576,9 @@ fn snapshot(root: &Path) -> BTreeMap<String, Vec<u8>> {
     rows
 }
 fn fixture(w: &World, pending: bool) -> Fixture {
+    fixture_with_origin(w, pending, None)
+}
+fn fixture_with_origin(w: &World, pending: bool, origin: Option<&str>) -> Fixture {
     let command = PathBuf::from(std::env::var_os("AGENT_MEMORY_TEST_OWNED_COMMAND").unwrap());
     let (runtime, _) = agent_memory::installation::executing_runtime(
         &agent_memory::installation::Environment::process(),
@@ -570,7 +586,7 @@ fn fixture(w: &World, pending: bool) -> Fixture {
     )
     .unwrap();
     support::installed_runtime::register_component_runtime();
-    let (repo, bank, dev) = w.fixture();
+    let (repo, bank, dev) = w.fixture_with_origin(origin);
     let sentence = "Under the synthetic review condition, preserve existing guidance and check the original source before acting.\n";
     let concise = format!("# Active context\n\n{sentence}");
     let mut proposal = agent_memory::developer_identity::load(include_bytes!(
@@ -635,13 +651,22 @@ fn fixture(w: &World, pending: bool) -> Fixture {
         + "# Existing typed guidance\n\nRetain source conditions and actual provenance.\n";
     let (header, mut routes, omitted) =
         agent_memory::bank_contract::parse_router(t(&native, "MEMORY.md")).unwrap();
-    routes.push(obj([
+    // Baseline `memory(oversized=True)`: the bank keeps its original router,
+    // which still omits activeContext.md; only the native map routes it.
+    let (original_header, mut original_routes, original_omitted) =
+        agent_memory::bank_contract::parse_router(
+            &fs::read_to_string(bank.join("MEMORY.md")).unwrap(),
+        )
+        .unwrap();
+    let route = obj([
         ("path", s(&record_path)),
         ("purpose", s("Existing typed guidance")),
         ("scope", s("repository")),
         ("lifecycle", s("active")),
         ("read-when", s("When checking source preservation")),
-    ]));
+    ]);
+    routes.push(route.clone());
+    original_routes.push(route);
     set(
         &mut native,
         "MEMORY.md",
@@ -654,6 +679,16 @@ fn fixture(w: &World, pending: bool) -> Fixture {
         fs::create_dir_all(bank.join(p).parent().unwrap()).unwrap();
         fs::write(bank.join(p), b.as_str().unwrap()).unwrap();
     }
+    fs::write(
+        bank.join("MEMORY.md"),
+        agent_memory::bank_contract::router_text(
+            &original_header,
+            &original_routes,
+            &original_omitted,
+        )
+        .unwrap(),
+    )
+    .unwrap();
     let mut large = "# Active context\n\n".to_owned();
     while large.len() + sentence.len() <= 79_054 {
         large.push_str(sentence);
@@ -679,6 +714,24 @@ fn fixture(w: &World, pending: bool) -> Fixture {
         originals,
         dev,
     }
+}
+include!("support/fanout_c_policies.rs");
+/// Baseline `setup_fault_repair` (test_layout_recovery.py:32-49): a doubled
+/// native activeContext, a small pending policy handoff and its independent
+/// repository source, so every intended path (router included) changes.
+fn fault_fixture(w: &World) -> Fixture {
+    let mut f = fixture(w, false);
+    let active = t(&f.native, "activeContext.md");
+    fs::write(
+        f.bank.join("activeContext.md"),
+        format!("{active}\n{active}"),
+    )
+    .unwrap();
+    let policy = format!("# Synthetic policy 1\n\n{}\n", POLICIES[0]);
+    fs::write(f.bank.join("handoff-prompt.md"), &policy).unwrap();
+    fs::write(f.repo.join("synthetic-policy.md"), &policy).unwrap();
+    f.originals = snapshot(&f.bank);
+    f
 }
 fn request(f: &Fixture, observed: &Value) -> Value {
     let manifest = g(observed, "manifest");
@@ -1312,7 +1365,7 @@ fn partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it
     isolated(
         "partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it",
         |w| {
-            let f = fixture(w, false);
+            let f = fault_fixture(w);
             let output = fault_action(
                 w,
                 &f,
@@ -1345,8 +1398,7 @@ fn partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it
     );
 }
 
-fn recover_fault(w: &World, pending: bool, stage: &str, mode: &str) {
-    let f = fixture(w, pending);
+fn recover_fault(f: Fixture, w: &World, stage: &str, mode: &str) {
     let (observed, proposal) = prepared(&f);
     let file = w.save(&proposal, &format!("fault-proposal-{}.json", uuid()));
     let output = fault_action(w, &f, "apply", Some(&file), stage);
@@ -1389,8 +1441,8 @@ fn first_replacement_before_progress_supports_known_finish_and_rollback() {
             mode,
             |w| {
                 recover_fault(
+                    fault_fixture(w),
                     w,
-                    true,
                     "layout-recovery-after-rename:activeContext.md",
                     mode,
                 );
@@ -1415,7 +1467,7 @@ fn known_finish_and_rollback_follow_exact_journal_boundaries() {
                 "known_finish_and_rollback_follow_exact_journal_boundaries",
                 &format!("{mode}:{stage}"),
                 |w| {
-                    recover_fault(w, false, stage, mode);
+                    recover_fault(fixture(w, false), w, stage, mode);
                 },
             );
         }

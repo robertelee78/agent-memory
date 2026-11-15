@@ -323,7 +323,22 @@ fn retired_channel(symlinked: bool) {
             text(&denied, "error"),
             agent_memory::installation::MANAGED_GUIDANCE
         );
-        assert_eq!(snapshot(&w.root), before);
+        let after = snapshot(&w.root);
+        let changed: Vec<_> = after
+            .iter()
+            .filter(|(path, entry)| before.get(*path) != Some(*entry))
+            .map(|(path, (mode, _))| format!("{} (mode {mode:o})", path.display()))
+            .chain(
+                before
+                    .keys()
+                    .filter(|path| !after.contains_key(*path))
+                    .map(|path| format!("{} (removed)", path.display())),
+            )
+            .collect();
+        assert!(
+            changed.is_empty(),
+            "refused install changed the world (check={check}): {changed:?}"
+        );
     }
 }
 #[test]

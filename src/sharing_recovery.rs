@@ -548,7 +548,7 @@ pub fn server(repo: &Path, remote: &str, branch: &str) -> Result<String> {
         let (left, reference) = line.split_once('\t').ok_or_else(|| {
             err("Configured authority differs from the server default or is unresolved")
         })?;
-        if reference == "HEAD" {
+        if reference == "HEAD" && left.starts_with("ref: refs/heads/") {
             default = left.strip_prefix("ref: refs/heads/");
         } else if reference == branch_ref {
             observed = Some(oid(left)?.to_owned());

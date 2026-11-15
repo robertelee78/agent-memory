@@ -302,6 +302,10 @@ pub struct SourceBarrier {
     owner: ThreadId,
 }
 impl SourceBarrier {
+    pub(crate) fn base(&self) -> &Path {
+        &self.base
+    }
+
     pub fn recheck(&self) -> Result<()> {
         if self.owner != std::thread::current().id() {
             return Err(err("Borrowed source barrier is not owned by this context"));

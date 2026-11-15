@@ -1849,10 +1849,9 @@ fn wait_ready(_child: &support::Child, path: &Path) -> TestResult {
     while !path.exists() && Instant::now() < deadline {
         std::thread::sleep(Duration::from_millis(10));
     }
-    assert!(
-        path.exists(),
-        "quick refresh never reached final source recheck"
-    );
+    if !path.exists() {
+        return Err("quick refresh never reached final source recheck".into());
+    }
     Ok(())
 }
 #[test]
@@ -1861,6 +1860,7 @@ fn current_final_recheck_api_worker() -> TestResult {
         return Ok(());
     };
     agent_memory::cli::register_providers().unwrap();
+    support::installed_runtime::register_component_runtime();
     let runtime = PathBuf::from(std::env::var_os("AM_REFRESH_TEST_RUNTIME").unwrap());
     let error = refresh::current_with_runtime(&PathBuf::from(repo), &runtime).unwrap_err();
     let failure = refresh::CurrentFailure::from_error(&error).unwrap();
@@ -1886,6 +1886,7 @@ fn current_final_recheck_refuses_local_authority_index_and_mode_races() -> TestR
         let before = state(&f.world, &f.repo)?;
         let directory = f.world.inside("source-race")?;
         fs::create_dir(&directory)?;
+        mode(&directory, 0o700)?;
         let stage = "refresh-current-before-final-recheck";
         f.world
             .env
@@ -1919,7 +1920,16 @@ fn current_final_recheck_refuses_local_authority_index_and_mode_races() -> TestR
                 f.repo.as_os_str(),
             ])?
         };
-        wait_ready(&child, &directory.join(format!("{stage}.ready")))?;
+        if let Err(error) = wait_ready(&child, &directory.join(format!("{stage}.ready"))) {
+            let output = child.wait()?;
+            return Err(format!(
+                "{scenario}, api={api}: {error}: {:?}: {} {}",
+                output.status,
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
+        }
         match scenario {
             "local" => {
                 fs::write(

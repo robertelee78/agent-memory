@@ -1416,8 +1416,8 @@ fn am(world: &World, args: &[&str]) -> (i32, String) {
     )
 }
 
-/// Native diagnostics keep uninstalled-runtime and recovery-frontier failures
-/// independent of the available local-only refresh check.
+/// Native diagnostics keep the uninstalled-runtime failure independent of the
+/// local-only refresh check and the validated canonical bank.
 #[test]
 fn am_diagnostics_run_natively_against_a_disposable_bank() {
     let world = World::new();
@@ -1441,12 +1441,10 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
     assert_eq!(text(get(&status, "bank"), "project_id"), PROJECT);
     assert_eq!(text(get(&status, "setup"), "state"), "binding_required");
     let doctor = run(&["--json", "doctor", "--repo", repo_text], 1);
-    // The baseline local-only refresh prerequisite succeeds before deep inventory.
-    // The uninstalled runtime and unported recovery-frontier still refuse separately.
-    assert_eq!(
-        names(&doctor, "failures"),
-        ["runtime.executing_artifact", "bank.inspection"]
-    );
+    // The baseline local-only refresh prerequisite succeeds before deep inventory;
+    // the canonical bank validates (diagnostics.py:725), so only the uninstalled
+    // runtime refuses.
+    assert_eq!(names(&doctor, "failures"), ["runtime.executing_artifact"]);
     assert_eq!(
         text(component(&doctor, "bank.refresh_prerequisites")[0], "state"),
         "pass"
@@ -1474,7 +1472,9 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
     );
     let (code, human) = am(&world, &["doctor", "--repo", repo_text]);
     assert_eq!(code, 1);
-    assert!(human.contains("setup inspection_required"), "{human}");
+    // The validated bank leaves the unbound checkout as the setup state, as
+    // `status` reports above.
+    assert!(human.contains("setup binding_required"), "{human}");
     assert!(human.contains("next "), "{human}");
     assert_eq!(snapshot(&world.root), before);
 }
@@ -1495,9 +1495,9 @@ fn am_init_runs_natively_against_a_disposable_bank() {
         "agent-memory/initialization-result-v1"
     );
     assert_eq!(text(&value, "operation"), "inspect");
-    // Canonical bank observation needs recovery_frontier (not ported): the
-    // existing bank is preserved for inspection, never overwritten.
-    assert_eq!(text(&value, "bank_state"), "needs-inspection");
+    // A complete readable bank is usable (initialization.py:145) and is never
+    // overwritten by inspection.
+    assert_eq!(text(&value, "bank_state"), "usable");
     assert_eq!(text(&value, "project_id"), PROJECT);
     assert_eq!(get(&value, "writes_performed"), &Value::Bool(false));
     let (code, stdout) = am(
@@ -1984,7 +1984,12 @@ fn doctor_does_not_resume_a_separately_confirmed_purge() {
     assert!(interrupted.stderr.is_empty());
     let journal_path = world.state().join("purges").join(format!("{confirm}.json"));
     let journal = decode(&journal_path);
-    assert_eq!(get(&journal, "preview"), get(&preview, "preview"));
+    // Python dict equality: the journal stores the approved preview sorted.
+    let sorted = |value: &Value| json::encode(value, json::SORTED_ASCII).unwrap();
+    assert_eq!(
+        sorted(get(&journal, "preview")),
+        sorted(get(&preview, "preview"))
+    );
     let quarantine = PathBuf::from(text(&journal, "stage"));
     assert!(quarantine.is_dir());
     assert!(!directory.exists());
@@ -2021,8 +2026,8 @@ fn doctor_does_not_resume_a_separately_confirmed_purge() {
     );
     assert_eq!(get(&completed, "verified"), &Value::Bool(true));
     assert_eq!(
-        get(get(&completed, "receipt"), "preview"),
-        get(&preview, "preview")
+        sorted(get(get(&completed, "receipt"), "preview")),
+        sorted(get(&preview, "preview"))
     );
     assert_eq!(
         get(get(&completed, "receipt"), "deletion_readback_verified"),
@@ -2236,45 +2241,32 @@ struct Native {
 impl Native {
     fn new(install_mode: Mode, no_guidance: bool) -> Self {
         let world = World::new();
-        let mut runtime =
-            support::installed_runtime::install(&world.root, |argv| native_process(&world, argv));
         let agent = world.path("native root");
         std::fs::create_dir(&agent).unwrap();
-        let mut argv = vec![
-            runtime.command.as_os_str().to_owned(),
-            "--json".into(),
-            "install".into(),
-            "--development-source".into(),
-            runtime.source.as_os_str().to_owned(),
-            "--mode".into(),
+        // Baseline installs the OMP runtime once. A prior `--no-guidance`
+        // receipt would keep no_guidance (installation.py:519), so the
+        // genuine first installation carries this case's flags.
+        let mut flags = vec![
+            "--mode",
             if install_mode == Mode::Copy {
                 "copy"
             } else {
                 "link"
-            }
-            .into(),
-            "--presets".into(),
-            "omp".into(),
-            "--omp-agent-dir".into(),
-            agent.into_os_string(),
-            "--omp-peers-upgraded".into(),
-            "--bin-dir".into(),
-            runtime.command.parent().unwrap().as_os_str().to_owned(),
+            },
+            "--presets",
+            "omp",
+            "--omp-agent-dir",
+            agent.to_str().unwrap(),
+            "--omp-peers-upgraded",
         ];
         if no_guidance {
-            argv.push("--no-guidance".into());
+            flags.push("--no-guidance");
         }
-        let output = native_process(&world, &argv);
-        assert_eq!(
-            output.status,
-            agent_memory::process::Status::Code(0),
-            "stdout={} stderr={}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr),
+        let mut runtime = support::installed_runtime::install_with(
+            &world.root,
+            |argv| native_process(&world, argv),
+            &flags,
         );
-        assert!(output.stderr.is_empty());
-        let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
-        assert_eq!(get(&value, "verified"), &Value::Bool(true), "{value:?}");
         (runtime.pack, runtime.binary) =
             install::executing_runtime(&world.env(), &runtime.command).unwrap();
         bank(&world.path("repo"));

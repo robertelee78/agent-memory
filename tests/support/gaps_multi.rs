@@ -463,7 +463,7 @@ fn apply_refresh(w: &World, p: &Value) -> TestResult<Value> {
 }
 
 #[test]
-// tests/contracts/test_multi_machine_compatible.py::MultiMachineCompatible.test_two_developers_three_clones_and_a_worktree_reconcile_without_importing_feature_code
+// obligation: tests/contracts/test_multi_machine_compatible.py::MultiMachineCompatible.test_two_developers_three_clones_and_a_worktree_reconcile_without_importing_feature_code
 fn compatible_three_clones_and_linked_worktree() -> TestResult {
     let mut w = World::new()?;
     let f = actors(&mut w)?;
@@ -610,7 +610,7 @@ fn compatible_three_clones_and_linked_worktree() -> TestResult {
 }
 
 #[test]
-// tests/contracts/test_multi_machine_conflicts.py::MultiMachineConflicts.test_detecting_developer_sees_both_origins_without_pausing_independent_memory_or_code
+// obligation: tests/contracts/test_multi_machine_conflicts.py::MultiMachineConflicts.test_detecting_developer_sees_both_origins_without_pausing_independent_memory_or_code
 fn detecting_developer_retains_both_origins_and_independent_work() -> TestResult {
     let mut w = World::new()?;
     let f = actors(&mut w)?;
@@ -914,7 +914,7 @@ fn indexed_review(
     Ok((output, value))
 }
 #[test]
-// tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_indexed_review_requires_every_pair_and_preserves_conflict
+// obligation: tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_indexed_review_requires_every_pair_and_preserves_conflict
 fn indexed_review_requires_every_pair_and_preserves_conflict() -> TestResult {
     let mut w = World::new()?;
     let (repo, _, _, claims) = indexed_fixture(&mut w)?;
@@ -964,7 +964,7 @@ fn indexed_review_requires_every_pair_and_preserves_conflict() -> TestResult {
     Ok(())
 }
 #[test]
-// tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_indexed_review_refuses_changed_source_or_authority
+// obligation: tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_indexed_review_refuses_changed_source_or_authority
 fn indexed_review_refuses_changed_source_or_authority() -> TestResult {
     for authority in [false, true] {
         let mut w = World::new()?;
@@ -1014,7 +1014,7 @@ fn stale_hold_worker() {
     panic!("stale-lock worker returned");
 }
 #[test]
-// tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_wrong_project_recovery_preserves_private_state_and_stale_bank_marker
+// obligation: tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_wrong_project_recovery_preserves_private_state_and_stale_bank_marker
 fn wrong_project_recovery_preserves_private_state_and_stale_marker() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, _, _) = fixture(&mut w)?;
@@ -1070,7 +1070,7 @@ fn wrong_project_recovery_preserves_private_state_and_stale_marker() -> TestResu
 }
 
 #[test]
-// tests/contracts/test_multi_machine_race.py::MultiMachineRace.test_simultaneous_public_publishers_consolidate_duplicate_learning_before_retry_lands
+// obligation: tests/contracts/test_multi_machine_race.py::MultiMachineRace.test_simultaneous_public_publishers_consolidate_duplicate_learning_before_retry_lands
 fn simultaneous_public_publishers_consolidate_before_retry_lands() -> TestResult {
     let mut w = World::new()?;
     let f = actors(&mut w)?;
@@ -1134,9 +1134,10 @@ fn simultaneous_public_publishers_consolidate_before_retry_lands() -> TestResult
     }
     let pa = save(&w, &a, "race-A.json")?;
     let pb = save(&w, &b, "race-B.json")?;
+    let command = w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone();
     let argv = |repo: &Path, input: &Path| {
         vec![
-            OsString::from(env!("CARGO_BIN_EXE_am")),
+            command.clone(),
             "--json".into(),
             "publish".into(),
             "land".into(),
@@ -1255,7 +1256,7 @@ fn simultaneous_public_publishers_consolidate_before_retry_lands() -> TestResult
 }
 
 #[test]
-// tests/contracts/test_multi_machine_merge_replay.py::MultiMachineMergeReplay.test_erasure_survives_an_ordinary_code_merge_and_pre_erasure_proposal_replay
+// obligation: tests/contracts/test_multi_machine_merge_replay.py::MultiMachineMergeReplay.test_erasure_survives_an_ordinary_code_merge_and_pre_erasure_proposal_replay
 fn erasure_survives_ordinary_code_merge_and_old_refresh_replay() -> TestResult {
     let mut w = World::new()?;
     let (repo, bank, peer, _) = fixture(&mut w)?;
@@ -1467,7 +1468,7 @@ fn erasure_survives_ordinary_code_merge_and_old_refresh_replay() -> TestResult {
 }
 
 #[test]
-// tests/contracts/test_shared_learning_loop.py::SharedLearningLoopContract.test_automatic_durable_capture_lands_and_another_actor_recalls_it_without_feature_code
+// obligation: tests/contracts/test_shared_learning_loop.py::SharedLearningLoopContract.test_automatic_durable_capture_lands_and_another_actor_recalls_it_without_feature_code
 fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> TestResult {
     let mut w = World::new()?;
     let f = actors(&mut w)?;
@@ -1502,6 +1503,7 @@ fn automatic_durable_capture_lands_and_another_actor_recalls_without_code() -> T
     set(m, "project-id", project.clone());
     set(m, "conditions", obj([("component", s("code.py"))]));
     set(m, "scope", s("repository"));
+    set(m, "evidence", Value::Array(vec![s("evidence.md")]));
     set(
         m,
         "source",

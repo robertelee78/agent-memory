@@ -555,11 +555,15 @@ fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregister
             )
             .unwrap()
     });
-    let proposal = json::decode(
+    let mut proposal = json::decode(
         include_str!("../skills/agent-memory/templates/router-proposal.example.json"),
         Default::default(),
     )
     .unwrap();
+    // The template carries a placeholder; a fixture bank needs a real UUIDv4,
+    // as `support::admission` supplies for the same template.
+    *proposal.get_mut("project-id").unwrap() =
+        Value::String("75b38e17-c36e-4fab-8ba9-5fa51f25de91".into());
     let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
     let bank = repo.join("memory-bank");
     for (path, body) in rendered.get("files").unwrap().as_object().unwrap() {

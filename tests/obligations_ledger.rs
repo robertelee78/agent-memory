@@ -53,6 +53,42 @@ fn live_ledger_is_consistent() {
 }
 
 #[test]
+#[ignore = "enable at release freeze"]
+fn no_unported_obligation_remains() {
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut bytes = Vec::new();
+    std::fs::File::open(manifest.join("tests/obligations/python-baseline-v1.json"))
+        .unwrap()
+        .take(MAX_LEDGER + 1)
+        .read_to_end(&mut bytes)
+        .unwrap();
+    assert!(
+        bytes.len() as u64 <= MAX_LEDGER,
+        "ledger exceeds byte limit"
+    );
+    let ledger = obligations::parse_ledger(&bytes).unwrap();
+    let unported: Vec<&str> = ledger
+        .get("methods")
+        .and_then(Value::as_array)
+        .expect("ledger methods must be an array")
+        .iter()
+        .filter(|method| method.get("status").and_then(Value::as_str) == Some("unported"))
+        .map(|method| {
+            method
+                .get("id")
+                .and_then(Value::as_str)
+                .unwrap_or("<missing id>")
+        })
+        .collect();
+    assert!(
+        unported.is_empty(),
+        "{} obligations are still unported:\n{}",
+        unported.len(),
+        unported.join("\n")
+    );
+}
+
+#[test]
 fn not_applicable_entries_need_a_note_and_no_rust_test() {
     let ledger = json::decode(r#"{"schema":"agent-memory/port-obligations-v1","status_values":["unported","partial","ported","not-applicable"],"methods":[{"id":"a","status":"not-applicable","registered":true,"note":"evaluation controller retired"},{"id":"b","status":"not-applicable","registered":true,"note":"  "}],"counts":{"static_methods":2,"generated_selectors":0,"registered":2,"unregistered":0,"by_status":{"not-applicable":2}},"other":{}}"#, Default::default()).unwrap();
     let findings = obligations::check(&ledger, &[ann("a", true)]);

@@ -712,11 +712,13 @@ fn local_boundary(root: &Path, observed: &Value, manifest: &Value) -> Result<Str
 }
 
 /// The runtime artifact digest: pack inventory plus the executing `bin/am`.
+/// The binary is the strict receipt-matched runtime of `runtime_root`, never
+/// the invoked path: macOS reports a symlinked command (`~/.local/bin/am`)
+/// unresolved, which the no-follow measurement correctly refuses.
 fn runtime_digest(runtime_root: &Path) -> Result<String> {
     let inventory = crate::pack_validation::inventory(runtime_root)?;
     let files = crate::release_distribution::inventory_value(&inventory);
-    let executable = std::env::current_exe()
-        .map_err(|_| err("The executing runtime binary cannot be observed"))?;
+    let executable = crate::recovery_quiescence::runtime_binary(runtime_root)?;
     let (binary, mode) =
         crate::pack_validation::binary_asset(&executable, "bin/am", MAX_RUNTIME_BINARY)?;
     let (_, digest) = crate::artifact::runtime_digest(&files, &sha(&binary), mode)?;

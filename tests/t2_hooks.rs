@@ -1403,9 +1403,12 @@ fn actual_plugin_enrolls_before_context_queues_once_and_recovers_native_session(
     world
         .git(["config", "--local", "agent-memory.authorityBranch", "main"])
         .unwrap();
-    let proposal = decode(include_str!(
+    let mut proposal = decode(include_str!(
         "../skills/agent-memory/templates/router-proposal.example.json"
     ));
+    // Baseline PublicationFixture banks carry a real project UUIDv4, not the
+    // template placeholder.
+    *proposal.get_mut("project-id").unwrap() = Value::String(agent_memory::host::uuid4().unwrap());
     let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
     let bank = repo.join("memory-bank");
     for (path, body) in get(&rendered, "files").as_object().unwrap() {
@@ -1919,7 +1922,11 @@ fn unresolved_identity_retains_fixed_metadata_without_bank_change() {
         |case| {
             let (repo, bank) = case.bank();
             let before = case.snapshot(&repo, &bank);
-            let registry = case.root.join("config/agent-memory/projects.json");
+            // Baseline reads the project registry under the agent-memory config
+            // home (test_hook_failure.py:67); this case World sets that home itself.
+            let registry =
+                std::path::PathBuf::from(std::env::var_os("AGENT_MEMORY_CONFIG_HOME").unwrap())
+                    .join("projects.json");
             let mut value = decode(&std::fs::read_to_string(&registry).unwrap());
             *value.get_mut("checkouts").unwrap() = Value::Object(Vec::new());
             std::fs::write(&registry, json::encode(&value, json::DEFAULT).unwrap()).unwrap();

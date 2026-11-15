@@ -1819,6 +1819,16 @@ fn capture_request(f: &Fixture) -> Value {
         "evidence",
         Value::Array(vec![s("synthetic-policy.md")]),
     );
+    // Baseline `AdmissionContract.request` (test_admission.py:89) names the
+    // candidate's true source as the request's source class.
+    set(
+        candidate.get_mut("metadata").unwrap(),
+        "source",
+        obj([
+            ("kind", s("verified-repository")),
+            ("actor", s("Explicit fixture source; not authenticated")),
+        ]),
+    );
     obj([
         ("project_id", s(&f.project)),
         ("candidate", candidate),
@@ -2109,17 +2119,21 @@ fn add_record(f: &mut Fixture, name: &str, body: &str) -> (Value, String) {
     let raw = agent_memory::codec::frontmatter::write(meta.as_object().unwrap()).unwrap() + &body;
     fs::create_dir_all(f.bank.join(&path).parent().unwrap()).unwrap();
     fs::write(f.bank.join(&path), &raw).unwrap();
+    // Original bank files carry the World children's umask 077 mode (see
+    // `Fixture::configured`), so metadata probes can realize them.
+    fs::set_permissions(f.bank.join(&path), fs::Permissions::from_mode(0o600)).unwrap();
     set(&mut f.native, &path, s(raw));
-    let (metadata, mut routes, omitted) =
-        agent_memory::bank_contract::parse_router(t(&f.native, "MEMORY.md")).unwrap();
-    routes.push(obj([
-        ("path", s(&path)),
-        ("purpose", s("Synthetic historical source")),
-        ("scope", s("repository")),
-        ("lifecycle", s("active")),
-        ("read-when", s("When comparing fixture meaning")),
-    ]));
-    let router = agent_memory::bank_contract::router_text(&metadata, &routes, &omitted).unwrap();
+    // Baseline `ComparisonContract.add` (test_comparison.py:57-59) appends the
+    // route row as router text; it never re-renders or bounds the router, so a
+    // fixture may pass 64 rows before regrouping them under indexes.
+    let row = format!(
+        "| [{path}](<{path}>) | Synthetic historical source | repository | active | When comparing fixture meaning |\n"
+    );
+    let router = t(&f.native, "MEMORY.md").replacen(
+        "\n## Omitted contexts",
+        &format!("{row}\n## Omitted contexts"),
+        1,
+    );
     set(&mut f.native, "MEMORY.md", s(&router));
     fs::write(f.bank.join("MEMORY.md"), router).unwrap();
     (meta, path)
@@ -2224,7 +2238,37 @@ fn boundary(kind: &str) {
         assert_eq!(code, 1);
         assert_eq!(g(&value, "comparison_read_complete"), &Value::Bool(false));
     } else {
-        let request = candidate_request(&f);
+        // Baseline `ComparisonContract.candidate` (test_comparison.py:49-53).
+        let body = "# Retry policy\n\nUse at most three attempts for this fixture.\n";
+        let raw = record_fixtures::record_text_with_ids(
+            body,
+            &f.project,
+            record_fixtures::RecordOptions {
+                status: "candidate",
+                ..Default::default()
+            },
+            &uuid(),
+            &f.actor,
+        )
+        .unwrap();
+        let (mut metadata, _) = unpack(&raw);
+        set(
+            &mut metadata,
+            "evidence",
+            Value::Array(vec![s("evidence.md")]),
+        );
+        let request = obj([
+            ("project_id", s(&f.project)),
+            (
+                "candidate",
+                obj([("metadata", metadata), ("body", s(body))]),
+            ),
+            (
+                "searches",
+                Value::Array(vec![s("retry policy"), s("attempt cap")]),
+            ),
+            ("read_paths", Value::Array(vec![])),
+        ]);
         let (_, view) = compare(&f, "inspect", &request, None, 0);
         let view = view.unwrap();
         let rows = array(g(&view, "matches"));
@@ -2318,7 +2362,9 @@ fn boundary(kind: &str) {
             out.clone().into_os_string(),
         ]);
         let reviewed = read(&out);
-        assert_eq!(g(&reviewed, "proof"), &proof);
+        // Python dict equality: the stored proof may order keys differently.
+        let sorted = |value: &Value| json::encode(value, json::SORTED_ASCII).unwrap();
+        assert_eq!(sorted(g(&reviewed, "proof")), sorted(&proof));
         compare(&f, "check", &request, Some(&proof), 0);
         let row = proof
             .get_mut("judgment")
@@ -3064,7 +3110,10 @@ fn unfinished_resolution() {
             .directory
             .join("resolution-completions")
             .join(format!("{resolution}.json"));
-        fs::create_dir_all(completion.parent().unwrap()).unwrap();
+        // Baseline `mkdir(mode=0o700, exist_ok=True)`: private like its siblings.
+        std::os::unix::fs::DirBuilderExt::mode(fs::DirBuilder::new().recursive(true), 0o700)
+            .create(completion.parent().unwrap())
+            .unwrap();
         private(&completion, &obj([("verified", Value::Bool(true))]));
         let corrupt = bytes(&f.directory);
         f.layout("resolve", vec!["--proposal".into(), f.save(&first)], 1);
@@ -3139,14 +3188,20 @@ fn unfinished_resolution() {
             ),
             &Value::Bool(true)
         );
-        f.private_layout(
-            "retention",
-            vec![
-                "inspect".into(),
-                "--operation".into(),
-                f.operation.clone().into(),
-            ],
-        );
+        // Baseline `retention inspect --repo …`: the stage precedes the options.
+        let output = f.world.inside("retention.json").unwrap();
+        f.good(vec![
+            "bank".into(),
+            "recover-layout".into(),
+            "retention".into(),
+            "inspect".into(),
+            "--repo".into(),
+            f.repo.clone().into_os_string(),
+            "--operation".into(),
+            f.operation.clone().into(),
+            "--output".into(),
+            output.into_os_string(),
+        ]);
         assert!(!f.bank.join(".agent-memory-transaction.md").exists());
         assert!(!f.bank.join(".agent-memory-recovery.md").exists());
         assert_eq!(originals(&f), original);
@@ -3209,39 +3264,69 @@ fn standalone_retry() {
     }
 }
 
-fn topic_groups(f: &mut Fixture, paths: &[String], size: usize) {
-    let (metadata, _, omitted) =
-        agent_memory::bank_contract::parse_router(t(&f.native, "MEMORY.md")).unwrap();
-    let mut routes = vec![];
+/// Baseline `LayoutContract.route` (test_bank_layout.py:39-41).
+const CLOSURE_ROUTE: [&str; 4] = [
+    "Useful fixture context",
+    "repository",
+    "active",
+    "When examining the fixture component",
+];
+/// Route fields `[purpose, scope, lifecycle, read-when]` for index children
+/// and for each index's root route, plus the index `updated` time (None: the
+/// router's own time).
+struct Groups<'a> {
+    prefix: &'a str,
+    child: [&'a str; 4],
+    group: [&'a str; 4],
+    updated: Option<&'a str>,
+}
+fn route_row(path: &str, fields: [&str; 4]) -> Value {
+    obj([
+        ("path", s(path)),
+        ("purpose", s(fields[0])),
+        ("scope", s(fields[1])),
+        ("lifecycle", s(fields[2])),
+        ("read-when", s(fields[3])),
+    ])
+}
+fn topic_groups(f: &mut Fixture, paths: &[String], size: usize, groups: Groups) {
+    // Baseline (test_layout_recovery_frontier_closure.py:26-39,
+    // test_layout_comparison_byte_boundaries.py:180-203) regroups from the
+    // router as it was before the added rows and keeps its routes, adding one
+    // root route per index.
+    let original = t(&f.native, "MEMORY.md")
+        .lines()
+        .filter(|line| {
+            !paths
+                .iter()
+                .any(|path| line.starts_with(&format!("| [{path}](<{path}>) |")))
+        })
+        .map(|line| format!("{line}\n"))
+        .collect::<String>();
+    let (metadata, mut routes, omitted) =
+        agent_memory::bank_contract::parse_router(&original).unwrap();
     for (number, group) in paths.chunks(size).enumerate() {
-        let path = format!("topics/frontier-index-{number}.md");
+        let path = format!("{}{number}.md", groups.prefix);
         let children = group
             .iter()
-            .map(|path| {
-                obj([
-                    ("path", s(path)),
-                    ("purpose", s("Synthetic historical source")),
-                    ("scope", s("task:x")),
-                    ("lifecycle", s("expired")),
-                    ("read-when", s("When comparing fixture meaning")),
-                ])
-            })
+            .map(|path| route_row(path, groups.child))
             .collect::<Vec<_>>();
         let header = obj([
             ("schema", s("agent-memory/topic-index-v1")),
             ("project-id", s(&f.project)),
-            ("updated", g(&metadata, "router-updated").clone()),
+            (
+                "updated",
+                groups
+                    .updated
+                    .map(s)
+                    .unwrap_or_else(|| g(&metadata, "router-updated").clone()),
+            ),
         ]);
         let raw = agent_memory::bank_layout::index_text(&path, &header, &children).unwrap();
         fs::write(f.bank.join(&path), &raw).unwrap();
+        fs::set_permissions(f.bank.join(&path), fs::Permissions::from_mode(0o600)).unwrap();
         set(&mut f.native, &path, s(raw));
-        routes.push(obj([
-            ("path", s(path)),
-            ("purpose", s("Synthetic group")),
-            ("scope", s("task:x")),
-            ("lifecycle", s("active")),
-            ("read-when", s("When comparing fixture meaning")),
-        ]));
+        routes.push(route_row(&path, groups.group));
     }
     let router = agent_memory::bank_contract::router_text(&metadata, &routes, &omitted).unwrap();
     fs::write(f.bank.join("MEMORY.md"), &router).unwrap();
@@ -3266,7 +3351,17 @@ fn selective_frontier() {
                     .1,
                 );
             }
-            topic_groups(f, &paths, 33);
+            topic_groups(
+                f,
+                &paths,
+                33,
+                Groups {
+                    prefix: "topics/frontier-index-",
+                    child: CLOSURE_ROUTE,
+                    group: CLOSURE_ROUTE,
+                    updated: Some("2026-10-22T22:00:00Z"),
+                },
+            );
         },
         |_| {},
     );
@@ -3356,11 +3451,39 @@ fn mixed_rows() {
                 set(&mut f.native, &path, s(raw));
                 paths.push(path);
             }
-            topic_groups(f, &paths, 26);
+            topic_groups(
+                f,
+                &paths,
+                26,
+                Groups {
+                    prefix: "topics/index",
+                    child: [
+                        "Synthetic historical source",
+                        "task:x",
+                        "expired",
+                        "When comparing fixture meaning",
+                    ],
+                    group: [
+                        "Synthetic group",
+                        "task:x",
+                        "active",
+                        "When comparing fixture meaning",
+                    ],
+                    updated: None,
+                },
+            );
             let mut router = t(&f.native, "MEMORY.md").to_owned();
-            let (_, _, omitted) = agent_memory::bank_contract::parse_router(&router).unwrap();
-            for (path, _) in omitted.as_object().unwrap() {
-                fs::write(f.bank.join(path), "cap").unwrap();
+            let (meta, _, omitted) = agent_memory::bank_contract::parse_router(&router).unwrap();
+            // Baseline (test_layout_comparison_byte_boundaries.py:204-207) writes
+            // every canonical context as `cap`, then routes the omitted ones at
+            // the router's own update time.
+            for path in agent_memory::bank_contract::CONTEXTS.iter() {
+                let target = f.bank.join(path);
+                let created = !target.exists();
+                fs::write(&target, "cap").unwrap();
+                if created {
+                    fs::set_permissions(&target, fs::Permissions::from_mode(0o600)).unwrap();
+                }
                 set(&mut f.native, path, s("cap"));
             }
             router = agent_memory::bank_contract::add_context_routes(
@@ -3371,7 +3494,7 @@ fn mixed_rows() {
                     .iter()
                     .map(|(p, _)| p.clone())
                     .collect::<Vec<_>>(),
-                &s("2026-11-14T00:00:00Z"),
+                g(&meta, "router-updated"),
             )
             .unwrap();
             fs::write(f.bank.join("MEMORY.md"), &router).unwrap();
@@ -3507,6 +3630,12 @@ fn reservation(transition: bool) {
         "abcdefghijklmnop".into()
     };
     fs::write(f.bank.join("handoff-prompt.md"), &raw).unwrap();
+    // A new original source carries the World children's umask 077 mode.
+    fs::set_permissions(
+        f.bank.join("handoff-prompt.md"),
+        fs::Permissions::from_mode(0o600),
+    )
+    .unwrap();
     let before = bytes(&f.bank);
     let mut accepted = vec![];
     let mut rejected = None;
@@ -3574,13 +3703,17 @@ fn reservation(transition: bool) {
                 <= 65536
         );
         accepted.push(count);
-        last = Some(proposal);
+        // Baseline keeps the accepted proposal with its own inspection
+        // (test_layout_recovery_frontier_closure.py:231,235).
+        last = Some((proposal, f.operation.clone(), f.manifest.clone()));
     }
     assert!(rejected.is_some());
     if transition {
         assert!(!accepted.is_empty());
         assert_eq!(rejected, accepted.last().map(|n| n + 1));
-        let proposal = last.unwrap();
+        let (proposal, operation, manifest) = last.unwrap();
+        f.operation = operation;
+        f.manifest = manifest;
         let result = f.layout("apply", vec!["--proposal".into(), f.save(&proposal)], 0);
         assert_eq!(
             array(g(&result, "pending_unit_ids")).len(),
@@ -4108,29 +4241,50 @@ fn catalog_retirement() {
         );
         set(request, "discovery", selected);
     };
+    // Baseline toggles `AGENT_MEMORY_NO_RECALL_CATALOG` in the World's own
+    // environment (test_layout_recovery_catalog.py:30-35); World run options
+    // accept only fault overrides, so run the owned command with that env.
     let search = |request: &Value, disabled: bool| {
-        let env = if disabled {
-            vec![("AGENT_MEMORY_NO_RECALL_CATALOG".into(), "1".into())]
-        } else {
-            vec![]
-        };
-        let output = f
+        let mut env: Vec<(OsString, OsString)> = f
             .world
-            .run_with(
-                [
-                    f.command.clone().into_os_string(),
-                    "search".into(),
-                    "--repo".into(),
-                    f.repo.clone().into_os_string(),
-                    "--request".into(),
-                    f.save(request),
-                ],
-                RunOptions {
-                    env: &env,
-                    ..Default::default()
+            .env
+            .iter()
+            .map(|(key, value)| (key.clone(), value.clone()))
+            .collect();
+        if disabled {
+            env.push(("AGENT_MEMORY_NO_RECALL_CATALOG".into(), "1".into()));
+        }
+        let argv: Vec<OsString> = vec![
+            f.command.clone().into_os_string(),
+            "search".into(),
+            "--repo".into(),
+            f.repo.clone().into_os_string(),
+            "--request".into(),
+            f.save(request),
+        ];
+        let timeout = std::time::Duration::from_secs(60);
+        let output = agent_memory::process::run_for(
+            &agent_memory::process::Spec {
+                argv: &argv,
+                search_path: false,
+                env: &env,
+                cwd: Some(&f.world.paths["repo"]),
+                stdin: agent_memory::process::Input::Null,
+                stdout: agent_memory::process::Target::Capture {
+                    limit: 8 * 1024 * 1024,
                 },
-            )
-            .unwrap();
+                stderr: agent_memory::process::Target::Capture {
+                    limit: 8 * 1024 * 1024,
+                },
+                deadline: agent_memory::clock::Deadline::after(timeout).unwrap(),
+                new_session: false,
+                file_size_limit: None,
+                umask: Some(0o077),
+                pass_fds: &[],
+            },
+            timeout,
+        )
+        .unwrap();
         assert_eq!(output.status, agent_memory::process::Status::Code(0));
         json::decode_bytes(&output.stdout, Default::default()).unwrap()
     };

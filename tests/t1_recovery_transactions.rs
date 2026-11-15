@@ -265,6 +265,13 @@ impl Fixture {
             agent_memory::process::Status::Code(code) => code,
             _ => panic!("Child did not exit normally"),
         };
+        if code != 0 {
+            // Shown only when the test fails: the refusal's diagnostic.
+            eprintln!(
+                "am exit {code}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
         let value = if output.stdout.is_empty() {
             Value::Null
         } else {
@@ -322,6 +329,7 @@ impl Fixture {
     ) -> Self {
         agent_memory::cli::register_providers().unwrap();
         let mut world = World::new().unwrap();
+        world.realize_group().unwrap();
         let installed = install(&world.root, |argv| {
             world
                 .run_with(
@@ -378,13 +386,20 @@ impl Fixture {
         let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
         let bank = repo.join("memory-bank");
         fs::create_dir(&bank).unwrap();
+        // Baseline fixtures write the original bank under the same umask as the
+        // `am` children; World children run with umask 077, so the originals
+        // carry the modes that umask produces and metadata probes can realize them.
+        let original = |path: PathBuf, body: &str| {
+            fs::write(&path, body).unwrap();
+            fs::set_permissions(path, fs::Permissions::from_mode(0o600)).unwrap();
+        };
         for (path, body) in g(&rendered, "files").as_object().unwrap() {
-            fs::write(bank.join(path), body.as_str().unwrap()).unwrap();
+            original(bank.join(path), body.as_str().unwrap());
         }
         let native = g(&rendered, "files").clone();
         let scope = support::identity_fixtures::bind_with_command(&world, &repo, &command).unwrap();
         let actor = t(&scope, "developer_id").to_owned();
-        fs::write(bank.join("handoff-prompt.md"), body).unwrap();
+        original(bank.join("handoff-prompt.md"), body);
         let mut f = Self {
             world,
             repo,

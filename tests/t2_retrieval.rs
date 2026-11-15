@@ -1136,13 +1136,24 @@ fn source_version_uncertainty_and_missing_parent_refuse() {
 #[test]
 fn stable_id_resolves_current_discovered_version() {
     let f = Fixture::new();
+    // Baseline `ComparisonContract.add` (test_comparison.py:55-60) writes the
+    // older version under topics/ through `record_text(status='superseded')`,
+    // which names its successor (record_fixtures.py:17-18).
+    let id = s(agent_memory::host::uuid4().unwrap());
     let old = f.add(
-        "history/old.md",
-        "# Retained old retry\n",
+        "topics/older-version.md",
+        "# Attempt cap\n\nStop after three attempts; retain the source conditions.\n",
         &[
+            ("id", id.clone()),
             ("status", s("superseded")),
-            ("state-reason", s("Replaced by corrected version")),
-            ("superseded-by", Value::Array(vec![])),
+            (
+                "state-reason",
+                s("The actual fixture correction retains this historical version."),
+            ),
+            (
+                "superseded-by",
+                Value::Array(vec![obj([("id", id), ("version", Value::Int(2.into()))])]),
+            ),
         ],
     );
     let new = f.add(
@@ -1163,8 +1174,8 @@ fn stable_id_resolves_current_discovered_version() {
     let mut r = request();
     set(&mut r, "ids", Value::Array(vec![get(&old, "id").clone()]));
     set(&mut r, "discovery", f.trace(&["topics/new.md"]));
-    let (ok, value, _) = f.recall(&r);
-    assert!(ok);
+    let (ok, value, stderr) = f.recall(&r);
+    assert!(ok, "{value:?}\n{stderr}");
     assert_eq!(rows(get(&value, "results")).len(), 1);
     assert_eq!(get(&rows(get(&value, "results"))[0], "record"), &new);
 }

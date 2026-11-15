@@ -1052,7 +1052,9 @@ fn fanout_d_init_apply(world: &World, prepared: &Value) -> (i32, Value) {
 #[test]
 // obligation: tests/contracts/test_observation_applicability.py::ObservationApplicability.test_unchanged_evidence_survives_memory_only_head_and_capture_branch_changes_without_duplication
 fn fanout_d_unchanged_evidence_survives_memory_head_and_branch_changes() {
-    let world = World::new();
+    // Recall measures the executing runtime for its catalog generation, so the
+    // public commands run through the World's installed `am`.
+    let world = World::native();
     let (repo, project, _) = setup(&world);
     world.git(&repo, &["add", "."]);
     world.git(&repo, &["commit", "-m", "Reviewed actual source fixture"]);

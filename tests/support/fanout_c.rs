@@ -83,8 +83,6 @@ fn fault(w: &World, f: &Fixture, op: &str, proposal: Option<&Value>, stage: &str
                 .join(format!("fault-output-{}.json", uuid()))
                 .into_os_string(),
         ),
-        ("AGENT_MEMORY_TEST_ROOT", w.root.clone().into_os_string()),
-        ("AGENT_MEMORY_TEST_TOKEN", "layout-contract".into()),
         ("AGENT_MEMORY_FAULT_STAGE", stage.into()),
         ("AGENT_MEMORY_FAULT_MODE", mode.into()),
     ];
@@ -167,7 +165,12 @@ fn apply_fault(
     terminal: bool,
     hold_swap: bool,
 ) {
-    let f = fixture(w, !terminal);
+    // Baseline: `setup_fault_repair` journeys; terminal journeys use `setup_repair`.
+    let f = if terminal {
+        fixture(w, false)
+    } else {
+        fault_fixture(w)
+    };
     let work = work(w, &f);
     let original_modes = modes(&f.bank);
     let (observed, proposal) = prepared(&f);
@@ -247,7 +250,7 @@ fn apply_fault(
     unchanged(w, &f, &work);
 }
 fn inspect_fault(w: &World, stage: &str, mode: &str, partial: bool) {
-    let f = fixture(w, true);
+    let f = fault_fixture(w);
     let work = work(w, &f);
     let before_modes = modes(&f.bank);
     fault(w, &f, "inspect", None, stage, mode);
@@ -329,11 +332,12 @@ fn retention_fault(w: &World, stage: &str, mode: &str) {
         t(&observed, "operation_id"),
         g(g(&proposal, "proposal"), "author"),
     );
+    // Baseline `sorted(proposal['delete'])`: the delete map's paths.
     let mut ordered: Vec<_> = g(g(&reviewed, "proposal"), "delete")
-        .as_array()
+        .as_object()
         .unwrap()
         .iter()
-        .map(|v| v.as_str().unwrap().to_owned())
+        .map(|(path, _)| path.clone())
         .collect();
     ordered.sort();
     assert!(!ordered.is_empty());
@@ -381,38 +385,11 @@ fn retention_fault(w: &World, stage: &str, mode: &str) {
     unchanged(w, &f, &work);
 }
 
+/// One baseline `subTest` in its own fresh installed World, selected by `key`.
 fn subcase(key: &str, value: &str) {
-    let root = Root::new();
-    fs::create_dir(root.join("home")).unwrap();
-    private(
-        &root.join(".test-world.json"),
-        b"{\"token\":\"layout-contract\"}",
-    );
-    let w = World {
-        root: root.0.clone(),
-    };
     let name = std::env::var("AM_LAYOUT_CASE").unwrap();
-    let result = w.command(
-        &[
-            std::env::current_exe().unwrap().into_os_string(),
-            "--exact".into(),
-            name.clone().into(),
-            "--include-ignored".into(),
-            "--nocapture".into(),
-        ],
-        &[
-            ("AM_LAYOUT_CASE", name.into()),
-            ("AM_LAYOUT_ROOT", root.0.clone().into_os_string()),
-            (key, value.into()),
-        ],
-    );
-    assert_eq!(
-        result.status,
-        agent_memory::process::Status::Code(0),
-        "{}\n{}",
-        String::from_utf8_lossy(&result.stdout),
-        String::from_utf8_lossy(&result.stderr)
-    );
+    let variant = std::env::var("AM_LAYOUT_VARIANT").unwrap_or_default();
+    launch_case(&name, &variant, &[(key, value)]);
 }
 fn retention_partition(w: &World, partition: usize, mode: &str) {
     if let Ok(sequence) = std::env::var("AM_RETENTION_SEQUENCE") {
@@ -431,8 +408,9 @@ fn retention_partition(w: &World, partition: usize, mode: &str) {
         t(&observed, "operation_id"),
         g(g(&proposal, "proposal"), "author"),
     );
+    // Baseline `len(proposal['delete'])`: the delete map's entries.
     let count = g(g(&reviewed, "proposal"), "delete")
-        .as_array()
+        .as_object()
         .unwrap()
         .len();
     let sequences: Vec<_> = (0..count)
@@ -1221,13 +1199,15 @@ fn metadata_retention(w: &World, mutation: &str) {
             t(&observed, "operation_id"),
             g(g(&proposal, "proposal"), "author"),
         );
-        let retain = g(g(&reviewed, "proposal"), "retain").as_array().unwrap();
+        // Baseline `proposal['retain']` is a path-keyed map
+        // (test_layout_metadata_probe_retention.py:41-42).
+        let retain = g(g(&reviewed, "proposal"), "retain").as_object().unwrap();
         assert!(
             retain
                 .iter()
-                .any(|p| p.as_str().unwrap().starts_with("metadata-probe-attempts/"))
+                .any(|(path, _)| path.starts_with("metadata-probe-attempts/"))
         );
-        assert!(retain.contains(&s("journal.json")));
+        assert!(retain.iter().any(|(path, _)| path == "journal.json"));
         let rendered = String::from_utf8(encoded(&reviewed).unwrap()).unwrap();
         for node in g(&plan, "nodes").as_array().unwrap() {
             if let Some(nonce) = node.get("nonce").and_then(Value::as_str) {
@@ -1272,7 +1252,7 @@ fn apply_changed_binding(w: &World, kind: &str) {
     let f = fixture(w, true);
     let work_before = work(w, &f);
     let (observed, proposal) = prepared(&f);
-    let registry = w.root.join("config/projects.json");
+    let registry = registry_path();
     match kind.as_str() {
         "settings" => {
             w.git(
@@ -1551,42 +1531,63 @@ fn add_native(f: &mut Fixture, path: &str, body: String, lifecycle: &str) {
     if let Value::Object(files) = &mut f.native {
         files.push((path.into(), s(body)));
     }
-    let (metadata, mut routes, omitted) =
-        agent_memory::bank_contract::parse_router(t(&f.native, "MEMORY.md")).unwrap();
-    routes.push(obj([
-        ("path", s(path)),
-        ("purpose", s("Controlled prior-guidance fixture")),
-        ("scope", s("repository")),
-        ("lifecycle", s(lifecycle)),
-        ("read-when", s("When reviewing synthetic conditions")),
-    ]));
-    let router = agent_memory::bank_contract::router_text(&metadata, &routes, &omitted).unwrap();
-    set(&mut f.native, "MEMORY.md", s(&router));
-    fs::write(f.bank.join("MEMORY.md"), router).unwrap();
+    // Baseline `add_witness_pair`: the row joins the original router and the
+    // native map alike; the original router keeps its own omissions.
+    let routed = |text: &str| {
+        let (metadata, mut routes, omitted) =
+            agent_memory::bank_contract::parse_router(text).unwrap();
+        routes.push(obj([
+            ("path", s(path)),
+            ("purpose", s("Controlled prior-guidance fixture")),
+            ("scope", s("repository")),
+            ("lifecycle", s(lifecycle)),
+            ("read-when", s("When reviewing synthetic conditions")),
+        ]));
+        agent_memory::bank_contract::router_text(&metadata, &routes, &omitted).unwrap()
+    };
+    let native = routed(t(&f.native, "MEMORY.md"));
+    set(&mut f.native, "MEMORY.md", s(native));
+    let original = routed(&fs::read_to_string(f.bank.join("MEMORY.md")).unwrap());
+    fs::write(f.bank.join("MEMORY.md"), original).unwrap();
 }
+/// Baseline `add_witness_pair`: a superseded version 1 under history/sources
+/// names its current version 2 replacement, which supersedes it.
 fn history_fixture(w: &World) -> (Fixture, String, String) {
     let mut f = fixture(w, false);
-    let record = f
+    let (topic, record) = f
         .native
         .as_object()
         .unwrap()
         .iter()
         .find(|(p, _)| p.starts_with("topics/"))
-        .unwrap()
-        .1
-        .as_str()
+        .map(|(p, b)| (p.clone(), b.as_str().unwrap().to_owned()))
         .unwrap();
-    let (_, mut metadata, body) = agent_memory::records::parse(record, &[]).unwrap();
-    set(&mut metadata, "status", s("superseded"));
-    if let Value::Object(pairs) = &mut metadata {
+    let (_, mut metadata, body) = agent_memory::records::parse(&record, &[]).unwrap();
+    let id = t(&metadata, "id").to_owned();
+    let capture = uuid();
+    let reference = |id: &str, version: usize| {
+        Value::Array(vec![obj([("id", s(id)), ("version", n(version))])])
+    };
+    let mut old = metadata.clone();
+    set(&mut old, "status", s("superseded"));
+    set(&mut old, "version", n(1));
+    set(&mut old, "derived-from", reference(&capture, 1));
+    if let Value::Object(pairs) = &mut old {
         pairs.push((
             "state-reason".into(),
             s("Independently reviewed correction retains this historical version."),
         ));
+        pairs.push(("superseded-by".into(), reference(&id, 2)));
     }
-    let history = format!("history/sources/{}/{}.md", uuid(), t(&metadata, "id"));
-    let raw =
+    set(&mut metadata, "version", n(2));
+    set(&mut metadata, "derived-from", reference(&id, 1));
+    set(&mut metadata, "supersedes", reference(&id, 1));
+    let current =
         agent_memory::codec::frontmatter::write(metadata.as_object().unwrap()).unwrap() + &body;
+    fs::write(f.bank.join(&topic), &current).unwrap();
+    set(&mut f.native, &topic, s(current));
+    let history = format!("history/sources/{capture}/{id}.md");
+    let raw = agent_memory::codec::frontmatter::write(old.as_object().unwrap()).unwrap() + &body;
     add_native(&mut f, &history, raw, "superseded");
     let id = uuid();
     let tomb = format!("history/tombstones/{id}.md");
@@ -2054,18 +2055,18 @@ fn setgid_bank(w: &World) {
 
 include!("fanout_c_cases.rs");
 
+/// Baseline: the project registry lives under the agent-memory config home.
+fn registry_path() -> PathBuf {
+    PathBuf::from(std::env::var_os("AGENT_MEMORY_CONFIG_HOME").unwrap()).join("projects.json")
+}
 fn historical_checkout(w: &World) {
-    let f = fixture(w, false);
-    w.git(
-        &f.repo,
-        &[
-            "remote",
-            "add",
-            "origin",
-            "https://github.com/example/memory-fixture.git",
-        ],
+    // Baseline wraps `World.repository` so origin exists before binding.
+    let f = fixture_with_origin(
+        w,
+        false,
+        Some("https://github.com/example/memory-fixture.git"),
     );
-    let path = w.root.join("config/projects.json");
+    let path = registry_path();
     let mut data = read_json(&path);
     let info = fs::metadata(f.repo.join(".git")).unwrap();
     let key = format!("{}:{}", info.dev(), info.ino());
@@ -2192,9 +2193,8 @@ fn raw_router(w: &World) {
 fn incapable_runtime(w: &World) {
     let f = fixture(w, true);
     let (observed, proposal) = prepared(&f);
-    let compatibility = f
-        .runtime
-        .join("skills/agent-memory/schemas/runtime-compatibility.json");
+    // `f.runtime` is the installed pack root itself.
+    let compatibility = f.runtime.join("schemas/runtime-compatibility.json");
     let mut value = read_json(&compatibility);
     value
         .get_mut("private_state_capabilities")
@@ -2353,7 +2353,12 @@ fn retained_handoff(w: &World, unfinished: bool) {
         }
         return;
     }
+    // Baseline `memory(world)` without `oversized`: the bank already holds
+    // exactly its native files, with no oversized activeContext.md to repair.
     let mut f = fixture(w, false);
+    for (path, body) in f.native.as_object().unwrap() {
+        fs::write(f.bank.join(path), body.as_str().unwrap()).unwrap();
+    }
     let scratch=b"# Disposable scratch\n\nSynthetic temporary work-state; explicitly not durable guidance.\n";
     let path = if unfinished {
         "handoff-notes.txt"

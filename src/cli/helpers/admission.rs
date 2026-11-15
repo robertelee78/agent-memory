@@ -94,6 +94,21 @@ fn input(m: &Matches, name: &str, maximum: usize) -> Result<Value> {
         .ok_or_else(|| ContractError::new("Missing admission input"))?;
     domain::read_input(Path::new(path), maximum)
 }
+/// A preview delivered through `--private-output` is stored in the canonical
+/// sorted encoding (`sharing_limits::write_private`), and `apply` re-derives
+/// the record frontmatter from that stored evidence in its key order. Deriving
+/// the preview from the same canonical form keeps preview, artifact and apply
+/// byte-identical. Fixes a baseline defect: `frontmatter.write` follows dict
+/// order while the private artifact is `encoded` with `sort_keys`, so any
+/// capture not already key-sorted was unappliable. Stdout previews keep the
+/// baseline input order.
+fn stored_form(value: Value, private: bool) -> Result<Value> {
+    if private {
+        crate::developer_identity::load(&crate::developer_identity::encoded(&value)?)
+    } else {
+        Ok(value)
+    }
+}
 pub(crate) fn private_preview(repo: &Path, value: Value, output: Option<&str>) -> Result<Value> {
     let token = crate::bank_writes::recovery_frontier_provider()?.observe(repo)?;
     let units = get(&token, "unit_ids")
@@ -132,22 +147,26 @@ fn run(matches: &Matches, context: &Context<'_>) -> CommandResult {
         "draft" => domain::draft(repo, &input(m, "input", domain::REQUEST_LIMIT)?),
         "start" => domain::start(repo, &input(m, "input", domain::REQUEST_LIMIT)?),
         "capture" => domain::capture(repo, &input(m, "request", domain::REQUEST_LIMIT)?),
-        "preview" => private_preview(
-            repo,
-            domain::preview(
+        "preview" => {
+            let private = m.text("private_output").is_some();
+            let read = |name, maximum| stored_form(input(m, name, maximum)?, private);
+            private_preview(
                 repo,
-                &input(m, "capture", domain::INPUT_LIMIT)?,
-                &input(m, "request", domain::INPUT_LIMIT)?,
-                &input(m, "proof", domain::INPUT_LIMIT)?,
-                m.text("navigation")
-                    .map(|_| input(m, "navigation", domain::REQUEST_LIMIT))
-                    .transpose()?
-                    .as_ref(),
-                m.text("operation_id"),
-                m.text("recorded_at"),
-            )?,
-            m.text("private_output"),
-        ),
+                domain::preview(
+                    repo,
+                    &read("capture", domain::INPUT_LIMIT)?,
+                    &read("request", domain::INPUT_LIMIT)?,
+                    &read("proof", domain::INPUT_LIMIT)?,
+                    m.text("navigation")
+                        .map(|_| read("navigation", domain::REQUEST_LIMIT))
+                        .transpose()?
+                        .as_ref(),
+                    m.text("operation_id"),
+                    m.text("recorded_at"),
+                )?,
+                m.text("private_output"),
+            )
+        }
         "apply" => domain::apply(&input(m, "proposal", crate::sharing_limits::MAX_PRIVATE)?),
         _ => Err(ContractError::new("Unknown admission operation")),
     })();

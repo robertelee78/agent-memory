@@ -40,7 +40,44 @@ pub fn stage_binary(binary: &Path, mut run: impl FnMut(&[OsString]) -> Output) {
 
 /// The runner owns the isolated environment and bounded child deadline. It
 /// receives complete copy/installer argv and must not modify global providers/env.
-pub fn install(root: &Path, mut run: impl FnMut(&[OsString]) -> Output) -> NativeRuntime {
+pub fn install(root: &Path, run: impl FnMut(&[OsString]) -> Output) -> NativeRuntime {
+    let runtime = install_with(
+        root,
+        run,
+        &["--mode", "link", "--presets", "none", "--no-guidance"],
+    );
+    let receipt = json::decode_bytes(
+        &std::fs::read(root.join("state/agent-memory/install/receipt.json")).unwrap(),
+        Default::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        receipt.get("schema").and_then(Value::as_str),
+        Some("agent-memory/install-receipt-v3"),
+    );
+    let recorded = receipt.get("source").unwrap();
+    assert_eq!(
+        installation::source_binary(recorded).unwrap(),
+        runtime.binary
+    );
+    assert_eq!(
+        recorded.get("pack").and_then(Value::as_str),
+        runtime.pack.to_str()
+    );
+    assert_eq!(
+        std::fs::canonicalize(&runtime.command).unwrap(),
+        runtime.binary
+    );
+    runtime
+}
+
+/// The genuine first installation with the caller's installer flags (after
+/// `--development-source`); `--bin-dir` is always the World's command dir.
+pub fn install_with(
+    root: &Path,
+    mut run: impl FnMut(&[OsString]) -> Output,
+    flags: &[&str],
+) -> NativeRuntime {
     for relative in [
         "cache",
         "credentials",
@@ -66,20 +103,19 @@ pub fn install(root: &Path, mut run: impl FnMut(&[OsString]) -> Output) -> Nativ
     let binary = source.join("target/release/am");
     stage_binary(&binary, &mut run);
     let command = root.join("home/.local/bin/am");
-    let output = run(&[
+    let mut argv: Vec<OsString> = vec![
         binary.as_os_str().to_owned(),
         "--json".into(),
         "install".into(),
         "--development-source".into(),
         source.as_os_str().to_owned(),
-        "--mode".into(),
-        "link".into(),
-        "--presets".into(),
-        "none".into(),
-        "--no-guidance".into(),
+    ];
+    argv.extend(flags.iter().map(OsString::from));
+    argv.extend([
         "--bin-dir".into(),
         command.parent().unwrap().as_os_str().to_owned(),
     ]);
+    let output = run(&argv);
     assert_eq!(
         output.status,
         Status::Code(0),
@@ -94,19 +130,6 @@ pub fn install(root: &Path, mut run: impl FnMut(&[OsString]) -> Output) -> Nativ
         Some(&Value::Bool(true)),
         "{result:?}"
     );
-    let receipt = json::decode_bytes(
-        &std::fs::read(root.join("state/agent-memory/install/receipt.json")).unwrap(),
-        Default::default(),
-    )
-    .unwrap();
-    assert_eq!(
-        receipt.get("schema").and_then(Value::as_str),
-        Some("agent-memory/install-receipt-v3"),
-    );
-    let recorded = receipt.get("source").unwrap();
-    assert_eq!(installation::source_binary(recorded).unwrap(), binary);
-    assert_eq!(recorded.get("pack").and_then(Value::as_str), pack.to_str());
-    assert_eq!(std::fs::canonicalize(&command).unwrap(), binary);
     NativeRuntime {
         source,
         pack,

@@ -24,7 +24,9 @@ fn get<'a>(v: &'a Value, k: &str) -> &'a Value {
     v.get(k).unwrap_or(&Value::Null)
 }
 fn text<'a>(v: &'a Value, k: &str) -> &'a str {
-    get(v, k).as_str().unwrap()
+    get(v, k)
+        .as_str()
+        .unwrap_or_else(|| panic!("Missing text field {k}: {v:?}"))
 }
 fn string(v: &str) -> Value {
     Value::String(v.into())
@@ -410,7 +412,7 @@ fn borrowed_exit_rejects_actual_inode_swap() {
     assert!(result.is_err());
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checked_stored_user_is_sole_genuine_root_and_mapping_is_not_required
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checked_stored_user_is_sole_genuine_root_and_mapping_is_not_required
 #[test]
 fn checked_stored_user_is_sole_genuine_root() {
     isolated("checked_stored_user_is_sole_genuine_root", |root| {
@@ -469,8 +471,8 @@ fn acknowledge(f: &Fixture, row: &Value) -> Value {
     transport::complete(&f.repo, &f.runtime, &value).unwrap()
 }
 
-// frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_long_segment_uses_two_shared_observations_and_ingest_is_idempotent
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_public_observer_seal_and_no_learning_long_segment
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_long_segment_uses_two_shared_observations_and_ingest_is_idempotent
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_public_observer_seal_and_no_learning_long_segment
 #[test]
 fn long_segment_registers_two_exact_sources_and_replays_idempotently() {
     isolated(
@@ -519,7 +521,7 @@ fn long_segment_registers_two_exact_sources_and_replays_idempotently() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_admission_requires_sealed_registered_segment
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_admission_requires_sealed_registered_segment
 #[test]
 fn admission_cannot_complete_an_open_segment() {
     isolated("admission_cannot_complete_an_open_segment", |root| {
@@ -551,7 +553,7 @@ fn admission_cannot_complete_an_open_segment() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_gap_refuses_both_assessment_outcomes_and_preserves_marker
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_gap_refuses_both_assessment_outcomes_and_preserves_marker
 #[test]
 fn gapped_source_refuses_both_assessment_outcomes() {
     isolated("gapped_source_refuses_both_assessment_outcomes", |root| {
@@ -603,7 +605,7 @@ fn gapped_source_refuses_both_assessment_outcomes() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_manual_marker_delete_cannot_hide_unregistered_source
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_manual_marker_delete_cannot_hide_unregistered_source
 #[test]
 fn manual_marker_delete_cannot_hide_retained_source() {
     isolated("manual_marker_delete_cannot_hide_retained_source", |root| {
@@ -617,7 +619,7 @@ fn manual_marker_delete_cannot_hide_retained_source() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_notification_without_stored_human_has_no_origin_or_source_gap
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_notification_without_stored_human_has_no_origin_or_source_gap
 #[test]
 fn notifications_never_create_native_human_authority() {
     isolated(
@@ -648,7 +650,7 @@ fn notifications_never_create_native_human_authority() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_on_started_runs_once_after_preflight_before_source_write
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_on_started_runs_once_after_preflight_before_source_write
 #[test]
 fn on_started_runs_once_before_native_source_write() {
     isolated("on_started_runs_once_before_native_source_write", |root| {
@@ -681,7 +683,7 @@ fn on_started_runs_once_before_native_source_write() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_legacy_notification_only_cursor_is_neither_reused_mutated_nor_sealed
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_legacy_notification_only_cursor_is_neither_reused_mutated_nor_sealed
 #[test]
 fn legacy_notification_cursor_stays_immutable_and_unsealed() {
     isolated(
@@ -711,7 +713,7 @@ fn legacy_notification_cursor_stays_immutable_and_unsealed() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_neutral_hint_keeps_sealed_parent_immutable
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_neutral_hint_keeps_sealed_parent_immutable
 #[test]
 fn neutral_hint_never_reopens_sealed_parent() {
     isolated("neutral_hint_never_reopens_sealed_parent", |root| {
@@ -728,7 +730,7 @@ fn neutral_hint_never_reopens_sealed_parent() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_missing_or_stale_receipt_is_not_a_production_fallback
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_missing_or_stale_receipt_is_not_a_production_fallback
 #[test]
 fn missing_or_stale_receipt_never_falls_back_to_marker() {
     isolated(
@@ -928,7 +930,7 @@ fn queued_result(writer: &stream::ResponseWriter) -> Value {
     get(&body, "result").clone()
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_missing_clock_commits_pending_refs_then_registers_after_response
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_missing_clock_commits_pending_refs_then_registers_after_response
 #[test]
 fn missing_clock_commits_refs_before_postresponse_registration() {
     isolated(
@@ -996,7 +998,7 @@ fn missing_clock_commits_refs_before_postresponse_registration() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonarmed_and_direct_observation_keep_synchronous_registration
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonarmed_and_direct_observation_keep_synchronous_registration
 #[test]
 fn nonarmed_and_direct_observations_register_synchronously() {
     isolated(
@@ -1037,7 +1039,7 @@ fn nonarmed_and_direct_observations_register_synchronously() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_exclusively_held_barrier_refuses_close_without_metadata_write
+// obligation: tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_exclusively_held_barrier_refuses_close_without_metadata_write
 #[test]
 fn exclusive_barrier_refuses_finite_close_without_metadata_write() {
     isolated(
@@ -1668,7 +1670,7 @@ fn source_path(directory: &Path, reference: &str) -> PathBuf {
         .unwrap()
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_empty_segment_does_not_observe_shared_namespace
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_empty_segment_does_not_observe_shared_namespace
 #[test]
 fn empty_segment_does_not_observe_corrupt_shared_namespace() {
     isolated(
@@ -1704,7 +1706,7 @@ fn empty_segment_does_not_observe_corrupt_shared_namespace() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_all_enrollments_are_validated_before_shared_namespace_observation
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_all_enrollments_are_validated_before_shared_namespace_observation
 #[test]
 fn invalid_enrollment_refuses_before_shared_namespace_observation() {
     isolated(
@@ -1729,7 +1731,7 @@ fn invalid_enrollment_refuses_before_shared_namespace_observation() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_distinct_sources_and_orphan_registration_retain_exact_identities
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_distinct_sources_and_orphan_registration_retain_exact_identities
 #[test]
 fn distinct_sources_and_orphan_registration_retain_exact_identities() {
     isolated(
@@ -1793,7 +1795,7 @@ fn distinct_sources_and_orphan_registration_retain_exact_identities() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_duplicate_or_changed_digest_refuses_only_affected_lookup
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_duplicate_or_changed_digest_refuses_only_affected_lookup
 #[test]
 fn duplicate_or_changed_digest_refuses_only_affected_lookup() {
     isolated(
@@ -1841,7 +1843,7 @@ fn duplicate_or_changed_digest_refuses_only_affected_lookup() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_ordinary_missing_source_retains_only_its_own_registration_fault
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_ordinary_missing_source_retains_only_its_own_registration_fault
 #[test]
 fn ordinary_missing_source_retains_only_its_registration_fault() {
     isolated(
@@ -1884,7 +1886,7 @@ fn ordinary_missing_source_retains_only_its_registration_fault() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_missing_and_corrupt_attempts_are_not_confused_with_new_attempts
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_missing_and_corrupt_attempts_are_not_confused_with_new_attempts
 #[test]
 fn corrupt_and_unknown_attempts_are_not_new_attempts() {
     isolated(
@@ -1979,7 +1981,7 @@ fn assert_source_retained(f: &Fixture, session: &str, observation: &Value) {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_sparse_pending_index_reads_last_slot_and_allocates_lowest_hole
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_sparse_pending_index_reads_last_slot_and_allocates_lowest_hole
 #[test]
 fn sparse_pending_index_reads_last_slot_and_allocates_lowest_hole() {
     isolated(
@@ -2012,7 +2014,7 @@ fn sparse_pending_index_reads_last_slot_and_allocates_lowest_hole() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_refuses_malformed_or_symlink_last_slot_before_new_source
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_refuses_malformed_or_symlink_last_slot_before_new_source
 #[test]
 fn pending_index_refuses_malformed_and_symlink_last_slot() {
     isolated(
@@ -2067,7 +2069,7 @@ fn pending_index_refuses_malformed_and_symlink_last_slot() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_full_pending_index_preserves_actual_4096_slot_capacity
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_full_pending_index_preserves_actual_4096_slot_capacity
 #[test]
 fn full_pending_index_preserves_actual_4096_slot_capacity() {
     isolated(
@@ -2116,7 +2118,7 @@ fn full_pending_index_preserves_actual_4096_slot_capacity() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_directory_overflow_retains_existing_source_without_allocating
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_directory_overflow_retains_existing_source_without_allocating
 #[test]
 fn pending_directory_overflow_preserves_sources_without_allocating() {
     isolated(
@@ -2154,7 +2156,7 @@ fn pending_directory_overflow_preserves_sources_without_allocating() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_next_mint_refuses_a_new_raw_only_bank_locator
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_next_mint_refuses_a_new_raw_only_bank_locator
 #[test]
 fn next_context_mint_refuses_new_raw_only_locator() {
     isolated("next_context_mint_refuses_new_raw_only_locator", |root| {
@@ -2176,7 +2178,7 @@ fn next_context_mint_refuses_new_raw_only_locator() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_live_marker_context_cannot_escape_its_read_lifetime
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_live_marker_context_cannot_escape_its_read_lifetime
 #[test]
 fn marker_context_cannot_escape_read_lifetime() {
     isolated("marker_context_cannot_escape_read_lifetime", |root| {
@@ -2521,8 +2523,27 @@ struct HeldFixture {
     original: Value,
     body: Vec<u8>,
 }
+fn recovery_digest(value: &Value) -> agent_memory::error::Result<String> {
+    let bytes = agent_memory::developer_identity::encoded(value)?;
+    Ok(agent_memory::developer_identity::digest(Some(&bytes)).unwrap())
+}
 fn held_fixture(root: &Path) -> HeldFixture {
-    let f = Fixture::new(root);
+    held_fixture_with_context(root, false)
+}
+fn held_fixture_with_context(root: &Path, checkpoint: bool) -> HeldFixture {
+    let f = if checkpoint {
+        let (runtime, receipt, proof) = install_only(root, "copy");
+        let repo = bank_fixture_with_context(root, root.join("repo"), true);
+        boundary::activate_marker(&repo, false, &runtime).unwrap();
+        Fixture {
+            repo,
+            runtime,
+            receipt,
+            proof,
+        }
+    } else {
+        Fixture::new(root)
+    };
     let bank = f.repo.join("memory-bank");
     let operation = uid();
     let proposal_id = uid();
@@ -2598,7 +2619,7 @@ fn held_fixture(root: &Path) -> HeldFixture {
         ("operation_id", string(&operation)),
         (
             "manifest_sha256",
-            string(&transport::digest(&manifest).unwrap()),
+            string(&recovery_digest(&manifest).unwrap()),
         ),
         ("units", Value::Array(units)),
     ]);
@@ -2618,11 +2639,11 @@ fn held_fixture(root: &Path) -> HeldFixture {
         ("operation_id", string(&operation)),
         (
             "manifest_sha256",
-            string(&transport::digest(&manifest).unwrap()),
+            string(&recovery_digest(&manifest).unwrap()),
         ),
         (
             "unit_map_sha256",
-            string(&transport::digest(&unit_map).unwrap()),
+            string(&recovery_digest(&unit_map).unwrap()),
         ),
         ("reviewer_session", string("fixture-independent-review")),
         ("author_session", string("fixture-proposal")),
@@ -2646,7 +2667,7 @@ fn held_fixture(root: &Path) -> HeldFixture {
         ("state_root", string(state_root.to_str().unwrap())),
         (
             "manifest_sha256",
-            string(&transport::digest(&manifest).unwrap()),
+            string(&recovery_digest(&manifest).unwrap()),
         ),
         (
             "runtime_artifact_digest",
@@ -2678,7 +2699,7 @@ fn held_fixture(root: &Path) -> HeldFixture {
     set(
         &mut review,
         "quiescence_attestation_sha256",
-        string(&transport::digest(&attestation).unwrap()),
+        string(&recovery_digest(&attestation).unwrap()),
     );
     let proposal = object([
         ("schema", string("agent-memory/layout-recovery-proposal-v1")),
@@ -2694,21 +2715,18 @@ fn held_fixture(root: &Path) -> HeldFixture {
         ),
         (
             "manifest_sha256",
-            string(&transport::digest(&manifest).unwrap()),
+            string(&recovery_digest(&manifest).unwrap()),
         ),
         (
             "unit_map_sha256",
-            string(&transport::digest(&unit_map).unwrap()),
+            string(&recovery_digest(&unit_map).unwrap()),
         ),
         ("review", review.clone()),
-        (
-            "review_sha256",
-            string(&transport::digest(&review).unwrap()),
-        ),
+        ("review_sha256", string(&recovery_digest(&review).unwrap())),
         ("quiescence_attestation", attestation.clone()),
         (
             "quiescence_attestation_sha256",
-            string(&transport::digest(&attestation).unwrap()),
+            string(&recovery_digest(&attestation).unwrap()),
         ),
     ]);
     let ranges = get(&unit_map, "units")
@@ -2726,15 +2744,15 @@ fn held_fixture(root: &Path) -> HeldFixture {
         ("project_id", get(&scope, "project_id").clone()),
         (
             "manifest_sha256",
-            string(&transport::digest(&manifest).unwrap()),
+            string(&recovery_digest(&manifest).unwrap()),
         ),
         (
             "unit_map_sha256",
-            string(&transport::digest(&unit_map).unwrap()),
+            string(&recovery_digest(&unit_map).unwrap()),
         ),
         (
             "proposal_sha256",
-            string(&transport::digest(&proposal).unwrap()),
+            string(&recovery_digest(&proposal).unwrap()),
         ),
         ("generation", Value::Int(0u8.into())),
         ("previous_generation_sha256", Value::Null),
@@ -2768,18 +2786,18 @@ fn held_fixture(root: &Path) -> HeldFixture {
         ("schema", string("agent-memory/layout-ledger-head-v1")),
         ("operation_id", string(&operation)),
         ("generation", Value::Int(0u8.into())),
-        ("sha256", string(&transport::digest(&ledger).unwrap())),
+        ("sha256", string(&recovery_digest(&ledger).unwrap())),
     ]);
     let journal = object([
         ("schema", string("agent-memory/layout-recovery-journal-v1")),
         ("operation_id", string(&operation)),
         (
             "proposal_sha256",
-            string(&transport::digest(&proposal).unwrap()),
+            string(&recovery_digest(&proposal).unwrap()),
         ),
         (
             "manifest_sha256",
-            string(&transport::digest(&manifest).unwrap()),
+            string(&recovery_digest(&manifest).unwrap()),
         ),
     ]);
     for (name, value) in [
@@ -2801,7 +2819,7 @@ fn held_fixture(root: &Path) -> HeldFixture {
             ("project_id", get(&scope, "project_id").clone()),
             (
                 "ledger_head_sha256",
-                string(&transport::digest(&head).unwrap()),
+                string(&recovery_digest(&head).unwrap()),
             ),
             ("proposal_id", string(&proposal_id)),
             ("hold_id", string(&hold_id)),
@@ -2820,7 +2838,7 @@ fn held_fixture(root: &Path) -> HeldFixture {
     std::fs::remove_file(bank.join("handoff-prompt.md")).unwrap();
     write(
         &bank.join(".agent-memory-transaction.md"),
-        turn_sources::encoded(&object([
+        agent_memory::developer_identity::encoded(&object([
             ("schema", string(agent_memory::bank_writes::HOLD)),
             ("project_id", get(&scope, "project_id").clone()),
             ("operation_id", string(&operation)),
@@ -2831,7 +2849,7 @@ fn held_fixture(root: &Path) -> HeldFixture {
     );
     write(
         &bank.join(".agent-memory-recovery.md"),
-        turn_sources::encoded(&object([
+        agent_memory::developer_identity::encoded(&object([
             ("schema", string(agent_memory::bank_writes::SENTINEL)),
             ("project_id", get(&scope, "project_id").clone()),
             ("operation_id", string(&operation)),
@@ -2848,7 +2866,7 @@ fn held_fixture(root: &Path) -> HeldFixture {
     }
 }
 
-// frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_typed_context_exact_retry_and_no_ack_authority
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_typed_context_exact_retry_and_no_ack_authority
 #[test]
 fn held_context_exact_retry_never_grants_acknowledgement_authority() {
     isolated(
@@ -2926,7 +2944,7 @@ fn held_context_exact_retry_never_grants_acknowledgement_authority() {
     );
 }
 
-// frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_unknown_missing_corrupt_hold_and_frontier_only_change_refuse
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_unknown_missing_corrupt_hold_and_frontier_only_change_refuse
 #[test]
 fn missing_or_corrupt_hold_and_frontier_only_changes_refuse() {
     isolated(
@@ -2969,7 +2987,7 @@ fn missing_or_corrupt_hold_and_frontier_only_changes_refuse() {
             }
             let mut index =
                 agent_memory::layout_recovery_state::index(&f.repo, &f.runtime).unwrap();
-            let previous_index = transport::digest(&index).unwrap();
+            let previous_index = recovery_digest(&index).unwrap();
             let old_head = transport::read(&h.directory.join("ledger-head.json"), 65536).unwrap();
             let ledger =
                 transport::read(&h.directory.join("ledger/00000000.json"), 16 * 1024 * 1024)
@@ -2979,7 +2997,7 @@ fn missing_or_corrupt_hold_and_frontier_only_changes_refuse() {
             set(
                 &mut next,
                 "previous_generation_sha256",
-                string(&transport::digest(&ledger).unwrap()),
+                string(&recovery_digest(&ledger).unwrap()),
             );
             agent_memory::layout_recovery_state::write_once(
                 &h.directory.join("ledger/00000001.json"),
@@ -2991,12 +3009,12 @@ fn missing_or_corrupt_hold_and_frontier_only_changes_refuse() {
             set(
                 &mut head,
                 "sha256",
-                string(&transport::digest(&next).unwrap()),
+                string(&recovery_digest(&next).unwrap()),
             );
             agent_memory::layout_recovery_state::replace(
                 &h.directory.join("ledger-head.json"),
                 &head,
-                Some(&transport::digest(&old_head).unwrap()),
+                Some(&recovery_digest(&old_head).unwrap()),
             )
             .unwrap();
             set(
@@ -3006,7 +3024,7 @@ fn missing_or_corrupt_hold_and_frontier_only_changes_refuse() {
                     .get_mut(&h.operation)
                     .unwrap(),
                 "ledger_head_sha256",
-                string(&transport::digest(&head).unwrap()),
+                string(&recovery_digest(&head).unwrap()),
             );
             agent_memory::layout_recovery_state::set_index(
                 &f.repo,
@@ -3201,7 +3219,7 @@ fn held_fault_boundaries(root: &Path, mode: &str, stages: &[&str]) {
         h.body
     );
 }
-// frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_error_before_source_boundaries_reconcile_one_original_observation
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_error_before_source_boundaries_reconcile_one_original_observation
 #[test]
 fn error_before_source_boundaries_reconciles_original_observation() {
     isolated(
@@ -3215,7 +3233,7 @@ fn error_before_source_boundaries_reconciles_original_observation() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_error_source_publication_boundaries_reconcile_one_original_observation
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_error_source_publication_boundaries_reconcile_one_original_observation
 #[test]
 fn error_source_publication_boundaries_reconcile_original_observation() {
     isolated(
@@ -3234,7 +3252,7 @@ fn error_source_publication_boundaries_reconcile_original_observation() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_hard_exit_before_source_boundaries_reconcile_one_original_observation
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_hard_exit_before_source_boundaries_reconcile_one_original_observation
 #[test]
 fn hard_exit_before_source_boundaries_reconciles_original_observation() {
     isolated(
@@ -3248,7 +3266,7 @@ fn hard_exit_before_source_boundaries_reconciles_original_observation() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_hard_exit_source_publication_boundaries_reconcile_one_original_observation
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_hard_exit_source_publication_boundaries_reconcile_one_original_observation
 #[test]
 fn hard_exit_source_publication_boundaries_reconcile_original_observation() {
     isolated(
@@ -3268,7 +3286,7 @@ fn hard_exit_source_publication_boundaries_reconcile_original_observation() {
     );
 }
 
-// frontier obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_all_shared_readers_refuse_unknown_compatibility_before_source_index_access
+// obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_all_shared_readers_refuse_unknown_compatibility_before_source_index_access
 #[test]
 fn every_shared_reader_refuses_unknown_compatibility_before_index_access() {
     isolated(
@@ -3399,7 +3417,7 @@ fn execute_seal(
         .unwrap();
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_not_armed_is_distinct_from_armed_without_nonce
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_not_armed_is_distinct_from_armed_without_nonce
 #[test]
 fn not_armed_differs_from_armed_without_nonce() {
     isolated("not_armed_differs_from_armed_without_nonce", |root| {
@@ -3436,7 +3454,7 @@ fn not_armed_differs_from_armed_without_nonce() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_empty_verified_seal_reports_wake_not_evaluated
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_empty_verified_seal_reports_wake_not_evaluated
 #[test]
 fn empty_verified_seal_reports_wake_not_evaluated() {
     isolated("empty_verified_seal_reports_wake_not_evaluated", |root| {
@@ -3473,7 +3491,7 @@ fn empty_verified_seal_reports_wake_not_evaluated() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_conflicting_existing_record_is_never_rewritten_or_replayed
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_conflicting_existing_record_is_never_rewritten_or_replayed
 #[test]
 fn conflicting_optional_record_never_rewrites_or_replays_source() {
     isolated(
@@ -3518,8 +3536,8 @@ fn conflicting_optional_record_never_rewrites_or_replays_source() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_false_observed_send_leaves_decision_unrecorded
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_failed_observed_send_leaves_decision_unrecorded_and_still_drains
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_false_observed_send_leaves_decision_unrecorded
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_failed_observed_send_leaves_decision_unrecorded_and_still_drains
 #[test]
 fn real_closed_writer_leaves_decision_unrecorded_and_still_drains() {
     isolated(
@@ -3567,7 +3585,7 @@ fn real_closed_writer_leaves_decision_unrecorded_and_still_drains() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_optional_writer_failure_after_response_preserves_source_root_and_drain
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_optional_writer_failure_after_response_preserves_source_root_and_drain
 #[test]
 fn non_directory_optional_writer_failure_preserves_verified_source_and_drain() {
     isolated(
@@ -3639,7 +3657,15 @@ struct OperationChild {
 }
 impl OperationChild {
     fn wait(self) -> agent_memory::process::Output {
-        self.child.finish(self.deadline).unwrap()
+        let output = self.child.finish(self.deadline).unwrap();
+        if output.status == agent_memory::process::Status::Code(101) {
+            eprintln!(
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+        output
     }
 }
 fn operation_child(
@@ -3650,9 +3676,36 @@ fn operation_child(
 ) -> OperationChild {
     let mut env = std::env::vars_os().collect::<Vec<_>>();
     env.push(("AGENT_MEMORY_FAULT_OMP_OPERATION".into(), operation.into()));
-    if let Some(stage) = stage {
+    let calibration_stage = "omp.reservation.before-reserve";
+    let late_calibration = operation == "finite-auto-calibrated"
+        && !stage.is_some_and(|stages| stages.split(',').any(|s| s == calibration_stage));
+    let stages = if late_calibration {
+        Some(stage.map_or_else(
+            || calibration_stage.to_owned(),
+            |stages| format!("{stages},{calibration_stage}"),
+        ))
+    } else {
+        stage.map(str::to_owned)
+    };
+    let modes = if late_calibration {
+        env.push(("AGENT_MEMORY_CALIBRATION_RELEASE".into(), "1".into()));
+        stage.map_or_else(
+            || "pause".to_owned(),
+            |stages| {
+                let existing = if mode.contains(',') {
+                    mode.to_owned()
+                } else {
+                    vec![mode; stages.split(',').count()].join(",")
+                };
+                format!("{existing},pause")
+            },
+        )
+    } else {
+        mode.to_owned()
+    };
+    if let Some(stage) = stages {
         env.push(("AGENT_MEMORY_FAULT_STAGE".into(), stage.into()));
-        env.push(("AGENT_MEMORY_FAULT_MODE".into(), mode.into()));
+        env.push(("AGENT_MEMORY_FAULT_MODE".into(), modes.into()));
         env.push((
             "AGENT_MEMORY_FAULT_DIR".into(),
             root.join("rendezvous").into_os_string(),
@@ -3871,26 +3924,11 @@ fn native_operation_child() {
             let response = writer.clone();
             let root = root.clone();
             let automatic = operation == "finite-auto-calibrated";
-            let source_directory = transport::session_dir(&f.site(), SESSION).unwrap();
+            let release_calibration =
+                std::env::var_os("AGENT_MEMORY_CALIBRATION_RELEASE").is_some();
             Some(std::thread::spawn(move || {
                 if automatic {
-                    let deadline =
-                        agent_memory::clock::Deadline::after(Duration::from_secs(12)).unwrap();
-                    loop {
-                        let sealed =
-                            std::fs::read_dir(&source_directory)
-                                .ok()
-                                .is_some_and(|entries| {
-                                    entries
-                                        .filter_map(|e| e.ok())
-                                        .any(|e| e.path().join("segment.json").is_file())
-                                });
-                        if sealed {
-                            break;
-                        }
-                        assert!(!deadline.expired(), "Native seal never became durable");
-                        std::thread::sleep(Duration::from_millis(1));
-                    }
+                    ready(&root, "omp.reservation.before-reserve");
                 } else {
                     wait_path(&root.join("calibrate-now"));
                 }
@@ -3919,6 +3957,9 @@ fn native_operation_child() {
                     )
                     .unwrap();
                 write(&root.join("calibrated"), b"", 0o600);
+                if release_calibration {
+                    release(&root, "omp.reservation.before-reserve");
+                }
             }))
         } else {
             None
@@ -3939,13 +3980,13 @@ fn native_operation_child() {
         let raw = if invalid {
             b"{".to_vec()
         } else {
-            turn_sources::encoded(&envelope(request, 1)).unwrap()
+            turn_sources::encoded(&envelope(request.clone(), 1)).unwrap()
         };
         let result = executor.execute(
             &mut coverage,
             frame_kind,
             1,
-            if invalid { None } else { Some(nonce) },
+            (!invalid && text(&request, "action") == "seal").then_some(nonce),
             &raw,
         );
         if root.join("case-reuse-nonce").exists() {
@@ -4064,7 +4105,7 @@ fn no_verified_response(root: &Path) {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonbusy_outcome_failure_never_writes_second_outcome_or_verified_response
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonbusy_outcome_failure_never_writes_second_outcome_or_verified_response
 #[test]
 fn nonbusy_outcome_exit_failure_never_publishes_verified_response() {
     isolated(
@@ -4109,7 +4150,7 @@ fn nonbusy_outcome_exit_failure_never_publishes_verified_response() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_captured_source_checkpoint_failure_does_not_verify_or_schedule_drain
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_captured_source_checkpoint_failure_does_not_verify_or_schedule_drain
 #[test]
 fn captured_source_checkpoint_failure_never_verifies_or_drains() {
     isolated(
@@ -4179,7 +4220,7 @@ fn checkpoint_swap(root: &Path, name: &str) {
     std::fs::remove_file(path).unwrap();
     std::fs::rename(old, base.join(name)).unwrap();
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_executor_barrier_fd_swap
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_executor_barrier_fd_swap
 #[test]
 fn checkpoint_rejects_actual_executor_barrier_inode_swap() {
     isolated(
@@ -4187,7 +4228,7 @@ fn checkpoint_rejects_actual_executor_barrier_inode_swap() {
         |root| checkpoint_swap(root, "source-barrier.lock"),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_transport_fd_swap
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_transport_fd_swap
 #[test]
 fn checkpoint_rejects_actual_transport_inode_swap() {
     isolated("checkpoint_rejects_actual_transport_inode_swap", |root| {
@@ -4266,7 +4307,7 @@ fn assert_verified_pending_source(f: &Fixture, directory: &Path) {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_ack_after_source_started_resolves_only_at_reservation
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_ack_after_source_started_resolves_only_at_reservation
 #[test]
 fn late_real_clock_ack_is_resolved_at_reservation() {
     isolated("late_real_clock_ack_is_resolved_at_reservation", |root| {
@@ -4278,7 +4319,7 @@ fn late_real_clock_ack_is_resolved_at_reservation() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_binds_actual_root_after_response_without_changing_old_evidence
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_binds_actual_root_after_response_without_changing_old_evidence
 #[test]
 fn offered_decision_binds_actual_root_and_preserves_old_evidence() {
     isolated(
@@ -4354,7 +4395,7 @@ fn offered_decision_binds_actual_root_and_preserves_old_evidence() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_spoofed_record_keys_types_digests_and_status_are_unbound_without_contents
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_spoofed_record_keys_types_digests_and_status_are_unbound_without_contents
 #[test]
 fn spoofed_diagnostic_keys_types_digests_and_status_are_unbound() {
     isolated(
@@ -4429,7 +4470,7 @@ fn spoofed_diagnostic_keys_types_digests_and_status_are_unbound() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_canonical_parsed_evidence_digests_survive_noncanonical_json_encoding
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_canonical_parsed_evidence_digests_survive_noncanonical_json_encoding
 #[test]
 fn parsed_evidence_digests_survive_noncanonical_json_encoding() {
     isolated(
@@ -4469,7 +4510,7 @@ fn parsed_evidence_digests_survive_noncanonical_json_encoding() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_root_write_failure_after_actual_reservation_is_unknown_not_replayed
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_root_write_failure_after_actual_reservation_is_unknown_not_replayed
 #[test]
 fn real_root_write_failure_after_reservation_stays_unknown() {
     isolated(
@@ -4501,8 +4542,8 @@ fn real_root_write_failure_after_reservation_stays_unknown() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_real_transport_lock_exit_swap_maps_committed_reservation_to_unknown
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_wake_and_observer_unwind_faults_preserve_source_and_actual_reservation_fact
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_real_transport_lock_exit_swap_maps_committed_reservation_to_unknown
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_wake_and_observer_unwind_faults_preserve_source_and_actual_reservation_fact
 #[test]
 fn real_transport_exit_swap_preserves_committed_source_and_spent_reservation() {
     isolated(
@@ -4594,7 +4635,7 @@ fn sampled_attempt_mutation(root: &Path, deleted: bool) {
     assert_eq!(get(&state, "sources").as_array().unwrap().len(), 2);
     assert_eq!(path.exists(), !deleted);
 }
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source
 #[test]
 fn changed_sampled_attempt_refuses_even_matching_registered_source() {
     isolated(
@@ -4602,7 +4643,7 @@ fn changed_sampled_attempt_refuses_even_matching_registered_source() {
         |root| sampled_attempt_mutation(root, false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source
 #[test]
 fn deleted_sampled_attempt_refuses_even_matching_registered_source() {
     isolated(
@@ -4611,7 +4652,7 @@ fn deleted_sampled_attempt_refuses_even_matching_registered_source() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_observation_failure_is_local_memoized_and_fault_lists_are_independent
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_observation_failure_is_local_memoized_and_fault_lists_are_independent
 #[test]
 fn observation_failure_is_local_memoized_and_fault_lists_are_independent() {
     isolated(
@@ -4663,7 +4704,7 @@ fn observation_failure_is_local_memoized_and_fault_lists_are_independent() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_registration_between_row_lookups_cannot_invent_retained_attempt_fault
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_registration_between_row_lookups_cannot_invent_retained_attempt_fault
 #[test]
 fn registration_between_lookups_cannot_invent_retained_attempt_fault() {
     isolated(
@@ -4715,7 +4756,7 @@ fn registration_between_lookups_cannot_invent_retained_attempt_fault() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_namespace_change_between_both_locked_passes_refuses_every_row
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_namespace_change_between_both_locked_passes_refuses_every_row
 #[test]
 fn namespace_change_between_locked_passes_refuses_every_row() {
     isolated(
@@ -4889,7 +4930,7 @@ fn held_unknown_foreign_malformed_and_unsafe_owners_never_become_busy() {
     }
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::AnswerFirstQualification.test_no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status
+// obligation: tests/contracts/test_omp_wake_decisions.py::AnswerFirstQualification.test_no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status
 #[test]
 fn no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status() {
     isolated(
@@ -4929,7 +4970,9 @@ fn no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status() {
                 let output = command(
                     &repo,
                     &[
-                        env!("CARGO_BIN_EXE_am").into(),
+                        Path::new(text(&receipt, "bin_dir"))
+                            .join("am")
+                            .into_os_string(),
                         "--json".into(),
                         operation.into(),
                     ],
@@ -4957,7 +5000,12 @@ fn no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status() {
 }
 
 fn bank_fixture(root: &Path) -> PathBuf {
-    let repo = root.join("repo");
+    bank_fixture_at(root, root.join("repo"))
+}
+fn bank_fixture_at(root: &Path, repo: PathBuf) -> PathBuf {
+    bank_fixture_with_context(root, repo, false)
+}
+fn bank_fixture_with_context(root: &Path, repo: PathBuf, checkpoint: bool) -> PathBuf {
     command(
         root,
         &[
@@ -4973,6 +5021,13 @@ fn bank_fixture(root: &Path) -> PathBuf {
         "# Evidence\n\nEphemeral fixture.\n",
         0o644,
     );
+    if checkpoint {
+        write(
+            &repo.join("README.md"),
+            "# Checkpoint fixture\n\nRetain the actual source conditions.\n",
+            0o644,
+        );
+    }
     command(&repo, &["git".into(), "add".into(), ".".into()]);
     command(
         &repo,
@@ -4992,6 +5047,25 @@ fn bank_fixture(root: &Path) -> PathBuf {
         "project-id",
         string("75b38e17-c36e-4fab-8ba9-5fa51f25de91"),
     );
+    if checkpoint {
+        set(
+            proposal.get_mut("contexts").unwrap(),
+            "activeContext.md",
+            object([
+                (
+                    "body",
+                    string(
+                        "# Active context\n\n## Current focus\n\nOld focus.\n\n## Recent changes\n\nEarlier meaningful result with its source.\n\n## Open questions\n\nDoes this hold beyond the retry component?\n\n## Next step\n\nInspect the other clone.\n\n## Source notes\n\nKeep branch:legacy, original developer and [evidence](../legacy-result.md).\n\n```markdown\n## Current focus\nThis is an example, not a duplicate checkpoint section.\n```\n",
+                    ),
+                ),
+                ("purpose", string("Fixture context")),
+                ("scope", string("repository")),
+                ("lifecycle", string("active")),
+                ("read-when", string("When resuming")),
+            ]),
+        );
+        remove_key(proposal.get_mut("omitted").unwrap(), "activeContext.md");
+    }
     let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
     for (name, body) in get(&rendered, "files").as_object().unwrap() {
         write(
@@ -5174,7 +5248,7 @@ fn stored_batch_controls_keep_foreign_companions_and_humans_as_source() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_observer_verification_cannot_enroll_or_promote_legacy_marker
+// obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_observer_verification_cannot_enroll_or_promote_legacy_marker
 #[test]
 fn observer_verification_never_enrolls_or_promotes_legacy_marker() {
     isolated(
@@ -5225,7 +5299,7 @@ fn observer_verification_never_enrolls_or_promotes_legacy_marker() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_transaction_local_read_reuse_requires_exact_live_context_and_preserves_inventory
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_transaction_local_read_reuse_requires_exact_live_context_and_preserves_inventory
 #[test]
 fn transaction_local_read_reuse_requires_exact_live_context() {
     isolated(
@@ -5312,7 +5386,7 @@ fn transaction_local_read_reuse_requires_exact_live_context() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_changed_configured_bank_before_reused_registration_writes_neither_namespace
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_changed_configured_bank_before_reused_registration_writes_neither_namespace
 #[test]
 fn changed_configured_bank_before_reused_registration_writes_neither_namespace() {
     isolated(
@@ -5379,8 +5453,8 @@ fn changed_configured_bank_before_reused_registration_writes_neither_namespace()
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_transaction_end_fresh_recheck_refuses_late_config_after_read_only_reuse
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_live_marker_observation_refuses_late_authority_change_without_private_writes
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_transaction_end_fresh_recheck_refuses_late_config_after_read_only_reuse
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_live_marker_observation_refuses_late_authority_change_without_private_writes
 #[test]
 fn transaction_exit_freshly_refuses_late_authority_config_without_private_writes() {
     isolated(
@@ -5427,7 +5501,7 @@ fn transaction_exit_freshly_refuses_late_authority_config_without_private_writes
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postcommit_pre_reservation_fault_has_no_second_outcome
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postcommit_pre_reservation_fault_has_no_second_outcome
 #[test]
 fn postcommit_prereservation_refusal_has_no_second_outcome() {
     isolated(
@@ -5457,7 +5531,7 @@ fn postcommit_prereservation_refusal_has_no_second_outcome() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_plain_prereserve_open_read_refuses_drift_after_verified_source
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_plain_prereserve_open_read_refuses_drift_after_verified_source
 #[test]
 fn prereserve_open_read_refuses_drift_after_verified_source() {
     isolated(
@@ -5491,8 +5565,8 @@ fn prereserve_open_read_refuses_drift_after_verified_source() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_retained_root_after_cursor_failure_stays_unknown_and_rootless
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_wake_failure_after_reservation_preserves_verified_seal_and_single_budget
+// obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_retained_root_after_cursor_failure_stays_unknown_and_rootless
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_wake_failure_after_reservation_preserves_verified_seal_and_single_budget
 #[test]
 fn retained_root_after_cursor_failure_stays_unknown_and_rootless() {
     isolated(
@@ -5539,20 +5613,16 @@ fn retained_root_after_cursor_failure_stays_unknown_and_rootless() {
                 &Value::Int(0u8.into())
             );
             let before = std::fs::read(&root_wakes(&f)[0]).unwrap();
-            let wake = object([
-                ("schema", string("agent-memory/omp-observer-request-v2")),
-                ("action", string("wake")),
-                ("session", string(SESSION)),
-                ("lifecycle", get(&result, "lifecycle").clone()),
-                ("payload", get(&result, "wake_payload").clone()),
-            ]);
-            assert_eq!(get(&f.observe(&wake), "continue"), &Value::Bool(false));
+            let repeated = f.observe(&armed_request(&f));
+            assert_eq!(get(&repeated, "verified"), &Value::Bool(true));
+            assert_eq!(get(&repeated, "continue"), &Value::Bool(false));
+            assert_eq!(f.pending().len(), 2);
             assert_eq!(std::fs::read(&root_wakes(&f)[0]).unwrap(), before);
         },
     );
 }
 
-// frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_rechecks_normal_and_ordinary_failures
+// obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_rechecks_normal_and_ordinary_failures
 #[test]
 fn public_readonly_drain_rechecks_raced_transport_absence() {
     isolated(
@@ -5585,8 +5655,8 @@ fn public_readonly_drain_rechecks_raced_transport_absence() {
     );
 }
 
-// frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_preserves_interrupts_and_fatal_failures
-// frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_native_drain_preserves_interrupts_and_releases_source_barrier
+// obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_preserves_interrupts_and_fatal_failures
+// obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_native_drain_preserves_interrupts_and_releases_source_barrier
 #[test]
 fn public_native_drain_preserves_real_sigint_and_releases_barrier() {
     isolated(
@@ -5836,7 +5906,7 @@ fn assert_capture_succeeds(child: OperationChild) {
     assert_eq!(get(&value, "admission_verified"), &Value::Bool(true));
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_public_capture_cannot_interpose_before_verified_outcome
+// obligation: tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_public_capture_cannot_interpose_before_verified_outcome
 #[test]
 fn public_capture_cannot_interpose_before_verified_finite_outcome() {
     isolated(
@@ -5898,7 +5968,7 @@ fn public_capture_cannot_interpose_before_verified_finite_outcome() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_exhausts_real_shared_barrier_without_canonical_write
+// obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_exhausts_real_shared_barrier_without_canonical_write
 #[test]
 fn public_capture_exhausts_real_shared_barrier_without_canonical_write() {
     isolated(
@@ -5942,7 +6012,7 @@ fn public_capture_exhausts_real_shared_barrier_without_canonical_write() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_refuses_unknown_marker_and_shared_upgrade
+// obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_refuses_unknown_marker_and_shared_upgrade
 #[test]
 fn public_capture_refuses_unknown_marker_and_shared_barrier_upgrade() {
     isolated(
@@ -6050,7 +6120,7 @@ fn writer_and_observer_order(root: &Path, writer_first: bool) {
         &Value::Int(0u8.into())
     );
 }
-// frontier obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders
+// obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders
 #[test]
 fn actual_capture_before_real_observer_retains_fence_order() {
     isolated(
@@ -6058,7 +6128,7 @@ fn actual_capture_before_real_observer_retains_fence_order() {
         |root| writer_and_observer_order(root, true),
     );
 }
-// frontier obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders
+// obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders
 #[test]
 fn actual_observer_before_real_capture_retains_fence_order() {
     isolated(
@@ -6120,7 +6190,7 @@ fn persistence_truncation_is_never_literal_complete_learning() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_active_unavailable_tail_is_real_gap_not_a_notification_gap
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_active_unavailable_tail_is_real_gap_not_a_notification_gap
 #[test]
 fn active_unavailable_tail_is_real_gap_not_notification_gap() {
     isolated(
@@ -6157,7 +6227,7 @@ fn active_unavailable_tail_is_real_gap_not_notification_gap() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity
 #[test]
 fn retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity() {
     isolated(
@@ -6200,7 +6270,7 @@ fn retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_new_truncated_entry_keeps_gap_and_prevents_complete_source_claim
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_new_truncated_entry_keeps_gap_and_prevents_complete_source_claim
 #[test]
 fn retired_new_truncated_entry_keeps_gap_and_prevents_complete_claim() {
     isolated(
@@ -6245,7 +6315,7 @@ fn retired_new_truncated_entry_keeps_gap_and_prevents_complete_claim() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_resumed_fork_postfork_human_is_not_blanket_inherited
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_resumed_fork_postfork_human_is_not_blanket_inherited
 #[test]
 fn resumed_fork_postfork_human_is_not_blanket_inherited() {
     isolated(
@@ -6297,7 +6367,7 @@ fn resumed_fork_postfork_human_is_not_blanket_inherited() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_fork_without_time_evidence_retains_nonhuman_source_with_explicit_gap
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_fork_without_time_evidence_retains_nonhuman_source_with_explicit_gap
 #[test]
 fn fork_without_time_evidence_retains_nonhuman_source_with_gap() {
     isolated(
@@ -6334,8 +6404,8 @@ fn fork_without_time_evidence_retains_nonhuman_source_with_gap() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_late_native_tool_result_recovers_original_sealed_gap_without_reopening
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_resolved_sealed_tool_gap_does_not_leave_stale_tool_pending_or_block_drain
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_late_native_tool_result_recovers_original_sealed_gap_without_reopening
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_resolved_sealed_tool_gap_does_not_leave_stale_tool_pending_or_block_drain
 #[test]
 fn exact_late_tool_result_recovers_sealed_gap_without_reopening_or_stale_pending() {
     isolated(
@@ -6440,7 +6510,7 @@ fn exact_late_tool_result_recovers_sealed_gap_without_reopening_or_stale_pending
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_foreign_tool_call_id_cannot_resolve_actual_sealed_tool_gap
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_foreign_tool_call_id_cannot_resolve_actual_sealed_tool_gap
 #[test]
 fn foreign_tool_call_id_never_resolves_actual_sealed_gap() {
     isolated(
@@ -6504,7 +6574,7 @@ fn foreign_tool_call_id_never_resolves_actual_sealed_gap() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_unsafe_exact_recovery_does_not_append_gap_to_sealed_source
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_unsafe_exact_recovery_does_not_append_gap_to_sealed_source
 #[test]
 fn unsafe_exact_recovery_never_mutates_sealed_source() {
     isolated(
@@ -6533,7 +6603,7 @@ fn unsafe_exact_recovery_never_mutates_sealed_source() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_manager_subdirectory_same_bank_accepts_and_native_root_identity_stays_canonical
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_manager_subdirectory_same_bank_accepts_and_native_root_identity_stays_canonical
 #[test]
 fn manager_subdirectory_accepts_only_canonical_bank_root_identity() {
     isolated(
@@ -6665,7 +6735,7 @@ fn response_frames(path: &Path) -> Vec<(String, u64, Value)> {
     result
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_contended_entry_refuses_current_frame_and_stops
+// obligation: tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_contended_entry_refuses_current_frame_and_stops
 #[test]
 fn contended_entry_refuses_current_frame_and_stops_with_open_input() {
     use std::io::Write;
@@ -6896,7 +6966,7 @@ fn with_window(f: &Fixture, value: &Value, clocks: &stream::ClockWindows, nonce:
     .unwrap()
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_delayed_old_checked_view_refuses_new_session_and_real_new_human_has_one_root
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_delayed_old_checked_view_refuses_new_session_and_real_new_human_has_one_root
 #[test]
 fn delayed_old_view_never_creates_new_session_authority() {
     isolated(
@@ -6993,7 +7063,7 @@ fn delayed_old_view_never_creates_new_session_authority() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_invalid_views_refuse_before_real_transport_contention_and_bad_receipt
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_invalid_views_refuse_before_real_transport_contention_and_bad_receipt
 #[test]
 fn invalid_view_precedes_contended_transport_and_bad_receipt() {
     isolated(
@@ -7066,7 +7136,7 @@ fn invalid_view_precedes_contended_transport_and_bad_receipt() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_completed_historical_origin_exact_replay_is_read_only_and_changed_request_refuses
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_completed_historical_origin_exact_replay_is_read_only_and_changed_request_refuses
 #[test]
 fn completed_historical_origin_allows_only_exact_readonly_replay() {
     isolated(
@@ -7109,7 +7179,7 @@ fn completed_historical_origin_allows_only_exact_readonly_replay() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_same_role_position_decoy_never_resolves_real_event_gap
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_same_role_position_decoy_never_resolves_real_event_gap
 #[test]
 fn adjacent_role_decoy_cannot_resolve_exact_event_gap() {
     isolated(
@@ -7176,7 +7246,7 @@ fn adjacent_role_decoy_cannot_resolve_exact_event_gap() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_weak_historical_event_resolution_does_not_authorize_new_acknowledgement
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_weak_historical_event_resolution_does_not_authorize_new_acknowledgement
 #[test]
 fn weak_historical_event_resolution_never_grants_new_completion() {
     isolated(
@@ -7250,7 +7320,7 @@ fn weak_historical_event_resolution_never_grants_new_completion() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_malformed_wake_state_suppresses_reservation_but_retains_and_enrolls_real_source
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_malformed_wake_state_suppresses_reservation_but_retains_and_enrolls_real_source
 #[test]
 fn malformed_wake_namespace_preserves_sources_without_spending_window() {
     isolated(
@@ -7290,7 +7360,7 @@ fn malformed_wake_namespace_preserves_sources_without_spending_window() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_no_active_resume_paths_never_append_to_previously_sealed_instance_segment
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_no_active_resume_paths_never_append_to_previously_sealed_instance_segment
 #[test]
 fn resumed_carrier_message_and_unavailable_tail_never_append_to_sealed_parent() {
     scenarios(
@@ -7352,7 +7422,7 @@ fn resumed_carrier_message_and_unavailable_tail_never_append_to_sealed_parent() 
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_expired_internal_delivery_window_never_reserves_root_wake
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_expired_internal_delivery_window_never_reserves_root_wake
 #[test]
 fn expired_real_window_does_not_spend_native_human_budget() {
     isolated(
@@ -7385,7 +7455,7 @@ fn expired_real_window_does_not_spend_native_human_budget() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_held_and_gapped_segments_do_not_gain_completion_authority
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_held_and_gapped_segments_do_not_gain_completion_authority
 #[test]
 fn held_and_gapped_segment_rows_never_authorize_completion() {
     scenarios(
@@ -7434,7 +7504,7 @@ fn held_and_gapped_segment_rows_never_authorize_completion() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_missing_corrupt_source_and_completion_faults_remain_visible
+// obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_missing_corrupt_source_and_completion_faults_remain_visible
 #[test]
 fn missing_corrupt_source_and_completion_records_remain_visible() {
     scenarios(
@@ -7906,7 +7976,7 @@ fn has_gap(directory: &Path, native: &str, reason: &str) -> bool {
         })
 }
 
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_fresh_capture_preserves_surrounding_source_and_retries
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_fresh_capture_preserves_surrounding_source_and_retries
 #[test]
 fn fresh_owned_capture_preserves_surrounding_source_in_both_install_modes() {
     scenarios(
@@ -7945,7 +8015,7 @@ fn fresh_owned_capture_preserves_surrounding_source_in_both_install_modes() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_nonread_result_never_mints_manual_witness
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_nonread_result_never_mints_manual_witness
 #[test]
 fn nonread_tool_output_remains_ordinary_learning_source() {
     isolated(
@@ -7984,7 +8054,7 @@ fn nonread_tool_output_remains_ordinary_learning_source() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_screened_invocation_does_not_hide_following_answer
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_screened_invocation_does_not_hide_following_answer
 #[test]
 fn screened_read_invocation_cannot_hide_following_answer() {
     isolated(
@@ -8091,7 +8161,7 @@ fn orphan_manual_snapshot(root: &Path, mismatched: bool) {
             .is_empty()
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_snapshot_publication_recovery_survives_uninstall_and_retry
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_snapshot_publication_recovery_survives_uninstall_and_retry
 #[test]
 fn orphan_owned_snapshot_recovers_after_manual_removal_without_reclassification() {
     isolated(
@@ -8099,7 +8169,7 @@ fn orphan_owned_snapshot_recovers_after_manual_removal_without_reclassification(
         |root| orphan_manual_snapshot(root, false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_mismatched_orphan_snapshot_is_integrity_failure
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_mismatched_orphan_snapshot_is_integrity_failure
 #[test]
 fn mismatched_orphan_owned_snapshot_refuses_without_overwrite() {
     isolated(
@@ -8107,7 +8177,7 @@ fn mismatched_orphan_owned_snapshot_refuses_without_overwrite() {
         |root| orphan_manual_snapshot(root, true),
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_preexisting_native_gap_is_not_reclassified
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_preexisting_native_gap_is_not_reclassified
 #[test]
 fn preexisting_unsafe_native_gap_cannot_become_owned_instruction() {
     isolated(
@@ -8152,7 +8222,10 @@ fn sealed_manual_gap(root: &Path, same_sweep: bool) {
     let witness = omp_installation::owned_manual(&f.receipt, "SKILL.md")
         .unwrap()
         .unwrap();
-    let (call, result) = pair(&witness);
+    let (call, mut result) = pair(&witness);
+    if same_sweep {
+        set(&mut result, "parentId", string("second-human"));
+    }
     let entries = if same_sweep {
         vec![
             human("human"),
@@ -8211,7 +8284,7 @@ fn sealed_manual_gap(root: &Path, same_sweep: bool) {
     }
     assert!(!f.pending().is_empty());
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_sealed_tool_gap_does_not_authorize_late_classification
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_sealed_tool_gap_does_not_authorize_late_classification
 #[test]
 fn sealed_tool_gap_never_lends_late_owned_instruction_authority() {
     isolated(
@@ -8219,7 +8292,7 @@ fn sealed_tool_gap_never_lends_late_owned_instruction_authority() {
         |root| sealed_manual_gap(root, false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_same_sweep_human_boundary_preserves_sealed_tool_gap
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_same_sweep_human_boundary_preserves_sealed_tool_gap
 #[test]
 fn same_sweep_human_boundary_preserves_original_tool_gap() {
     isolated(
@@ -8227,7 +8300,7 @@ fn same_sweep_human_boundary_preserves_original_tool_gap() {
         |root| sealed_manual_gap(root, true),
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_protected_private_root_cannot_silently_move_or_lose_binding
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_protected_private_root_cannot_silently_move_or_lose_binding
 #[test]
 fn protected_private_root_cannot_lose_native_binding_silently() {
     isolated(
@@ -8247,7 +8320,7 @@ fn protected_private_root_cannot_lose_native_binding_silently() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source
+// obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source
 #[test]
 fn native_root_wake_is_once_and_next_human_includes_old_unassessed_sources() {
     isolated(
@@ -8433,7 +8506,7 @@ fn finish_enrollment(root: &Path, child: OperationChild, stage: &str) -> Value {
     registry_result(root)
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival
 #[test]
 fn bounded_sweeps_enroll_oldest_without_losing_new_arrivals() {
     isolated(
@@ -8501,7 +8574,7 @@ fn bounded_sweeps_enroll_oldest_without_losing_new_arrivals() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried
 #[test]
 fn lost_registration_response_recovers_only_actual_original_shared_source() {
     scenarios(
@@ -8590,7 +8663,7 @@ fn lost_registration_response_recovers_only_actual_original_shared_source() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_shared_fault_retained_across_later_observer_progress
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_shared_fault_retained_across_later_observer_progress
 #[test]
 fn actual_shared_source_capacity_fault_remains_retained_across_observer_progress() {
     isolated(
@@ -8599,19 +8672,43 @@ fn actual_shared_source_capacity_fault_remains_retained_across_observer_progress
             let f = Fixture::new(root);
             let lifecycle =
                 transport::uuid5_url(&format!("{}:omp:{SESSION}:human", f.repo.display()));
-            for n in 0..turn_sources::MAX_SOURCES {
-                turn_sources::register(
-                    &f.repo,
-                    "omp",
-                    SESSION,
-                    &lifecycle,
-                    &format!("{n:064x}"),
-                    Some(&format!("existing-{n}")),
-                    Some(&format!("omp:existing-{n}")),
-                    None,
-                    &f.runtime,
-                )
-                .unwrap();
+            let source = turn_sources::register(
+                &f.repo,
+                "omp",
+                SESSION,
+                &lifecycle,
+                &format!("{:064x}", 0),
+                Some("existing-0"),
+                Some("omp:existing-0"),
+                None,
+                &f.runtime,
+            )
+            .unwrap();
+            let (full, _) = turn_sources::private_namespace(
+                &f.repo, "omp", SESSION, &lifecycle, false, &f.runtime,
+            )
+            .unwrap();
+            // Retained setup records fill the real bound; the ordinary observer
+            // below must hit the actual source-capacity writer and retain its fault.
+            for n in 1..turn_sources::MAX_SOURCES {
+                let mut retained = source.clone();
+                set(&mut retained, "observation_id", string(&uid()));
+                set(&mut retained, "source_sha256", string(&format!("{n:064x}")));
+                set(
+                    &mut retained,
+                    "native_source_id",
+                    string(&format!("existing-{n}")),
+                );
+                set(
+                    &mut retained,
+                    "source_reference",
+                    string(&format!("omp:existing-{n}")),
+                );
+                write(
+                    &full.directory.join(format!("source-{n}.json")),
+                    turn_sources::encoded(&retained).unwrap(),
+                    0o600,
+                );
             }
             let value = request(&f, &[human("human")], "seal");
             let first = f.observe(&value);
@@ -8649,7 +8746,7 @@ fn actual_shared_source_capacity_fault_remains_retained_across_observer_progress
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_resolves_regular_and_newline_worktree_identity
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_resolves_regular_and_newline_worktree_identity
 #[test]
 fn fresh_context_resolves_regular_and_newline_linked_worktree_identity() {
     isolated(
@@ -8688,7 +8785,7 @@ fn fresh_context_resolves_regular_and_newline_linked_worktree_identity() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_foreign_bank_identity_without_private_writes
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_foreign_bank_identity_without_private_writes
 #[test]
 fn fresh_context_refuses_physical_foreign_bank_identity_without_private_writes() {
     isolated(
@@ -8697,9 +8794,7 @@ fn fresh_context_refuses_physical_foreign_bank_identity_without_private_writes()
             let f = Fixture::new(root);
             let bank = f.repo.join("memory-bank");
             let foreign = f.repo.join("foreign-bank");
-            copy_tree(root, &bank, &foreign);
             let router = foreign.join("MEMORY.md");
-            let original = std::fs::read_to_string(&router).unwrap();
             let project =
                 agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
                     .unwrap()
@@ -8707,6 +8802,8 @@ fn fresh_context_refuses_physical_foreign_bank_identity_without_private_writes()
                     .as_str()
                     .unwrap()
                     .to_owned();
+            copy_tree(root, &bank, &foreign);
+            let original = std::fs::read_to_string(&router).unwrap();
             write(&router, original.replace(&project, &uid()), 0o644);
             std::fs::rename(&bank, root.join("retained-original-identity-bank")).unwrap();
             git_config(&f, "agent-memory.bankRoot", "foreign-bank");
@@ -8719,7 +8816,7 @@ fn fresh_context_refuses_physical_foreign_bank_identity_without_private_writes()
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_bank_drift_after_actual_scope_read
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_bank_drift_after_actual_scope_read
 #[test]
 fn fresh_context_refuses_competing_bank_added_after_actual_scope_read() {
     isolated(
@@ -8815,7 +8912,7 @@ fn raw_locator_refusal(root: &Path, held: bool, kind: &str, late: bool) {
         before
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_raw_nonrouter_refusal_with_and_without_verified_hold
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_raw_nonrouter_refusal_with_and_without_verified_hold
 #[test]
 fn raw_nonrouter_context_refusal_preserves_held_and_ordinary_banks() {
     scenarios(
@@ -8824,7 +8921,7 @@ fn raw_nonrouter_context_refusal_preserves_held_and_ordinary_banks() {
         |root, mode| raw_locator_refusal(root, mode == "held", "untracked", false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_committed_raw_locator_refusal_with_and_without_verified_hold
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_committed_raw_locator_refusal_with_and_without_verified_hold
 #[test]
 fn committed_missing_raw_locator_refusal_preserves_held_and_ordinary_banks() {
     scenarios(
@@ -8833,7 +8930,7 @@ fn committed_missing_raw_locator_refusal_preserves_held_and_ordinary_banks() {
         |root, mode| raw_locator_refusal(root, mode == "held", "committed", false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_symlink_locator_refusal_with_and_without_verified_hold
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_symlink_locator_refusal_with_and_without_verified_hold
 #[test]
 fn symlink_raw_locator_refusal_preserves_held_and_ordinary_banks() {
     scenarios(
@@ -8842,7 +8939,7 @@ fn symlink_raw_locator_refusal_preserves_held_and_ordinary_banks() {
         |root, mode| raw_locator_refusal(root, mode == "held", "symlink", false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_late_raw_locator_refusal_with_and_without_verified_hold
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_late_raw_locator_refusal_with_and_without_verified_hold
 #[test]
 fn late_raw_locator_after_real_scope_read_refuses_held_and_ordinary_contexts() {
     scenarios(
@@ -8851,7 +8948,7 @@ fn late_raw_locator_after_real_scope_read_refuses_held_and_ordinary_contexts() {
         |root, mode| raw_locator_refusal(root, mode == "held", "untracked", true),
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_successful_but_disagreeing_bank_locators
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_successful_but_disagreeing_bank_locators
 #[test]
 fn successful_but_disagreeing_raw_and_ordinary_bank_locators_never_mint_context() {
     isolated(
@@ -8884,7 +8981,7 @@ fn successful_but_disagreeing_raw_and_ordinary_bank_locators_never_mint_context(
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_reused_locator_keeps_post_source_mutation_scope_check_and_original_fault
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_reused_locator_keeps_post_source_mutation_scope_check_and_original_fault
 #[test]
 fn reused_locator_rechecks_scope_after_actual_source_publication_and_retains_fault() {
     isolated(
@@ -8923,7 +9020,7 @@ fn reused_locator_rechecks_scope_after_actual_source_publication_and_retains_fau
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_concurrent_slot_creation_keeps_both_sources_and_next_hole
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_concurrent_slot_creation_keeps_both_sources_and_next_hole
 #[test]
 fn concurrent_real_pending_slot_creation_keeps_both_sources_and_next_hole() {
     isolated(
@@ -8960,7 +9057,7 @@ fn concurrent_real_pending_slot_creation_keeps_both_sources_and_next_hole() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_retries_transient_scan_change_and_refuses_persistent_churn
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_retries_transient_scan_change_and_refuses_persistent_churn
 #[test]
 fn pending_index_retries_real_transient_change_and_refuses_real_persistent_churn() {
     scenarios(
@@ -9042,7 +9139,7 @@ fn pending_index_retries_real_transient_change_and_refuses_real_persistent_churn
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_held_read_reuse_keeps_exact_intent_pins_and_refuses_changed_hold_without_new_source
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_held_read_reuse_keeps_exact_intent_pins_and_refuses_changed_hold_without_new_source
 #[test]
 fn held_read_reuse_keeps_exact_intent_pins_and_refuses_new_source_after_hold_change() {
     isolated(
@@ -9127,7 +9224,7 @@ fn held_read_reuse_keeps_exact_intent_pins_and_refuses_new_source_after_hold_cha
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_observe_bank_drift_keeps_original_captures_refuses_final_and_next_frame_freshly_locates
+// obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_observe_bank_drift_keeps_original_captures_refuses_final_and_next_frame_freshly_locates
 #[test]
 fn observer_bank_drift_retains_both_original_captures_and_next_frame_freshly_locates() {
     isolated(
@@ -9302,7 +9399,7 @@ fn configured_bank_phase(root: &Path, action: &str, writer: bool) {
     assert!(directory.join("closed.json").is_file());
     assert_eq!(snapshot(&base_b), before_b);
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_ingest_refuses_without_retirement_or_new_private_state
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_ingest_refuses_without_retirement_or_new_private_state
 #[test]
 fn configured_bank_ingest_drift_refuses_without_retirement_or_new_namespace() {
     isolated(
@@ -9310,7 +9407,7 @@ fn configured_bank_ingest_drift_refuses_without_retirement_or_new_namespace() {
         |root| configured_bank_phase(root, "ingest", false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_seal_refuses_without_new_private_state
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_seal_refuses_without_new_private_state
 #[test]
 fn configured_bank_seal_drift_refuses_without_new_namespace() {
     isolated(
@@ -9318,7 +9415,7 @@ fn configured_bank_seal_drift_refuses_without_new_namespace() {
         |root| configured_bank_phase(root, "seal", false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_ingest_canonical_writer_is_busy_before_binding_refusal
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_ingest_canonical_writer_is_busy_before_binding_refusal
 #[test]
 fn configured_bank_ingest_writer_busy_precedes_binding_refusal() {
     isolated(
@@ -9326,7 +9423,7 @@ fn configured_bank_ingest_writer_busy_precedes_binding_refusal() {
         |root| configured_bank_phase(root, "ingest", true),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_seal_canonical_writer_is_busy_before_binding_refusal
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_seal_canonical_writer_is_busy_before_binding_refusal
 #[test]
 fn configured_bank_seal_writer_busy_precedes_binding_refusal() {
     isolated(
@@ -9334,7 +9431,7 @@ fn configured_bank_seal_writer_busy_precedes_binding_refusal() {
         |root| configured_bank_phase(root, "seal", true),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_metadata_refuses_without_attempt_or_new_base
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_metadata_refuses_without_attempt_or_new_base
 #[test]
 fn configured_bank_metadata_drift_refuses_before_attempt_publication() {
     isolated(
@@ -9385,6 +9482,22 @@ fn activated_alias_retarget(root: &Path, action: &str, exclusive: bool, direct: 
     let base_a = boundary::base(&f.repo).unwrap();
     let other = root.join("second-activated-root");
     copy_tree(root, &f.repo, &other);
+    let router = other.join("memory-bank/MEMORY.md");
+    let original = std::fs::read_to_string(&router).unwrap();
+    write(
+        &router,
+        original.replace("75b38e17-c36e-4fab-8ba9-5fa51f25de91", &uid()),
+        0o644,
+    );
+    let binding = agent_memory::scope_binding::preview(
+        &other,
+        "bind",
+        None,
+        "Independent activated checkout fixture",
+        None,
+    )
+    .unwrap();
+    agent_memory::scope_binding::apply(&binding).unwrap();
     boundary::activate_marker(&other, false, &f.runtime).unwrap();
     let base_b = boundary::base(&other).unwrap();
     let f2 = Fixture {
@@ -9401,6 +9514,14 @@ fn activated_alias_retarget(root: &Path, action: &str, exclusive: bool, direct: 
     } else {
         None
     };
+    if direct {
+        for base in [&base_a, &base_b] {
+            turn_sources::private_lock(&base.join("omp-transport.lock"), false, false)
+                .unwrap()
+                .finish()
+                .unwrap();
+        }
+    }
     let alias = root.join("selected-checkout");
     symlink(&f.repo, &alias).unwrap();
     write(
@@ -9451,7 +9572,7 @@ fn activated_alias_retarget(root: &Path, action: &str, exclusive: bool, direct: 
     let output = direct.then(|| child.take().unwrap().wait());
     std::fs::set_permissions(&canary, std::fs::Permissions::from_mode(mode)).unwrap();
     assert_eq!(physical_snapshot(&base_b), before);
-    assert!(!base_b.join("omp-transport.lock").exists());
+    assert_eq!(base_b.join("omp-transport.lock").exists(), direct);
     if let Some(held) = &held {
         held.recheck().unwrap();
         assert!(
@@ -9504,7 +9625,7 @@ fn activated_alias_retarget(root: &Path, action: &str, exclusive: bool, direct: 
     }
     drop(held);
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_never_acquires_foreign_exclusive_barrier
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_never_acquires_foreign_exclusive_barrier
 #[test]
 fn retargeted_ingest_never_acquires_foreign_exclusive_barrier() {
     isolated(
@@ -9512,7 +9633,7 @@ fn retargeted_ingest_never_acquires_foreign_exclusive_barrier() {
         |root| activated_alias_retarget(root, "ingest", true, false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_never_acquires_foreign_exclusive_barrier
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_never_acquires_foreign_exclusive_barrier
 #[test]
 fn retargeted_seal_never_acquires_foreign_exclusive_barrier() {
     isolated(
@@ -9520,7 +9641,7 @@ fn retargeted_seal_never_acquires_foreign_exclusive_barrier() {
         |root| activated_alias_retarget(root, "seal", true, false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_refuses_before_unreadable_native_binding
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_refuses_before_unreadable_native_binding
 #[test]
 fn retargeted_ingest_refuses_before_unreadable_foreign_binding() {
     isolated(
@@ -9528,7 +9649,7 @@ fn retargeted_ingest_refuses_before_unreadable_foreign_binding() {
         |root| activated_alias_retarget(root, "ingest", false, false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_refuses_before_unreadable_native_binding
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_refuses_before_unreadable_native_binding
 #[test]
 fn retargeted_seal_refuses_before_unreadable_foreign_binding() {
     isolated(
@@ -9536,7 +9657,7 @@ fn retargeted_seal_refuses_before_unreadable_foreign_binding() {
         |root| activated_alias_retarget(root, "seal", false, false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checkout_retarget_after_view_validation_refuses_before_started_or_source
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checkout_retarget_after_view_validation_refuses_before_started_or_source
 #[test]
 fn checkout_alias_retarget_after_validation_refuses_before_started_or_retirement() {
     isolated(
@@ -9597,7 +9718,7 @@ fn carrier_uri(call: &mut Value, result: &mut Value, uri: Value) {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_fresh_owned_guides_capture_exact_metadata_in_copy_and_link_modes
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_fresh_owned_guides_capture_exact_metadata_in_copy_and_link_modes
 #[test]
 fn fresh_owned_guides_retain_exact_closed_context_in_copy_and_link_modes() {
     scenarios(
@@ -9706,8 +9827,8 @@ fn fresh_owned_guides_retain_exact_closed_context_in_copy_and_link_modes() {
                 )
                 .unwrap();
                 assert_eq!(
-                    get(&payload, "content"),
-                    get(get(native, "message"), "content")
+                    turn_sources::encoded(get(&payload, "content")).unwrap(),
+                    turn_sources::encoded(get(get(native, "message"), "content")).unwrap()
                 );
                 assert!(payload.get("instruction_context").is_none());
                 assert!(native_path(&s.directory, "captures", text(native, "id")).is_file());
@@ -9719,7 +9840,7 @@ fn fresh_owned_guides_retain_exact_closed_context_in_copy_and_link_modes() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_owned_guide_alias_partial_tamper_and_foreign_reads_keep_real_gaps
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_owned_guide_alias_partial_tamper_and_foreign_reads_keep_real_gaps
 #[test]
 fn owned_guide_alias_partial_tamper_and_foreign_carriers_keep_original_gaps() {
     isolated(
@@ -9855,7 +9976,7 @@ fn owned_guide_alias_partial_tamper_and_foreign_carriers_keep_original_gaps() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_noninstruction_artifact_read_retains_ordinary_body_not_owned_metadata
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_noninstruction_artifact_read_retains_ordinary_body_not_owned_metadata
 #[test]
 fn noninstruction_packaged_artifact_retains_actual_ordinary_body_and_details() {
     isolated(
@@ -9916,12 +10037,12 @@ fn noninstruction_packaged_artifact_retains_actual_ordinary_body_and_details() {
             .unwrap();
             assert!(payload.get("instruction_context").is_none());
             assert_eq!(
-                get(&payload, "content"),
-                get(get(&result, "message"), "content")
+                turn_sources::encoded(get(&payload, "content")).unwrap(),
+                turn_sources::encoded(get(get(&result, "message"), "content")).unwrap()
             );
             assert_eq!(
-                get(&payload, "details"),
-                get(get(&result, "message"), "details")
+                turn_sources::encoded(get(&payload, "details")).unwrap(),
+                turn_sources::encoded(get(get(&result, "message"), "details")).unwrap()
             );
         },
     );
@@ -10042,7 +10163,7 @@ fn owned_manual_verification_rejects_real_binding_payload_and_policy_races() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_unrelated_ancestor_churn_preserves_witness_and_public_annotation
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_unrelated_ancestor_churn_preserves_witness_and_public_annotation
 #[test]
 fn unrelated_ancestor_churn_preserves_owned_witness_and_public_source_annotation() {
     scenarios(
@@ -10095,7 +10216,7 @@ fn unrelated_ancestor_churn_preserves_owned_witness_and_public_source_annotation
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_historical_owned_guide_never_authorizes_read_after_installation_changes
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_historical_owned_guide_never_authorizes_read_after_installation_changes
 #[test]
 fn historical_owned_guide_metadata_cannot_authorize_fresh_read_after_installation_change() {
     isolated(
@@ -10187,7 +10308,7 @@ fn historical_owned_guide_metadata_cannot_authorize_fresh_read_after_installatio
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_owned_guide_rechecks_receipt_selection_and_nested_symlinks
+// obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_owned_guide_rechecks_receipt_selection_and_nested_symlinks
 #[test]
 fn owned_guide_rechecks_selected_receipt_entry_nested_links_and_actual_rebind() {
     isolated(
@@ -10507,7 +10628,7 @@ fn run_wake_child(root: &Path, request: &Value, selector: Option<&str>, mode: &s
     assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
     registry_result(root)
 }
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_cancel_before_reservation_refuses_and_after_start_preserves_result
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_cancel_before_reservation_refuses_and_after_start_preserves_result
 #[test]
 fn cancellation_before_reservation_refuses_but_after_reservation_keeps_one_root() {
     isolated(
@@ -10540,7 +10661,7 @@ fn cancellation_before_reservation_refuses_but_after_reservation_keeps_one_root(
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_replacement_and_end_after_start_preserve_result
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_replacement_and_end_after_start_preserve_result
 #[test]
 fn replacing_clock_or_ending_after_reservation_preserves_exact_single_root() {
     scenarios(
@@ -10570,7 +10691,7 @@ fn replacing_clock_or_ending_after_reservation_preserves_exact_single_root() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_pre_reservation_wake_exception_does_not_unverify_committed_source
+// obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_pre_reservation_wake_exception_does_not_unverify_committed_source
 #[test]
 fn real_prereservation_fault_does_not_unverify_durable_direct_seal() {
     isolated(
@@ -10643,7 +10764,7 @@ fn cancelled_outcome_failure(root: &Path, io_failure: bool) {
     assert_eq!(rows.len(), 2);
     assert!(rows.iter().all(|r| r.get("observation_id").is_none()));
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_io_failure_never_verifies_partial_seal
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_io_failure_never_verifies_partial_seal
 #[test]
 fn cancelled_uncommitted_outcome_real_io_failure_never_verifies_partial_seal() {
     isolated(
@@ -10651,7 +10772,7 @@ fn cancelled_uncommitted_outcome_real_io_failure_never_verifies_partial_seal() {
         |root| cancelled_outcome_failure(root, true),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_refusal_never_verifies_partial_seal
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_refusal_never_verifies_partial_seal
 #[test]
 fn cancelled_uncommitted_outcome_typed_refusal_never_verifies_partial_seal() {
     isolated(
@@ -10690,7 +10811,10 @@ fn controlled_reserved_root_exit(root: &Path, control: &str) {
         let result = child_result(root);
         assert_eq!(get(&result, "verified"), &Value::Bool(true));
         assert_eq!(get(&result, "continue"), &Value::Bool(false));
-        assert_eq!(text(&result, "status"), "pending-wake-unknown");
+        assert_eq!(
+            text(&result, "status"),
+            "pending-wake-unknown-after-reservation"
+        );
         assert!(result.get("root_request_id").is_none());
     }
     assert_eq!(snapshot(&f.repo.join("memory-bank")), before);
@@ -10700,7 +10824,7 @@ fn controlled_reserved_root_exit(root: &Path, control: &str) {
     assert!(rows.iter().all(|r| r.get("observation_id").is_some()));
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancel_after_actual_reserve_then_exit_fault_retains_one_unknown_root
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancel_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
 fn cancel_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
     isolated(
@@ -10709,7 +10833,7 @@ fn cancel_after_real_reservation_and_transport_exit_drift_retains_one_unknown_ro
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_replacement_after_actual_reserve_then_exit_fault_retains_one_unknown_root
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_replacement_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
 fn replacement_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
     isolated(
@@ -10718,7 +10842,7 @@ fn replacement_after_real_reservation_and_transport_exit_drift_retains_one_unkno
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_eof_after_actual_reserve_then_exit_fault_retains_one_unknown_root
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_eof_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
 fn eof_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
     isolated(
@@ -10727,7 +10851,7 @@ fn eof_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root(
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_output_loss_after_actual_reserve_then_exit_fault_retains_one_unknown_root
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_output_loss_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
 fn output_loss_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
     isolated(
@@ -10783,7 +10907,7 @@ fn signaled_owned_child(root: &Path, child: OperationChild) {
         agent_memory::process::Status::Signal(2)
     );
 }
-// frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_race_remains_pending_for_normal_and_ordinary_failure
+// obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_race_remains_pending_for_normal_and_ordinary_failure
 #[test]
 fn public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_failure() {
     scenarios(
@@ -10819,7 +10943,7 @@ fn public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_fai
             assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
             let result = registry_result(root);
             assert_eq!(text(&result, "decision"), "pending");
-            assert_eq!(get(&result, "unknown_state"), &Value::Bool(true));
+            assert!(!get(&result, "unknown_state").as_array().unwrap().is_empty());
             assert_eq!(
                 get(&result, "private_evidence_preserved"),
                 &Value::Bool(true)
@@ -10828,7 +10952,7 @@ fn public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_fai
         },
     );
 }
-// frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_preserves_interrupts_and_fatal_failures
+// obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_preserves_interrupts_and_fatal_failures
 #[test]
 fn public_compatibility_preserves_real_sigint_and_exit_with_raced_evidence() {
     scenarios(
@@ -10870,7 +10994,7 @@ fn public_compatibility_preserves_real_sigint_and_exit_with_raced_evidence() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_source_inspection_preserves_interrupts_with_raced_completion_lock
+// obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_source_inspection_preserves_interrupts_with_raced_completion_lock
 #[test]
 fn public_source_inspection_preserves_real_fatal_exits_and_refuses_raced_completion_lock() {
     scenarios(
@@ -10943,7 +11067,7 @@ fn public_source_inspection_preserves_real_fatal_exits_and_refuses_raced_complet
         },
     );
 }
-// frontier obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_unchanged_absence_allows_normal_exit_and_preserves_ordinary_error
+// obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_unchanged_absence_allows_normal_exit_and_preserves_ordinary_error
 #[test]
 fn unchanged_private_absence_allows_success_and_preserves_original_ordinary_error() {
     scenarios(
@@ -11258,7 +11382,7 @@ fn finite_writer_outcome(root: &Path, window: &str, failure: &str, transaction: 
     }
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_at_outcome_unwinds_then_closes_without_replaying_source
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_at_outcome_unwinds_then_closes_without_replaying_source
 #[test]
 fn writer_at_outcome_unwinds_and_closes_without_replaying_source() {
     isolated(
@@ -11267,7 +11391,7 @@ fn writer_at_outcome_unwinds_and_closes_without_replaying_source() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_transaction_at_outcome_waits_without_adopting_its_marker
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_transaction_at_outcome_waits_without_adopting_its_marker
 #[test]
 fn transaction_at_outcome_waits_without_adopting_real_marker() {
     isolated(
@@ -11276,7 +11400,7 @@ fn transaction_at_outcome_waits_without_adopting_real_marker() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_pre_ex_empty_publication_defers_without_stealing_its_lock
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_pre_ex_empty_publication_defers_without_stealing_its_lock
 #[test]
 fn pre_ex_empty_publication_defers_without_stealing_real_writer_slot() {
     isolated(
@@ -11285,7 +11409,7 @@ fn pre_ex_empty_publication_defers_without_stealing_real_writer_slot() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_full_owner_fsync_window_has_ex_ownership_before_probe
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_full_owner_fsync_window_has_ex_ownership_before_probe
 #[test]
 fn full_owner_fsync_window_has_actual_ex_ownership_before_probe() {
     isolated(
@@ -11294,7 +11418,7 @@ fn full_owner_fsync_window_has_actual_ex_ownership_before_probe() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_metadata_exhaustion_keeps_source_and_open_unknown
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_metadata_exhaustion_keeps_source_and_open_unknown
 #[test]
 fn actual_writer_metadata_exhaustion_preserves_source_and_open_unknown() {
     isolated(
@@ -11303,7 +11427,7 @@ fn actual_writer_metadata_exhaustion_preserves_source_and_open_unknown() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_initializing_writer_exhaustion_cannot_verify_or_close
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_initializing_writer_exhaustion_cannot_verify_or_close
 #[test]
 fn initializing_writer_real_deadline_cannot_verify_or_close() {
     isolated(
@@ -11312,7 +11436,7 @@ fn initializing_writer_real_deadline_cannot_verify_or_close() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_unheld_empty_publication_exhaustion_retains_source_without_outcome
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_unheld_empty_publication_exhaustion_retains_source_without_outcome
 #[test]
 fn unheld_empty_publication_real_deadline_retains_source_without_outcome() {
     isolated(
@@ -11321,7 +11445,7 @@ fn unheld_empty_publication_real_deadline_retains_source_without_outcome() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_released_writer_with_unknown_transaction_is_hard_refusal_not_retry
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_released_writer_with_unknown_transaction_is_hard_refusal_not_retry
 #[test]
 fn released_writer_unknown_transaction_is_not_retryable() {
     isolated(
@@ -11330,7 +11454,7 @@ fn released_writer_unknown_transaction_is_not_retryable() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_transaction_left_after_writer_release_remains_interruption
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_transaction_left_after_writer_release_remains_interruption
 #[test]
 fn released_transaction_retained_marker_remains_interruption() {
     isolated(
@@ -11339,7 +11463,7 @@ fn released_transaction_retained_marker_remains_interruption() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_release_rediscovers_identity_instead_of_reusing_frame_scope
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_release_rediscovers_identity_instead_of_reusing_frame_scope
 #[test]
 fn writer_release_freshly_rediscovers_changed_project_identity() {
     isolated(
@@ -11361,7 +11485,7 @@ fn busy_source_outcome(root: &Path, after_write: bool, exhausted: bool) {
     } else {
         "omp.outcome.before-guard"
     };
-    let busy = "omp.metadata.after-busy";
+    let busy = "omp.observer.after-busy-error";
     let selector = format!("{stage},{busy}");
     let observer = operation_child(root, Some(&selector), "pause", "finite");
     ready(root, stage);
@@ -11430,7 +11554,7 @@ fn busy_source_outcome(root: &Path, after_write: bool, exhausted: bool) {
         assert!(rows.iter().all(|r| r.get("observation_id").is_some()));
     }
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_beforewrite_or_exit_retries_only_identical_source_after_unlock
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_beforewrite_or_exit_retries_only_identical_source_after_unlock
 #[test]
 fn busy_source_outcome_retries_exact_immutable_source_after_transport_unlock() {
     scenarios(
@@ -11439,7 +11563,7 @@ fn busy_source_outcome_retries_exact_immutable_source_after_transport_unlock() {
         |root, mode| busy_source_outcome(root, mode == "after", false),
     );
 }
-// frontier obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_exit_exhaustion_keeps_retained_record_without_response_or_drain
+// obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_exit_exhaustion_keeps_retained_record_without_response_or_drain
 #[test]
 fn busy_source_outcome_exit_real_deadline_keeps_record_without_response_or_drain() {
     isolated(
@@ -11447,7 +11571,7 @@ fn busy_source_outcome_exit_real_deadline_keeps_record_without_response_or_drain
         |root| busy_source_outcome(root, true, true),
     );
 }
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_real_io_failure_does_not_manufacture_invalid_request_refusal
+// obligation: tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_real_io_failure_does_not_manufacture_invalid_request_refusal
 #[test]
 fn accepted_attempt_publication_failure_is_not_an_invalid_request_refusal() {
     isolated(
@@ -11479,7 +11603,7 @@ fn accepted_attempt_publication_failure_is_not_an_invalid_request_refusal() {
         },
     );
 }
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_run_final_close_rejects_barrier_inode_replacement_after_metadata_write
+// obligation: tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_run_final_close_rejects_barrier_inode_replacement_after_metadata_write
 #[test]
 fn final_close_rejects_actual_source_barrier_swap_after_retaining_closed_record() {
     isolated(
@@ -11528,7 +11652,7 @@ fn signal_registry(root: &Path, signal: &str) {
     let pid = std::fs::read_to_string(root.join("registry-pid")).unwrap();
     command(root, &["/bin/kill".into(), signal.into(), pid.into()]);
 }
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_startup_typed_busy_retries_before_open_and_ready
+// obligation: tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_startup_typed_busy_retries_before_open_and_ready
 #[test]
 fn startup_retries_actual_canonical_busy_before_publishing_open_or_ready() {
     isolated(
@@ -11639,13 +11763,11 @@ fn invalid_attempt_busy_retry(root: &Path, kind: &str, corruption: &str) {
                 .count(),
             1
         );
-        assert_eq!(
-            frames
-                .iter()
-                .filter(|(kind, seq, _)| kind == "STARTED" && *seq == 2)
-                .count(),
-            1
-        );
+        assert!(directory.join("started/2.json").is_file());
+        assert!(!directory.join("started/1.json").exists());
+        let second =
+            transport::read(&directory.join("outcomes/2.json"), stream::MAX_METADATA).unwrap();
+        assert_eq!(text(&second, "outcome"), "verified");
         let closed = transport::read(&directory.join("closed.json"), 4096).unwrap();
         assert_eq!(get(&closed, "last_attempt_seq"), &Value::Int(2u8.into()));
         assert_eq!(
@@ -11657,7 +11779,7 @@ fn invalid_attempt_busy_retry(root: &Path, kind: &str, corruption: &str) {
     }
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_request_durable_attempt_exit_busy_resumes_exactly_once
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_request_durable_attempt_exit_busy_resumes_exactly_once
 #[test]
 fn invalid_request_busy_exit_resumes_exactly_once() {
     isolated("invalid_request_busy_exit_resumes_exactly_once", |root| {
@@ -11665,7 +11787,7 @@ fn invalid_request_busy_exit_resumes_exactly_once() {
     });
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_refused_frame_durable_attempt_exit_busy_counts_once
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_refused_frame_durable_attempt_exit_busy_counts_once
 #[test]
 fn invalid_refused_frame_busy_exit_counts_exactly_once() {
     isolated(
@@ -11674,7 +11796,7 @@ fn invalid_refused_frame_busy_exit_counts_exactly_once() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_partial_retry_record
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_partial_retry_record
 #[test]
 fn invalid_attempt_busy_exit_never_adopts_partial_record() {
     isolated(
@@ -11683,7 +11805,7 @@ fn invalid_attempt_busy_exit_never_adopts_partial_record() {
     );
 }
 
-// frontier obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_different_retry_record
+// obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_different_retry_record
 #[test]
 fn invalid_attempt_busy_exit_never_adopts_different_record() {
     isolated(
@@ -11763,7 +11885,6 @@ fn b3_real_owner_publication_between_empty_samples_is_initializing() {
 
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_empty_held_and_unheld_slots_never_mint_scope_or_claim_known_writer
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_empty_slots_never_mint_scope_or_claim_known_writer() {
     isolated(
         "b3_empty_slots_never_mint_scope_or_claim_known_writer",
@@ -11850,7 +11971,6 @@ fn b3_frontier_marker_race(root: &Path, boundary: &str, writer: bool, empty: boo
 
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_before_frontier_entry_is_exact_writer_deferral
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_late_transaction_before_frontier_entry_defers() {
     isolated("b3_late_transaction_before_frontier_entry_defers", |root| {
         b3_frontier_marker_race(root, "verified-hold.before-entry", true, false)
@@ -11858,7 +11978,6 @@ fn b3_late_transaction_before_frontier_entry_defers() {
 }
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_during_failed_marker_read_is_exact_writer_deferral
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_late_transaction_during_failed_marker_read_defers() {
     isolated(
         "b3_late_transaction_during_failed_marker_read_defers",
@@ -11867,7 +11986,6 @@ fn b3_late_transaction_during_failed_marker_read_defers() {
 }
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_after_marker_read_is_exact_writer_deferral
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_late_transaction_after_marker_read_defers() {
     isolated("b3_late_transaction_after_marker_read_defers", |root| {
         b3_frontier_marker_race(root, "marker.after-read", true, false)
@@ -11875,7 +11993,6 @@ fn b3_late_transaction_after_marker_read_defers() {
 }
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_arbitrary_marker_read_failure_without_writer_is_not_retryable
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_marker_read_failure_without_writer_is_not_retryable() {
     isolated(
         "b3_marker_read_failure_without_writer_is_not_retryable",
@@ -11884,7 +12001,6 @@ fn b3_marker_read_failure_without_writer_is_not_retryable() {
 }
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_failed_marker_read_with_unproven_empty_slot_keeps_original_refusal
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_failed_marker_read_with_empty_slot_keeps_refusal() {
     isolated(
         "b3_failed_marker_read_with_empty_slot_keeps_refusal",
@@ -11893,17 +12009,15 @@ fn b3_failed_marker_read_with_empty_slot_keeps_refusal() {
 }
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_arriving_after_preflight_is_classified_at_actual_identity_guard
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_writer_after_preflight_defers_at_identity_guard() {
     isolated(
         "b3_writer_after_preflight_defers_at_identity_guard",
-        |root| b3_frontier_marker_race(root, "observe-bank.after-read", true, false),
+        |root| b3_frontier_marker_race(root, "verified-hold.after-entry", true, false),
     );
 }
 
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_shared_source_barrier_reentrancy_and_lifecycle_contention_preserve_sources
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_held_barrier_reentrancy_and_contention_preserve_sources() {
     isolated(
         "b3_held_barrier_reentrancy_and_contention_preserve_sources",
@@ -11970,7 +12084,6 @@ fn b3_held_barrier_reentrancy_and_contention_preserve_sources() {
 
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_verified_hold_rejects_location_and_hold_changes_during_observation
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_verified_hold_rejects_location_and_hold_observation_changes() {
     isolated(
         "b3_verified_hold_rejects_location_and_hold_observation_changes",
@@ -12028,7 +12141,6 @@ fn b3_verified_hold_rejects_location_and_hold_observation_changes() {
 
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_late_hold_registry_and_ledger_changes_retain_written_source_then_retry
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_late_hold_changes_retain_source_and_retry_same_observation() {
     isolated(
         "b3_late_hold_changes_retain_source_and_retry_same_observation",
@@ -12058,7 +12170,7 @@ fn b3_late_hold_changes_retain_source_and_retry_same_observation() {
                 if target.file_name().unwrap() == "ledger-head.json" {
                     let ledger_path = h.directory.join("ledger/00000000.json");
                     let mut ledger = transport::read(&ledger_path, transport::MAX_PAYLOAD).unwrap();
-                    let previous = transport::digest(&ledger).unwrap();
+                    let previous = recovery_digest(&ledger).unwrap();
                     set(&mut ledger, "generation", Value::Int(1u8.into()));
                     set(&mut ledger, "previous_generation_sha256", string(&previous));
                     agent_memory::layout_recovery_state::write_once(
@@ -12071,9 +12183,13 @@ fn b3_late_hold_changes_retain_source_and_retry_same_observation() {
                     set(
                         &mut head,
                         "sha256",
-                        string(&transport::digest(&ledger).unwrap()),
+                        string(&recovery_digest(&ledger).unwrap()),
                     );
-                    write(&target, turn_sources::encoded(&head).unwrap(), 0o600);
+                    write(
+                        &target,
+                        agent_memory::developer_identity::encoded(&head).unwrap(),
+                        0o600,
+                    );
                     let mut index = json::decode_bytes(&index_before, Default::default()).unwrap();
                     set(
                         index
@@ -12082,13 +12198,21 @@ fn b3_late_hold_changes_retain_source_and_retry_same_observation() {
                             .get_mut(&h.operation)
                             .unwrap(),
                         "ledger_head_sha256",
-                        string(&transport::digest(&head).unwrap()),
+                        string(&recovery_digest(&head).unwrap()),
                     );
-                    write(&index_path, turn_sources::encoded(&index).unwrap(), 0o600);
+                    write(
+                        &index_path,
+                        agent_memory::developer_identity::encoded(&index).unwrap(),
+                        0o600,
+                    );
                 } else if target.file_name().unwrap() == ".agent-memory-transaction.md" {
                     let mut hold = json::decode_bytes(&old, Default::default()).unwrap();
                     set(&mut hold, "hold_id", string(&uid()));
-                    write(&target, turn_sources::encoded(&hold).unwrap(), 0o600);
+                    write(
+                        &target,
+                        agent_memory::developer_identity::encoded(&hold).unwrap(),
+                        0o600,
+                    );
                 } else {
                     let mut changed = old.clone();
                     changed.extend_from_slice(b"\n");
@@ -12152,9 +12276,14 @@ fn b3_cli(
     input: Option<&Value>,
     faults: &[(&str, &str)],
 ) -> agent_memory::process::Output {
-    let installed = root.join("bin/am");
-    let binary = if installed.exists() {
-        installed
+    let receipt_path = root.join("state/agent-memory/install/receipt.json");
+    let binary = if receipt_path.exists() {
+        let receipt = transport::read(&receipt_path, 16 * 1024 * 1024).unwrap();
+        if get(&receipt, "uninstalled") == &Value::Bool(true) {
+            PathBuf::from(env!("CARGO_BIN_EXE_am"))
+        } else {
+            Path::new(text(&receipt, "bin_dir")).join("am")
+        }
     } else {
         PathBuf::from(env!("CARGO_BIN_EXE_am"))
     };
@@ -12291,7 +12420,6 @@ fn b3_real_recovery_wins_first_ex_and_creator_cleans_empty_slot() {
 
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_interrupt_during_marker_read_is_not_reclassified_as_writer_retry
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_marker_read_fatal_exit_never_becomes_writer_retry() {
     scenarios(
         "b3_marker_read_fatal_exit_never_becomes_writer_retry",
@@ -12330,7 +12458,6 @@ fn b3_marker_read_fatal_exit_never_becomes_writer_retry() {
 
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_no_context_preserves_fresh_per_reference_observations
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_unscoped_join_freshly_observes_each_reference() {
     isolated("b3_unscoped_join_freshly_observes_each_reference", |root| {
         let f = Fixture::new(root);
@@ -12376,7 +12503,6 @@ fn b3_unscoped_join_freshly_observes_each_reference() {
 
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_historical_completed_gate_observation_is_not_reused_for_lookup
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_historical_completed_gate_never_supplies_lookup_inventory() {
     isolated(
         "b3_historical_completed_gate_never_supplies_lookup_inventory",
@@ -12395,6 +12521,7 @@ fn b3_historical_completed_gate_never_supplies_lookup_inventory() {
             assert!(!transport::source_bound_origin(&s.directory, &s.cursor).unwrap());
             let stage = "omp.join.after-origin-gate";
             let child = start_join(root, &f, &s, stage);
+            ready(root, stage);
             let completion = shared(&f, &s.cursor)
                 .directory
                 .join(format!("{}.done", text(&rows[0], "observation_id")));
@@ -12437,7 +12564,6 @@ fn b3_historical_completed_gate_never_supplies_lookup_inventory() {
 
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_type_and_key_errors_still_reach_whole_segment_fault_handling
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_invalid_typed_shared_state_reaches_whole_segment_fault_handling() {
     scenarios(
         "b3_invalid_typed_shared_state_reaches_whole_segment_fault_handling",
@@ -12448,8 +12574,10 @@ fn b3_invalid_typed_shared_state_reaches_whole_segment_fault_handling() {
             let context =
                 agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
                     .unwrap();
-            let ns = shared(&f, &s.cursor);
-            let source = source_path(&ns.directory, text(&s.enrollments[0], "source_reference"));
+            let source = s.directory.join("enrollments").join(format!(
+                "{}.json",
+                transport::digest(get(&s.enrollments[0], "source_reference")).unwrap()
+            ));
             let mut value = transport::read(&source, 4096).unwrap();
             if case == "type" {
                 set(&mut value, "source_sha256", Value::Array(vec![]));
@@ -12457,14 +12585,19 @@ fn b3_invalid_typed_shared_state_reaches_whole_segment_fault_handling() {
                 let Value::Object(pairs) = &mut value else {
                     unreachable!()
                 };
-                pairs.retain(|(k, _)| k != "observation_id");
+                pairs.retain(|(k, _)| k != "source_reference");
             }
             write(&source, turn_sources::encoded(&value).unwrap(), 0o600);
+            let barrier =
+                turn_sources::source_barrier(&f.repo, false, false, None, &f.runtime).unwrap();
             let (_, faults) =
                 agent_memory::scope_binding::private_enrollment_reads(&context, |context| {
-                    transport::pending_inventory(&f.site().with(context))
+                    agent_memory::scope_binding::observe_enrollment_locations(context, || {
+                        transport::pending_inventory(&f.site().with(context))
+                    })
                 })
                 .unwrap();
+            barrier.recheck().unwrap();
             assert_eq!(faults, ["native-enrollment-unverifiable"]);
         },
     );
@@ -12472,7 +12605,6 @@ fn b3_invalid_typed_shared_state_reaches_whole_segment_fault_handling() {
 
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_completed_snapshots_require_bound_drain_proof_after_marker_removal
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_completed_snapshots_require_bound_drain_proof() {
     isolated("b3_completed_snapshots_require_bound_drain_proof", |root| {
         let f = Fixture::new(root);
@@ -12522,15 +12654,25 @@ fn b3_completed_snapshots_require_bound_drain_proof() {
 
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_capacity_retains_arrival_then_reuses_reference_after_capacity_frees
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
     isolated(
         "b3_full_capacity_retains_arrival_then_reuses_exact_reference",
         |root| {
             let f = Fixture::new(root);
-            let other = register_source(&f, "other", "other", &"a".repeat(64));
+            let other = turn_sources::register(
+                &f.repo,
+                "codex",
+                "other",
+                LIFE,
+                &"a".repeat(64),
+                None,
+                None,
+                None,
+                &f.runtime,
+            )
+            .unwrap();
             let (ns, _) =
-                turn_sources::private_namespace(&f.repo, "omp", "other", LIFE, false, &f.runtime)
+                turn_sources::private_namespace(&f.repo, "codex", "other", LIFE, false, &f.runtime)
                     .unwrap();
             let pending = ns.base.join("pending");
             let original = std::fs::read(pending.join("0.json")).unwrap();
@@ -12569,7 +12711,7 @@ fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
             .unwrap();
             turn_sources::complete(
                 &f.repo,
-                "omp",
+                "codex",
                 "other",
                 LIFE,
                 text(&other, "observation_id"),
@@ -12597,25 +12739,38 @@ fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
 
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_full_backlog_and_long_unicode_repo_still_offer_one_bounded_wake
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_full_backlog_unicode_repository_offers_one_bounded_wake() {
     isolated(
         "b3_full_backlog_unicode_repository_offers_one_bounded_wake",
         |root| {
-            let mut f = Fixture::new(root);
+            let (runtime, receipt, proof) = install_only(root, "copy");
             let long = root
                 .join("界".repeat(68))
                 .join("界".repeat(68))
                 .join("界".repeat(68))
                 .join("xxxxxxxxxxxxxxxx");
-            std::fs::create_dir_all(long.parent().unwrap()).unwrap();
-            std::fs::rename(&f.repo, &long).unwrap();
-            f.repo = long;
+            let repo = bank_fixture_at(root, long);
+            boundary::activate_marker(&repo, false, &runtime).unwrap();
+            write(
+                &root.join("case-observer-repo"),
+                repo.to_str().unwrap(),
+                0o600,
+            );
+            let f = Fixture {
+                repo,
+                runtime,
+                receipt,
+                proof,
+            };
             let mut entries = vec![];
             let mut result = Value::Null;
             for n in 0..15 {
                 entries.push(human(&format!("human-{n}")));
-                result = f.observe(&request(&f, &entries, "seal"));
+                result = f.observe(&if n == 0 {
+                    request(&f, &entries, "seal")
+                } else {
+                    replay_request(&f, &entries, "seal", &result)
+                });
             }
             let refs = f
                 .pending()
@@ -12713,7 +12868,6 @@ fn b3_hidden_batch(root: &Path, crash: bool) {
 }
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_exact_own_hidden_batch_does_not_open_a_source_successor
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_exact_hidden_batch_never_opens_successor() {
     isolated("b3_exact_hidden_batch_never_opens_successor", |root| {
         b3_hidden_batch(root, false)
@@ -12721,7 +12875,6 @@ fn b3_exact_hidden_batch_never_opens_successor() {
 }
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_crashed_pure_snapshot_never_reopens_sealed_parent
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_crashed_pure_snapshot_never_reopens_parent() {
     isolated("b3_crashed_pure_snapshot_never_reopens_parent", |root| {
         b3_hidden_batch(root, true)
@@ -12765,7 +12918,6 @@ fn b3_hook_event(root: &Path, f: &Fixture, harness: &str, session: &str, life: &
 
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_public_layout_hold_enrolls_real_codex_and_claude_prompt_hooks
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_public_held_prompt_hooks_replay_one_exact_source() {
     isolated(
         "b3_public_held_prompt_hooks_replay_one_exact_source",
@@ -12820,7 +12972,6 @@ fn b3_public_held_prompt_hooks_replay_one_exact_source() {
 
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_real_codex_claude_hooks_keep_task_active_but_boundaries_pending
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_held_hooks_keep_tasks_active_and_boundaries_pending() {
     isolated(
         "b3_held_hooks_keep_tasks_active_and_boundaries_pending",
@@ -13079,7 +13230,6 @@ fn b3_closed_pipe_order(root: &Path) {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_response_loss_still_drains_once_before_next_fifo_and_final
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_closed_pipe_writer_false_drains_before_next_fifo_and_final_in_full_run
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_real_epipe_drains_before_next_fifo_and_final() {
     isolated(
         "b3_real_epipe_drains_before_next_fifo_and_final",
@@ -13089,7 +13239,6 @@ fn b3_real_epipe_drains_before_next_fifo_and_final() {
 
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_busy_is_one_batch_and_leaves_discoverable_enrollments
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_postresponse_busy_is_one_batch_then_next_frame_progresses() {
     isolated(
         "b3_postresponse_busy_is_one_batch_then_next_frame_progresses",
@@ -13137,7 +13286,6 @@ fn b3_postresponse_busy_is_one_batch_then_next_frame_progresses() {
 
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_control_flow_is_not_masked_or_closed
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_postresponse_interrupt_preserves_verified_open_source() {
     isolated(
         "b3_postresponse_interrupt_preserves_verified_open_source",
@@ -13169,7 +13317,6 @@ fn b3_postresponse_interrupt_preserves_verified_open_source() {
 
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_oldest8_after_response_and_cli_collision_leave_canonical_state_unchanged
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state() {
     isolated(
         "b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state",
@@ -13322,7 +13469,6 @@ fn b3_new_install(root: &Path) -> (PathBuf, PathBuf, PathBuf) {
 
 // obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_receipt_commit_separates_bank_activation_from_rollback
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_receipt_commit_separates_native_bank_activation_from_rollback() {
     scenarios(
         "b3_receipt_commit_separates_native_bank_activation_from_rollback",
@@ -13388,7 +13534,6 @@ fn b3_receipt_commit_separates_native_bank_activation_from_rollback() {
 
 // obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_prior_committed_activation_recovers_after_a_later_install_rolls_back
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_prior_committed_activation_survives_later_install_rollback() {
     isolated(
         "b3_prior_committed_activation_survives_later_install_rollback",
@@ -13422,7 +13567,7 @@ fn b3_prior_committed_activation_survives_later_install_rollback() {
                 root,
                 &[
                     "cp".into(),
-                    "-R".into(),
+                    "-pR".into(),
                     first.as_os_str().to_owned(),
                     second.as_os_str().to_owned(),
                 ],
@@ -13462,7 +13607,6 @@ fn b3_prior_committed_activation_survives_later_install_rollback() {
 
 // obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_real_binding_proof_rejects_forgery_and_mid_instance_drift_before_source
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_real_binding_proof_rejects_forgery_and_mid_instance_drift() {
     isolated(
         "b3_real_binding_proof_rejects_forgery_and_mid_instance_drift",
@@ -13597,12 +13741,11 @@ fn b3_real_binding_proof_rejects_forgery_and_mid_instance_drift() {
 
 // obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_public_uninstall_requires_quiescence_and_actually_drains_completed_sources
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_public_uninstall_requires_quiescence_and_drains_completed_sources() {
     isolated(
         "b3_public_uninstall_requires_quiescence_and_drains_completed_sources",
         |root| {
-            let f = Fixture::new(root);
+            let f = fixture_without_native_activation(root);
             let base = boundary::base(&f.repo).unwrap();
             let extension = Path::new(text(get(&f.receipt, "omp_binding"), "extension_target"));
             let before = snapshot(extension.parent().unwrap());
@@ -13617,6 +13760,7 @@ fn b3_public_uninstall_requires_quiescence_and_drains_completed_sources() {
                 0,
             );
             assert_eq!(snapshot(extension.parent().unwrap()), before);
+            boundary::activate_marker(&f.repo, false, &f.runtime).unwrap();
             f.observe(&request(&f, &[human("completed-uninstall-human")], "seal"));
             for row in f.pending() {
                 acknowledge(&f, &row);
@@ -13649,16 +13793,21 @@ fn b3_public_uninstall_requires_quiescence_and_drains_completed_sources() {
             assert!(!base.join("turn-sources-compat-v1.json").exists());
             assert_eq!(snapshot(&base.join("omp-source-v1")), retained);
             assert!(
-                boundary::required_source_capabilities(&f.repo, &f.runtime)
-                    .unwrap()
-                    .is_empty()
+                boundary::required_source_capabilities_with_authority(
+                    &f.repo,
+                    agent_memory::scope_binding::RuntimeAuthority::Lifecycle {
+                        pack: &f.runtime,
+                        binary: &root.join("development-source/target/release/am"),
+                    },
+                )
+                .unwrap()
+                .is_empty()
             );
         },
     );
 }
 // obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_public_uninstall_keeps_pending_sources_and_disabled_owned_binding
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_public_uninstall_preserves_pending_sources_and_disables_binding() {
     isolated(
         "b3_public_uninstall_preserves_pending_sources_and_disables_binding",
@@ -13740,7 +13889,6 @@ fn b3_public_uninstall_preserves_pending_sources_and_disables_binding() {
 
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_real_completion_between_result_and_wake_requires_new_inventory
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_completion_between_seal_and_wake_requires_new_inventory() {
     isolated(
         "b3_completion_between_seal_and_wake_requires_new_inventory",
@@ -13789,7 +13937,15 @@ fn b3_completion_between_seal_and_wake_requires_new_inventory() {
             assert_eq!(get(&result, "verified"), &Value::Bool(true));
             assert_eq!(get(&result, "continue"), &Value::Bool(false));
             assert_eq!(text(&result, "status"), "pending-wake-unavailable");
-            assert!(f.pending().is_empty());
+            assert!(
+                get(
+                    &transport::list_pending(&f.repo, &f.runtime, 0).unwrap(),
+                    "pending"
+                )
+                .as_array()
+                .unwrap()
+                .is_empty()
+            );
             assert!(root_wakes(&f).is_empty());
         },
     );
@@ -13797,7 +13953,6 @@ fn b3_completion_between_seal_and_wake_requires_new_inventory() {
 
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_clock_ack_behind_accepted_16mib_frame_reaches_late_reservation
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_clock_ack_behind_real_16mib_frame_reaches_reservation() {
     isolated(
         "b3_clock_ack_behind_real_16mib_frame_reaches_reservation",
@@ -13863,7 +14018,6 @@ fn b3_clock_ack_behind_real_16mib_frame_reaches_reservation() {
 
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_completion_guard_discovers_fresh_locations_and_restores_live_locator
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_completion_guard_rediscovers_location_then_restores_live_locator() {
     isolated(
         "b3_completion_guard_rediscovers_location_then_restores_live_locator",
@@ -13890,6 +14044,8 @@ fn b3_completion_guard_rediscovers_location_then_restores_live_locator() {
             let context =
                 agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
                     .unwrap();
+            let barrier =
+                turn_sources::source_barrier(&f.repo, false, false, None, &f.runtime).unwrap();
             agent_memory::scope_binding::private_enrollment_reads(&context, |context| {
                 agent_memory::scope_binding::observe_enrollment_locations(context, || {
                     agent_memory::scope_binding::enrollment_read_context(&f.repo, context)?;
@@ -13898,14 +14054,38 @@ fn b3_completion_guard_rediscovers_location_then_restores_live_locator() {
                 })
             })
             .unwrap();
-            assert_retained_human(&f, "phase-human");
+            barrier.recheck().unwrap();
+            drop(barrier);
+            let retained = transport::read(
+                &native_path(&first_segment(&f).directory, "snapshots", "phase-human"),
+                transport::MAX_PAYLOAD,
+            )
+            .unwrap();
+            assert_eq!(
+                get(&retained, "content"),
+                &string("Only ephemeral arithmetic.")
+            );
+            let retry = operation_child(root, None, "", "finite");
+            assert_eq!(retry.wait().status, agent_memory::process::Status::Code(0));
+            assert_eq!(get(&registry_result(root), "ok"), &Value::Bool(true));
+            let frames = response_frames(&root.join("responses.raw"));
+            let (_, _, response) = frames
+                .iter()
+                .find(|(kind, seq, _)| kind == "OBSERVED" && *seq == 1)
+                .unwrap();
+            assert_eq!(
+                text(get(response, "result"), "status"),
+                "pending-undeliverable-window"
+            );
+            let rows = f.pending();
+            assert_eq!(rows.len(), 2);
+            assert!(rows.iter().all(|row| row.get("observation_id").is_some()));
         },
     );
 }
 
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_reused_header_nonce_decline_and_exit_fault_do_not_claim_own_reservation
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation() {
     isolated(
         "b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation",
@@ -13981,7 +14161,6 @@ fn b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation() {
 
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_legacy_random_root_wake_follows_exact_native_user_without_spending_new_human_budget
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_legacy_root_wake_follows_exact_native_user_not_new_human_budget() {
     isolated(
         "b3_legacy_root_wake_follows_exact_native_user_not_new_human_budget",
@@ -14028,7 +14207,6 @@ fn b3_legacy_root_wake_follows_exact_native_user_not_new_human_budget() {
 
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_random_legacy_root_with_real_reconciled_human_still_cannot_acknowledge
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_random_legacy_root_cannot_acknowledge_reconciled_real_human() {
     isolated(
         "b3_random_legacy_root_cannot_acknowledge_reconciled_real_human",
@@ -14057,7 +14235,64 @@ fn b3_random_legacy_root_cannot_acknowledge_reconciled_real_human() {
             );
             transport::replace_cursor(&s.directory.join("cursor.json"), &cursor).unwrap();
             transport::enroll_admission(&s.directory, &cursor, Some(&capture)).unwrap();
-            transport::seal(&s.directory, &cursor).unwrap();
+            // Baseline :431-438 captures historical bytes directly: the live
+            // sealer must refuse this deliberately unbound legacy family.
+            let seal_id = uid();
+            let manifest = object([
+                ("schema", string("agent-memory/omp-segment-v1")),
+                ("session", string(SESSION)),
+                ("lifecycle", string(&legacy)),
+                ("origin", get(&cursor, "origin").clone()),
+                ("seal_id", string(&seal_id)),
+                ("admission_ref", get(&capture, "snapshot_ref").clone()),
+                (
+                    "captures",
+                    Value::Array(vec![object([
+                        ("ref", get(&capture, "snapshot_ref").clone()),
+                        ("sha256", get(&capture, "snapshot_sha256").clone()),
+                    ])]),
+                ),
+                ("gaps", Value::Array(vec![])),
+                (
+                    "exclusions",
+                    Value::Array(
+                        agent_memory::omp_projection::EXCLUSIONS
+                            .iter()
+                            .map(|s| string(s))
+                            .collect(),
+                    ),
+                ),
+                ("previous_digest", Value::Null),
+            ]);
+            transport::retain(
+                &s.directory.join("segment.json"),
+                &manifest,
+                transport::MAX_PAYLOAD,
+            )
+            .unwrap();
+            let reference = format!("omp:seal:{seal_id}");
+            let enrollment = object([
+                ("schema", string("agent-memory/omp-enrollment-v1")),
+                ("session", string(SESSION)),
+                ("lifecycle", string(&legacy)),
+                ("source_reference", string(&reference)),
+                (
+                    "source_sha256",
+                    string(&transport::digest(&manifest).unwrap()),
+                ),
+                ("snapshot_ref", string("segment.json")),
+                ("kind", string("segment")),
+                ("native_source_id", string(&seal_id)),
+            ]);
+            transport::retain(
+                &s.directory.join("enrollments").join(format!(
+                    "{}.json",
+                    transport::digest(&string(&reference)).unwrap()
+                )),
+                &enrollment,
+                transport::MAX_RECORD,
+            )
+            .unwrap();
             let mut registered = vec![];
             for path in
                 transport::files(&s.directory, "enrollments", transport::Names::Hex64).unwrap()
@@ -14166,7 +14401,6 @@ fn b3_random_legacy_root_cannot_acknowledge_reconciled_real_human() {
 
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_existing_root_retains_legacy_bare_pending_without_inferred_cause
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_existing_root_retains_bare_pending_without_inferred_cause() {
     isolated(
         "b3_existing_root_retains_bare_pending_without_inferred_cause",
@@ -14213,7 +14447,6 @@ fn b3_existing_root_retains_bare_pending_without_inferred_cause() {
 
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_writer_checks_actual_request_without_cursor_or_root_scan
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_optional_writer_checks_exact_request_without_cursor_or_root_scan() {
     scenarios(
         "b3_optional_writer_checks_exact_request_without_cursor_or_root_scan",
@@ -14280,7 +14513,6 @@ fn b3_optional_writer_checks_exact_request_without_cursor_or_root_scan() {
 
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_nonseal_and_failed_source_attempts_do_not_acquire_diagnostic_rows
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_nonseal_and_real_capture_failure_never_acquire_decision_rows() {
     scenarios(
         "b3_nonseal_and_real_capture_failure_never_acquire_decision_rows",
@@ -14336,7 +14568,6 @@ fn b3_nonseal_and_real_capture_failure_never_acquire_decision_rows() {
 
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_bounded_summary_orphans_and_unreadable_namespace_do_not_change_doctor_health
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health() {
     isolated(
         "b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health",
@@ -14410,12 +14641,11 @@ fn b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health() 
 
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_rolled_back_raw_scope_defers_late_real_held_checkpoint_without_source_loss
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_rolled_back_raw_scope_defers_late_real_checkpoint_without_source_loss() {
     isolated(
         "b3_rolled_back_raw_scope_defers_late_real_checkpoint_without_source_loss",
         |root| {
-            let h = held_fixture(root);
+            let h = held_fixture_with_context(root, true);
             let f = &h.fixture;
             let index_path = agent_memory::layout_recovery_state::paths(&f.repo, None, &f.runtime)
                 .unwrap()
@@ -14431,7 +14661,11 @@ fn b3_rolled_back_raw_scope_defers_late_real_checkpoint_without_source_loss() {
                 "state",
                 string("rolled-back"),
             );
-            write(&index_path, turn_sources::encoded(&index).unwrap(), 0o600);
+            write(
+                &index_path,
+                agent_memory::developer_identity::encoded(&index).unwrap(),
+                0o600,
+            );
             let context =
                 agent_memory::scope_binding::private_enrollment_context(&f.repo, &f.runtime)
                     .unwrap();
@@ -14788,7 +15022,6 @@ fn b3_signed_native_updates_preserve_exact_owned_extension_integrity() {
 
 // obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_native_update_ignores_missing_historical_worktree_but_preserves_required_enrollment
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_signed_native_update_distinguishes_missing_history_from_required_enrollment() {
     let world = World::new().unwrap();
     let channel = support::distribution::Channel::new(&world);
@@ -14839,12 +15072,17 @@ fn b3_signed_native_update_distinguishes_missing_history_from_required_enrollmen
         receipt
     );
     assert_eq!(snapshot(&world.root.join("state")), state);
-    assert_eq!(snapshot(&retained), before);
+    assert_eq!(
+        snapshot(&retained)
+            .into_iter()
+            .map(|(path, bytes)| { (repo.join(path.strip_prefix(&retained).unwrap()), bytes) })
+            .collect::<std::collections::BTreeMap<_, _>>(),
+        before
+    );
 }
 
 // obligation: tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_held_native_preview_consumes_reviewed_envelope_without_publishing
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication() {
     isolated(
         "b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication",
@@ -14868,7 +15106,7 @@ fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication()
                 root,
                 &[
                     "cp".into(),
-                    "-R".into(),
+                    "-pR".into(),
                     root.join("development-source").into_os_string(),
                     source.as_os_str().to_owned(),
                 ],
@@ -14880,8 +15118,18 @@ fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication()
                     string(agent.join("skills/agent-memory").to_str().unwrap()),
                     string(agent.join("extensions/agent-memory.ts").to_str().unwrap()),
                     string(agent.join("AGENTS.md").to_str().unwrap()),
-                    string(root.join("bin/am").to_str().unwrap()),
-                    string(root.join("bin/agent-memory").to_str().unwrap()),
+                    string(
+                        Path::new(text(&f.receipt, "bin_dir"))
+                            .join("am")
+                            .to_str()
+                            .unwrap(),
+                    ),
+                    string(
+                        Path::new(text(&f.receipt, "bin_dir"))
+                            .join("agent-memory")
+                            .to_str()
+                            .unwrap(),
+                    ),
                 ]),
             );
             let envelope = |attestation: Value| {
@@ -14894,7 +15142,7 @@ fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication()
                             ("operation_id", get(&attestation, "operation_id").clone()),
                             (
                                 "attestation_sha256",
-                                string(&transport::digest(&attestation).unwrap()),
+                                string(&recovery_digest(&attestation).unwrap()),
                             ),
                             (
                                 "reviewer_developer_id",
@@ -15059,7 +15307,6 @@ fn b3_real_clock_controls_revoke_actual_one_shot_delivery() {
 
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_malformed_real_result_shapes_are_unknown_without_inventing_a_cause
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_malformed_real_results_stay_unknown_without_invented_cause() {
     scenarios(
         "b3_malformed_real_results_stay_unknown_without_invented_cause",
@@ -15131,7 +15378,6 @@ fn b3_malformed_real_results_stay_unknown_without_invented_cause() {
 
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_substituted_oversize_response_never_records_an_offered_continuation
 #[test]
-#[ignore = "needs recovery_frontier registered"]
 fn b3_real_oversize_response_substitution_never_records_offered_continuation() {
     isolated(
         "b3_real_oversize_response_substitution_never_records_offered_continuation",

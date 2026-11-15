@@ -285,11 +285,20 @@ impl Fixture {
     }
 }
 fn isolated(name: &str, with_bank: bool, body: impl FnOnce(Fixture)) {
+    isolated_case(name, with_bank, None, body)
+}
+fn isolated_case(name: &str, with_bank: bool, case: Option<&str>, body: impl FnOnce(Fixture)) {
     if let Ok(root) = support::require_current_world() {
+        if case.is_some_and(|case| std::env::var("AM_SMOKE_CASE").ok().as_deref() != Some(case)) {
+            return;
+        }
         body(Fixture::load(&root));
         return;
     }
     let mut world = World::new().unwrap();
+    if let Some(case) = case {
+        world.env.insert("AM_SMOKE_CASE".into(), case.into());
+    }
     Fixture::prepare(&mut world, with_bank);
     let output = world
         .run_with(
@@ -654,13 +663,16 @@ fn controlled_native_protocol() {
 }
 
 #[test]
+// obligation: tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_unsupported_binary_refuses_before_native_launch_or_human_turns
 fn test_unsupported_binary_refuses_before_native_launch_or_human_turns() {
     isolated(
         "test_unsupported_binary_refuses_before_native_launch_or_human_turns",
         false,
         |fixture| {
             // The former targets and adjacent releases all refuse.
-            for version in ["18.16.0", "18.19.0", "18.20.0", "18.20.2"] {
+            for version in [
+                "18.14.0", "18.16.0", "18.18.9", "18.19.0", "18.19.1", "18.20.0", "18.20.2",
+            ] {
                 let binary = fixture.binary(version, "disabled");
                 let report = fixture.smoke(&binary, 5, 1);
                 assert_eq!(get(&report, "native_version"), &s(format!("omp/{version}")));
@@ -672,6 +684,7 @@ fn test_unsupported_binary_refuses_before_native_launch_or_human_turns() {
 }
 
 #[test]
+// obligation: tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_historical_observers_cannot_qualify_new_current_session
 fn test_historical_observers_cannot_qualify_new_current_session() {
     isolated(
         "test_historical_observers_cannot_qualify_new_current_session",
@@ -721,19 +734,22 @@ fn test_historical_observers_cannot_qualify_new_current_session() {
 }
 
 #[test]
+// obligation: tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_both_exact_current_human_turns_and_persistent_session_are_required
 fn test_both_exact_current_human_turns_and_persistent_session_are_required() {
-    isolated(
-        "test_both_exact_current_human_turns_and_persistent_session_are_required",
-        true,
-        |fixture| {
-            for mode in ["first-only", "wrong-text", "wrong-id", "missing-session"] {
+    for mode in ["first-only", "wrong-text", "wrong-id", "missing-session"] {
+        isolated_case(
+            "test_both_exact_current_human_turns_and_persistent_session_are_required",
+            true,
+            Some(mode),
+            |fixture| {
                 fixture.smoke(&fixture.binary("18.20.1", mode), 5, 1);
-            }
-        },
-    );
+            },
+        );
+    }
 }
 
 #[test]
+// obligation: tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_source_verifier_binds_completed_human_ids_text_roots_and_digests
 fn test_source_verifier_binds_completed_human_ids_text_roots_and_digests() {
     isolated(
         "test_source_verifier_binds_completed_human_ids_text_roots_and_digests",
@@ -849,6 +865,7 @@ fn test_source_verifier_binds_completed_human_ids_text_roots_and_digests() {
 }
 
 #[test]
+// obligation: tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_source_verifier_waits_for_fault_free_shared_registration
 fn test_source_verifier_waits_for_fault_free_shared_registration() {
     isolated(
         "test_source_verifier_waits_for_fault_free_shared_registration",
@@ -926,6 +943,7 @@ fn test_source_verifier_waits_for_fault_free_shared_registration() {
 }
 
 #[test]
+// obligation: tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence
 fn test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence() {
     isolated(
         "test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence",
@@ -1037,18 +1055,16 @@ fn human_entry_assistant(id: &str, content: &str) -> Value {
 }
 
 #[test]
+// obligation: tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof
 fn test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof() {
-    isolated(
-        "test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof",
-        true,
-        |fixture| {
-            for (version, mode) in [
-                ("18.20.1", "complete"),
-                ("18.20.1", "late-duplicate"),
-                ("18.20.1", "late-unsettled"),
-            ] {
+    for mode in ["complete", "late-duplicate", "late-unsettled"] {
+        isolated_case(
+            "test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof",
+            true,
+            Some(mode),
+            |fixture| {
                 let report = fixture.smoke(
-                    &fixture.binary(version, mode),
+                    &fixture.binary("18.20.1", mode),
                     30,
                     if mode == "complete" { 0 } else { 1 },
                 );
@@ -1070,11 +1086,15 @@ fn test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof() {
                             .any(|(_, n)| n.as_int().unwrap().as_u64().unwrap() > 1)
                     );
                 } else {
-                    assert_eq!(get(&report, "native_is_settled"), &Value::Bool(false));
+                    assert_eq!(
+                        get(&report, "native_is_settled"),
+                        &Value::Bool(false),
+                        "{report:?}"
+                    );
                 }
-            }
-        },
-    );
+            },
+        );
+    }
 }
 
 #[test]
@@ -1209,7 +1229,7 @@ fn source_digest_and_content_text_follow_baseline_canonical_bytes() {
 }
 
 #[test]
-// tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_observer_verification_cannot_enroll_or_promote_legacy_marker
+// obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_observer_verification_cannot_enroll_or_promote_legacy_marker
 fn gaps_observer_verification_cannot_enroll_or_promote_legacy_marker() {
     isolated(
         "gaps_observer_verification_cannot_enroll_or_promote_legacy_marker",
@@ -1250,7 +1270,7 @@ fn gaps_observer_verification_cannot_enroll_or_promote_legacy_marker() {
 }
 
 #[test]
-// tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_real_binding_proof_rejects_forgery_and_mid_instance_drift_before_source
+// obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_real_binding_proof_rejects_forgery_and_mid_instance_drift_before_source
 fn gaps_real_binding_proof_rejects_forgery_and_mid_instance_drift() {
     isolated(
         "gaps_real_binding_proof_rejects_forgery_and_mid_instance_drift",
@@ -1323,7 +1343,7 @@ fn gaps_real_binding_proof_rejects_forgery_and_mid_instance_drift() {
                 pass_fds: &[],
             })
             .unwrap();
-            assert_eq!(result.status, Status::Code(1));
+            assert_eq!(result.status, Status::Code(2));
             assert!(!base.join("omp-source-v1").exists());
             for kind in ["receipt", "marker", "bank-binding"] {
                 let path = match kind {
@@ -1403,23 +1423,40 @@ fn gaps_install_call(w: &World, args: &[OsString], fault: Option<(&str, &str)>) 
     )
 }
 #[test]
-// tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_receipt_commit_separates_bank_activation_from_rollback
+// obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_receipt_commit_separates_bank_activation_from_rollback
 fn gaps_receipt_commit_separates_bank_activation_from_rollback() {
     for (stage, mode, committed) in [
         ("install-before-receipt", "exit", false),
         ("install-after-receipt", "exit", true),
         ("install-before-stored-source-activation", "error", true),
     ] {
-        let r = support::cutover::Recall::new();
-        let w = &r.world;
+        let world = World::new().unwrap();
+        let w = &world;
         let source = support::lifecycle::source(w);
+        let repo = w.repository("repo", false).unwrap();
+        let mut proposal = decode(include_bytes!(
+            "../skills/agent-memory/templates/router-proposal.example.json"
+        ));
+        set(&mut proposal, "project-id", s(uuid()));
+        let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
+        let bank = repo.join("memory-bank");
+        fs::create_dir(&bank).unwrap();
+        for (path, value) in get(&rendered, "files").as_object().unwrap() {
+            fs::write(bank.join(path), value.as_str().unwrap()).unwrap();
+        }
+        support::identity_fixtures::bind_with_command(
+            w,
+            &repo,
+            Path::new(env!("CARGO_BIN_EXE_am")),
+        )
+        .unwrap();
         let agent = w.root.join("explicit-omp");
         fs::create_dir(&agent).unwrap();
         let args = gaps_install_args(&source, &agent);
         let (code, value) = gaps_install_call(w, &args, Some((stage, mode)));
         assert_eq!(code, if mode == "exit" { 86 } else { 1 }, "{value:?}");
         let base = w.paths["state"].join("agent-memory/writes").join(
-            agent_memory::developer_identity::digest(Some(r.bank.to_str().unwrap().as_bytes()))
+            agent_memory::developer_identity::digest(Some(bank.to_str().unwrap().as_bytes()))
                 .unwrap(),
         );
         let marker = base.join("turn-sources-compat-v1.json");
@@ -1455,7 +1492,7 @@ fn gaps_receipt_commit_separates_bank_activation_from_rollback() {
     }
 }
 #[test]
-// tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_prior_committed_activation_recovers_after_a_later_install_rolls_back
+// obligation: tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_prior_committed_activation_recovers_after_a_later_install_rolls_back
 fn gaps_prior_committed_activation_recovers_after_later_install_rolls_back() {
     let r = support::cutover::Recall::new();
     let w = &r.world;

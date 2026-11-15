@@ -130,6 +130,8 @@ fn repository_worker() {
         })
     } else if mode == "discover" {
         agent_memory::project_identity::discover(repo, None, Default::default())
+    } else if mode == "status" {
+        scope_binding::status(repo, &[], None, None)
     } else {
         let pack = agent_memory::cli::pack_root().unwrap();
         scope_binding::private_enrollment_context(repo, &pack).and_then(|context| {
@@ -366,11 +368,14 @@ fn sampled_head_is_immutable_and_next_settings_read_observes_later_commit() {
 #[test]
 // obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_timeout_and_launch_failure_never_mint_identity_from_partial_output
 fn timeout_and_git_launch_failures_never_mint_identity_from_partial_output() {
-    for body in [
+    for (index, body) in [
         "exec /bin/sleep 30",
         "exec /missing-owned-git",
         "exec /bin/sh /missing-owned-input",
-    ] {
+    ]
+    .into_iter()
+    .enumerate()
+    {
         let mut r = fixture();
         let before = physical(&r.repo);
         let root = r.repo.to_str().unwrap().to_owned();
@@ -382,13 +387,30 @@ fn timeout_and_git_launch_failures_never_mint_identity_from_partial_output() {
             ),
         );
         assert!(!yes(&library(&r.world, &r.repo, "settings", ""), "ok"));
+        // Baseline `assert_refused` (test_repository_observation_batch.py:38-45).
+        let status = library(&r.world, &r.repo, "status", "");
+        assert!(yes(&status, "ok"), "{body}: {status:?}");
+        let status = get(&status, "value");
+        assert_eq!(get(status, "resolved"), &Value::Bool(false), "{status:?}");
+        assert_eq!(get(status, "project_id"), &Value::Null, "{status:?}");
+        assert!(
+            !string(get(status, "project"), "error").is_empty(),
+            "{status:?}"
+        );
+        assert_eq!(get(status, "writes_performed"), &Value::Bool(false));
         assert!(!yes(&library(&r.world, &r.repo, "enrollment", ""), "ok"));
         assert_eq!(physical(&r.repo), before);
         no_live_queries(&r.world);
+        // Baseline checks the genuine non-Git directory only under the
+        // timeout fault, `failures[0]` (test_repository_observation_batch.py:291-294);
+        // the shim's completed partial-output exits are not a non-Git launch.
+        if index != 0 {
+            continue;
+        }
         let plain = r.world.inside("genuine non-Git launch failure").unwrap();
         fs::create_dir(&plain).unwrap();
         let value = library(&r.world, &plain, "settings", "");
-        assert!(yes(&value, "ok"));
+        assert!(yes(&value, "ok"), "{body}: {value:?}");
         assert_eq!(string(get(&value, "value"), "bank_root"), "memory-bank");
         assert!(!plain.join("memory-bank").exists());
     }

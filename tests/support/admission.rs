@@ -38,6 +38,12 @@ impl World {
     }
     pub fn command(&self, argv: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
         let mut env = self.env();
+        // Baseline `child_env.update(env)`: an explicit key replaces the inherited one.
+        env.retain(|(key, _)| {
+            !extra
+                .iter()
+                .any(|(name, _)| key == std::ffi::OsStr::new(name))
+        });
         env.extend(extra.iter().map(|(k, v)| ((*k).into(), v.clone())));
         let spec = process::Spec {
             argv,
@@ -76,11 +82,19 @@ impl World {
         String::from_utf8(output.stdout).unwrap()
     }
     pub fn fixture(&self) -> (PathBuf, PathBuf, String) {
+        self.fixture_with_origin(None)
+    }
+    /// `fixture()` whose repository already names `origin` when it is bound
+    /// (baseline `World.repository` wrapped to add the remote at creation).
+    pub fn fixture_with_origin(&self, origin: Option<&str>) -> (PathBuf, PathBuf, String) {
         let repo = self.root.join("repository");
         std::fs::create_dir(&repo).unwrap();
         self.git(&repo, &["init", "--initial-branch=main"]);
         self.git(&repo, &["config", "user.name", "Fixture"]);
         self.git(&repo, &["config", "user.email", "fixture@example.invalid"]);
+        if let Some(origin) = origin {
+            self.git(&repo, &["remote", "add", "origin", origin]);
+        }
         std::fs::write(
             repo.join("evidence.md"),
             b"# Observed result\n\nA disposable measured fixture, not actual project admission.\n",

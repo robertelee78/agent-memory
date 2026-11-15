@@ -737,6 +737,8 @@ fn private_enrollment_context_at(
         RuntimeAuthority::Lifecycle { pack, binary } => frontier
             .verified_enrollment_hold_for_runtime_at_bank(&raw_root, &raw_bank, (pack, binary))?,
     };
+    #[cfg(feature = "dev-tools")]
+    writes::fault("frontier.verified-hold.after-entry")?;
     let scope = match &hold {
         Some(hold) => hold.scope.clone(),
         None => require(&root, None, RequireOptions::default())?,

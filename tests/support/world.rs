@@ -9,7 +9,7 @@ use std::ffi::{OsStr, OsString};
 use std::fmt;
 use std::fs;
 use std::io;
-use std::os::unix::fs::{DirBuilderExt, PermissionsExt, symlink};
+use std::os::unix::fs::{DirBuilderExt, MetadataExt, PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::Duration;
@@ -347,6 +347,28 @@ impl World {
         Ok(world)
     }
 
+    /// Baseline `layout_recovery_fixtures.installed:71-76`: Darwin's
+    /// `/private/tmp` can inherit a group the test principal cannot reproduce
+    /// on replacement. Select a realizable group for every World directory
+    /// before any original bank or source exists; production preservation
+    /// checks stay unchanged.
+    pub fn realize_group(&self) -> Result<()> {
+        let group = agent_memory::host::effective_gid();
+        let mut directories = vec![self.root.clone()];
+        while let Some(directory) = directories.pop() {
+            if fs::symlink_metadata(&directory)?.gid() != group {
+                std::os::unix::fs::chown(&directory, None, Some(group))?;
+            }
+            for entry in fs::read_dir(&directory)? {
+                let entry = entry?;
+                if entry.file_type()?.is_dir() {
+                    directories.push(entry.path());
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn inside(&self, path: impl AsRef<Path>) -> Result<PathBuf> {
         let path = path.as_ref();
         let resolved = agent_memory::fs::canonical_path(
@@ -413,10 +435,16 @@ impl World {
                 env.push((key.clone(), value.clone()));
             }
         }
+        // Baseline `World.run`: `cwd or self.paths["repo"]` (world.py:136).
+        let repo = self
+            .paths
+            .get("repo")
+            .cloned()
+            .unwrap_or_else(|| self.root.join("repo"));
         let command = Command {
             argv,
             env,
-            cwd: self.inside(options.cwd.unwrap_or(&self.root.join("repo")))?,
+            cwd: self.inside(options.cwd.unwrap_or(&repo))?,
             timeout: options.timeout,
             capture_limit: options.capture_limit,
             check: options.check,

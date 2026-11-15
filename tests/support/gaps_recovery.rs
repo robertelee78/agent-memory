@@ -233,10 +233,16 @@ fn signed_hold() -> (Fixture, Channel) {
         false,
         POLICY,
         move |f| {
+            // Baseline `runtime_update_fixtures.fixture` is the World's only
+            // installation; a plain install over a recorded development
+            // receipt keeps that development source (installation.py:643).
+            let removed = f.good(vec!["uninstall".into()]);
+            assert_eq!(g(&removed, "verified"), &Value::Bool(true));
             let channel = Channel::new(&f.world);
             channel.publish(env!("CARGO_PKG_VERSION"), &"1".repeat(40));
             let installed = channel.install(&f.world, "none", "copy");
             let receipt = g(&installed, "receipt");
+            assert_eq!(t(g(receipt, "source"), "kind"), "release");
             f.runtime = PathBuf::from(t(g(receipt, "source"), "pack"));
             f.binary = agent_memory::installation::source_binary(g(receipt, "source")).unwrap();
             f.command = Path::new(t(receipt, "bin_dir")).join("am");
@@ -780,19 +786,31 @@ fn completed_omp_drains_only_after_independent_layout_hold_retires() {
     );
     assert_eq!(snapshot(&base.join("omp-source-v1"), false), retained);
     let before = snapshot(&f.bank, false);
+    // The uninstalled runtime's command is gone; the later reader is an
+    // independent `am` that is not the receipt owner.
     let output = f
         .world
-        .am_with(
+        .run_with(
             [
+                env!("CARGO_BIN_EXE_am"),
                 "--json",
                 "bank",
                 "validate",
                 "--repo",
                 f.repo.to_str().unwrap(),
             ],
-            RunOptions::default(),
+            RunOptions {
+                check: false,
+                ..RunOptions::default()
+            },
         )
         .unwrap();
-    assert_eq!(output.status, Status::Code(0));
+    assert_eq!(
+        output.status,
+        Status::Code(0),
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
     assert_eq!(snapshot(&f.bank, false), before);
 }

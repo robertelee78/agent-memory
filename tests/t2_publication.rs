@@ -67,7 +67,8 @@ fn user(id: i64, login: &str) -> Value {
 
 fn save(w: &World, value: &Value, name: &str) -> TestResult<PathBuf> {
     let path = w.root.join(name);
-    fs::write(&path, encode(value)?)?;
+    fs::write(&path, agent_memory::developer_identity::encoded(value)?)?;
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o600))?;
     Ok(path)
 }
 fn git(w: &World, cwd: &Path, args: &[&str]) -> TestResult<String> {
@@ -115,6 +116,19 @@ fn good(w: &World, command: &str, args: &[&OsStr]) -> TestResult<Value> {
     Ok(value)
 }
 fn install_runtime(w: &mut World) {
+    // Baseline layout_recovery_fixtures.installed:74-76 chooses a group
+    // reproducible by this principal before any original bank exists.
+    let mut directories = vec![w.root.clone()];
+    while let Some(directory) = directories.pop() {
+        std::os::unix::fs::chown(&directory, None, Some(agent_memory::host::effective_gid()))
+            .unwrap();
+        for entry in fs::read_dir(directory).unwrap() {
+            let entry = entry.unwrap();
+            if entry.file_type().unwrap().is_dir() {
+                directories.push(entry.path());
+            }
+        }
+    }
     let runtime = support::installed_runtime::install(&w.root, |argv| {
         w.run_with(
             argv,
@@ -603,17 +617,6 @@ fn github(
             ],
         )?;
         git(w, peer, &["push", "origin", "HEAD:main"])?;
-        git(
-            w,
-            peer,
-            &[
-                "remote",
-                "set-url",
-                "origin",
-                "https://github.com/fixture/memory.git",
-            ],
-        )?;
-        bind(w, peer)?;
     }
     enforce(&remote)?;
     Ok(policy)
@@ -1165,6 +1168,18 @@ fn policy_worker() {
                     ("again", again),
                     ("changed", s(changed.message())),
                     ("retained", Value::Array(retained_bytes)),
+                    (
+                        "normal_refused",
+                        Value::Bool(
+                            agent_memory::sharing_recovery::tree(
+                                repo,
+                                text(get(&input, "revision")),
+                                "memory-bank",
+                                false,
+                            )
+                            .is_err(),
+                        ),
+                    ),
                 ])
             }
         };
@@ -3511,151 +3526,2429 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     Ok(())
 }
 
-/// An existing baseline obligation whose complete scenario body and fixture
-/// have not been ported. This is not an executable consumer or adapter proof.
-fn deferred_body(fixture: &str) -> TestResult {
-    Err(WorldError::invalid(format!("Scenario body waits for {fixture}")).into())
+// ---------------------------------------------------------------- layout publication contracts
+
+fn hash_bytes(bytes: &[u8]) -> String {
+    agent_memory::developer_identity::digest(Some(bytes)).unwrap()
+}
+fn hash_value(value: &Value) -> String {
+    hash_bytes(&agent_memory::developer_identity::encoded(value).unwrap())
+}
+fn read_json(path: &Path) -> TestResult<Value> {
+    decode(&fs::read(path)?)
+}
+fn bank_files(bank: &Path) -> TestResult<Value> {
+    let mut files = BTreeMap::new();
+    files_below(bank, bank, &mut files)?;
+    Ok(Value::Object(
+        files
+            .into_iter()
+            .filter(|(p, _)| p.ends_with(".md") && !p.starts_with(".agent-memory"))
+            .map(|(p, b)| Ok((p, s(String::from_utf8(b)?))))
+            .collect::<TestResult<_>>()?,
+    ))
+}
+fn recovery_call(w: &World, repo: &Path, args: &[&OsStr], expected: i32) -> TestResult<Value> {
+    use agent_memory::process::{Input, Spec, Status, Target};
+    support::require_world(&w.env, repo)?;
+    let argv: Vec<OsString> = [
+        w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+        "--json".into(),
+        "bank".into(),
+        "recover-layout".into(),
+    ]
+    .into_iter()
+    .chain(args.iter().map(|v| v.to_os_string()))
+    .chain(["--repo".into(), repo.as_os_str().to_owned()])
+    .collect();
+    let env: Vec<_> = w.env.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+    // Baseline World inherits the ordinary creation mask used for these 0644
+    // originals. Layout recovery deliberately refuses an unreproducible mode
+    // instead of chmod-repairing it (layout_recovery.py:737-740,777-780).
+    let output = agent_memory::process::run(&Spec {
+        argv: &argv,
+        search_path: false,
+        env: &env,
+        cwd: Some(repo),
+        stdin: Input::Null,
+        stdout: Target::Capture {
+            limit: support::world::CAPTURE_LIMIT,
+        },
+        stderr: Target::Capture {
+            limit: support::world::CAPTURE_LIMIT,
+        },
+        deadline: agent_memory::clock::Deadline::after(Duration::from_secs(60))?,
+        new_session: false,
+        file_size_limit: None,
+        umask: Some(0o022),
+        pass_fds: &[],
+    })?;
+    let value = decode(&output.stdout)?;
+    assert_eq!(
+        output.status,
+        Status::Code(expected),
+        "{}: {}",
+        encode(&value)?,
+        String::from_utf8_lossy(&output.stderr)
+    );
+    Ok(value)
+}
+fn recovery_output(
+    w: &World,
+    repo: &Path,
+    operation: &str,
+    args: &[&OsStr],
+    expected: i32,
+) -> TestResult<Value> {
+    let output = w.root.join(format!(
+        "layout-output-{}.json",
+        agent_memory::host::uuid4()?
+    ));
+    let mut argv = args.to_vec();
+    argv.extend([
+        os("--operation"),
+        os(operation),
+        os("--output"),
+        output.as_os_str(),
+    ]);
+    let safe = recovery_call(w, repo, &argv, expected)?;
+    if expected == 0 {
+        read_json(&output)
+    } else {
+        Ok(safe)
+    }
+}
+fn layout_inspect(w: &World, repo: &Path) -> TestResult<Value> {
+    let output = w.root.join("layout-inspected.json");
+    recovery_call(
+        w,
+        repo,
+        &[os("inspect"), os("--output"), output.as_os_str()],
+        0,
+    )?;
+    read_json(&output)
+}
+fn layout_request(w: &World, inspected: &Value, intended: &Value) -> TestResult<Value> {
+    let manifest = get(inspected, "manifest");
+    let operation = text(get(manifest, "operation_id"));
+    let scope = get(get(manifest, "identity"), "scope_context");
+    let author = obj([
+        ("developer_id", get(scope, "developer_id").clone()),
+        ("harness", s("fixture-author")),
+        ("session", s(format!("author-{operation}"))),
+        (
+            "evidence",
+            s("Controlled fixture full-source observation, not product acceptance"),
+        ),
+    ]);
+    let mut reviewer = author.clone();
+    set(&mut reviewer, "harness", s("fixture-independent-reviewer"));
+    set(&mut reviewer, "session", s(format!("reviewer-{operation}")));
+    let mut page = 0;
+    let mut units = Vec::new();
+    for source in get(manifest, "sources").as_array().unwrap() {
+        let path = text(get(source, "path"));
+        let length = get(source, "byte_count")
+            .as_int()
+            .unwrap()
+            .as_i64()
+            .unwrap();
+        let pages = (length + 24575) / 24576;
+        let pending = intended.get(path).is_none();
+        let lengths = if path == "handoff-prompt.md" && length == 28478 {
+            vec![3560, 3560, 3560, 3560, 3560, 3560, 3560, 3558]
+        } else {
+            vec![length]
+        };
+        let existing = intended
+            .get(path)
+            .and_then(Value::as_str)
+            .and_then(|body| agent_memory::records::parse(body, &[]).ok())
+            .filter(|(_, meta, _)| meta.get("id").is_some())
+            .map_or(Value::Null, |(_, meta, _)| {
+                obj([
+                    ("id", get(&meta, "id").clone()),
+                    ("version", get(&meta, "version").clone()),
+                ])
+            });
+        let mut offset = 0;
+        for size in lengths {
+            units.push(obj([
+                ("unit_id", s(agent_memory::host::uuid4()?)),
+                ("source_ranges", Value::Array(vec![obj([("source_id", get(source, "source_id").clone()), ("start", int(offset)), ("end", int(offset + size))])])),
+                ("semantic_kind", s(if pending { "unadmitted-source" } else if path == "MEMORY.md" { "canonical-framing" } else { "canonical-guidance" })),
+                ("existing_record", existing.clone()), ("provenance", obj([("origin", s(if pending { "unknown" } else { "existing canonical fixture" })), ("uncertainty", Value::Bool(pending))])),
+                ("disposition", s(if pending { "pending-admission" } else { "preserve" })),
+                ("targets", Value::Array(if pending { vec![] } else { vec![obj([("path", s(path)), ("sha256", s(hash_bytes(text(get(intended, path)).as_bytes())))])] })),
+                ("reason", s("Preserve complete synthetic meaning and conditions; unconfirmed sources need separate admission")),
+                ("required_actions", Value::Array(if pending { vec![s("Confirm independent repository evidence before ordinary admission")] } else { vec![] })),
+                ("context_pages", Value::Array((page..page + pages.max(1)).map(int).collect())),
+            ]));
+            offset += size;
+        }
+        page += pages.max(1);
+    }
+    let unit_map = obj([
+        ("schema", s("agent-memory/layout-unit-map-v1")),
+        ("operation_id", s(operation)),
+        ("manifest_sha256", s(hash_value(manifest))),
+        ("units", Value::Array(units.clone())),
+    ]);
+    let physical = get(manifest, "physical_entries").as_array().unwrap();
+    let metadata = obj([
+        (
+            "files",
+            Value::Object(
+                intended
+                    .as_object()
+                    .unwrap()
+                    .iter()
+                    .map(|(path, _)| {
+                        let row = physical
+                            .iter()
+                            .find(|row| text(get(row, "path")) == path)
+                            .unwrap();
+                        (
+                            path.clone(),
+                            obj([
+                                ("uid", get(row, "uid").clone()),
+                                ("gid", get(row, "gid").clone()),
+                                (
+                                    "mode",
+                                    int(get(row, "mode").as_int().unwrap().as_i64().unwrap()
+                                        & 0o777),
+                                ),
+                                ("xattrs", get(row, "xattrs").clone()),
+                            ]),
+                        )
+                    })
+                    .collect(),
+            ),
+        ),
+        ("directories", obj([])),
+    ]);
+    let review_id = agent_memory::host::uuid4()?;
+    let pending = units
+        .iter()
+        .any(|u| text(get(u, "disposition")) == "pending-admission");
+    let attestation = if pending {
+        let runtime = agent_memory::artifact::inspect_runtime(
+            &w.root.join("dev-source/skills/agent-memory"),
+            &w.root.join("dev-source/target/release/am"),
+        )?;
+        obj([
+            ("schema", s("agent-memory/layout-quiescence-attestation-v1")),
+            ("attestation_id", s(agent_memory::host::uuid4()?)),
+            ("operation_id", s(operation)),
+            ("project_id", get(manifest, "project_id").clone()),
+            ("repo_root", get(manifest, "repo_root").clone()),
+            ("bank_path", get(manifest, "bank_path").clone()),
+            ("checkout_key", get(scope, "checkout_key").clone()),
+            (
+                "state_root",
+                s(w.env[OsStr::new("AGENT_MEMORY_STATE_HOME")].to_string_lossy()),
+            ),
+            ("manifest_sha256", s(hash_value(manifest))),
+            (
+                "runtime_artifact_digest",
+                get(&runtime, "artifact_digest").clone(),
+            ),
+            ("operator_developer_id", get(scope, "developer_id").clone()),
+            ("issued_at", get(manifest, "inspected_at").clone()),
+            (
+                "declared_principals",
+                Value::Array(vec![get(scope, "developer_id").clone()]),
+            ),
+            (
+                "declared_invocation_routes",
+                Value::Array(vec![s(w.env
+                    [OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")]
+                .to_string_lossy())]),
+            ),
+            ("stopped_sessions", Value::Array(vec![])),
+            (
+                "statement",
+                s(
+                    "All authorized legacy invocation routes and in-flight sessions are disabled or quiesced until terminal recovery retirement, or use the independently verified capable runtime and bound private state.",
+                ),
+            ),
+            ("review_id", s(&review_id)),
+        ])
+    } else {
+        Value::Null
+    };
+    let review = obj([
+        ("schema", s("agent-memory/layout-review-v1")),
+        ("review_id", s(review_id)),
+        ("operation_id", s(operation)),
+        ("manifest_sha256", s(hash_value(manifest))),
+        ("unit_map_sha256", s(hash_value(&unit_map))),
+        ("intended_files_sha256", s(hash_value(intended))),
+        ("metadata_plan_sha256", s(hash_value(&metadata))),
+        (
+            "authority_sha256",
+            s(hash_value(get(
+                get(manifest, "identity"),
+                "project_evidence",
+            ))),
+        ),
+        ("author", author.clone()),
+        ("reviewer", reviewer),
+        ("reviewed_at", get(manifest, "inspected_at").clone()),
+        (
+            "unit_decisions",
+            Value::Array(
+                units
+                    .iter()
+                    .map(|u| {
+                        obj([
+                            ("unit_id", get(u, "unit_id").clone()),
+                            ("disposition", get(u, "disposition").clone()),
+                            ("rationale", get(u, "reason").clone()),
+                        ])
+                    })
+                    .collect(),
+            ),
+        ),
+        (
+            "inherited_frontier_sha256",
+            s(hash_value(&Value::Array(vec![]))),
+        ),
+        ("inherited_unit_decisions", Value::Array(vec![])),
+        (
+            "quiescence_attestation_sha256",
+            if pending {
+                s(hash_value(&attestation))
+            } else {
+                Value::Null
+            },
+        ),
+        ("semantic_preservation", Value::Bool(true)),
+        ("security", Value::Bool(true)),
+        ("identity", Value::Bool(true)),
+        ("decision", s("approve")),
+        (
+            "evidence",
+            s("Controlled full original/context-page and complete native-result review"),
+        ),
+    ]);
+    Ok(obj([
+        ("schema", s("agent-memory/layout-prepare-v1")),
+        ("operation_id", s(operation)),
+        ("author", author),
+        ("unit_map", unit_map),
+        ("intended_files", intended.clone()),
+        ("metadata_plan", metadata),
+        ("review", review),
+        ("quiescence_attestation", attestation),
+        ("retained_source_ids", Value::Array(vec![])),
+    ]))
+}
+fn repair(w: &World, repo: &Path, intended: &Value) -> TestResult<(Value, Value)> {
+    let inspected = layout_inspect(w, repo)?;
+    let operation = text(get(&inspected, "operation_id"));
+    let input = save(
+        w,
+        &layout_request(w, &inspected, intended)?,
+        "layout-prepare.json",
+    )?;
+    let proposal = recovery_output(
+        w,
+        repo,
+        operation,
+        &[os("prepare"), os("--input"), input.as_os_str()],
+        0,
+    )?;
+    let proposal_path = save(w, &proposal, "layout-proposal.json")?;
+    let applied = recovery_call(
+        w,
+        repo,
+        &[os("apply"), os("--proposal"), proposal_path.as_os_str()],
+        0,
+    )?;
+    Ok((inspected, applied))
+}
+struct PublicRepair {
+    repo: PathBuf,
+    bank: PathBuf,
+    remote: PathBuf,
+    policy: PathBuf,
+    operation: String,
+    intended: Value,
+    inspected: Value,
+    applied: Value,
+    originals: BTreeMap<String, Vec<u8>>,
+}
+fn public_repair(w: &mut World) -> TestResult<PublicRepair> {
+    public_repair_with_pending(w, None)
+}
+fn public_repair_with_pending(w: &mut World, handoff: Option<&str>) -> TestResult<PublicRepair> {
+    let (repo, bank, peer, _) = fixture(w)?;
+    let remote = PathBuf::from(git(w, &repo, &["remote", "get-url", "origin"])?.trim());
+    let policy = github(w, &repo, &bank, Some(&peer), false)?;
+    git(
+        w,
+        &repo,
+        &[
+            "commit",
+            "--only",
+            "-m",
+            "Fixture existing authority identity",
+            "--",
+            "memory-bank/MEMORY.md",
+        ],
+    )?;
+    git(
+        w,
+        &repo,
+        &["commit", "-m", "Fixture unfinished feature ancestor"],
+    )?;
+    git(w, &repo, &["fetch", "origin", "main"])?;
+    git(w, &repo, &["merge", "--no-edit", "FETCH_HEAD"])?;
+    fs::write(
+        repo.join("code.py"),
+        "VALUE = 3  # staged feature sentinel\n",
+    )?;
+    git(w, &repo, &["add", "code.py"])?;
+    fs::write(
+        repo.join("code.py"),
+        "VALUE = 4  # unstaged feature sentinel\n",
+    )?;
+    let original = fs::read_to_string(bank.join("activeContext.md"))?;
+    let sentence = "Under the synthetic condition preserve the original source before acting.\n";
+    let mut raw = original.clone() + &sentence.repeat((79054 - original.len()) / sentence.len());
+    raw.push_str(&" ".repeat(79054 - raw.len()));
+    fs::write(bank.join("activeContext.md"), &raw)?;
+    fs::write(peer.join("memory-bank/activeContext.md"), &raw)?;
+    git(w, &peer, &["add", "memory-bank/activeContext.md"])?;
+    git(
+        w,
+        &peer,
+        &["commit", "-m", "Synthetic invalid authority context"],
+    )?;
+    git(w, &peer, &["push", "origin", "HEAD:main"])?;
+    let mut intended = bank_files(&bank)?;
+    set(
+        &mut intended,
+        "activeContext.md",
+        s(original.replacen("# Current focus\n", "# Active context\n", 1) + "\n" + sentence),
+    );
+    if let Some(handoff) = handoff {
+        fs::write(bank.join("handoff-prompt.md"), handoff)?;
+    }
+    let before = state(w, &repo, &bank)?;
+    let (inspected, applied) = repair(w, &repo, &intended)?;
+    assert_eq!(
+        get(&applied, "semantic_recovery_complete"),
+        &Value::Bool(handoff.is_none())
+    );
+    let after = state(w, &repo, &bank)?;
+    assert_eq!(
+        (&after.1, &after.2, &after.3, &after.4),
+        (&before.1, &before.2, &before.3, &before.4)
+    );
+    Ok(PublicRepair {
+        repo,
+        bank,
+        remote,
+        policy,
+        operation: text(get(&inspected, "operation_id")).into(),
+        intended,
+        inspected,
+        applied,
+        originals: before.0,
+    })
+}
+fn publication_review(observation: &Value, files: &Value) -> TestResult<Value> {
+    let author = obj([
+        (
+            "developer_id",
+            get(
+                get(get(observation, "binding"), "scope_context"),
+                "developer_id",
+            )
+            .clone(),
+        ),
+        ("harness", s("controlled-author")),
+        ("session", s(agent_memory::host::uuid4()?)),
+        (
+            "evidence",
+            s("Actual disposable fixture source review; not product acceptance"),
+        ),
+    ]);
+    let mut reviewer = author.clone();
+    set(&mut reviewer, "harness", s("controlled-reviewer"));
+    set(&mut reviewer, "session", s(agent_memory::host::uuid4()?));
+    let mut units = Vec::new();
+    for (side, variant) in get(observation, "variants").as_object().unwrap() {
+        for source in get(variant, "sources").as_array().unwrap() {
+            let path = text(get(source, "path"));
+            units.push(obj([("unit_id", s(agent_memory::host::uuid4()?)), ("side", s(side)), ("source_id", get(source,"source_id").clone()), ("start", int(0)), ("end", get(source,"byte_count").clone()), ("disposition", s("preserve")),
+                ("targets", Value::Array(vec![obj([("path", s(path)), ("sha256", s(hash_bytes(text(get(files,path)).as_bytes())))])])), ("rationale", s("Complete controlled source meaning and conditions retained in the native result")), ("terminal_evidence", Value::Null)]));
+        }
+    }
+    Ok(obj([
+        ("schema", s("agent-memory/layout-publication-review-v1")),
+        ("review_id", s(agent_memory::host::uuid4()?)),
+        ("observation_sha256", s(hash_value(observation))),
+        ("intended_files_sha256", s(hash_value(files))),
+        ("author", author),
+        ("reviewer", reviewer),
+        ("reviewed_at", s(agent_memory::host::utc_now_isoformat()?)),
+        ("source_units", Value::Array(units)),
+        ("added_paths", Value::Array(vec![])),
+        ("record_evidence", Value::Array(vec![])),
+        (
+            "identity_decisions",
+            obj([
+                (
+                    "base",
+                    s("Checked original same-project router and authority"),
+                ),
+                (
+                    "local",
+                    s("Checked original same-project router and authority"),
+                ),
+                (
+                    "landed",
+                    s("Checked original same-project router and authority"),
+                ),
+            ]),
+        ),
+        ("semantic_preservation", Value::Bool(true)),
+        ("security", Value::Bool(true)),
+        ("decision", s("approve")),
+    ]))
+}
+fn publication_input(observation: &Value, files: &Value) -> TestResult<Value> {
+    Ok(obj([
+        ("schema", s("agent-memory/layout-publication-prepare-v1")),
+        ("observation_id", get(observation, "observation_id").clone()),
+        ("intended_files", files.clone()),
+        ("review", publication_review(observation, files)?),
+    ]))
+}
+fn layout_publication_observation(w: &World, f: &PublicRepair) -> TestResult<Value> {
+    recovery_output(w, &f.repo, &f.operation, &[os("publish"), os("inspect")], 0)
+}
+fn layout_prepared(w: &World, f: &PublicRepair) -> TestResult<Value> {
+    let observed = layout_publication_observation(w, f)?;
+    let input = save(
+        w,
+        &publication_input(get(&observed, "observation"), &f.intended)?,
+        "publication-layout-input.json",
+    )?;
+    let prepared = recovery_output(
+        w,
+        &f.repo,
+        &f.operation,
+        &[
+            os("publish"),
+            os("prepare"),
+            os("--input"),
+            input.as_os_str(),
+        ],
+        0,
+    )?;
+    assert_eq!(text(get(&prepared, "state")), "prepared");
+    Ok(get(&prepared, "request").clone())
+}
+fn layout_land(w: &World, f: &PublicRepair, request: &Value, expected: i32) -> TestResult<Value> {
+    let input = save(w, request, "publication-layout-exact.json")?;
+    recovery_output(
+        w,
+        &f.repo,
+        &f.operation,
+        &[os("publish"), os("land"), os("--input"), input.as_os_str()],
+        expected,
+    )
+}
+fn layout_fault_journey(boundary: &str, mode: &str) -> TestResult {
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let local = state(&w, &f.repo, &f.bank)?;
+    let before = remote_head(&w, &f.repo)?;
+    let request = layout_prepared(&w, &f)?;
+    let input = save(&w, &request, "fault-exact.json")?;
+    let output = w.root.join("fault-interrupted.json");
+    let interrupted = w.run_with(
+        [
+            w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+            "bank".into(),
+            "recover-layout".into(),
+            "publish".into(),
+            "land".into(),
+            "--repo".into(),
+            f.repo.as_os_str().to_owned(),
+            "--operation".into(),
+            f.operation.clone().into(),
+            "--input".into(),
+            input.into_os_string(),
+            "--output".into(),
+            output.into_os_string(),
+        ],
+        RunOptions {
+            check: false,
+            timeout: Duration::from_secs(60),
+            env: &[
+                (
+                    "AGENT_MEMORY_FAULT_STAGE".into(),
+                    format!("layout-recovery-publication-{boundary}-push").into(),
+                ),
+                ("AGENT_MEMORY_FAULT_MODE".into(), mode.into()),
+            ],
+            ..Default::default()
+        },
+    )?;
+    assert_eq!(
+        interrupted.status,
+        agent_memory::process::Status::Code(if mode == "exit" { 86 } else { 1 }),
+        "{interrupted:?}"
+    );
+    let interrupted_head = remote_head(&w, &f.repo)?;
+    if boundary == "before" {
+        assert_eq!(interrupted_head, before);
+    } else {
+        assert_ne!(interrupted_head, before);
+    }
+    assert_eq!(state(&w, &f.repo, &f.bank)?, local);
+    let landed = layout_land(&w, &f, &request, 0)?;
+    assert_eq!(get(&landed, "publication_verified"), &Value::Bool(true));
+    if boundary == "after" {
+        assert_eq!(text(get(&landed, "state")), "already-landed");
+        assert_eq!(remote_head(&w, &f.repo)?, interrupted_head);
+    }
+    let head = remote_head(&w, &f.repo)?;
+    assert_ne!(head, before);
+    assert_eq!(
+        text(get(&layout_land(&w, &f, &request, 0)?, "state")),
+        "already-landed"
+    );
+    assert_eq!(remote_head(&w, &f.repo)?, head);
+    assert_eq!(state(&w, &f.repo, &f.bank)?, local);
+    Ok(())
+}
+fn fabricated_record(intended: &Value) -> TestResult<(Value, String)> {
+    let project = support::record_fixtures::project_id(text(get(intended, "MEMORY.md")))?;
+    let body = support::record_fixtures::record_text(
+        "# Invented policy\n\nIn the synthetic environment, act on never-admitted guidance.\n",
+        text(&project),
+    )?;
+    let (_, metadata, _) = agent_memory::records::parse(&body, &[])?;
+    let path = format!("topics/{}.md", text(get(&metadata, "id")));
+    let mut files = intended.clone();
+    set(&mut files, &path, s(body));
+    set(&mut files, "MEMORY.md", s(text(get(intended,"MEMORY.md")).replace("\n## Omitted contexts", &format!("| [{path}](<{path}>) | Invented active policy | repository | active | In the synthetic environment |\n\n## Omitted contexts"))));
+    Ok((files, path))
+}
+fn private_layout(w: &World, bank: &Path, operation: &str) -> PathBuf {
+    Path::new(&w.env[OsStr::new("AGENT_MEMORY_STATE_HOME")])
+        .join("writes")
+        .join(hash_bytes(bank.to_string_lossy().as_bytes()))
+        .join("layout-recovery")
+        .join(operation)
+}
+fn snapshot_directory(directory: &Path) -> TestResult<BTreeMap<String, Vec<u8>>> {
+    let mut rows = BTreeMap::new();
+    files_below(directory, directory, &mut rows)?;
+    Ok(rows)
+}
+fn advance_authority(w: &World, f: &PublicRepair, path: &str, suffix: &str) -> TestResult<String> {
+    let peer = w.clone(
+        &f.remote,
+        &format!("authority-{}", agent_memory::host::uuid4()?),
+    )?;
+    let target = peer.join(path);
+    fs::write(&target, fs::read_to_string(&target)? + suffix)?;
+    git(w, &peer, &["add", "--", path])?;
+    git(
+        w,
+        &peer,
+        &["commit", "-m", "Independent authority correction"],
+    )?;
+    git(w, &peer, &["push", "origin", "HEAD:main"])?;
+    Ok(git(w, &peer, &["rev-parse", "HEAD"])?.trim().into())
+}
+fn git_input(w: &World, repo: &Path, args: &[&str], input: &[u8]) -> TestResult<String> {
+    use agent_memory::process::{Input, Spec, Target};
+    let argv: Vec<_> = std::iter::once(OsString::from("git"))
+        .chain(args.iter().map(OsString::from))
+        .collect();
+    let env: Vec<_> = w.env.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+    let output = agent_memory::process::run(&Spec {
+        argv: &argv,
+        search_path: true,
+        env: &env,
+        cwd: Some(repo),
+        stdin: Input::Bytes(input),
+        stdout: Target::Capture { limit: 1 << 20 },
+        stderr: Target::Capture { limit: 1 << 20 },
+        deadline: agent_memory::clock::Deadline::after(Duration::from_secs(60))?,
+        new_session: false,
+        file_size_limit: None,
+        umask: Some(0o077),
+        pass_fds: &[],
+    })?;
+    assert_eq!(
+        output.status,
+        agent_memory::process::Status::Code(0),
+        "{output:?}"
+    );
+    Ok(String::from_utf8(output.stdout)?.trim().into())
+}
+fn pending_handoff(
+    w: &World,
+    repo: &Path,
+    bank: &Path,
+    intended: &Value,
+) -> TestResult<(Value, Value)> {
+    fs::write(
+        bank.join("handoff-prompt.md"),
+        "# Unconfirmed synthetic handoff\n\nUnknown provenance requires independent review.\n",
+    )?;
+    let (inspected, applied) = repair(w, repo, intended)?;
+    assert_eq!(
+        get(&applied, "semantic_recovery_complete"),
+        &Value::Bool(false)
+    );
+    Ok((inspected, applied))
+}
+fn fresh_recall(
+    w: &mut World,
+    f: &PublicRepair,
+    target: &str,
+    expected: &Value,
+    record: Option<&Value>,
+) -> TestResult {
+    let clone = w.clone(&f.remote, "fresh-consumer")?;
+    git(
+        w,
+        &clone,
+        &[
+            "remote",
+            "set-url",
+            "origin",
+            "https://github.com/fixture/memory.git",
+        ],
+    )?;
+    let original = w.env.clone();
+    let profile = w.root.join("empty-consumer-profile");
+    fs::create_dir(&profile)?;
+    fs::set_permissions(&profile, fs::Permissions::from_mode(0o700))?;
+    w.env.insert(
+        "AGENT_MEMORY_CONFIG_HOME".into(),
+        profile.join("config").into_os_string(),
+    );
+    w.env.insert(
+        "AGENT_MEMORY_STATE_HOME".into(),
+        profile.join("state").into_os_string(),
+    );
+    let result = (|| {
+        bind(w, &clone)?;
+        good(
+            w,
+            "am bank",
+            &[os("validate"), os("--repo"), clone.as_os_str()],
+        )?;
+        let project = support::record_fixtures::project_id(text(get(&f.intended, "MEMORY.md")))?;
+        let request = obj([
+            ("project_id", project),
+            ("query", s("synthetic condition")),
+            (
+                "ids",
+                Value::Array(
+                    record
+                        .map(|r| vec![get(r, "id").clone()])
+                        .unwrap_or_default(),
+                ),
+            ),
+            (
+                "paths",
+                Value::Array(if record.is_some() {
+                    vec![]
+                } else {
+                    vec![s(target)]
+                }),
+            ),
+            ("context", obj([])),
+            (
+                "kinds",
+                Value::Array(
+                    record
+                        .map(|r| vec![get(r, "kind").clone()])
+                        .unwrap_or_default(),
+                ),
+            ),
+            ("minimum_trust", s("reviewed")),
+            ("limit", int(8)),
+            ("include_context", Value::Bool(record.is_none())),
+        ]);
+        let input = save(w, &request, "fresh-recall.json")?;
+        let recalled = good(
+            w,
+            "am search",
+            &[
+                os("--repo"),
+                clone.as_os_str(),
+                os("--request"),
+                input.as_os_str(),
+            ],
+        )?;
+        let results = get(&recalled, "results").as_array().unwrap();
+        assert_eq!(results.len(), 1, "{recalled:?}");
+        assert_eq!(text(get(&results[0], "path")), target);
+        assert_eq!(get(&results[0], "body"), expected);
+        if let Some(metadata) = record {
+            for field in ["id", "kind", "evidence", "conditions", "origin", "source"] {
+                assert_eq!(get(get(&results[0], "record"), field), get(metadata, field));
+            }
+            assert_eq!(
+                get(&recalled, "source_assertions_verified"),
+                &Value::Bool(false)
+            );
+        } else {
+            assert_eq!(
+                text(get(&results[0], "selection_class")),
+                "orientation-only"
+            );
+            assert_eq!(
+                get(get(&results[0], "context_assessment"), "managed_checkpoint"),
+                &Value::Bool(false)
+            );
+        }
+        assert_eq!(
+            get(&recalled, "code_working_bytes_verified"),
+            &Value::Bool(false)
+        );
+        // Baseline test_layout_recovery_resolved_publication.py:185-186:
+        // ordinary recall may keep private writes state, never layout recovery.
+        let mut pending = vec![profile.join("state/writes")];
+        while let Some(directory) = pending.pop() {
+            if !directory.is_dir() {
+                continue;
+            }
+            for entry in fs::read_dir(&directory)? {
+                let path = entry?.path();
+                assert_ne!(path.file_name(), Some(OsStr::new("layout-recovery")));
+                pending.push(path);
+            }
+        }
+        Ok(())
+    })();
+    w.env = original;
+    result
+}
+const SYNTHETIC_POLICIES: [&str; 8] = [
+    "In the synthetic offline-queue environment, attempt delivery at most three times, retain every queued item after failure, and resume delivery only after the operator changes the environment to online.",
+    "For synthetic read-only database snapshots, pin the snapshot revision before querying, reject any write request, and discard the query result if the revision changes before readback.",
+    "For the synthetic local cache, a missing checksum is a cache miss rather than an empty value; preserve the backing file and rebuild only after reading the authoritative fixture input.",
+    "For synthetic batch imports, process records in original sequence, keep the first invalid record pending with its original ordinal, and never report the unread remainder as imported.",
+    "For synthetic dry-run deployments, generate the exact target plan without activating it; activation requires a separate operator decision tied to that same plan and target revision.",
+    "For synthetic expired credentials, stop the requested network operation without retrying another account; retain the pending request and ask the detecting developer to renew the intended account.",
+    "For synthetic concurrent edits, preserve both source versions and their conditions; a later timestamp alone does not choose the correct meaning or authorize overwriting either version.",
+    "For synthetic terminal deletion, retain only the content-free stable-identity marker in current memory and reject any later stale snapshot that tries to resurrect the removed body.",
+];
+fn admission_proposal(
+    w: &World,
+    repo: &Path,
+    bank: &Path,
+    body: &str,
+    evidence_path: &str,
+    inspected: Option<&Value>,
+    stdout_order: bool,
+) -> TestResult<(Value, String)> {
+    // Baseline fixtures save canonical (sorted) JSON; `stdout_order` instead
+    // keeps request/capture files in their authored and printed key order.
+    let store = |value: &Value, name: &str| -> TestResult<PathBuf> {
+        if !stdout_order {
+            return save(w, value, name);
+        }
+        let path = w.root.join(name);
+        fs::write(&path, json::encode(value, json::INDENT2_UTF8)?)?;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600))?;
+        Ok(path)
+    };
+    // Baseline layout_recovery_fixtures.admission_proposal:289-290 takes the
+    // project and actor from the inspected manifest while recovery is pending.
+    let (project, actor) = match inspected {
+        Some(inspected) => {
+            let manifest = get(inspected, "manifest");
+            (
+                get(manifest, "project_id").clone(),
+                get(
+                    get(get(manifest, "identity"), "scope_context"),
+                    "developer_id",
+                )
+                .clone(),
+            )
+        }
+        None => {
+            let scope = good(
+                w,
+                "am identity",
+                &[os("status"), os("--repo"), repo.as_os_str()],
+            )?;
+            (
+                get(&scope, "project_id").clone(),
+                get(&scope, "developer_id").clone(),
+            )
+        }
+    };
+    let mut candidate = decode(include_bytes!(
+        "../skills/agent-memory/templates/record-proposal.example.json"
+    ))?;
+    set(&mut candidate, "body", s(body));
+    let meta = candidate.get_mut("metadata").unwrap();
+    set(meta, "project-id", project.clone());
+    set(meta, "id", s(agent_memory::host::uuid4()?));
+    set(meta, "evidence", Value::Array(vec![s(evidence_path)]));
+    set(meta, "scope", s("repository"));
+    set(meta, "trust", s("reviewed"));
+    set(meta, "visibility", s("visible"));
+    set(
+        meta,
+        "admission-reason",
+        s("Controlled structural fixture, not release acceptance evidence"),
+    );
+    set(meta, "conditions", obj([]));
+    set(
+        meta,
+        "source",
+        obj([
+            ("kind", s("verified-repository")),
+            ("actor", s("Explicit controlled fixture source")),
+        ]),
+    );
+    let origin = meta.get_mut("origin").unwrap();
+    set(origin, "developer-id", actor.clone());
+    set(origin, "code-state", s("not-code"));
+    let request = obj([
+        ("project_id", project.clone()),
+        ("candidate", candidate),
+        ("source_class", s("verified-repository")),
+        (
+            "repository_evidence",
+            obj([
+                ("path", s(evidence_path)),
+                (
+                    "sha256",
+                    s(hash_bytes(&fs::read(repo.join(evidence_path))?)),
+                ),
+            ]),
+        ),
+        (
+            "assessment",
+            obj([
+                ("category", s("durable-discovery")),
+                (
+                    "utility",
+                    s(
+                        "Prevent repeated source and condition mistakes in this synthetic environment",
+                    ),
+                ),
+                ("durable", Value::Bool(true)),
+                ("evidence_confidence", s("confirmed")),
+                (
+                    "evidence_reason",
+                    s("Checked independently readable repository evidence"),
+                ),
+                ("confirmed", Value::Bool(true)),
+                ("source_redundant", Value::Bool(false)),
+                ("work_state_copy", Value::Bool(false)),
+                (
+                    "review",
+                    s(
+                        "Controlled review of actual independent repository evidence and complete source conditions",
+                    ),
+                ),
+            ]),
+        ),
+    ]);
+    let input = store(&request, "admission-capture-input.json")?;
+    let captured = good(
+        w,
+        "am capture",
+        &[
+            os("--repo"),
+            repo.as_os_str(),
+            os("--request"),
+            input.as_os_str(),
+        ],
+    )?;
+    let capture = captured.get("capture").unwrap_or(&captured);
+    assert_eq!(text(get(capture, "decision")), "eligible");
+    let candidate = get(get(capture, "request"), "candidate");
+    let compared = obj([
+        ("project_id", project.clone()),
+        ("candidate", candidate.clone()),
+        (
+            "searches",
+            Value::Array(vec![
+                s("offline delivery queue"),
+                s("retain items after failure"),
+            ]),
+        ),
+        ("read_paths", Value::Array(vec![])),
+    ]);
+    let compared_path = store(&compared, "admission-comparison-input.json")?;
+    let view_path = w.root.join("admission-comparison-private.json");
+    good(
+        w,
+        "am compare",
+        &[
+            os("inspect"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--request"),
+            compared_path.as_os_str(),
+            os("--private-output"),
+            view_path.as_os_str(),
+        ],
+    )?;
+    let view = read_json(&view_path)?;
+    let operation = agent_memory::host::uuid4()?;
+    let stamp = inspected
+        .map(|v| text(get(get(v, "manifest"), "inspected_at")).to_owned())
+        .unwrap_or(agent_memory::host::utc_now_isoformat()?);
+    // Baseline layout_recovery_fixtures.py:307-314 builds the intended map from
+    // the canonical capture, the form the private preview artifact stores.
+    let canonical = agent_memory::developer_identity::load(
+        &agent_memory::developer_identity::encoded(capture)?,
+    )?;
+    let intended = agent_memory::admission::desired(
+        &bank_files(bank)?,
+        &obj([("capture", canonical), ("recorded_at", s(&stamp))]),
+        &operation,
+    )?;
+    let target = format!("topics/{}.md", text(get(get(candidate, "metadata"), "id")));
+    let pending = get(&view, "pending_matches")
+        .as_array()
+        .unwrap_or(&[])
+        .iter()
+        .map(|row| {
+            let claim = obj([
+                ("unit_id", get(row, "unit_id").clone()),
+                ("coverage", s("full")),
+                ("covered_source_ranges", get(row, "source_ranges").clone()),
+                (
+                    "target_record_refs",
+                    Value::Array(vec![obj([
+                        ("id", get(get(candidate, "metadata"), "id").clone()),
+                        ("version", int(1)),
+                        ("path", s(&target)),
+                        (
+                            "resulting_sha256",
+                            s(hash_bytes(text(get(&intended, &target)).as_bytes())),
+                        ),
+                    ])]),
+                ),
+            ]);
+            obj([
+                ("unit_id", get(row, "unit_id").clone()),
+                ("classification", s("distinct-knowledge")),
+                (
+                    "rationale",
+                    s("Controlled full source meaning and conditions reviewed independently"),
+                ),
+                ("coverage_claim", claim),
+            ])
+        })
+        .collect::<Vec<_>>();
+    let judgment = obj([
+        ("observation", get(&view, "observation").clone()),
+        (
+            "decisions",
+            Value::Array(
+                get(&view, "matches")
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|row| {
+                        obj([
+                            ("path", get(row, "path").clone()),
+                            ("classification", s("distinct-knowledge")),
+                            (
+                                "rationale",
+                                s("Different independently inspected prior meaning"),
+                            ),
+                        ])
+                    })
+                    .collect(),
+            ),
+        ),
+        ("pending_decisions", Value::Array(pending.clone())),
+        (
+            "rationale",
+            s("Complete controlled comparison, not product acceptance"),
+        ),
+    ]);
+    let judgment_path = save(w, &judgment, "admission-review-input.json")?;
+    let proof_path = w.root.join("admission-proof-private.json");
+    let mut args = vec![
+        os("review"),
+        os("--repo"),
+        repo.as_os_str(),
+        os("--request"),
+        compared_path.as_os_str(),
+        os("--judgment"),
+        judgment_path.as_os_str(),
+        os("--private-output"),
+        proof_path.as_os_str(),
+    ];
+    let coverage_path;
+    if let Some(inspected) = inspected {
+        let directory = private_layout(w, bank, text(get(inspected, "operation_id")));
+        let head = read_json(&directory.join("ledger-head.json"))?;
+        let generation = get(&head, "generation").as_int().unwrap().as_i64().unwrap();
+        let ledger = read_json(&directory.join(format!("ledger/{generation:08}.json")))?;
+        let proof = obj([
+            ("schema", s("agent-memory/comparison-proof-v2")),
+            ("judgment", judgment.clone()),
+            ("disposition", s("create-distinct")),
+            ("targets", Value::Array(vec![])),
+        ]);
+        let review = obj([
+            ("schema", s("agent-memory/layout-coverage-review-v1")),
+            ("review_id", s(agent_memory::host::uuid4()?)),
+            ("operation_id", get(inspected, "operation_id").clone()),
+            ("reviewer_developer_id", actor.clone()),
+            ("reviewer_harness", s("controlled-coverage-reviewer")),
+            ("reviewer_session", s(format!("coverage-{operation}"))),
+            ("review_time", s(&stamp)),
+            ("manifest_sha256", get(&ledger, "manifest_sha256").clone()),
+            ("unit_map_sha256", get(&ledger, "unit_map_sha256").clone()),
+            ("ledger_head_sha256", get(&head, "sha256").clone()),
+            ("comparison_proof_input_sha256", s(hash_value(&proof))),
+            ("intended_output_sha256", s(hash_value(&intended))),
+            (
+                "claims",
+                Value::Array(
+                    pending
+                        .iter()
+                        .map(|row| get(row, "coverage_claim").clone())
+                        .collect(),
+                ),
+            ),
+            (
+                "rationale",
+                s("Controlled distinct-session full original-range and intended-result review"),
+            ),
+            ("decision", s("approve")),
+        ]);
+        coverage_path = save(w, &review, "admission-coverage-review.json")?;
+        args.extend([os("--coverage-review"), coverage_path.as_os_str()]);
+    }
+    good(w, "am compare", &args)?;
+    let capture_path = store(capture, "admission-capture-private.json")?;
+    let preview_path = w.root.join("admission-preview-private.json");
+    good(
+        w,
+        "am admission",
+        &[
+            os("preview"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--capture"),
+            capture_path.as_os_str(),
+            os("--request"),
+            compared_path.as_os_str(),
+            os("--proof"),
+            proof_path.as_os_str(),
+            os("--operation-id"),
+            os(&operation),
+            os("--recorded-at"),
+            os(&stamp),
+            os("--private-output"),
+            preview_path.as_os_str(),
+        ],
+    )?;
+    Ok((get(&read_json(&preview_path)?, "proposal").clone(), target))
+}
+fn apply_admission(w: &World, proposal: &Value) -> TestResult<Value> {
+    let path = save(w, proposal, "real-admission-proposal.json")?;
+    let result = good(
+        w,
+        "am admission",
+        &[os("apply"), os("--proposal"), path.as_os_str()],
+    )?;
+    assert_eq!(get(&result, "admission_verified"), &Value::Bool(true));
+    Ok(result)
+}
+fn publication_with_admission(
+    w: &World,
+    f: &PublicRepair,
+    proposal: &Value,
+    receipt: &Value,
+) -> TestResult<Value> {
+    let observed = layout_publication_observation(w, f)?;
+    let files = get(proposal, "files");
+    let mut input = publication_input(get(&observed, "observation"), files)?;
+    set(
+        input.get_mut("review").unwrap(),
+        "record_evidence",
+        Value::Array(vec![obj([
+            ("operation_id", get(proposal, "operation_id").clone()),
+            ("receipt_sha256", s(hash_value(receipt))),
+            ("proposal", proposal.clone()),
+        ])]),
+    );
+    Ok(input)
 }
 
-// ---------------------------------------------------------------- layout publication contracts
-//
-// Production calls layout_recovery_publication directly. These obligations
-// still lack their complete public_repair scenario bodies and fixture; they
-// must not be represented as active tests of the landed implementation.
-
-const LAYOUT_FIXTURE: &str = "layout_recovery_fixtures.public_repair (layout_recovery lane)";
+// Rust-only regression: publication measures the receipt-matched runtime
+// binary, not the invoked path. macOS `current_exe` reports the installed
+// `~/.local/bin/am` symlink unresolved, which the no-follow measurement
+// refused as "Runtime binary must not be a symlink".
+#[test]
+fn publication_inspect_through_the_symlinked_command_measures_the_installed_binary() -> TestResult {
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let key = OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND");
+    let command = PathBuf::from(&w.env[key]);
+    assert!(fs::symlink_metadata(&command)?.file_type().is_symlink());
+    let linked = layout_publication_observation(&w, &f)?;
+    let digest = text(get(get(&linked, "observation"), "runtime_artifact_digest")).to_owned();
+    assert_eq!(digest.len(), 64);
+    w.env
+        .insert(key.into(), fs::canonicalize(&command)?.into_os_string());
+    let direct = layout_publication_observation(&w, &f)?;
+    w.env.insert(key.into(), command.into_os_string());
+    assert_eq!(
+        text(get(get(&direct, "observation"), "runtime_artifact_digest")),
+        digest
+    );
+    Ok(())
+}
 
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_after_push_error
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn layout_publication_after_push_error() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    layout_fault_journey("after", "error")
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_after_push_exit
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn layout_publication_after_push_exit() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    layout_fault_journey("after", "exit")
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_before_push_error
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn layout_publication_before_push_error() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    layout_fault_journey("before", "error")
 }
 // obligation: tests/contracts/test_layout_publication_faults.py::LayoutPublicationFaults.test_before_push_exit
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn layout_publication_before_push_exit() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    layout_fault_journey("before", "exit")
 }
 // obligation: tests/contracts/test_layout_recovery_identity_closure.py::RecoveryIdentityClosureContract.test_publication_refuses_unicode_and_case_aliased_authority_sources
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn publication_refuses_unicode_and_case_aliased_authority_sources() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    for names in [["alias.md", "ALIAS.md"], ["caf\u{e9}.md", "cafe\u{301}.md"]] {
+        let mut w = World::new()?;
+        let f = public_repair(&mut w)?;
+        let peer = w.clone(&f.remote, "alias-peer")?;
+        let blob = git_input(
+            &w,
+            &peer,
+            &["hash-object", "-w", "--stdin"],
+            b"Distinct raw authority source.\n",
+        )?;
+        let mut bank_entries = git(&w, &peer, &["ls-tree", "-z", "HEAD:memory-bank"])?;
+        for name in names {
+            bank_entries.push_str(&format!("100644 blob {blob}\t{name}\0"));
+        }
+        let bank_tree = git_input(&w, &peer, &["mktree", "-z"], bank_entries.as_bytes())?;
+        let raw = git(&w, &peer, &["ls-tree", "-z", &bank_tree])?;
+        for name in names {
+            assert!(raw.contains(&format!("100644 blob {blob}\t{name}\0")));
+        }
+        let root = git(&w, &peer, &["ls-tree", "-z", "HEAD"])?;
+        let mut entries: String = root
+            .split_terminator('\0')
+            .filter(|entry| entry.split_once('\t').unwrap().1 != "memory-bank")
+            .map(|entry| format!("{entry}\0"))
+            .collect();
+        entries.push_str(&format!("040000 tree {bank_tree}\tmemory-bank\0"));
+        let tree = git_input(&w, &peer, &["mktree", "-z"], entries.as_bytes())?;
+        let parent = git(&w, &peer, &["rev-parse", "HEAD"])?;
+        let commit = git(
+            &w,
+            &peer,
+            &[
+                "commit-tree",
+                &tree,
+                "-p",
+                parent.trim(),
+                "-m",
+                "Aliased authority sources",
+            ],
+        )?;
+        git(
+            &w,
+            &peer,
+            &[
+                "push",
+                "origin",
+                &format!("{}:refs/heads/main", commit.trim()),
+            ],
+        )?;
+        let before = state(&w, &f.repo, &f.bank)?;
+        let refused = recovery_output(
+            &w,
+            &f.repo,
+            &f.operation,
+            &[os("publish"), os("inspect")],
+            1,
+        )?;
+        assert_eq!(
+            get(&refused, "canonical_writes_performed"),
+            &Value::Bool(false)
+        );
+        assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    }
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_complete_candidate_delta_excludes_original_feature_index
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn complete_candidate_delta_excludes_original_feature_index() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let before = state(&w, &f.repo, &f.bank)?;
+    let request = layout_prepared(&w, &f)?;
+    let base = text(get(&request, "base"));
+    let candidate = text(get(&request, "candidate"));
+    assert_eq!(
+        rev_parents(&w, &f.repo, candidate)?.get(1..).unwrap(),
+        &[base.to_owned()]
+    );
+    let changed = git(
+        &w,
+        &f.repo,
+        &[
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            base,
+            candidate,
+        ],
+    )?;
+    assert!(changed.lines().all(|path| path.starts_with("memory-bank/")));
+    assert!(changed.contains("memory-bank/activeContext.md"));
+    assert_eq!(
+        git(&w, &f.repo, &["show", &format!("{candidate}:code.py")])?,
+        git(&w, &f.repo, &["show", &format!("{base}:code.py")])?
+    );
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    let index = w.root.join("code-control-index");
+    let previous = w
+        .env
+        .insert("GIT_INDEX_FILE".into(), index.into_os_string());
+    git(&w, &f.repo, &["read-tree", candidate])?;
+    let blob = git_input(
+        &w,
+        &f.repo,
+        &["hash-object", "-w", "--stdin"],
+        b"VALUE = 999\n",
+    )?;
+    git(
+        &w,
+        &f.repo,
+        &[
+            "update-index",
+            "--cacheinfo",
+            &format!("100644,{blob},code.py"),
+        ],
+    )?;
+    let tree = git(&w, &f.repo, &["write-tree"])?;
+    if let Some(previous) = previous {
+        w.env.insert("GIT_INDEX_FILE".into(), previous);
+    } else {
+        w.env.remove(OsStr::new("GIT_INDEX_FILE"));
+    }
+    let bad = git(
+        &w,
+        &f.repo,
+        &[
+            "commit-tree",
+            tree.trim(),
+            "-p",
+            candidate,
+            "-m",
+            "Unreviewed code delta",
+        ],
+    )?;
+    let mut tampered = request.clone();
+    set(&mut tampered, "candidate", s(bad.trim()));
+    layout_land(&w, &f, &tampered, 1)?;
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_complete_raw_local_side_includes_opaque_nonmarkdown_occupants
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn complete_raw_local_side_includes_opaque_nonmarkdown_occupants() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let body = b"Non-guidance opaque fixture bytes: \xff\x00\n";
+    fs::write(f.bank.join("opaque-source.bin"), body)?;
+    let before = state(&w, &f.repo, &f.bank)?;
+    let observed = layout_publication_observation(&w, &f)?;
+    let sources = get(
+        get(get(get(&observed, "observation"), "variants"), "local"),
+        "sources",
+    )
+    .as_array()
+    .unwrap();
+    let source = sources
+        .iter()
+        .find(|row| text(get(row, "path")) == "opaque-source.bin")
+        .unwrap();
+    let directory = Path::new(text(get(&observed, "observation_path")))
+        .parent()
+        .unwrap();
+    assert_eq!(fs::read(directory.join(text(get(source, "blob"))))?, body);
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_current_committed_admission_addition_and_receipt_source_fence
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn current_committed_admission_addition_and_receipt_source_fence() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    fs::write(
+        f.repo.join("evidence.md"),
+        "# Confirmed synthetic repository result\n\nUse at most three attempts for this fixture.\n",
+    )?;
+    let (proposal, _) = admission_proposal(
+        &w,
+        &f.repo,
+        &f.bank,
+        "# Retry policy\n\nUse at most three attempts for this fixture.\n",
+        "evidence.md",
+        None,
+        false,
+    )?;
+    for (path, body) in get(&proposal, "files").as_object().unwrap() {
+        fs::create_dir_all(f.bank.join(path).parent().unwrap())?;
+        fs::write(f.bank.join(path), text(body))?;
+    }
+    let mut input = publication_with_admission(&w, &f, &proposal, &Value::Null)?;
+    let Value::Array(rows) = input
+        .get_mut("review")
+        .unwrap()
+        .get_mut("record_evidence")
+        .unwrap()
+    else {
+        panic!("evidence")
+    };
+    set(&mut rows[0], "receipt_sha256", s("0".repeat(64)));
+    let input = save(&w, &input, "uncommitted-admission-publication.json")?;
+    let before = state(&w, &f.repo, &f.bank)?;
+    let head = remote_head(&w, &f.repo)?;
+    recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[
+            os("publish"),
+            os("prepare"),
+            os("--input"),
+            input.as_os_str(),
+        ],
+        1,
+    )?;
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    for (path, _) in get(&proposal, "files").as_object().unwrap() {
+        if get(&proposal, "observed_hashes").get(path).is_none() {
+            fs::remove_file(f.bank.join(path))?;
+        }
+    }
+    for (path, body) in f.intended.as_object().unwrap() {
+        fs::write(f.bank.join(path), text(body))?;
+    }
+    let admitted = apply_admission(&w, &proposal)?;
+    let receipt_path = Path::new(text(get(&admitted, "receipt_path")));
+    let receipt_bytes = fs::read(receipt_path)?;
+    let receipt = decode(&receipt_bytes)?;
+    let input = save(
+        &w,
+        &publication_with_admission(&w, &f, &proposal, &receipt)?,
+        "committed-admission-publication.json",
+    )?;
+    let prepared = recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[
+            os("publish"),
+            os("prepare"),
+            os("--input"),
+            input.as_os_str(),
+        ],
+        0,
+    )?;
+    let request = get(&prepared, "request");
+    let before = state(&w, &f.repo, &f.bank)?;
+    fs::remove_file(receipt_path)?;
+    layout_land(&w, &f, request, 1)?;
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    assert_eq!(remote_head(&w, &f.repo)?, head);
+    fs::write(receipt_path, receipt_bytes)?;
+    fs::set_permissions(receipt_path, fs::Permissions::from_mode(0o600))?;
+    assert_eq!(
+        get(&layout_land(&w, &f, request, 0)?, "publication_verified"),
+        &Value::Bool(true)
+    );
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let peer = w.clone(&f.remote, "new-source-authority")?;
+    fs::write(
+        peer.join("memory-bank/new-handoff.md"),
+        "# Unconfirmed source\n\nThis new source requires separate detecting-developer admission.\n",
+    )?;
+    git(&w, &peer, &["add", "memory-bank/new-handoff.md"])?;
+    git(
+        &w,
+        &peer,
+        &["commit", "-m", "Controlled newly discovered source"],
+    )?;
+    git(&w, &peer, &["push", "origin", "HEAD:main"])?;
+    let observed = layout_publication_observation(&w, &f)?;
+    let observation = get(&observed, "observation");
+    let mut filtered = observation.clone();
+    let sources = filtered
+        .get_mut("variants")
+        .unwrap()
+        .get_mut("landed")
+        .unwrap()
+        .get_mut("sources")
+        .unwrap();
+    let Value::Array(rows) = sources else {
+        panic!("sources")
+    };
+    let position = rows
+        .iter()
+        .position(|row| text(get(row, "path")) == "new-handoff.md")
+        .unwrap();
+    let new = rows.remove(position);
+    let mut review = publication_review(&filtered, &f.intended)?;
+    set(
+        &mut review,
+        "observation_sha256",
+        s(hash_value(observation)),
+    );
+    let Value::Array(units) = review.get_mut("source_units").unwrap() else {
+        panic!("units")
+    };
+    units.push(obj([
+        ("unit_id", s(agent_memory::host::uuid4()?)),
+        ("side", s("landed")),
+        ("source_id", get(&new, "source_id").clone()),
+        ("start", int(0)),
+        ("end", get(&new, "byte_count").clone()),
+        ("disposition", s("preserve")),
+        (
+            "targets",
+            Value::Array(vec![obj([
+                ("path", s("activeContext.md")),
+                (
+                    "sha256",
+                    s(hash_bytes(
+                        text(get(&f.intended, "activeContext.md")).as_bytes(),
+                    )),
+                ),
+            ])]),
+        ),
+        (
+            "rationale",
+            s("Controlled invalid attempt to relabel an unconfirmed source as admitted guidance"),
+        ),
+        ("terminal_evidence", Value::Null),
+    ]));
+    let mut request = publication_input(observation, &f.intended)?;
+    set(&mut request, "review", review);
+    let input = save(&w, &request, "unsupported-source.json")?;
+    let before = state(&w, &f.repo, &f.bank)?;
+    let head = remote_head(&w, &f.repo)?;
+    recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[
+            os("publish"),
+            os("prepare"),
+            os("--input"),
+            input.as_os_str(),
+        ],
+        1,
+    )?;
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    assert_eq!(remote_head(&w, &f.repo)?, head);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_offline_and_changed_sources_preserve_local_result_and_evidence
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn offline_and_changed_sources_preserve_local_result_and_evidence() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let before = state(&w, &f.repo, &f.bank)?;
+    let away = f.remote.with_file_name("offline.git");
+    fs::rename(&f.remote, &away)?;
+    recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[os("publish"), os("inspect")],
+        1,
+    )?;
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    fs::rename(&away, &f.remote)?;
+    let observed = layout_publication_observation(&w, &f)?;
+    let input = save(
+        &w,
+        &publication_input(get(&observed, "observation"), &f.intended)?,
+        "changed-source.json",
+    )?;
+    fs::write(
+        f.bank.join("projectbrief.md"),
+        format!(
+            "{}\nA later independent local change.\n",
+            text(get(&f.intended, "projectbrief.md"))
+        ),
+    )?;
+    let changed = state(&w, &f.repo, &f.bank)?;
+    recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[
+            os("publish"),
+            os("prepare"),
+            os("--input"),
+            input.as_os_str(),
+        ],
+        1,
+    )?;
+    assert_eq!(state(&w, &f.repo, &f.bank)?, changed);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_public_raw_authority_publication_and_empty_profile_second_clone
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn public_raw_authority_publication_and_empty_profile_second_clone() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let before = state(&w, &f.repo, &f.bank)?;
+    let observed = layout_publication_observation(&w, &f)?;
+    let mut input = publication_input(get(&observed, "observation"), &f.intended)?;
+    let Value::Array(units) = input
+        .get_mut("review")
+        .unwrap()
+        .get_mut("source_units")
+        .unwrap()
+    else {
+        panic!("units")
+    };
+    let omitted = units.pop().unwrap();
+    let rejected = save(&w, &input, "omitted-publication-evidence.json")?;
+    recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[
+            os("publish"),
+            os("prepare"),
+            os("--input"),
+            rejected.as_os_str(),
+        ],
+        1,
+    )?;
+    let Value::Array(units) = input
+        .get_mut("review")
+        .unwrap()
+        .get_mut("source_units")
+        .unwrap()
+    else {
+        panic!("units")
+    };
+    units.push(omitted);
+    let input = save(&w, &input, "complete-publication-evidence.json")?;
+    let prepared = recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[
+            os("publish"),
+            os("prepare"),
+            os("--input"),
+            input.as_os_str(),
+        ],
+        0,
+    )?;
+    let request = get(&prepared, "request");
+    assert_eq!(
+        get(&layout_land(&w, &f, request, 0)?, "publication_verified"),
+        &Value::Bool(true)
+    );
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    assert_eq!(
+        text(get(&layout_land(&w, &f, request, 0)?, "state")),
+        "already-landed"
+    );
+    fresh_recall(
+        &mut w,
+        &f,
+        "activeContext.md",
+        get(&f.intended, "activeContext.md"),
+        None,
+    )
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_publication_refuses_pending_frontier_before_network
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn publication_refuses_pending_frontier_before_network() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let (repo, bank, _, _) = fixture(&mut w)?;
+    let intended = bank_files(&bank)?;
+    let (inspected, _) = pending_handoff(&w, &repo, &bank, &intended)?;
+    let before = state(&w, &repo, &bank)?;
+    let refused = recovery_output(
+        &w,
+        &repo,
+        text(get(&inspected, "operation_id")),
+        &[os("publish"), os("inspect")],
+        1,
+    )?;
+    assert_eq!(get(&refused, "publication_verified"), &Value::Bool(false));
+    assert_eq!(state(&w, &repo, &bank)?, before);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_publication_review_cannot_admit_fabricated_outputs_or_local_sources
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn publication_review_cannot_admit_fabricated_outputs_or_local_sources() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let remote = remote_head(&w, &f.repo)?;
+    let (files, path) = fabricated_record(&f.intended)?;
+    for local_source in [false, true] {
+        if local_source {
+            fs::create_dir_all(f.bank.join(&path).parent().unwrap())?;
+            fs::write(f.bank.join(&path), text(get(&files, &path)))?;
+            fs::write(f.bank.join("MEMORY.md"), text(get(&files, "MEMORY.md")))?;
+        }
+        let before = state(&w, &f.repo, &f.bank)?;
+        let observed = layout_publication_observation(&w, &f)?;
+        let mut input = publication_input(get(&observed, "observation"), &files)?;
+        set(
+            input.get_mut("review").unwrap(),
+            "added_paths",
+            Value::Array(if local_source { vec![] } else { vec![s(&path)] }),
+        );
+        let input = save(&w, &input, "fabrication.json")?;
+        let refused = recovery_output(
+            &w,
+            &f.repo,
+            &f.operation,
+            &[
+                os("publish"),
+                os("prepare"),
+                os("--input"),
+                input.as_os_str(),
+            ],
+            1,
+        )?;
+        assert_eq!(get(&refused, "publication_verified"), &Value::Bool(false));
+        assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+        assert_eq!(remote_head(&w, &f.repo)?, remote);
+    }
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_raw_source_bound_alias_and_committed_hold_refuse
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn raw_source_bound_alias_and_committed_hold_refuse() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    for variant in ["overflow", "alias", "hold", "symlink"] {
+        let mut w = World::new()?;
+        let (repo, bank, _, _) = fixture(&mut w)?;
+        match variant {
+            "overflow" => fs::write(bank.join("activeContext.md"), vec![b'x'; 1048577])?,
+            "alias" => {
+                let blob = git_input(
+                    &w,
+                    &repo,
+                    &["hash-object", "-w", "--stdin"],
+                    b"Portable alias must not be hidden.\n",
+                )?;
+                git(
+                    &w,
+                    &repo,
+                    &[
+                        "update-index",
+                        "--add",
+                        "--cacheinfo",
+                        &format!("100644,{blob},memory-bank/ProjectBrief.md"),
+                    ],
+                )?;
+            }
+            "hold" => fs::write(bank.join(".agent-memory-transaction.md"), "{}\n")?,
+            _ => std::os::unix::fs::symlink("projectbrief.md", bank.join("redirect.md"))?,
+        }
+        if variant != "alias" {
+            git(&w, &repo, &["add", "-f", "memory-bank"])?;
+        }
+        git(&w, &repo, &["commit", "-m", "Unsafe raw source control"])?;
+        let before = state(&w, &repo, &bank)?;
+        let outcome = observe_tree_case(&w, &repo)?;
+        assert!(get(&outcome, "error").as_str().is_some(), "{outcome:?}");
+        assert_eq!(state(&w, &repo, &bank)?, before);
+    }
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication.py::LayoutPublicationContract.test_reported_size_sources_are_raw_not_a_normal_snapshot
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn reported_size_sources_are_raw_not_a_normal_snapshot() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
+    let mut raw = "# Qualified context\n\n".to_owned()
+        + &"Context condition and provenance remain review inputs.\n".repeat(2000);
+    raw.truncate(79054);
+    raw.push_str(&" ".repeat(79054 - raw.len()));
+    let handoff =
+        "# Pending handoff\n\n".to_owned() + &"x".repeat(28478 - "# Pending handoff\n\n".len());
+    fs::write(peer.join("memory-bank/activeContext.md"), &raw)?;
+    fs::write(peer.join("memory-bank/handoff-prompt.md"), &handoff)?;
+    git(&w, &peer, &["add", "memory-bank"])?;
+    git(
+        &w,
+        &peer,
+        &["commit", "-m", "Synthetic invalid authority layout"],
+    )?;
+    let revision = git(&w, &peer, &["rev-parse", "HEAD"])?;
+    git(
+        &w,
+        &repo,
+        &["fetch", peer.to_str().unwrap(), revision.trim()],
+    )?;
+    let before = state(&w, &repo, &bank)?;
+    let outcome = run_case(
+        &w,
+        &repo,
+        &[("tree.json", &obj([("revision", s(revision.trim()))]))],
+    )?;
+    let manifest = get(&outcome, "manifest");
+    assert_eq!(get(manifest, "observation_complete"), &Value::Bool(true));
+    for (path, body) in [("activeContext.md", raw), ("handoff-prompt.md", handoff)] {
+        let sources = get(manifest, "sources").as_array().unwrap();
+        let position = sources
+            .iter()
+            .position(|row| text(get(row, "path")) == path)
+            .unwrap();
+        assert_eq!(
+            get(&sources[position], "byte_count"),
+            &int(body.len() as i64)
+        );
+        assert_eq!(
+            text(&get(&outcome, "retained").as_array().unwrap()[position]),
+            body
+        );
+    }
+    assert_eq!(get(&outcome, "normal_refused"), &Value::Bool(true));
+    assert_eq!(state(&w, &repo, &bank)?, before);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_ordinary_prepared_land_refuses_pending_recovery_frontier
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn ordinary_prepared_land_refuses_pending_recovery_frontier() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    for pending in [false, true] {
+        let mut w = World::new()?;
+        let (repo, bank, peer, _) = fixture(&mut w)?;
+        github(&mut w, &repo, &bank, Some(&peer), false)?;
+        let body = fs::read_to_string(bank.join("activeContext.md"))?.replacen(
+            "# Current focus\n",
+            "# Active context\n",
+            1,
+        ) + "\nUnder the controlled fixture condition, preserve the source before acting.\n";
+        fs::write(bank.join("activeContext.md"), body)?;
+        let prepared = prepared(&w, &repo)?;
+        let request = get(&prepared, "request");
+        if !pending {
+            assert_eq!(
+                get(&land(&w, &repo, request)?, "publication_verified"),
+                &Value::Bool(true)
+            );
+            assert!(remote_head(&w, &repo)?.contains(text(get(request, "candidate"))));
+            continue;
+        }
+        let intended = bank_files(&bank)?;
+        let (inspected, applied) = pending_handoff(&w, &repo, &bank, &intended)?;
+        assert!(
+            get(&applied, "pending_units")
+                .as_int()
+                .unwrap()
+                .as_i64()
+                .unwrap()
+                > 0
+        );
+        assert_eq!(bank_files(&bank)?, intended);
+        let before = state(&w, &repo, &bank)?;
+        let directory = private_layout(&w, &bank, text(get(&inspected, "operation_id")));
+        let retained = snapshot_directory(&directory)?;
+        let candidate = git(
+            &w,
+            &repo,
+            &["cat-file", "commit", text(get(request, "candidate"))],
+        )?;
+        let refs = git(&w, &repo, &["ls-remote", "origin"])?;
+        let (code, refused) = publish(&w, &repo, "land", request)?;
+        assert_ne!(code, 0);
+        assert_eq!(get(&refused, "publication_verified"), &Value::Bool(false));
+        assert_eq!(text(get(&refused, "sharing_state")), "pending-inspection");
+        assert_eq!(
+            text(get(&refused, "failure_code")),
+            "publication-unverified"
+        );
+        assert_eq!(get(&refused, "git_metadata_writes_performed"), &Value::Null);
+        assert_eq!(git(&w, &repo, &["ls-remote", "origin"])?, refs);
+        assert_eq!(state(&w, &repo, &bank)?, before);
+        assert_eq!(snapshot_directory(&directory)?, retained);
+        assert_eq!(
+            git(
+                &w,
+                &repo,
+                &["cat-file", "commit", text(get(request, "candidate"))]
+            )?,
+            candidate
+        );
+    }
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_ordinary_publish_refuses_a_previously_reviewed_proof_after_pending_handoff
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn ordinary_publish_refuses_a_previously_reviewed_proof_after_pending_handoff() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
+    github(&mut w, &repo, &bank, Some(&peer), false)?;
+    let body = fs::read_to_string(bank.join("activeContext.md"))?.replacen(
+        "# Current focus\n",
+        "# Active context\n",
+        1,
+    ) + "\nUnder the controlled fixture condition, preserve the source before acting.\n";
+    fs::write(bank.join("activeContext.md"), body)?;
+    let proof = proof(&w, &repo)?;
+    assert_eq!(publish(&w, &repo, "prepare", &proof)?.0, 0);
+    let intended = bank_files(&bank)?;
+    let (inspected, _) = pending_handoff(&w, &repo, &bank, &intended)?;
+    let directory = private_layout(&w, &bank, text(get(&inspected, "operation_id")));
+    let retained = snapshot_directory(&directory)?;
+    let before = state(&w, &repo, &bank)?;
+    let head = remote_head(&w, &repo)?;
+    let (code, refused) = publish(&w, &repo, "prepare", &proof)?;
+    assert_ne!(code, 0);
+    assert!(!encode(&refused)?.contains("Unknown provenance requires independent review."));
+    assert_eq!(state(&w, &repo, &bank)?, before);
+    assert_eq!(snapshot_directory(&directory)?, retained);
+    assert_eq!(remote_head(&w, &repo)?, head);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_policy_and_required_review_leave_candidate_and_private_evidence_intact
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn policy_and_required_review_leave_candidate_and_private_evidence_intact() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let request = layout_prepared(&w, &f)?;
+    let before = state(&w, &f.repo, &f.bank)?;
+    let directory = private_layout(&w, &f.bank, &f.operation);
+    let retained = snapshot_directory(&directory)?;
+    let candidate = git(
+        &w,
+        &f.repo,
+        &["cat-file", "commit", text(get(&request, "candidate"))],
+    )?;
+    let head = remote_head(&w, &f.repo)?;
+    let baseline = read_policy(&f.policy)?;
+    for review in [false, true] {
+        fs::write(&f.policy, encode(&baseline)?)?;
+        if review {
+            edit_policy(
+                &f.policy,
+                &[
+                    ("rules", Value::Array(vec![])),
+                    ("protected", Value::Bool(true)),
+                    ("review", s("REVIEW_REQUIRED")),
+                ],
+            )?;
+        } else {
+            edit_policy(
+                &f.policy,
+                &[(
+                    "rules",
+                    Value::Array(vec![obj([("type", s("required_deployments"))])]),
+                )],
+            )?;
+        }
+        let refused = layout_land(&w, &f, &request, 1)?;
+        assert_eq!(text(get(&refused, "state")), "pending");
+        assert_eq!(get(&refused, "verified"), &Value::Bool(false));
+        for field in [
+            "publication_verified",
+            "canonical_writes_performed",
+            "canonical_mutation_may_have_occurred",
+            "original_index_writes_performed",
+            "head_writes_performed",
+            "feature_writes_performed",
+            "history_writes_performed",
+        ] {
+            assert_eq!(get(&refused, field), &Value::Bool(false), "{field}");
+        }
+        assert_eq!(remote_head(&w, &f.repo)?, head);
+        assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+        assert_eq!(snapshot_directory(&directory)?, retained);
+        assert_eq!(
+            git(
+                &w,
+                &f.repo,
+                &["cat-file", "commit", text(get(&request, "candidate"))]
+            )?,
+            candidate
+        );
+    }
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_policy_at_observation_refuses_prepare_or_required_review_land
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn policy_at_observation_refuses_prepare_or_required_review_land() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    for review in [false, true] {
+        let mut w = World::new()?;
+        let f = public_repair(&mut w)?;
+        if review {
+            edit_policy(
+                &f.policy,
+                &[
+                    ("rules", Value::Array(vec![])),
+                    ("protected", Value::Bool(true)),
+                    ("review", s("REVIEW_REQUIRED")),
+                ],
+            )?;
+        } else {
+            edit_policy(
+                &f.policy,
+                &[(
+                    "rules",
+                    Value::Array(vec![obj([("type", s("required_deployments"))])]),
+                )],
+            )?;
+        }
+        let observed = layout_publication_observation(&w, &f)?;
+        let input = save(
+            &w,
+            &publication_input(get(&observed, "observation"), &f.intended)?,
+            "policy-at-observation.json",
+        )?;
+        let input_bytes = fs::read(&input)?;
+        let before = state(&w, &f.repo, &f.bank)?;
+        let directory = private_layout(&w, &f.bank, &f.operation);
+        let mut retained = snapshot_directory(&directory)?;
+        let head = remote_head(&w, &f.repo)?;
+        let prepared = recovery_output(
+            &w,
+            &f.repo,
+            &f.operation,
+            &[
+                os("publish"),
+                os("prepare"),
+                os("--input"),
+                input.as_os_str(),
+            ],
+            if review { 0 } else { 1 },
+        )?;
+        let pending = if review {
+            let request = get(&prepared, "request");
+            retained = snapshot_directory(&directory)?;
+            let candidate = git(
+                &w,
+                &f.repo,
+                &["cat-file", "commit", text(get(request, "candidate"))],
+            )?;
+            edit_policy(
+                &f.policy,
+                &[(
+                    "rules",
+                    Value::Array(vec![obj([("type", s("required_deployments"))])]),
+                )],
+            )?;
+            assert_eq!(
+                get(&layout_land(&w, &f, request, 1)?, "publication_verified"),
+                &Value::Bool(false)
+            );
+            assert_eq!(snapshot_directory(&directory)?, retained);
+            edit_policy(&f.policy, &[("rules", Value::Array(vec![]))])?;
+            let pending = layout_land(&w, &f, request, 1)?;
+            assert_eq!(
+                git(
+                    &w,
+                    &f.repo,
+                    &["cat-file", "commit", text(get(request, "candidate"))]
+                )?,
+                candidate
+            );
+            pending
+        } else {
+            prepared
+        };
+        assert_eq!(
+            text(get(&pending, "state")),
+            if review {
+                "pending-repository-rules"
+            } else {
+                "pending-policy"
+            }
+        );
+        assert_eq!(get(&pending, "publication_verified"), &Value::Bool(false));
+        assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+        assert_eq!(snapshot_directory(&directory)?, retained);
+        assert_eq!(remote_head(&w, &f.repo)?, head);
+        assert_eq!(fs::read(&input)?, input_bytes);
+    }
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_recovery_historical_retry_preserves_later_authority_correction
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn recovery_historical_retry_preserves_later_authority_correction() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let request = layout_prepared(&w, &f)?;
+    let first = layout_land(&w, &f, &request, 0)?;
+    assert_eq!(text(get(&first, "state")), "landed");
+    assert_eq!(get(&first, "witnessed_commit"), get(&request, "candidate"));
+    let correction = "\nA later independently made authority correction takes precedence.\n";
+    let advanced = advance_authority(&w, &f, "memory-bank/activeContext.md", correction)?;
+    assert_ne!(advanced, text(get(&first, "witnessed_commit")));
+    let before = state(&w, &f.repo, &f.bank)?;
+    let directory = private_layout(&w, &f.bank, &f.operation);
+    let retained = snapshot_directory(&directory)?;
+    let refs = git(&w, &f.repo, &["ls-remote", "origin"])?;
+    let retry = layout_land(&w, &f, &request, 0)?;
+    assert_eq!(text(get(&retry, "state")), "already-landed");
+    for field in [
+        "publication_verified",
+        "receipt_is_historical",
+        "already_applied",
+    ] {
+        assert_eq!(get(&retry, field), &Value::Bool(true));
+    }
+    assert_eq!(
+        get(&retry, "witnessed_commit"),
+        get(&first, "witnessed_commit")
+    );
+    assert_eq!(get(&retry, "receipt"), get(&first, "receipt"));
+    assert_eq!(get(&retry, "intended_delta_current"), &Value::Bool(false));
+    assert_eq!(
+        git(
+            &w,
+            &f.repo,
+            &["show", &format!("{advanced}:memory-bank/activeContext.md")]
+        )?,
+        text(get(&f.intended, "activeContext.md")).to_owned() + correction
+    );
+    assert_eq!(git(&w, &f.repo, &["ls-remote", "origin"])?, refs);
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    assert_eq!(snapshot_directory(&directory)?, retained);
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_publication_closure.py::RecoveryPublicationClosure.test_recovery_land_refuses_authority_advance_after_prepare
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn recovery_land_refuses_authority_advance_after_prepare() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let f = public_repair(&mut w)?;
+    let request = layout_prepared(&w, &f)?;
+    let candidate = git(
+        &w,
+        &f.repo,
+        &["cat-file", "commit", text(get(&request, "candidate"))],
+    )?;
+    let advanced = advance_authority(&w, &f, "code.py", "\n# Independent authority advance.\n")?;
+    assert_ne!(advanced, text(get(&request, "base")));
+    let before = state(&w, &f.repo, &f.bank)?;
+    let directory = private_layout(&w, &f.bank, &f.operation);
+    let retained = snapshot_directory(&directory)?;
+    let refs = git(&w, &f.repo, &["ls-remote", "origin"])?;
+    let pending = layout_land(&w, &f, &request, 1)?;
+    assert_eq!(text(get(&pending, "state")), "pending");
+    for field in [
+        "publication_verified",
+        "canonical_writes_performed",
+        "canonical_mutation_may_have_occurred",
+        "original_index_writes_performed",
+        "head_writes_performed",
+        "feature_writes_performed",
+        "history_writes_performed",
+    ] {
+        assert_eq!(get(&pending, field), &Value::Bool(false), "{field}");
+    }
+    assert_eq!(git(&w, &f.repo, &["ls-remote", "origin"])?, refs);
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    assert_eq!(snapshot_directory(&directory)?, retained);
+    assert_eq!(
+        git(
+            &w,
+            &f.repo,
+            &["cat-file", "commit", text(get(&request, "candidate"))]
+        )?,
+        candidate
+    );
+    Ok(())
+}
+
+// Regression for a baseline defect (A1): with pending recovery the preview must
+// use --private-output, whose artifact is stored canonical (sorted), while the
+// capture arrived in authored/printed key order. Apply re-derives the record
+// from the stored evidence; preview must have derived it from the same form.
+#[test]
+fn stdout_ordered_capture_with_pending_recovery_previews_and_applies_from_the_private_artifact()
+-> TestResult {
+    let mut w = World::new()?;
+    let handoff = SYNTHETIC_POLICIES[0].to_owned() + "\n";
+    let f = public_repair_with_pending(&mut w, Some(&handoff))?;
+    assert!(
+        !get(&f.applied, "pending_unit_ids")
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    fs::write(
+        f.repo.join("synthetic-policy.md"),
+        "# Independent synthetic repository source\n\n".to_owned() + SYNTHETIC_POLICIES[0] + "\n",
+    )?;
+    let body = "# Synthetic policy\n\n".to_owned() + SYNTHETIC_POLICIES[0] + "\n";
+    let (proposal, target) = admission_proposal(
+        &w,
+        &f.repo,
+        &f.bank,
+        &body,
+        "synthetic-policy.md",
+        Some(&f.inspected),
+        true,
+    )?;
+    let raw = fs::read_to_string(w.root.join("admission-capture-private.json"))?;
+    assert!(raw.find("\"schema\"").unwrap() < raw.find("\"admission-reason\"").unwrap());
+    let record = text(get(get(&proposal, "files"), &target)).to_owned();
+    assert!(record.starts_with("---\nadmission-reason: "));
+    // Apply exactly the stored private artifact, as an operator would.
+    let artifact = w.root.join("admission-preview-private.json");
+    let admitted = good(
+        &w,
+        "am admission",
+        &[os("apply"), os("--proposal"), artifact.as_os_str()],
+    )?;
+    assert_eq!(get(&admitted, "admission_verified"), &Value::Bool(true));
+    assert_eq!(fs::read_to_string(f.bank.join(&target))?, record);
+    let status = recovery_call(
+        &w,
+        &f.repo,
+        &[os("status"), os("--operation"), os(&f.operation)],
+        0,
+    )?;
+    assert_eq!(get(&status, "pending_unit_ids"), &Value::Array(vec![]));
+    Ok(())
 }
 // obligation: tests/contracts/test_layout_recovery_resolved_publication.py::ResolvedPublicationJourneyContract.test_eight_resolved_units_land_and_recall_in_an_empty_profile
 #[test]
-#[ignore = "missing full scenario body and layout_recovery_fixtures.public_repair fixture"]
 fn eight_resolved_units_land_and_recall_in_an_empty_profile() -> TestResult {
-    deferred_body(LAYOUT_FIXTURE)
+    let mut w = World::new()?;
+    let mut handoff = String::new();
+    for policy in SYNTHETIC_POLICIES {
+        let mut unit = policy.to_owned() + "\n";
+        unit.push_str(&" ".repeat(3560 - unit.len()));
+        handoff.push_str(&unit);
+    }
+    handoff.truncate(28478);
+    assert_eq!(handoff.len(), 28478);
+    let f = public_repair_with_pending(&mut w, Some(&handoff))?;
+    fs::write(
+        f.repo.join("synthetic-policy.md"),
+        "# Independent synthetic repository source\n\n".to_owned()
+            + &SYNTHETIC_POLICIES.join("\n\n")
+            + "\n",
+    )?;
+    let originals = &f.originals;
+    assert_eq!(originals["activeContext.md"].len(), 79054);
+    assert_eq!(originals["handoff-prompt.md"].len(), 28478);
+    let feature = state(&w, &f.repo, &f.bank)?;
+    let inspected = &f.inspected;
+    let applied = &f.applied;
+    assert_eq!(
+        get(&applied, "semantic_recovery_complete"),
+        &Value::Bool(false)
+    );
+    let pending = get(&applied, "pending_unit_ids").as_array().unwrap();
+    assert_eq!(pending.len(), 8);
+    let directory = private_layout(&w, &f.bank, &f.operation);
+    let initial = read_json(&directory.join("ledger/00000000.json"))?;
+    let initial_units = get(&initial, "units").as_array().unwrap();
+    assert_eq!(initial_units.len(), 8);
+    let before = state(&w, &f.repo, &f.bank)?;
+    let remote = remote_head(&w, &f.repo)?;
+    recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[os("publish"), os("inspect")],
+        1,
+    )?;
+    assert_eq!(remote_head(&w, &f.repo)?, remote);
+    assert_eq!(state(&w, &f.repo, &f.bank)?, before);
+    let source = get(get(&inspected, "manifest"), "sources")
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| text(get(row, "path")) == "handoff-prompt.md")
+        .unwrap();
+    let mut ranges: Vec<_> = initial_units
+        .iter()
+        .flat_map(|u| get(u, "source_ranges").as_array().unwrap())
+        .filter(|span| get(span, "source_id") == get(source, "source_id"))
+        .map(|span| {
+            (
+                get(span, "start").as_int().unwrap().as_i64().unwrap(),
+                get(span, "end").as_int().unwrap().as_i64().unwrap(),
+            )
+        })
+        .collect();
+    ranges.sort();
+    assert_eq!(
+        ranges,
+        vec![
+            (0, 3560),
+            (3560, 7120),
+            (7120, 10680),
+            (10680, 14240),
+            (14240, 17800),
+            (17800, 21360),
+            (21360, 24920),
+            (24920, 28478)
+        ]
+    );
+    let body = "# Synthetic policies\n\n".to_owned() + &SYNTHETIC_POLICIES.join("\n\n") + "\n";
+    let (proposal, target) = admission_proposal(
+        &w,
+        &f.repo,
+        &f.bank,
+        &body,
+        "synthetic-policy.md",
+        Some(&inspected),
+        false,
+    )?;
+    let admitted = apply_admission(&w, &proposal)?;
+    let status = recovery_call(
+        &w,
+        &f.repo,
+        &[os("status"), os("--operation"), os(&f.operation)],
+        0,
+    )?;
+    assert_eq!(
+        get(&status, "semantic_recovery_complete"),
+        &Value::Bool(true)
+    );
+    assert_eq!(get(&status, "pending_unit_ids"), &Value::Array(vec![]));
+    let head = read_json(&directory.join("ledger-head.json"))?;
+    let generation = get(&head, "generation").as_int().unwrap().as_i64().unwrap();
+    let ledger = read_json(&directory.join(format!("ledger/{generation:08}.json")))?;
+    let mut resolutions = std::collections::BTreeSet::new();
+    for unit in get(&ledger, "units").as_array().unwrap() {
+        let original = initial_units
+            .iter()
+            .find(|old| get(old, "unit_id") == get(unit, "unit_id"))
+            .unwrap();
+        assert_eq!(text(get(unit, "state")), "admitted");
+        for field in ["source_ranges", "provenance"] {
+            assert_eq!(get(unit, field), get(original, field));
+        }
+        let links = get(unit, "terminal_receipts").as_array().unwrap();
+        assert_eq!(links.len(), 1);
+        let resolution = text(get(&links[0], "resolution_id"));
+        resolutions.insert(resolution.to_owned());
+        let receipt = read_json(&directory.join(format!("resolutions/{resolution}.json")))?;
+        assert_eq!(hash_value(&receipt), text(get(&links[0], "sha256")));
+        assert_eq!(
+            get(&receipt, "canonical_operation_id"),
+            get(&proposal, "operation_id")
+        );
+        assert_eq!(get(&receipt, "unit_id"), get(unit, "unit_id"));
+    }
+    assert_eq!(resolutions.len(), 8);
+    let receipt = read_json(Path::new(text(get(&admitted, "receipt_path"))))?;
+    let input = save(
+        &w,
+        &publication_with_admission(&w, &f, &proposal, &receipt)?,
+        "resolved-publication.json",
+    )?;
+    let prepared = recovery_output(
+        &w,
+        &f.repo,
+        &f.operation,
+        &[
+            os("publish"),
+            os("prepare"),
+            os("--input"),
+            input.as_os_str(),
+        ],
+        0,
+    )?;
+    let resolved = state(&w, &f.repo, &f.bank)?;
+    assert_eq!(
+        get(
+            &layout_land(&w, &f, get(&prepared, "request"), 0)?,
+            "publication_verified"
+        ),
+        &Value::Bool(true)
+    );
+    assert_eq!(state(&w, &f.repo, &f.bank)?, resolved);
+    assert_eq!(
+        (&resolved.1, &resolved.2, &resolved.3, &resolved.4),
+        (&feature.1, &feature.2, &feature.3, &feature.4)
+    );
+    for source in get(get(&inspected, "manifest"), "sources")
+        .as_array()
+        .unwrap()
+    {
+        assert_eq!(
+            fs::read(directory.join(text(get(source, "blob"))))?,
+            originals[text(get(source, "path"))]
+        );
+    }
+    let changed = git(
+        &w,
+        &f.remote,
+        &[
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            "refs/heads/main",
+        ],
+    )?;
+    assert!(changed.lines().all(|p| p.starts_with("memory-bank/")));
+    assert!(
+        changed
+            .lines()
+            .any(|p| p == format!("memory-bank/{target}"))
+    );
+    // Baseline :117-120 reads the admitted record from the bank itself.
+    let (_, metadata, recalled_body) =
+        agent_memory::records::parse(&fs::read_to_string(f.bank.join(&target))?, &[])?;
+    for policy in SYNTHETIC_POLICIES {
+        assert!(recalled_body.contains(policy));
+    }
+    assert!(
+        get(&metadata, "evidence")
+            .as_array()
+            .unwrap()
+            .contains(&s("synthetic-policy.md"))
+    );
+    fresh_recall(&mut w, &f, &target, &s(recalled_body), Some(&metadata))
 }
 
 #[test]
@@ -4093,6 +6386,12 @@ fn fanout_d_new_index(
     )?;
     Ok(path)
 }
+fn fanout_d_publish_index(w: &World, peer: &Path) -> TestResult {
+    git(w, peer, &["add", "memory-bank"])?;
+    git(w, peer, &["commit", "-m", "Independent source-bound index"])?;
+    git(w, peer, &["push", "origin", "HEAD:main"])?;
+    Ok(())
+}
 
 fn fanout_d_review_new_index(w: &World, repo: &Path) -> TestResult<(i32, Value)> {
     let inspection = good(
@@ -4138,8 +6437,7 @@ fn fanout_d_new_shared_index_preserves_both_independent_source_routes() -> TestR
         None,
         "2026-10-24T00:00:00Z",
     )?;
-    let request = get(&prepared(&w, &peer)?, "request").clone();
-    land(&w, &peer, &request)?;
+    fanout_d_publish_index(&w, &peer)?;
     let before = state(&w, &repo, &bank)?;
     let (code, plan) = fanout_d_review_new_index(&w, &repo)?;
     assert_eq!(code, 0, "{plan:?}");
@@ -4186,7 +6484,7 @@ fn fanout_d_absent_prose_baseline_does_not_license_conflicting_introductions() -
         None,
         "2026-10-23T00:00:00Z",
     )?;
-    land(&w, &peer, get(&prepared(&w, &peer)?, "request"))?;
+    fanout_d_publish_index(&w, &peer)?;
     let before = state(&w, &repo, &bank)?;
     assert_eq!(fanout_d_review_new_index(&w, &repo)?.0, 1);
     assert_eq!(state(&w, &repo, &bank)?, before);
@@ -4217,7 +6515,7 @@ fn fanout_d_absent_route_baseline_never_chooses_conflicting_captions() -> TestRe
         Some(&fs::read(bank.join(path))?),
         "2026-10-23T00:00:00Z",
     )?;
-    land(&w, &peer, get(&prepared(&w, &peer)?, "request"))?;
+    fanout_d_publish_index(&w, &peer)?;
     let before = state(&w, &repo, &bank)?;
     assert_eq!(fanout_d_review_new_index(&w, &repo)?.0, 1);
     assert_eq!(state(&w, &repo, &bank)?, before);

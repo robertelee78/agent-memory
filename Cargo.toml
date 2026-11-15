@@ -35,8 +35,23 @@ regex = { version = "=1.12.2", default-features = false, features = ["std", "per
 # debug `am` past release_distribution::MAX_BINARY (64 MiB), which the
 # installer and updater tests apply to the real binary. Panic messages keep
 # their file:line (std::panic::Location does not need debug info).
+#
+# Tests exercise real-time contracts (950 ms stop callbacks, 10 s rendezvous,
+# 120 s child bounds) against the real `am`, so dev/test code is optimised
+# (debug assertions and overflow checks stay on); the hash and compression
+# crates get full optimisation because `am` hashes its own runtime image.
 [profile.dev]
 debug = false
+opt-level = 1
+
+[profile.dev.package.sha2]
+opt-level = 3
+[profile.dev.package.sha1]
+opt-level = 3
+[profile.dev.package.flate2]
+opt-level = 3
+[profile.dev.package.miniz_oxide]
+opt-level = 3
 
 [profile.release]
 panic = "abort"

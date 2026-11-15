@@ -1231,7 +1231,7 @@ fn omp_boundary_route_reports_pending_work_and_argument_errors() {
         (
             process::Status::Code(1),
             "",
-            "am omp-boundary: No installed Rust runtime receipt owns this executable; pass --pack PATH\n"
+            "am omp-boundary: No installed Rust runtime receipt owns this executable; use the trusted bootstrap installer\n"
         )
     );
     // The stream parser, not the boundary parser, decides `--stream` argv.

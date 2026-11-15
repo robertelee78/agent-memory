@@ -247,7 +247,7 @@ fn interrupt_captured_activation(w: &World, old: &Value) -> (PathBuf, Vec<u8>) {
 }
 
 #[test]
-// obligation: Python-era adoption design, in-flight journal v1 recorded-step rollback.
+// Design requirement (no baseline test): Python-era adoption, in-flight journal v1 recorded-step rollback.
 fn captured_python_journal_rolls_back_under_verified_install_candidate() {
     let w = World::new().unwrap();
     let old = captured(&w, "all-copy");
@@ -271,7 +271,7 @@ fn captured_python_journal_rolls_back_under_verified_install_candidate() {
 }
 
 #[test]
-// obligation: Python-era adoption design, standalone journal recovery verifies the retained reader.
+// Design requirement (no baseline test): Python-era adoption, standalone journal recovery verifies the retained reader.
 fn standalone_python_recovery_reads_a_verified_pack_and_refuses_drift() {
     let w = World::new().unwrap();
     let mut old = captured(&w, "all-copy");

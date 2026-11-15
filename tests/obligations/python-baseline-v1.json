@@ -1465,42 +1465,42 @@
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_all_six_tracked_contexts_retain_git_evidence_without_claiming_uncommitted_bytes_are_shared",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_busy_or_interrupted_bank_is_not_repaired_by_state_loss",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_git_inspection_ignores_ambient_repo_redirection_and_does_not_execute_fsmonitor_or_write_trace",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_git_root_spelling_preserves_trailing_spaces",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_minimal_untracked_bank_survives_poisoned_then_removed_application_state",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_current_bank.py::CurrentBankContract.test_missing_git_still_reads_the_copied_portable_markdown_bank",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -1647,14 +1647,14 @@
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_meaningful_admission_creates_native_topics_preserves_payloads_and_replays",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_discovery.py::DiscoveryContract.test_navigation_without_trace_collision_or_substituted_proposal_refuses",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -2277,91 +2277,91 @@
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_all_shared_readers_refuse_unknown_compatibility_before_source_index_access",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_error_before_source_boundaries_reconcile_one_original_observation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_error_source_publication_boundaries_reconcile_one_original_observation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_hard_exit_before_source_boundaries_reconcile_one_original_observation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_hard_exit_source_publication_boundaries_reconcile_one_original_observation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_late_hold_registry_and_ledger_changes_retain_written_source_then_retry",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_public_layout_hold_enrolls_real_codex_and_claude_prompt_hooks",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_real_codex_claude_hooks_keep_task_active_but_boundaries_pending",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_rolled_back_raw_scope_defers_late_real_held_checkpoint_without_source_loss",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_shared_source_barrier_reentrancy_and_lifecycle_contention_preserve_sources",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_typed_context_exact_retry_and_no_ack_authority",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_unknown_missing_corrupt_hold_and_frontier_only_change_refuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_verified_hold_rejects_location_and_hold_changes_during_observation",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3481,35 +3481,35 @@
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_history_boundary_excess_and_retry",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_persisted_corruption_and_interruption_remain_noncapacity",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_record_boundary_excess_and_retry",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_sealed_byte_boundary_excess_and_retry",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_hold_capacity.py::KnownHoldCapacityContract.test_structure_precedes_capacity_and_combined_dimension_precedence",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -3530,14 +3530,14 @@
   {
    "id": "tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_known_dispute_survives_rewording_changed_framing_and_registry_recovery",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_known_holds_v2.py::KnownHoldsVersionTwoContract.test_renewed_clarification_proof_replays_without_losing_prior_resolution",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -5637,14 +5637,14 @@
   {
    "id": "tests/contracts/test_layout_recovery_frontier.py::RecoveryFrontierContract.test_removed_sentinel_is_pending_not_successful_empty_coverage",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_layout_recovery_frontier.py::RecoveryFrontierContract.test_reported_size_pending_repair_retains_exact_private_originals_and_qualified_recall",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5686,7 +5686,7 @@
   {
    "id": "tests/contracts/test_layout_recovery_frontier_closure.py::RecoveryFrontierClosureContract.test_partial_claims_need_two_receipts_and_independent_complete_union",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5763,7 +5763,7 @@
   {
    "id": "tests/contracts/test_layout_recovery_frontier_closure.py::RecoveryFrontierClosureContract.test_reservation_transition_accepts_last_complete_frontier_and_refuses_next",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -5784,7 +5784,7 @@
   {
    "id": "tests/contracts/test_layout_recovery_frontier_substitution.py::RecoveryFrontierSubstitutionContract.test_corrupt_private_index_blocks_public_comparison_without_canonical_write",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -6926,7 +6926,7 @@
   {
    "id": "tests/contracts/test_memory_publication.py::MemoryPublicationContract.test_unstaged_canonical_deletion_needs_real_prior_ownership_not_an_index_edit",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7234,21 +7234,21 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_native_update_ignores_missing_historical_worktree_but_preserves_required_enrollment",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_public_uninstall_keeps_pending_sources_and_disabled_owned_binding",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeLifecyclePublic.test_public_uninstall_requires_quiescence_and_actually_drains_completed_sources",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7262,56 +7262,56 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_both_exact_current_human_turns_and_persistent_session_are_required",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_historical_observers_cannot_qualify_new_current_session",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_source_verifier_binds_completed_human_ids_text_roots_and_digests",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_source_verifier_waits_for_fault_free_shared_registration",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSmokeQualification.test_unsupported_binary_refuses_before_native_launch_or_human_turns",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_admission_requires_sealed_registered_segment",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7325,7 +7325,7 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_completed_snapshots_require_bound_drain_proof_after_marker_removal",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7353,42 +7353,42 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_gap_refuses_both_assessment_outcomes_and_preserves_marker",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_late_native_tool_result_recovers_original_sealed_gap_without_reopening",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_long_segment_uses_two_shared_observations_and_ingest_is_idempotent",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_manual_marker_delete_cannot_hide_unregistered_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_protected_private_root_cannot_silently_move_or_lose_binding",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -7402,14 +7402,14 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_fresh_capture_preserves_surrounding_source_and_retries",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_fresh_owned_guides_capture_exact_metadata_in_copy_and_link_modes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7423,7 +7423,7 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_historical_owned_guide_never_authorizes_read_after_installation_changes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7444,77 +7444,77 @@
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_mismatched_orphan_snapshot_is_integrity_failure",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_noninstruction_artifact_read_retains_ordinary_body_not_owned_metadata",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_nonread_result_never_mints_manual_witness",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_owned_guide_alias_partial_tamper_and_foreign_reads_keep_real_gaps",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_owned_guide_rechecks_receipt_selection_and_nested_symlinks",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_preexisting_native_gap_is_not_reclassified",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_same_sweep_human_boundary_preserves_sealed_tool_gap",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_screened_invocation_does_not_hide_following_answer",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_sealed_tool_gap_does_not_authorize_late_classification",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_snapshot_publication_recovery_survives_uninstall_and_retry",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_unrelated_ancestor_churn_preserves_witness_and_public_annotation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7550,322 +7550,322 @@
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_changed_configured_bank_before_reused_registration_writes_neither_namespace",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_committed_raw_locator_refusal_with_and_without_verified_hold",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_late_raw_locator_refusal_with_and_without_verified_hold",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_raw_nonrouter_refusal_with_and_without_verified_hold",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_symlink_locator_refusal_with_and_without_verified_hold",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_bank_drift_after_actual_scope_read",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_foreign_bank_identity_without_private_writes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_successful_but_disagreeing_bank_locators",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_resolves_regular_and_newline_worktree_identity",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_full_pending_index_preserves_actual_4096_slot_capacity",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_held_read_reuse_keeps_exact_intent_pins_and_refuses_changed_hold_without_new_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_live_marker_context_cannot_escape_its_read_lifetime",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_live_marker_observation_refuses_late_authority_change_without_private_writes",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_lost_success_reuses_observation_and_unknown_attempt_is_not_retried",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_next_mint_refuses_a_new_raw_only_bank_locator",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_observe_bank_drift_keeps_original_captures_refuses_final_and_next_frame_freshly_locates",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_directory_overflow_retains_existing_source_without_allocating",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_concurrent_slot_creation_keeps_both_sources_and_next_hole",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_refuses_malformed_or_symlink_last_slot_before_new_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_retries_transient_scan_change_and_refuses_persistent_churn",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_public_observer_seal_and_no_learning_long_segment",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_reused_locator_keeps_post_source_mutation_scope_check_and_original_fault",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_shared_fault_retained_across_later_observer_progress",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_sparse_pending_index_reads_last_slot_and_allocates_lowest_hole",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_transaction_end_fresh_recheck_refuses_late_config_after_read_only_reuse",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_transaction_local_read_reuse_requires_exact_live_context_and_preserves_inventory",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_contended_entry_refuses_current_frame_and_stops",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_public_capture_cannot_interpose_before_verified_outcome",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_transaction_at_outcome_waits_without_adopting_its_marker",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_at_outcome_unwinds_then_closes_without_replaying_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_metadata_exhaustion_keeps_source_and_open_unknown",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_arbitrary_marker_read_failure_without_writer_is_not_retryable",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_empty_held_and_unheld_slots_never_mint_scope_or_claim_known_writer",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_failed_marker_read_with_unproven_empty_slot_keeps_original_refusal",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_held_unknown_foreign_malformed_and_unsafe_owners_never_become_busy",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_different_retry_record",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_partial_retry_record",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_refused_frame_durable_attempt_exit_busy_counts_once",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_request_durable_attempt_exit_busy_resumes_exactly_once",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_after_marker_read_is_exact_writer_deferral",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_before_frontier_entry_is_exact_writer_deferral",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_during_failed_marker_read_is_exact_writer_deferral",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_initializing_writer_exhaustion_cannot_verify_or_close",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_full_owner_fsync_window_has_ex_ownership_before_probe",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_pre_ex_empty_publication_defers_without_stealing_its_lock",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7879,42 +7879,42 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_released_writer_with_unknown_transaction_is_hard_refusal_not_retry",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_transaction_left_after_writer_release_remains_interruption",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_unheld_empty_publication_exhaustion_retains_source_without_outcome",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_unheld_local_owner_is_interruption_not_live_pid_authority",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_arriving_after_preflight_is_classified_at_actual_identity_guard",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_release_rediscovers_identity_instead_of_reusing_frame_scope",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -7949,7 +7949,7 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_interrupt_during_marker_read_is_not_reclassified_as_writer_retry",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8250,7 +8250,7 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_real_io_failure_does_not_manufacture_invalid_request_refusal",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8334,7 +8334,7 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_startup_typed_busy_retries_before_open_and_ready",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8579,14 +8579,14 @@
   {
    "id": "tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_exclusively_held_barrier_refuses_close_without_metadata_write",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_run_final_close_rejects_barrier_inode_replacement_after_metadata_write",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -8621,147 +8621,147 @@
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_all_enrollments_are_validated_before_shared_namespace_observation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_distinct_sources_and_orphan_registration_retain_exact_identities",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_duplicate_or_changed_digest_refuses_only_affected_lookup",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_empty_segment_does_not_observe_shared_namespace",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_held_and_gapped_segments_do_not_gain_completion_authority",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_historical_completed_gate_observation_is_not_reused_for_lookup",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_missing_and_corrupt_attempts_are_not_confused_with_new_attempts",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_missing_corrupt_source_and_completion_faults_remain_visible",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_namespace_change_between_both_locked_passes_refuses_every_row",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_no_context_preserves_fresh_per_reference_observations",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_observation_failure_is_local_memoized_and_fault_lists_are_independent",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_ordinary_missing_source_retains_only_its_own_registration_fault",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_real_completion_between_result_and_wake_requires_new_inventory",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_registration_between_row_lookups_cannot_invent_retained_attempt_fault",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_type_and_key_errors_still_reach_whole_segment_fault_handling",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_ack_after_source_started_resolves_only_at_reservation",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_never_acquires_foreign_exclusive_barrier",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_refuses_before_unreadable_native_binding",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_never_acquires_foreign_exclusive_barrier",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_refuses_before_unreadable_native_binding",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8775,7 +8775,7 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_borrowed_consumer_refuses_foreign_thread_source_observation_without_fallback",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8810,42 +8810,42 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_beforewrite_or_exit_retries_only_identical_source_after_unlock",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_exit_exhaustion_keeps_retained_record_without_response_or_drain",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancel_after_actual_reserve_then_exit_fault_retains_one_unknown_root",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_io_failure_never_verifies_partial_seal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_refusal_never_verifies_partial_seal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_captured_source_checkpoint_failure_does_not_verify_or_schedule_drain",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8859,91 +8859,91 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_closed_pipe_writer_false_drains_before_next_fifo_and_final_in_full_run",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_completion_guard_discovers_fresh_locations_and_restores_live_locator",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_ingest_refuses_without_retirement_or_new_private_state",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_metadata_refuses_without_attempt_or_new_base",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_seal_refuses_without_new_private_state",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_ingest_canonical_writer_is_busy_before_binding_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_seal_canonical_writer_is_busy_before_binding_refusal",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_eof_after_actual_reserve_then_exit_fault_retains_one_unknown_root",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_executor_borrowed_entry_refuses_actual_source_inode_swap",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_executor_borrowed_exit_refuses_actual_source_inode_swap",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_missing_clock_commits_pending_refs_then_registers_after_response",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonarmed_and_direct_observation_keep_synchronous_registration",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonbusy_outcome_failure_never_writes_second_outcome_or_verified_response",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8971,21 +8971,21 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_output_loss_after_actual_reserve_then_exit_fault_retains_one_unknown_root",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_plain_prereserve_open_read_refuses_drift_after_verified_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postcommit_pre_reservation_fault_has_no_second_outcome",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -8999,35 +8999,35 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_busy_is_one_batch_and_leaves_discoverable_enrollments",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_control_flow_is_not_masked_or_closed",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_real_transport_lock_exit_swap_maps_committed_reservation_to_unknown",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_replacement_after_actual_reserve_then_exit_fault_retains_one_unknown_root",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_response_loss_still_drains_once_before_next_fifo_and_final",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9041,28 +9041,28 @@
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_root_write_failure_after_actual_reservation_is_unknown_not_replayed",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_executor_barrier_fd_swap",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_transport_fd_swap",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_wake_and_observer_unwind_faults_preserve_source_and_actual_reservation_fact",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9104,14 +9104,14 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_active_unavailable_tail_is_real_gap_not_a_notification_gap",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_cancel_before_reservation_refuses_and_after_start_preserves_result",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
@@ -9125,63 +9125,63 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checked_stored_user_is_sole_genuine_root_and_mapping_is_not_required",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checkout_retarget_after_view_validation_refuses_before_started_or_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_completed_historical_origin_exact_replay_is_read_only_and_changed_request_refuses",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_delayed_old_checked_view_refuses_new_session_and_real_new_human_has_one_root",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_expired_internal_delivery_window_never_reserves_root_wake",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_foreign_tool_call_id_cannot_resolve_actual_sealed_tool_gap",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_fork_without_time_evidence_retains_nonhuman_source_with_explicit_gap",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_invalid_views_refuse_before_real_transport_contention_and_bad_receipt",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_legacy_notification_only_cursor_is_neither_reused_mutated_nor_sealed",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9195,21 +9195,21 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_malformed_wake_state_suppresses_reservation_but_retains_and_enrolls_real_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_manager_subdirectory_same_bank_accepts_and_native_root_identity_stays_canonical",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_missing_or_stale_receipt_is_not_a_production_fallback",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9223,42 +9223,42 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_neutral_hint_keeps_sealed_parent_immutable",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_no_active_resume_paths_never_append_to_previously_sealed_instance_segment",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_notification_without_stored_human_has_no_origin_or_source_gap",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_on_started_runs_once_after_preflight_before_source_write",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_pre_reservation_wake_exception_does_not_unverify_committed_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_random_legacy_root_with_real_reconciled_human_still_cannot_acknowledge",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9279,42 +9279,42 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_replacement_and_end_after_start_preserve_result",
    "registered": true,
-   "status": "unported",
+   "status": "partial",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_resolved_sealed_tool_gap_does_not_leave_stale_tool_pending_or_block_drain",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_resumed_fork_postfork_human_is_not_blanket_inherited",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_new_truncated_entry_keeps_gap_and_prevents_complete_source_claim",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_orphan_snapshot_reuses_original_safe_payload_by_native_identity",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_retired_persistence_truncation_is_not_literal_complete_learning",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9328,7 +9328,7 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_same_role_position_decoy_never_resolves_real_event_gap",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9342,28 +9342,28 @@
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_unsafe_exact_recovery_does_not_append_gap_to_sealed_source",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_wake_failure_after_reservation_preserves_verified_seal_and_single_budget",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_weak_historical_event_resolution_does_not_authorize_new_acknowledgement",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_both_contended_lock_families_raise_typed_busy_before_body",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9377,35 +9377,35 @@
   {
    "id": "tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_observer_verification_cannot_enroll_or_promote_legacy_marker",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_prior_committed_activation_recovers_after_a_later_install_rolls_back",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_real_binding_proof_rejects_forgery_and_mid_instance_drift_before_source",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_stored_source_lifecycle.py::StoredSourceLifecycle.test_receipt_commit_separates_bank_activation_from_rollback",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::AnswerFirstQualification.test_no_guidance_is_explicitly_unqualified_without_unhealthy_disk_status",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9419,84 +9419,84 @@
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_canonical_parsed_evidence_digests_survive_noncanonical_json_encoding",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_conflicting_existing_record_is_never_rewritten_or_replayed",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_empty_verified_seal_reports_wake_not_evaluated",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_existing_root_retains_legacy_bare_pending_without_inferred_cause",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_failed_observed_send_leaves_decision_unrecorded_and_still_drains",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_false_observed_send_leaves_decision_unrecorded",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_malformed_real_result_shapes_are_unknown_without_inventing_a_cause",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_nonseal_and_failed_source_attempts_do_not_acquire_diagnostic_rows",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_not_armed_is_distinct_from_armed_without_nonce",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_binds_actual_root_after_response_without_changing_old_evidence",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_writer_checks_actual_request_without_cursor_or_root_scan",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_optional_writer_failure_after_response_preserves_source_root_and_drain",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9517,42 +9517,42 @@
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_retained_root_after_cursor_failure_stays_unknown_and_rootless",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_spoofed_record_keys_types_digests_and_status_are_unbound_without_contents",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_substituted_oversize_response_never_records_an_offered_continuation",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_exhausts_real_shared_barrier_without_canonical_write",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_refuses_unknown_marker_and_shared_upgrade",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9874,7 +9874,7 @@
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_completion_absence_preserves_interrupts_and_fatal_failures",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9888,63 +9888,63 @@
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_native_absence_preserves_interrupts_and_fatal_failures",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_native_absence_rechecks_normal_and_ordinary_failures",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_preserves_interrupts_and_fatal_failures",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_race_remains_pending_for_normal_and_ordinary_failure",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_native_drain_preserves_interrupts_and_releases_source_barrier",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_source_inspection_preserves_interrupts_with_raced_completion_lock",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_preserves_interrupts_and_fatal_failures",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_rechecks_normal_and_ordinary_failures",
    "registered": true,
-   "status": "unported",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_unchanged_absence_allows_normal_exit_and_preserves_ordinary_error",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -9972,7 +9972,7 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_changed_registry_bank_remote_or_authority_refuses_stale_proposals",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -10070,7 +10070,7 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_normalization_strips_secrets_and_unifies_only_documented_equivalence",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": "tests/t1_a1.rs::normalization_strips_secrets_and_unifies_only_documented_equivalence",
    "note": "normalizer only; CLI transport not ported yet"
   },
@@ -10098,7 +10098,7 @@
   {
    "id": "tests/contracts/test_project_identity.py::ProjectIdentityContract.test_project_registry_stale_lock_recovery_is_bounded_and_read_back",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -11190,7 +11190,7 @@
   {
    "id": "tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_timeout_and_launch_failure_never_mint_identity_from_partial_output",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12177,14 +12177,14 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_changed_configuration_invalidates_prepared_write_without_touching_either_bank",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_configured_branch_or_remote_default_observation_never_uses_feature_branch_as_authority",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12212,7 +12212,7 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_default_boundary_tracks_only_markdown_without_awa_vox_or_writes",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12240,7 +12240,7 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_ignored_or_untracked_memory_and_tracked_runtime_artifacts_block_eligibility",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12261,7 +12261,7 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_nested_configured_bank_is_shared_by_identity_writes_inspection_and_audit",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12275,14 +12275,14 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_secret_shaped_selected_remote_is_refused_without_eligibility_or_echo",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_symlink_spelling_alias_and_two_bank_roots_are_refused_without_adoption",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12296,147 +12296,147 @@
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_unsafe_bank_prefix_is_withheld_for_explicit_and_discovered_locations",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_unsafe_content_or_interrupted_bank_is_never_an_eligible_empty_success",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_unsafe_duplicate_or_ambiguous_configuration_preserves_all_paths",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_both_changed_same_prose_requires_meaning_review_without_choosing_landing_order",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_changed_default_remote_history_and_unrelated_candidate_code_require_review",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_current_untracked_admitted_record_does_not_block_fresh_remote_inventory",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_cursor_loss_combines_independent_edits_and_repeated_normal_merge_without_reversing_memory",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_fetch_failure_after_real_advertisement_has_specific_safe_repair",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_fetched_capacity_preserves_typed_cause_and_local_feature_state",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_inactive_stable_version_cannot_be_reactivated_by_an_older_working_copy",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_last_observed_memory_base_does_not_require_importing_authority_code_ancestry",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_later_correction_keeps_historical_publication_receipt_without_claiming_current_truth",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_lost_success_response_and_squash_readback_do_not_require_a_duplicate_push",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_nested_bank_observation_reconciliation_and_replay_use_same_configured_prefix",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_normal_rebase_keeps_previously_imported_memory_once_and_local_feature_code",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_offline_capture_stays_readable_and_online_observation_preserves_feature_state",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_merge_or_cursor_loss",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
   {
    "id": "tests/contracts/test_sharing_recovery.py::SharingRecoveryContract.test_remote_advance_during_observation_requires_new_inventory",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12646,7 +12646,7 @@
   {
    "id": "tests/contracts/test_tombstones.py::TombstonesContract.test_exact_five_field_format_roundtrips_without_personal_prose_or_generated_state",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -12660,7 +12660,7 @@
   {
    "id": "tests/contracts/test_tombstones.py::TombstonesContract.test_sensitive_extra_fields_bodies_names_and_fingerprints_refuse_without_echo_or_mutation",
    "registered": true,
-   "status": "partial",
+   "status": "ported",
    "rust_test": null,
    "note": null
   },
@@ -13203,9 +13203,9 @@
   "unregistered": 33,
   "by_status": {
    "not-applicable": 103,
-   "partial": 817,
-   "ported": 464,
-   "unported": 478
+   "partial": 723,
+   "ported": 724,
+   "unported": 312
   }
  }
 }

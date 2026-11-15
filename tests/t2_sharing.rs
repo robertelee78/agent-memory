@@ -1614,37 +1614,203 @@ fn test_explicit_clarifying_decision_corrects_then_consolidates_with_both_origin
         "# Wall\n\nThe wall should be blue.\n",
     );
     f.publish();
-    // Fixture begins after the governed correction. Governance owns admission and
-    // explicit-authority qualification; this test exercises sharing's consumer.
-    let old_content = std::fs::read_to_string(f.bank.join(&left)).unwrap();
-    let mut corrected = old.clone();
-    *corrected.get_mut("version").unwrap() = Value::Int(2.into());
-    *corrected.get_mut("evidence").unwrap() = a(&["user:explicit-wall-blue-clarification"]);
-    *corrected.get_mut("corrects").unwrap() = Value::Array(vec![o([
-        ("id", g(&old, "id").clone()),
-        ("version", g(&old, "version").clone()),
-    ])]);
-    std::fs::write(
-        f.bank.join(&left),
-        render_record(&corrected, "# Wall\n\nThe wall should be blue.\n"),
-    )
-    .unwrap();
-    let history = format!("history/versions/{}/v1.md", g(&old, "id").as_str().unwrap());
-    std::fs::create_dir_all(f.bank.join(&history).parent().unwrap()).unwrap();
-    std::fs::write(f.bank.join(&history), old_content).unwrap();
-    let (meta, mut routes, omitted) = agent_memory::bank_contract::parse_router(
-        &std::fs::read_to_string(f.bank.join("MEMORY.md")).unwrap(),
-    )
-    .unwrap();
-    routes.push(
-        agent_memory::consolidation::route(&history, "Previous governed version", &old, true)
-            .unwrap(),
+    let native = |args: &[OsString]| {
+        let output =
+            f.w.run_with(
+                [
+                    f.w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+                    "--json".into(),
+                ]
+                .into_iter()
+                .chain(args.iter().cloned()),
+                RunOptions {
+                    check: false,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        let value = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+        assert_eq!(
+            output.status,
+            agent_memory::process::Status::Code(0),
+            "{value:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        value
+    };
+    let scope = native(&[
+        "identity".into(),
+        "status".into(),
+        "--repo".into(),
+        f.repo.as_os_str().to_owned(),
+    ]);
+    let mut metadata = old.clone();
+    *metadata.get_mut("status").unwrap() = s("candidate");
+    *metadata.get_mut("evidence").unwrap() = a(&["user:explicit-wall-blue-clarification"]);
+    *metadata.get_mut("source").unwrap() = o([
+        ("kind", s("user")),
+        ("actor", s("Explicit fixture source; not authenticated")),
+    ]);
+    *metadata
+        .get_mut("origin")
+        .unwrap()
+        .get_mut("developer-id")
+        .unwrap() = g(&scope, "developer_id").clone();
+    let candidate = o([
+        ("metadata", metadata),
+        ("body", s("# Wall\n\nThe wall should be blue.\n")),
+    ]);
+    let request = o([
+        ("project_id", g(&scope, "project_id").clone()),
+        ("candidate", candidate),
+        ("source_class", s("user")),
+        ("repository_evidence", Value::Null),
+        (
+            "assessment",
+            o([
+                ("category", s("user-correction")),
+                (
+                    "utility",
+                    s("Prevent repeated confusion about this explicitly clarified wall"),
+                ),
+                ("durable", Value::Bool(true)),
+                ("evidence_confidence", s("confirmed")),
+                (
+                    "evidence_reason",
+                    s("The current detecting developer explicitly clarified the correction"),
+                ),
+                ("confirmed", Value::Bool(true)),
+                ("source_redundant", Value::Bool(false)),
+                ("work_state_copy", Value::Bool(false)),
+                ("review", Value::Null),
+            ]),
+        ),
+    ]);
+    let path = f.save(&request, "clarification-capture.json");
+    let captured = native(&[
+        "capture".into(),
+        "--repo".into(),
+        f.repo.as_os_str().to_owned(),
+        "--request".into(),
+        path.into_os_string(),
+    ]);
+    let capture = g(&captured, "capture");
+    let compared = o([
+        ("project_id", g(&scope, "project_id").clone()),
+        ("candidate", g(g(capture, "request"), "candidate").clone()),
+        (
+            "searches",
+            a(&["wall color", "explicit wall clarification"]),
+        ),
+        ("read_paths", a(&[])),
+    ]);
+    let path = f.save(&compared, "clarification-comparison.json");
+    let view = native(&[
+        "compare".into(),
+        "inspect".into(),
+        "--repo".into(),
+        f.repo.as_os_str().to_owned(),
+        "--request".into(),
+        path.as_os_str().to_owned(),
+    ]);
+    let judgment = o([
+        ("observation",g(&view,"observation").clone()),
+        ("decisions",Value::Array(g(&view,"matches").as_array().unwrap().iter().map(|row|o([("path",g(row,"path").clone()),("classification",s("contradiction")),("rationale",s("The explicit current developer clarification contradicts the prior yellow claim"))])).collect())),
+        ("pending_decisions",a(&[])),("rationale",s("Compared full prior claims with the actual detecting-developer decision")),
+    ]);
+    let judged = f.save(&judgment, "clarification-judgment.json");
+    let proof = native(&[
+        "compare".into(),
+        "review".into(),
+        "--repo".into(),
+        f.repo.as_os_str().to_owned(),
+        "--request".into(),
+        path.into_os_string(),
+        "--judgment".into(),
+        judged.into_os_string(),
+    ]);
+    let files = agent_memory::bank_transactions::files_at(&f.bank).unwrap();
+    let hashes = agent_memory::bank_transactions::file_hashes(&files).unwrap();
+    let context_review = Value::Object(
+        hashes
+            .as_object()
+            .unwrap()
+            .iter()
+            .filter(|(p, _)| !p.contains('/'))
+            .cloned()
+            .collect(),
     );
-    std::fs::write(
-        f.bank.join("MEMORY.md"),
-        agent_memory::bank_contract::router_text(&meta, &routes, &omitted).unwrap(),
-    )
-    .unwrap();
+    let request = o([
+        ("project_id", g(&scope, "project_id").clone()),
+        ("operation", s("correct")),
+        (
+            "target",
+            o([
+                ("path", s(&left)),
+                ("id", g(&old, "id").clone()),
+                ("version", g(&old, "version").clone()),
+                ("sha256", g(&hashes, &left).clone()),
+            ]),
+        ),
+        (
+            "authority",
+            o([
+                ("source_class", s("user")),
+                ("repository_evidence", Value::Null),
+                ("evidence", a(&["user:explicit-wall-blue-clarification"])),
+                (
+                    "reason",
+                    s(
+                        "The current detecting developer explicitly clarified that this wall is blue.",
+                    ),
+                ),
+                ("confirmed", Value::Bool(true)),
+                ("strength", s("established")),
+                ("basis", s("stronger-evidence")),
+                ("impact", s("all-target-conditions")),
+                ("review", Value::Null),
+                ("reason_class", Value::Null),
+            ]),
+        ),
+        ("capture", capture.clone()),
+        (
+            "comparison",
+            o([("request", compared), ("proof", g(&proof, "proof").clone())]),
+        ),
+        ("replacement", Value::Null),
+        ("delete_ids", a(&[])),
+        ("context_review", context_review),
+        ("context_edits", empty()),
+        ("context", empty()),
+    ]);
+    let path = f.save(&request, "clarification-governance.json");
+    let preview = native(&[
+        "govern".into(),
+        "preview".into(),
+        "--repo".into(),
+        f.repo.as_os_str().to_owned(),
+        "--request".into(),
+        path.into_os_string(),
+    ]);
+    let proposal = f.save(g(&preview, "proposal"), "clarification-proposal.json");
+    let done = native(&[
+        "govern".into(),
+        "apply".into(),
+        "--proposal".into(),
+        proposal.into_os_string(),
+    ]);
+    assert_eq!(g(&done, "verified"), &Value::Bool(true));
+    let (_, corrected, _) =
+        agent_memory::records::parse(&std::fs::read_to_string(f.bank.join(&left)).unwrap(), &[])
+            .unwrap();
+    assert_eq!(g(&corrected, "version"), &Value::Int(2.into()));
+    assert!(
+        g(&corrected, "evidence")
+            .as_array()
+            .unwrap()
+            .contains(&s("user:explicit-wall-blue-clarification"))
+    );
+    let history = format!("history/versions/{}/v1.md", g(&old, "id").as_str().unwrap());
     let view = f.good("inspect", &[]);
     let selected = g(&view, "sources")
         .as_array()
@@ -1698,7 +1864,45 @@ fn test_explicit_clarifying_decision_corrects_then_consolidates_with_both_origin
             .contains(&s("user:explicit-wall-blue-clarification"))
     );
     assert_eq!(g(&previous, "origin"), g(&landed, "origin"));
+    assert_eq!(g(&previous, "status"), &s("superseded"));
+    let (_, archived, _) =
+        agent_memory::records::parse(g(output, &history).as_str().unwrap(), &[]).unwrap();
+    assert_eq!(g(&archived, "origin"), g(&old, "origin"));
     assert!(output.get(&history).is_some());
     assert!(output.get(&history.replace("v1.md", "v2.md")).is_some());
     assert_eq!(before, f.state());
+    f.save(output, "clarification-files.json");
+    f.w.run_with(
+        [
+            std::env::current_exe().unwrap().into_os_string(),
+            "--exact".into(),
+            "clarified_apply_worker".into(),
+            "--nocapture".into(),
+        ],
+        RunOptions {
+            env: &[("AGENT_MEMORY_FAULT_CLARIFIED_APPLY".into(), "1".into())],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let after = f.state();
+    assert_eq!((&after.1, &after.2), (&before.1, &before.2));
+}
+#[test]
+fn clarified_apply_worker() {
+    if std::env::var_os("AGENT_MEMORY_FAULT_CLARIFIED_APPLY").is_none() {
+        return;
+    }
+    let root = support::require_current_world().unwrap();
+    agent_memory::cli::register_providers().unwrap();
+    support::installed_runtime::register_component_runtime();
+    let files = json::decode_bytes(
+        &std::fs::read(root.join("clarification-files.json")).unwrap(),
+        Default::default(),
+    )
+    .unwrap();
+    let proposal =
+        agent_memory::bank_transactions::preview(&root.join("repo"), &files, "refresh").unwrap();
+    let receipt = agent_memory::bank_transactions::apply(&proposal).unwrap();
+    assert_eq!(g(&receipt, "verified"), &Value::Bool(true));
 }

@@ -74,6 +74,14 @@ impl World {
             .collect()
     }
     fn command(&self, argv: &[OsString], extra: &[(&str, OsString)]) -> process::Output {
+        self.command_within(argv, extra, Duration::from_secs(120))
+    }
+    fn command_within(
+        &self,
+        argv: &[OsString],
+        extra: &[(&str, OsString)],
+        bound: Duration,
+    ) -> process::Output {
         let mut env = self.env();
         env.extend(
             extra
@@ -99,7 +107,7 @@ impl World {
                 umask: None,
                 pass_fds: &[],
             },
-            Duration::from_secs(120),
+            bound,
         )
         .unwrap()
     }
@@ -240,7 +248,7 @@ fn good(world: &World, args: &[OsString]) -> Value {
     assert_eq!(
         output.status,
         process::Status::Code(0),
-        "{} {}",
+        "{args:?}: {} {}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
@@ -298,7 +306,10 @@ fn isolated(name: &str, body: impl FnOnce(&World)) {
         env: isolated_world.env.clone(),
         runtime: None,
     };
-    let output = world.command(
+    // The case child runs a whole baseline test (each of its commands keeps
+    // the 120 s bound); the complete v2 delta workflow alone runs ~20 public
+    // commands, so the case as a whole gets its own finite bound.
+    let output = world.command_within(
         &[
             std::env::current_exe().unwrap().into_os_string(),
             "--exact".into(),
@@ -310,6 +321,7 @@ fn isolated(name: &str, body: impl FnOnce(&World)) {
             ("AM_SECURITY_CASE", name.into()),
             ("AM_SECURITY_ROOT", world.root.as_os_str().to_owned()),
         ],
+        Duration::from_secs(900),
     );
     assert_eq!(
         output.status,
@@ -1504,38 +1516,20 @@ fn feature_state(world: &World, repo: &Path) -> Vec<Vec<u8>> {
         git_bytes(world, repo, &["symbolic-ref", "HEAD"]),
     ]
 }
+/// Baseline `record_text` (record_fixtures.py:9-19): each authored record has
+/// its own fresh id and developer id.
 fn authored_record(number: usize) -> String {
-    let mut template = developer::load(include_bytes!(
-        "../skills/agent-memory/templates/record-proposal.example.json"
-    ))
-    .unwrap();
-    let metadata = template.get_mut("metadata").unwrap();
-    set(metadata, "project-id", string(PROJECT));
-    set(metadata, "scope", string("repository"));
-    set(metadata, "status", string("active"));
-    set(metadata, "conditions", object([] as [(&str, Value); 0]));
-    set(metadata, "trust", string("reviewed"));
-    set(metadata, "visibility", string("visible"));
-    set(
-        metadata,
-        "admission-reason",
-        string("Disposable structural fixture; not real admission evidence"),
-    );
-    set(
-        metadata.get_mut("origin").unwrap(),
-        "code-state",
-        string("not-code"),
-    );
-    agent_memory::codec::frontmatter::write(metadata.as_object().unwrap()).unwrap()
-        + &format!(
-            "# Peer observation {number}\n\nRetain the independent authored partition {number} observation.\n{}\n",
-            "Independent source context. ".repeat(35)
-        )
+    support::record_fixtures::record_text(
+        &format!(
+            "# Peer observation {number}\n\nRetain the independent authored partition {number} observation.\n"
+        ),
+        PROJECT,
+    )
+    .unwrap()
 }
 
 // obligation: tests/contracts/test_large_refresh_security.py::LargeRefreshSecurityContract.test_complete_v2_delta_above_sixty_four_sources_imports_and_qualifies_peer_learning
 #[test]
-#[ignore = "needs semantic_sharing semantic inspect/page/review-v2 and memory_refresh refresh prepare/apply-v2 command implementations"]
 fn complete_v2_refresh_preserves_feature_state_and_qualifies_last_source() {
     isolated(
         "complete_v2_refresh_preserves_feature_state_and_qualifies_last_source",
@@ -1762,7 +1756,10 @@ fn complete_v2_refresh_preserves_feature_state_and_qualifies_last_source() {
                 .unwrap()
                 .iter()
                 .filter(|(path, body)| {
-                    get(get(proposal, "observed_hashes"), path).as_str()
+                    // Baseline `observed_hashes.get(path)`: new paths have no observed hash.
+                    get(proposal, "observed_hashes")
+                        .get(path)
+                        .and_then(Value::as_str)
                         != digest(Some(body.as_str().unwrap().as_bytes())).as_deref()
                 })
                 .collect::<Vec<_>>();
