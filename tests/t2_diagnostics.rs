@@ -1423,6 +1423,7 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
     let world = World::new();
     let repo = world.path("repo");
     bank(&repo);
+    assert!(!world.receipt_path().exists());
     let before = snapshot(&world.root);
     let run = |args: &[&str], expected: i32| {
         let (code, stdout) = am(&world, args);
@@ -1430,6 +1431,9 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
         let value = json::decode(&stdout, Default::default()).unwrap();
         assert_eq!(text(&value, "schema"), diagnostics::SCHEMA);
         assert_eq!(text(&value, "operation"), args[1]);
+        for key in ["writes_performed", "repairs_performed", "network_performed"] {
+            assert_eq!(get(&value, key), &Value::Bool(false));
+        }
         value
     };
     let repo_text = repo.to_str().unwrap();
@@ -1445,6 +1449,14 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
     // the canonical bank validates (diagnostics.py:725), so only the uninstalled
     // runtime refuses.
     assert_eq!(names(&doctor, "failures"), ["runtime.executing_artifact"]);
+    assert_eq!(
+        text(
+            component(&doctor, "bank.schema_and_readability")[0],
+            "state"
+        ),
+        "pass"
+    );
+    assert_eq!(text(get(&doctor, "setup"), "state"), "binding_required");
     assert_eq!(
         text(component(&doctor, "bank.refresh_prerequisites")[0], "state"),
         "pass"
@@ -1476,6 +1488,7 @@ fn am_diagnostics_run_natively_against_a_disposable_bank() {
     // `status` reports above.
     assert!(human.contains("setup binding_required"), "{human}");
     assert!(human.contains("next "), "{human}");
+    assert!(!world.receipt_path().exists());
     assert_eq!(snapshot(&world.root), before);
 }
 
@@ -1485,6 +1498,7 @@ fn am_init_runs_natively_against_a_disposable_bank() {
     let world = World::new();
     let repo = world.path("repo");
     bank(&repo);
+    assert!(!world.receipt_path().exists());
     let before = snapshot(&world.root);
     let repo_text = repo.to_str().unwrap();
     let (code, stdout) = am(&world, &["--json", "init", "inspect", "--repo", repo_text]);
@@ -1530,6 +1544,7 @@ fn am_init_runs_natively_against_a_disposable_bank() {
     assert_eq!(code, 1, "{stdout}");
     let value = json::decode(&stdout, Default::default()).unwrap();
     assert_eq!(get(&value, "inspection_required"), &Value::Bool(true));
+    assert!(!world.receipt_path().exists());
     assert_eq!(snapshot(&world.root), before);
 }
 
@@ -2271,6 +2286,11 @@ impl Native {
             install::executing_runtime(&world.env(), &runtime.command).unwrap();
         bank(&world.path("repo"));
         let receipt = decode(&world.receipt_path());
+        assert_eq!(get(&receipt, "no_guidance"), &Value::Bool(no_guidance));
+        assert_eq!(
+            get(get(&receipt, "omp_binding"), "activation_target") == &Value::Null,
+            no_guidance,
+        );
         let source = runtime.source.clone();
         Self {
             installed: Installed { world, source },

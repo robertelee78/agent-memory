@@ -530,7 +530,7 @@ fn install(w: &mut World, repo: &Path, remote: &Path, protected: bool) -> TestRe
         remote.to_string_lossy()
     );
     let transport = format!(
-        "#!/bin/sh\nfor arg do\n case \"$arg\" in\n fetch|push|ls-remote) exec {} -c {} \"$@\" ;;\n esac\ndone\nexec {} \"$@\"\n",
+        "#!/bin/sh\nfor arg do\n case \"$arg\" in\n fetch|pull|push|ls-remote) exec {} -c {} \"$@\" ;;\n esac\ndone\nexec {} \"$@\"\n",
         shell_quote(&git_binary.to_string_lossy()),
         shell_quote(&rewrite),
         shell_quote(&git_binary.to_string_lossy()),
@@ -5993,12 +5993,23 @@ fn fanout_d_public_land_rechecks_source_authority_index_and_policy() -> TestResu
                 ..RunOptions::default()
             },
         )?;
-        let deadline = agent_memory::clock::Deadline::after(Duration::from_secs(8))?;
+        let deadline = child.deadline()?;
         while !pause.join(format!("{stage}.ready")).exists() {
-            assert!(
-                !deadline.expired(),
-                "publication did not reach final review"
-            );
+            if deadline.expired() {
+                let outcome = child.wait();
+                let reached = pause.join(format!("{stage}.ready")).exists();
+                match outcome {
+                    Ok(output) => panic!(
+                        "publication did not reach final review within the deadline for {action}; ready after collection={reached}; status={:?}; stdout={}; stderr={}",
+                        output.status,
+                        String::from_utf8_lossy(&output.stdout),
+                        String::from_utf8_lossy(&output.stderr),
+                    ),
+                    Err(error) => panic!(
+                        "publication did not reach final review within the deadline for {action}; ready after collection={reached}; child collection failed: {error:?}"
+                    ),
+                }
+            }
             std::thread::sleep(Duration::from_millis(5));
         }
         match action {

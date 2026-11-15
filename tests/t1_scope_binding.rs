@@ -609,10 +609,10 @@ fn in_world(name: &str, body: impl FnOnce(&World)) {
             ));
             let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
                 || {
-                    Ok((
+                    Ok(Some((
                         Path::new(env!("CARGO_MANIFEST_DIR")).join("skills/agent-memory"),
                         PathBuf::from(env!("CARGO_BIN_EXE_am")),
-                    ))
+                    )))
                 },
             ));
             writes::register_recovery_frontier(Some(frontier.clone()));

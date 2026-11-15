@@ -541,7 +541,7 @@ fn fixture_commands_run_native_am_invocations_and_refuse_script_names() {
 }
 
 #[test]
-fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregistered_binding() {
+fn identity_fixture_creates_developer_and_verifies_binding() {
     let world = World::new().unwrap();
     let repo = world.repository("repo", false).unwrap();
     let runtime = support::installed_runtime::install(&world.root, |argv| {
@@ -560,10 +560,7 @@ fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregister
         Default::default(),
     )
     .unwrap();
-    // The template carries a placeholder; a fixture bank needs a real UUIDv4,
-    // as `support::admission` supplies for the same template.
-    *proposal.get_mut("project-id").unwrap() =
-        Value::String("75b38e17-c36e-4fab-8ba9-5fa51f25de91".into());
+    *proposal.get_mut("project-id").unwrap() = Value::String(agent_memory::host::uuid4().unwrap());
     let rendered = agent_memory::bank_contract::render(&proposal).unwrap();
     let bank = repo.join("memory-bank");
     for (path, body) in rendered.get("files").unwrap().as_object().unwrap() {
@@ -579,51 +576,9 @@ fn identity_fixture_creates_developer_and_verifies_or_clearly_refuses_unregister
         assert!(output.stderr.is_empty());
         json::decode_bytes(&output.stdout, Default::default()).unwrap()
     };
-    let apply = |domain: &str, proposal: &Value| {
-        let path = world.root.join("identity-proposal.json");
-        fs::write(&path, json::encode(proposal, json::DEFAULT).unwrap()).unwrap();
-        command(&[
-            OsStr::new(domain),
-            OsStr::new("apply"),
-            OsStr::new("--proposal"),
-            path.as_os_str(),
-        ])
-    };
-    let developer = command(&[
-        OsStr::new("developer"),
-        OsStr::new("preview"),
-        OsStr::new("--create"),
-        OsStr::new("--label"),
-        OsStr::new("Disposable test developer"),
-    ]);
-    apply("developer", &developer);
     for _ in 0..2 {
-        let current = command(&[
-            OsStr::new("identity"),
-            OsStr::new("status"),
-            OsStr::new("--repo"),
-            repo.as_os_str(),
-        ]);
-        if current.get("resolved").and_then(Value::as_bool) != Some(true) {
-            let proposal = command(&[
-                OsStr::new("identity"),
-                OsStr::new("preview"),
-                OsStr::new("--repo"),
-                repo.as_os_str(),
-                OsStr::new("--action"),
-                OsStr::new("bind"),
-                OsStr::new("--reason"),
-                OsStr::new("Explicit disposable fixture bank adoption"),
-            ]);
-            let receipt = apply("identity", &proposal);
-            assert_eq!(receipt.get("verified").and_then(Value::as_bool), Some(true));
-        }
-        let result = command(&[
-            OsStr::new("identity"),
-            OsStr::new("status"),
-            OsStr::new("--repo"),
-            repo.as_os_str(),
-        ]);
+        let result =
+            support::identity_fixtures::bind_with_command(&world, &repo, &runtime.command).unwrap();
         assert_eq!(result.get("resolved").and_then(Value::as_bool), Some(true));
     }
     let developer = command(&[

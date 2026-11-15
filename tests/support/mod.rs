@@ -35,11 +35,11 @@ pub fn with_frontier(name: &str, body: impl FnOnce()) {
             || {
                 let root = require_current_world()
                     .map_err(|error| ContractError::new(error.to_string()))?;
-                Ok((
+                Ok(Some((
                     agent_memory::fs::canonical_path(&root.join("data"), true)?,
                     std::env::current_exe()
                         .map_err(|error| ContractError::new(error.to_string()))?,
-                ))
+                )))
             },
         ));
         agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));

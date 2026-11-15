@@ -1405,7 +1405,7 @@ fn recover_fault(f: Fixture, w: &World, stage: &str, mode: &str) {
     assert_eq!(
         output.status,
         agent_memory::process::Status::Code(1),
-        "{}",
+        "mode={mode}, stage={stage}\n{}",
         String::from_utf8_lossy(&output.stdout)
     );
     let preview = r::recover(
@@ -1865,6 +1865,79 @@ fn public_purge_and_age_cannot_retire_pending_hold() {
             g(&applied, "pending_unit_ids")
         );
     });
+}
+
+#[test]
+fn native_pending_hold_refuses_missing_installed_receipt_without_changing_evidence() {
+    isolated(
+        "native_pending_hold_refuses_missing_installed_receipt_without_changing_evidence",
+        |w| {
+            let f = fixture(w, true);
+            let (_, proposal) = prepared(&f);
+            let applied = r::apply(&f.repo, &proposal, &f.runtime).unwrap();
+            assert_eq!(
+                g(&applied, "semantic_recovery_complete"),
+                &Value::Bool(false)
+            );
+            assert!(
+                !g(&applied, "pending_unit_ids")
+                    .as_array()
+                    .unwrap()
+                    .is_empty()
+            );
+            let (pack, binary) = agent_memory::installation::executing_runtime(
+                &agent_memory::installation::Environment::process(),
+                &f.command,
+            )
+            .unwrap();
+            let held =
+                agent_memory::recovery_frontier::verified_hold(&f.repo, None, None, &pack, &binary)
+                    .unwrap()
+                    .expect("Pending layout apply must establish a verified hold");
+            assert_eq!(fs::read(f.bank.join(r::MARKER)).unwrap(), held.marker());
+            let argv = [
+                f.command.clone().into_os_string(),
+                "--json".into(),
+                "inspect".into(),
+                "--repo".into(),
+                f.repo.clone().into_os_string(),
+            ];
+            let healthy = w.command(&argv, &[]);
+            assert_eq!(healthy.status, agent_memory::process::Status::Code(0));
+            let status = agent_memory::developer_identity::load(&healthy.stdout).unwrap();
+            assert_eq!(t(&status, "semantic_coverage"), "incomplete-recovery");
+            assert_eq!(
+                g(&status, "pending_recovery_unit_ids"),
+                g(&applied, "pending_unit_ids")
+            );
+
+            let receipt = PathBuf::from(std::env::var_os("AGENT_MEMORY_STATE_HOME").unwrap())
+                .join("install/receipt.json");
+            let mut retained = support::cutover::physical(&w.root);
+            let relative_receipt = receipt.strip_prefix(&w.root).unwrap().to_str().unwrap();
+            assert!(retained.remove(relative_receipt).is_some());
+            fs::remove_file(&receipt).unwrap();
+            let refused = w.command(&argv, &[]);
+            assert_eq!(
+                refused.status,
+                agent_memory::process::Status::Code(1),
+                "{refused:?}"
+            );
+            let refusal = agent_memory::developer_identity::load(&refused.stdout).unwrap();
+            assert_eq!(g(&refusal, "valid"), &Value::Bool(false));
+            assert_eq!(g(&refusal, "writes_performed"), &Value::Bool(false));
+            let reason = t(&refusal, "error");
+            assert!(
+                reason.contains("No installed")
+                    && reason.contains("receipt")
+                    && reason.contains("bootstrap"),
+                "{refusal:?}"
+            );
+            assert_eq!(support::cutover::physical(&w.root), retained);
+            assert!(!receipt.exists());
+            assert_eq!(fs::read(f.bank.join(r::MARKER)).unwrap(), held.marker());
+        },
+    );
 }
 
 #[test]

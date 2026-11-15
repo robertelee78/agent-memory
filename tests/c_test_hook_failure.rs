@@ -25,7 +25,7 @@ fn hook_driver() {
         ))
     }
     let frontier = std::sync::Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
-        channel_runtime,
+        || channel_runtime().map(Some),
     ));
     agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
     agent_memory::bank_contract::register_recovery_coverage(Some(frontier));

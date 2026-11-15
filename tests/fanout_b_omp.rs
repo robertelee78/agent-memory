@@ -67,7 +67,7 @@ fn register_providers(root: &Path) {
     }
     agent_memory::cli::register_providers().unwrap();
     let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
-        installed_pair,
+        || installed_pair().map(Some),
     ));
     agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
     agent_memory::bank_contract::register_recovery_coverage(Some(frontier));

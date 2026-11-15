@@ -353,7 +353,7 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     let frontier = Arc::new(crate::recovery_frontier::FrontierProvider::new(|| {
         let executable =
             std::env::current_exe().map_err(|error| ContractError::new(error.to_string()))?;
-        crate::installation::executing_runtime(
+        crate::installation::executing_runtime_if_installed(
             &crate::installation::Environment::process(),
             &executable,
         )

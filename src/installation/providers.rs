@@ -16,33 +16,38 @@ use crate::omp_installation::{
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-/// The current (Rust-era) installed receipt, if any.
-fn rust_receipt(env: &Environment) -> Result<(PathBuf, Value)> {
-    let state = locations(env)?.state;
-    let receipt = read_receipt(env, &state)?
-        .filter(receipt_is_rust_era)
-        .ok_or_else(|| {
-            ContractError::new(
-                "No installed Rust runtime receipt owns this executable; use the trusted bootstrap installer",
-            )
-        })?;
-    Ok((state, receipt))
-}
+const RUNTIME_RECEIPT_GUIDANCE: &str =
+    "No installed Rust runtime receipt owns this executable; use the trusted bootstrap installer";
 
 /// The executing pack and binary selected together from one installed v3 receipt.
 /// The executable is checked against that receipt, never used as a fallback.
 pub fn executing_runtime(env: &Environment, executable: &Path) -> Result<(PathBuf, PathBuf)> {
-    let (_, receipt) = rust_receipt(env)?;
+    executing_runtime_if_installed(env, executable)?
+        .ok_or_else(|| ContractError::new(RUNTIME_RECEIPT_GUIDANCE).into())
+}
+
+/// Resolve one current installed receipt, checking its selected executable.
+/// `None` means no receipt or a valid uninstalled receipt, as in `read_receipt`.
+/// Present invalid receipts, legacy receipts and executable mismatches are errors.
+pub fn executing_runtime_if_installed(
+    env: &Environment,
+    executable: &Path,
+) -> Result<Option<(PathBuf, PathBuf)>> {
+    let state = locations(env)?.state;
+    let Some(receipt) = read_receipt(env, &state)? else {
+        return Ok(None);
+    };
+    super::require(receipt_is_rust_era(&receipt), RUNTIME_RECEIPT_GUIDANCE)?;
     let source = get(&receipt, "source");
     let binary = source_binary(source)?;
     super::require(
         canonical(executable)? == canonical(&binary)?,
         "This executable is not the installed agent-memory runtime; use the trusted bootstrap installer",
     )?;
-    Ok((
+    Ok(Some((
         PathBuf::from(text(source, "pack").unwrap_or_default()),
         binary,
-    ))
+    )))
 }
 
 /// The installed pack of the running binary, from the same runtime authority.

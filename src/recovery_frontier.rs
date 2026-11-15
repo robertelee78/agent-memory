@@ -2450,17 +2450,40 @@ fn successor_token_units(
 }
 
 /// Runtime locations are injected by the composition root, never guessed from
-/// a source tree or accepted from a caller's JSON proof.
+/// a source tree or accepted from a caller's JSON proof. Only ordinary observation
+/// may use the canonical running executable directory for containment when there
+/// is no current installed receipt, including a validated uninstalled tombstone.
 pub struct FrontierProvider {
-    executing_runtime: fn() -> Result<(PathBuf, PathBuf)>,
+    executing_runtime: fn() -> Result<Option<(PathBuf, PathBuf)>>,
 }
 impl FrontierProvider {
-    pub fn new(executing_runtime: fn() -> Result<(PathBuf, PathBuf)>) -> Self {
+    pub fn new(executing_runtime: fn() -> Result<Option<(PathBuf, PathBuf)>>) -> Self {
         Self { executing_runtime }
     }
 
+    fn strict_runtime(&self) -> Result<(PathBuf, PathBuf)> {
+        (self.executing_runtime)()?.ok_or_else(|| {
+            err("No installed Rust runtime receipt owns this executable; use the trusted bootstrap installer")
+        })
+    }
+
+    fn observation_runtime(&self) -> Result<PathBuf> {
+        match (self.executing_runtime)()? {
+            Some((runtime, _)) => Ok(runtime),
+            None => {
+                // Containment only: this directory never supplies runtime identity.
+                let executable =
+                    crate::fs::canonical_path(&crate::host::current_executable()?, false)?;
+                executable
+                    .parent()
+                    .map(Path::to_path_buf)
+                    .ok_or_else(|| err("The running executable has no containment directory"))
+            }
+        }
+    }
+
     fn matching_runtime(&self, supplied: &Path) -> Result<(PathBuf, PathBuf)> {
-        let (runtime, binary) = (self.executing_runtime)()?;
+        let (runtime, binary) = self.strict_runtime()?;
         let runtime = crate::fs::canonical_path(&runtime, false)?;
         if crate::fs::canonical_path(supplied, false)? != runtime {
             return Err(err(
@@ -2469,37 +2492,13 @@ impl FrontierProvider {
         }
         Ok((runtime, binary))
     }
-
-    /// Containment boundary for ordinary no-hold observation. The baseline
-    /// bounds recovery state by the location of the executing code
-    /// (`layout_recovery_state.py:163-165`), reached from read paths such as
-    /// `bank_contract.validate:382`; it reads no runtime file or identity. An
-    /// installed receipt keeps its strict pack. With no receipt at all, the
-    /// directory containing the running executable is that location. Hold and
-    /// runtime-identity paths still resolve `executing_runtime` strictly.
-    fn observation_runtime(&self) -> Result<PathBuf> {
-        match (self.executing_runtime)() {
-            Ok((runtime, _)) => Ok(runtime),
-            Err(error) => {
-                if crate::installation::installed_receipt()?.is_some() {
-                    return Err(error);
-                }
-                let executable =
-                    crate::fs::canonical_path(&crate::host::current_executable()?, true)?;
-                executable
-                    .parent()
-                    .map(Path::to_path_buf)
-                    .ok_or_else(|| err("Cannot locate executing runtime"))
-            }
-        }
-    }
 }
 impl writes::RecoveryFrontier for FrontierProvider {
     fn runtime_pair(&self, runtime_root: &Path) -> Result<(PathBuf, PathBuf)> {
         self.matching_runtime(runtime_root)
     }
     fn capture_scope(&self, repo: &Path) -> Result<Value> {
-        let (runtime, binary) = (self.executing_runtime)()?;
+        let (runtime, binary) = self.strict_runtime()?;
         capture_scope(repo, &runtime, &binary)
     }
     fn observe(&self, repo: &Path) -> Result<Value> {
@@ -2525,7 +2524,7 @@ impl writes::RecoveryFrontier for FrontierProvider {
         require_complete(repo, owner, transaction, &runtime)
     }
     fn verified_hold(&self, repo: &Path, owner: Option<&[u8]>) -> Result<Vec<u8>> {
-        let (runtime, binary) = (self.executing_runtime)()?;
+        let (runtime, binary) = self.strict_runtime()?;
         verified_hold(repo, owner, None, &runtime, &binary)?
             .map(|held| held.marker().to_vec())
             .ok_or_else(|| err("Recovery hold is absent"))
@@ -2565,7 +2564,7 @@ impl writes::RecoveryFrontier for FrontierProvider {
                 ));
             }
         };
-        let (runtime, binary) = (self.executing_runtime)()?;
+        let (runtime, binary) = self.strict_runtime()?;
         require_scope(
             repo,
             project,
@@ -2672,7 +2671,7 @@ impl writes::RecoveryFrontier for FrontierProvider {
         marker_value(raw)
     }
     fn invalidate(&self, repo: &Path) -> Result<String> {
-        let (runtime, _) = (self.executing_runtime)()?;
+        let (runtime, _) = self.strict_runtime()?;
         invalidate(repo, &runtime)
     }
     fn range_value(&self, value: &Value) -> Result<()> {

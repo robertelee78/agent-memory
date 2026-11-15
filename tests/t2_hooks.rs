@@ -1439,7 +1439,7 @@ const source={type:'user',id:'msg_original',text:'Explain the fixture value with
 const prompt={messageID:source.id,sessionID:'ses_original'};await hooks.prompt(prompt);source.metadata=prompt.metadata;
 const firstBacklog=JSON.parse((await tools.pending_sources({}, {sessionID:'ses_original'})).content);
 if(firstBacklog.pending_count!==1||firstBacklog.sources[0].session_id!=='ses_original'||firstBacklog.sources[0].source_id!==source.id||queues.length!==0)throw Error('source not enrolled before context');
-await hooks.context({sessionID:'ses_original',messages:[{id:source.id}]});await hooks.context({sessionID:'ses_original',messages:[{id:source.id}]});
+await hooks.context({sessionID:'ses_original',messages:[{id:source.id}],system:[]});await hooks.context({sessionID:'ses_original',messages:[{id:source.id}],system:[]});
 if(queues.length!==1||Buffer.byteLength(queues[0].text)>2048||!queues[0].text.includes('Preserve the substantive task answer'))throw Error('unbounded or duplicate queue');
 const rows=sessions.get('ses_original');rows.push({type:'assistant',id:'answer',text:'The fixture value is seven.',finish:'stop',time:{completed:1}},
  {type:'synthetic',id:queues[0].id,text:queues[0].text,metadata:queues[0].metadata},{type:'assistant',id:'continuation'});
@@ -1457,7 +1457,7 @@ if(missing.status!=='pending')throw Error('interrupted source falsely complete')
 rows.push({type:'assistant',id:'resumed-answer',text:'The fixture is temporary.',finish:'stop',time:{completed:2}});
 const recovered=JSON.parse((await tools.source_ack({source_id:interrupted.id,recover:true,source_session_id:'ses_original',diagnostic:true,outcome:'no-learning',assessment:{source_id:interrupted.id,source_review:'Recovered original native source and resumed answer; no durable claim.',candidates:[]}}, {sessionID:'ses_later',messageID:'later-assistant'})).content);
 if(!recovered.verified||!recovered.assessment_verified||recovered.session_id!=='ses_original'||recovered.source_id!==interrupted.id)throw Error('source reassigned');
-await hooks.context({sessionID:'ses_original',messages:[{id:interrupted.id}]});
+await hooks.context({sessionID:'ses_original',messages:[{id:interrupted.id}],system:[]});
 if(queues.length!==1)throw Error('completed source requeued');
 dispose();process.stdout.write(JSON.stringify({firstBacklog,ack,backlog,missing,recovered,queues:queues.length,bytes:Buffer.byteLength(queues[0].text)}));
 "#;

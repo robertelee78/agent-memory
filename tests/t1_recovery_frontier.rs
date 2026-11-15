@@ -1153,6 +1153,7 @@ fn ordinary_hold_adapters_require_the_executing_pair_before_observation() {
                     &agent_memory::installation::Environment::process(),
                     &root.join("home/.local/bin/am"),
                 )
+                .map(Some)
                 .map_err(|error| ContractError::new(error.to_string()))
             });
             let retained = [
