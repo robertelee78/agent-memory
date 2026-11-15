@@ -1,0 +1,8 @@
+{
+  "title": "Release builds need rust-lld for musl targets",
+  "body": "Cross-building the Linux musl binaries on macOS fails with the platform linker. Set CARGO_TARGET_<TRIPLE>_LINKER=rust-lld; the toolchain ships it.",
+  "kind": "fix",
+  "evidence": ["docs/releasing.md", "CI run 1234"],
+  "read_when": "When cross-building release binaries",
+  "reason": "User confirmed the fix after the build passed"
+}

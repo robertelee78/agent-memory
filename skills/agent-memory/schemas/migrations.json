@@ -1,7 +1,0 @@
-{
-  "schema": "agent-memory/migration-catalog-v2",
-  "codecs": [
-    {"schema": "agent-memory/v1", "validator": {"codec": "native"}}
-  ],
-  "steps": []
-}

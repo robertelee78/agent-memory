@@ -1,0 +1,3 @@
+<!-- agent-memory:activation:begin -->
+When the repository has memory-bank/MEMORY.md, load the agent-memory skill: run `am recall QUERY` before relying on assumptions, and when a fix is confirmed, a decision is made or a task is done, suggest a short memory, ask the user, then `am remember`.
+<!-- agent-memory:activation:end -->

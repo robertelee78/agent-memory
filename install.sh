@@ -8,7 +8,7 @@ if :; then
 set -eu
 
 # Release constants. Nothing in the environment or on the command line can
-# change them; the contract tests substitute these lines in a private copy.
+# change them.
 AM_RELEASE_BASE='https://github.com/robertelee78/agent-memory/releases/latest/download/'
 AM_PROTOCOLS='=https'
 AM_ALLOWED_SIGNERS='release@agent-memory namespaces="agent-memory.release,agent-memory.release-binary" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB+C//uSRKmScS5hTki796yvLR2oOSn2IKHLkr1RWE2y'
@@ -39,10 +39,9 @@ am_refuse() {
 
 am_help() {
   printf '%s\n' \
-    'Install Agent Memory: install.sh [--check|--dry-run] [--json] [--verbose] [--mode link|copy] [--presets all|none|CLIENTS]' \
+    'Install Agent Memory: install.sh [--dry-run] [--mode link|copy] [--presets all|none|CLIENTS]' \
     'Custom discovery: --target-dir PATH, --bin-dir PATH, --no-guidance' \
-    'Native omp (excluded from all): --presets omp --omp-agent-dir ABSOLUTE_ROOT --omp-peers-upgraded' \
-    'Quiescence gates: --layout-quiescence VALUE, --omp-layout-quiescence VALUE' \
+    'Native omp (excluded from all): --presets omp --omp-agent-dir ABSOLUTE_ROOT' \
     'Explicit source: --development-source PATH (a checkout with a prebuilt target/release/am)' \
     'Bootstrap: downloads the signed am binary for this host, verifies it with ssh-keygen, then runs am install.' \
     'Requires curl and ssh-keygen. Hosts: aarch64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.' \
@@ -51,25 +50,20 @@ am_help() {
 
 # Syntax check of the options `am install` accepts, so a typo needs no download.
 am_validate() {
-  am_development=no
-  am_channel=no
   while [ "$#" -gt 0 ]; do
     am_word=$1
     case $am_word in
-      --remote=*|--ref=*|--development-source=*|--mode=*|--presets=*|--target-dir=*|--bin-dir=*|--omp-agent-dir=*|--omp-layout-quiescence=*|--layout-quiescence=*)
-        am_option=${am_word%%=*}
+      --development-source=*|--mode=*|--presets=*|--target-dir=*|--bin-dir=*|--omp-agent-dir=*)
         am_value=${am_word#*=}
         ;;
-      --remote|--ref|--development-source|--mode|--presets|--target-dir|--bin-dir|--omp-agent-dir|--omp-layout-quiescence|--layout-quiescence)
+      --development-source|--mode|--presets|--target-dir|--bin-dir|--omp-agent-dir)
         if [ "$#" -lt 2 ]; then
           am_refuse usage missing-value 2 'An option needs a value. Run install.sh --help.'
         fi
-        am_option=$am_word
         shift
         am_value=$1
         ;;
-      --check|--dry-run|--no-guidance|--json|--verbose|-v|--omp-peers-upgraded)
-        am_option=$am_word
+      --check|--dry-run|--no-guidance)
         am_value=flag
         ;;
       *)
@@ -81,15 +75,8 @@ am_validate() {
         am_refuse usage missing-value 2 'An option needs a value. Run install.sh --help.'
         ;;
     esac
-    case $am_option in
-      --development-source) am_development=yes ;;
-      --remote|--ref) am_channel=yes ;;
-    esac
     shift
   done
-  if [ "$am_development" = yes ] && [ "$am_channel" = yes ]; then
-    am_refuse usage conflicting-sources 2 'Choose development source or managed remote/ref, not both.'
-  fi
 }
 
 am_detect() {

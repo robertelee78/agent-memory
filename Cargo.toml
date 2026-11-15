@@ -2,7 +2,7 @@
 name = "agent-memory"
 version = "0.0.15"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.89"
 description = "Repository-owned Markdown memory for coding agents"
 repository = "https://github.com/robertelee78/agent-memory"
 publish = false
@@ -24,34 +24,8 @@ path = "src/bin/am_dev/main.rs"
 required-features = ["dev-tools"]
 
 [dependencies]
-libc = "0.2"
-sha1 = "=0.11.0"
 sha2 = "0.11"
-unicode-normalization = { version = "0.1", default-features = false }
 flate2 = { version = "=1.1.11", default-features = false, features = ["rust_backend"] }
-regex = { version = "=1.12.2", default-features = false, features = ["std", "perf"] }
-
-# Dev/test builds carry no debug info: even line tables push the Linux musl
-# debug `am` past release_distribution::MAX_BINARY (64 MiB), which the
-# installer and updater tests apply to the real binary. Panic messages keep
-# their file:line (std::panic::Location does not need debug info).
-#
-# Tests exercise real-time contracts (950 ms stop callbacks, 10 s rendezvous,
-# 120 s child bounds) against the real `am`, so dev/test code is optimised
-# (debug assertions and overflow checks stay on); the hash and compression
-# crates get full optimisation because `am` hashes its own runtime image.
-[profile.dev]
-debug = false
-opt-level = 1
-
-[profile.dev.package.sha2]
-opt-level = 3
-[profile.dev.package.sha1]
-opt-level = 3
-[profile.dev.package.flate2]
-opt-level = 3
-[profile.dev.package.miniz_oxide]
-opt-level = 3
 
 [profile.release]
 panic = "abort"

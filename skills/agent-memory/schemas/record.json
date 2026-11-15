@@ -405,7 +405,7 @@
       }
     }
   ],
-  "x-local-invariants": "The Rust record contract (src/records.rs, am record-contract) additionally checks canonical UUIDv4, exact RFC3339 ordering, path scopes, version links and conditional unmerged observations",
+  "x-local-invariants": "am doctor checks the required fields, kind, status, evidence, unique ids, the bank project-id and that active notes are linked from MEMORY.md",
   "x-policy-fields": [
     "confidence",
     "admission-reason",

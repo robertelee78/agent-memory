@@ -1,6 +1,0 @@
-# Registration points the am binary does not call yet, and the module(s)
-# whose port they wait for. tests/wiring.rs fails when a registration point
-# is neither called in src/cli/mod.rs register_providers nor listed here,
-# and when every module a line waits for exists (then it must be wired).
-# Format: <module>::<register_fn> waits for <module>[, <module>...]
-#     or: <module>::<register_fn> blocked by <reason>   (an API gap, not a missing module)
