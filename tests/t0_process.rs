@@ -1345,6 +1345,27 @@ fn run_for_retains_read_fault_bytes_and_kill_reap_evidence() {
 }
 
 #[test]
+fn closed_output_short_child_does_not_wait_for_the_exit_poll_cap() {
+    let dir = PrivateDir::new();
+    let args = argv(&[
+        "/bin/sh",
+        "-c",
+        "exec 1>&- 2>&-; exec /bin/sleep 0.02",
+    ]);
+    let requests = [spec(&args, &dir.0)];
+    let mut group = Group::launch(&requests, Duration::from_secs(1)).unwrap();
+    // A fixed poll at this cap would miss the unchanged launch deadline.
+    group
+        .set_exit_poll_interval(Duration::from_secs(5))
+        .unwrap();
+    let output = group.value(0).unwrap();
+    assert_eq!(output.status, Status::Code(0));
+    assert!(output.stdout.is_empty() && output.stderr.is_empty());
+    assert_gone_and_reaped(output.pid);
+    group.finish().unwrap();
+}
+
+#[test]
 fn group_refuses_an_exit_first_observed_after_its_interval_deadline() {
     let dir = PrivateDir::new();
     let args = [

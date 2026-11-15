@@ -1430,6 +1430,7 @@ fn spawn<'a>(spec: &Spec<'a>, timing: Timing) -> std::result::Result<Active<'a>,
         out: Vec::new(),
         err: Vec::new(),
         poll_wakeups: 0,
+        exit_poll_delay: Duration::from_nanos(REAP_FIRST_PAUSE_NS * 2),
         stdout_limit: match spec.stdout {
             Target::Capture { limit } => limit,
             _ => 0,
@@ -1487,6 +1488,7 @@ struct Active<'a> {
     // Launch-relative queries refuse completion first observed at the deadline.
     interval_deadline: bool,
     poll_wakeups: u64,
+    exit_poll_delay: Duration,
 }
 
 impl Active<'_> {
@@ -1568,6 +1570,17 @@ impl Active<'_> {
         if self.sent == self.payload.len() {
             close_pipe(self.input.take())
                 .map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+        }
+        // EOF can arrive between the first waitpid observation and draining.
+        // Reap again before sleeping with no output descriptors left to wake us.
+        if self.stdout.is_none() && self.stderr.is_none() && self.owner.status.is_none() {
+            let observed_ns = self
+                .owner
+                .observe()
+                .map_err(|error| (Refusal::Infrastructure, Some(error)))?;
+            if self.interval_deadline && observed_ns >= self.deadline.as_ns() {
+                return Err((Refusal::Deadline, None));
+            }
         }
         if self.interval_deadline && self.deadline.expired() {
             return Err((Refusal::Deadline, None));
@@ -1907,7 +1920,13 @@ impl<'a> Group<'a> {
                     && active.stderr.is_none()
                     && active.owner.status.is_none()
                 {
-                    remaining = remaining.min(self.exit_poll_interval);
+                    // Popen.wait(timeout) doubles its initial 0.5ms before
+                    // sleeping, up to a 50ms cap; don't start at the cap.
+                    remaining = remaining.min(active.exit_poll_delay.min(self.exit_poll_interval));
+                    active.exit_poll_delay = active
+                        .exit_poll_delay
+                        .saturating_mul(2)
+                        .min(self.exit_poll_interval);
                 }
                 active.poll_wakeups = active.poll_wakeups.saturating_add(1);
                 for fd in active.fds() {
@@ -2222,6 +2241,7 @@ impl Active<'_> {
             deadline: self.deadline,
             interval_deadline: self.interval_deadline,
             poll_wakeups: self.poll_wakeups,
+            exit_poll_delay: self.exit_poll_delay,
         }
     }
 }
