@@ -148,14 +148,18 @@ const ROWS: &str = "<!-- am: routes -->";
 fn router_skeleton(text: &str) -> String {
     let mut out = String::new();
     let mut marked = false;
-    for line in text.split_inclusive('\n') {
+    let mut in_front = false;
+    for (index, line) in text.split_inclusive('\n').enumerate() {
+        if line.trim_end() == "---" {
+            in_front = index == 0; // Opens on the first line, closes on the next.
+        }
         if bank::parse_route(line).is_some() {
             if !marked {
                 out.push_str(ROWS);
                 out.push('\n');
                 marked = true;
             }
-        } else if line.starts_with("router-updated:") {
+        } else if in_front && line.starts_with("router-updated:") {
             out.push_str("router-updated: \"\"\n");
         } else {
             out.push_str(line);
@@ -511,6 +515,31 @@ fn record_shared(repo: &Repo, commit: &str) -> Result<()> {
     Ok(())
 }
 
+/// Stage `commit`'s bank under the bank lock, unless the index holds the
+/// only copy of something the user staged (checked right before the reset).
+/// Returns those protected paths; empty means staged.
+fn stage_shared(repo: &Repo, commit: &str, known: &[&str]) -> Result<Vec<String>> {
+    let _lock = lock_bank(repo)?;
+    let mut recent = known.to_vec();
+    recent.push(commit);
+    let lost = staged_only(repo, "share", &recent).unwrap_or_else(|e| vec![e.0]);
+    if lost.is_empty() {
+        record_shared(repo, commit)?;
+    }
+    // Otherwise the recorded base stays as it is, matching what is staged.
+    Ok(lost)
+}
+
+fn protected_note(lost: &[String]) -> String {
+    if lost.is_empty() {
+        return String::new();
+    }
+    format!(
+        " The shared memory was not staged, to keep the changes you staged meanwhile: {}.",
+        lost.join(", ")
+    )
+}
+
 fn conflict_help(conflicts: &[String]) -> String {
     format!(
         "Your memory and the shared memory both changed: {}. Edit the marked sections (<<<<<<< yours … >>>>>>> shared), then run am share again.",
@@ -633,11 +662,12 @@ pub fn share(message: Option<&str>) -> Result<String> {
             format!("\n{}", kept_note(&merged.kept_rows))
         };
         let Some(commit) = snapshot else {
+            let mut kept = String::new();
             if let Some(theirs) = theirs.filter(|t| shared.base.as_deref() != Some(*t)) {
-                record_shared(&repo, theirs)?;
+                kept = protected_note(&stage_shared(&repo, theirs, &known)?);
             }
             return Ok(format!(
-                "Nothing new to share; origin/{branch} has all of this memory.{notes}"
+                "Nothing new to share; origin/{branch} has all of this memory.{kept}{notes}"
             ));
         };
         let pushed = repo.git(&[
@@ -649,22 +679,14 @@ pub fn share(message: Option<&str>) -> Result<String> {
         ])?;
         let short = &commit[..commit.len().min(10)];
         if pushed.ok() {
-            // Re-check under the lock right before staging: the user may
-            // have staged memory while the push ran.
-            let _lock = lock_bank(&repo)?;
-            let mut recent = known.clone();
-            recent.push(&commit);
-            let lost = staged_only(&repo, "share", &recent).unwrap_or_else(|e| vec![e.0]);
-            if lost.is_empty() {
-                record_shared(&repo, &commit)?;
-                return Ok(format!(
-                    "Shared memory to origin/{branch} (commit {short}).\n{STAGED}{notes}"
-                ));
-            }
-            // The recorded base stays as it is, matching what is staged.
+            let lost = stage_shared(&repo, &commit, &known)?;
+            let staged = if lost.is_empty() {
+                format!("\n{STAGED}")
+            } else {
+                protected_note(&lost)
+            };
             return Ok(format!(
-                "Shared memory to origin/{branch} (commit {short}). It was not staged, to keep the changes you staged meanwhile: {}.{notes}",
-                lost.join(", ")
+                "Shared memory to origin/{branch} (commit {short}).{staged}{notes}"
             ));
         }
         let error = format!("{}\n{}", pushed.text(), pushed.error_text());

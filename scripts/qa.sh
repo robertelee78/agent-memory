@@ -40,7 +40,16 @@ mkdir -p "$state"
 cp "$src/skills/agent-memory/templates/activation-markdown.txt" "$HOME/.claude/CLAUDE.md"
 stale="$HOME/.claude/.CLAUDE.md.am-0b6c1d2e-3f40-4a51-8b62-7c83d94ea5f6"
 touch "$stale"
-printf 'temp\t%s\ncreated\t%s\n' "$stale" "$HOME/.claude/CLAUDE.md" > "$state/leftovers"
+# A runtime directory the killed run had moved aside, which install must put
+# back first; and a recorded entry that is not am's (a user's file outside any
+# target directory), which am must leave alone and doctor must report.
+data="$HOME/.local/share/agent-memory"
+aside="$data/.runtime.am-old-2d8e3f40-5162-4c73-8d84-9ea5fb607182"
+mkdir -p "$aside" && printf 'previous runtime\n' > "$aside/marker"
+mkdir -p "$HOME/notes"
+foreign="$HOME/notes/.todo.md.am-3e9f4051-6273-4d84-9e95-af6b07182930"
+printf 'my todo draft\n' > "$foreign"
+printf 'temp\t%s\ncreated\t%s\naside\t%s\t%s\ntemp\t%s\n' "$stale" "$HOME/.claude/CLAUDE.md" "$data/runtime" "$aside" "$foreign" > "$state/leftovers"
 # A user's file that merely looks like an am temporary: never am's to delete.
 lookalike="$HOME/.claude/.settings.json.am-1c7d2e3f-4051-4b62-9c73-8d94ea5fb607"
 printf '{"my": "recovery backup"}\n' > "$lookalike"
@@ -98,6 +107,9 @@ expect "skill linked for Claude" test -f "$HOME/.claude/skills/agent-memory/SKIL
 expect "recorded interrupted-install temporary removed" test ! -e "$stale"
 expect "look-alike user file survives install" grep -q 'recovery backup' "$lookalike"
 expect "doctor mentions the look-alike" sh -c "am doctor | grep -q 'looks like an am temporary'"
+expect "moved-aside runtime put back before install" grep -q 'previous runtime' "$data/runtime/marker"
+expect "unrecognized recorded entry left alone" grep -q 'my todo draft' "$foreign"
+expect "doctor lists the entry am did not act on" sh -c "am doctor | grep -q '.todo.md.am-'"
 step "help (subcommand)" "$work" am remember --help
 expect "am install -h prints its usage" sh -c "am install -h | grep -q 'Usage: am install'"
 
@@ -200,7 +212,7 @@ expect "pre-existing empty-ish codex hooks.json kept" sh -c "grep -q permissions
 expect "pre-existing whitespace-only AGENTS.md kept" test -e "$HOME/.config/opencode/AGENTS.md"
 expect "omp extension removed" test ! -e "$HOME/.omp/agent/extensions/agent-memory.ts"
 expect "look-alike user file survives uninstall" grep -q 'recovery backup' "$lookalike"
-expect "no other am temporaries left" sh -c "test \"\$(find '$HOME' -name '.*.am-*')\" = '$lookalike'"
+expect "no am temporaries left (the user's two look-alikes stay)" sh -c "test -z \"\$(find '$HOME' -name '.*.am-*' ! -path '$lookalike' ! -path '$foreign')\" && test -e '$foreign'"
 expect "banks untouched" test -f "$work/a/memory-bank/MEMORY.md"
 
 # --------------------------------------------------------------- v0.0.14 takeover

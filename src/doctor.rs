@@ -120,8 +120,21 @@ fn installation(report: &mut Report, deep: bool) {
                 ));
             }
         }
-        if locations.state.join("leftovers").exists() {
-            report.line("  note: an interrupted install or uninstall left work to finish; the next `am install` completes it");
+        if locations.state.join("leftovers").symlink_metadata().is_ok() {
+            report.line(format!(
+                "  note: {} records an interrupted install or uninstall; the next `am install` finishes it (if it is not a regular file you own, am will not use it: inspect and remove it)",
+                locations.state.join("leftovers").display()
+            ));
+        }
+        let unrecognized = locations.state.join(install::UNRECOGNIZED);
+        if let Ok(text) = std::fs::read_to_string(&unrecognized) {
+            report.line(format!(
+                "  note: am did not act on these recorded entries because they do not look like its own; inspect them, then delete {}:",
+                unrecognized.display()
+            ));
+            for line in text.lines() {
+                report.line(format!("    {}", line.replace('\t', " ")));
+            }
         }
     }
     let binary = source.and_then(|s| s.str("binary")).unwrap_or("");

@@ -1,19 +1,19 @@
 # v0.0.15 lean `am` — rebuild report
 
 Branch `lean/v0.0.15`, built against [docs/design/v0.0.15-lean.md](docs/design/v0.0.15-lean.md).
-The first build and review batches 1–2 are committed (1cf10b44); batch 3 below is not.
+Committed through review batch 3 (29e32aea); batch 4 below is not.
 
 ## Line count (product)
 
 | | Before | After |
 | --- | ---: | ---: |
-| Rust `src/` (am + am-dev) | 133,453 | **5,834** |
+| Rust `src/` (am + am-dev) | 133,453 | **5,984** |
 | `tests/` | 189,253 (209 files) | 0 |
 | Skill pack `skills/agent-memory/` | 9,285 (71 files) | 648 (14 files) |
 | `install.sh` | 369 | 356 |
 
-Rust by file: `install/mod.rs` 1,503 · `install/release.rs` 782 · `share.rs` 782 ·
-`bank.rs` 456 · `json.rs` 451 · `memory.rs` 404 · `main.rs` 321 · `doctor.rs` 310 ·
+Rust by file: `install/mod.rs` 1,618 · `share.rs` 804 · `install/release.rs` 782 ·
+`bank.rs` 456 · `json.rs` 451 · `memory.rs` 404 · `doctor.rs` 323 · `main.rs` 321 ·
 `util.rs` 298 · `repo.rs` 194 · `hook.rs` 74 · `lib.rs` 10 · `bin/am_dev/main.rs` 249.
 Dependencies: `sha2`, `flate2`, `libc` (only `geteuid` for the temp-dir check;
 already in the lockfile through `sha2`). Dropped `sha1`, `regex`, `unicode-normalization`.
@@ -37,8 +37,8 @@ already in the lockfile through `sha2`). Dropped `sha1`, `regex`, `unicode-norma
 ## User smoke test (macOS arm64, temp HOME)
 
 `scripts/qa.sh <worktree>` (new, kept in the repo) drives the real binary. Final
-run after review batch 3: **0 failures, 40 steps (36 `am`, 4 plain git; 2 are
-expected refusals) + 46 checks**. Timings below are from the batch-2 run; the
+run after review batch 4: **0 failures, 40 steps (36 `am`, 4 plain git; 2 are
+expected refusals) + 49 checks**. Timings below are from the batch-2 run; the
 batch-3 run matched them (share 124–156 ms, refresh 73–135 ms, install 74 ms,
 `install --dry-run` 128 ms, uninstall 28 ms, takeover 28 ms).
 
@@ -154,7 +154,7 @@ is exercised only on the signed-release path (downloads and signature checks),
 which dev-source QA does not reach; macOS `$TMPDIR` and `/tmp` both pass the rule
 (checked with `stat -L`).
 
-## Review fixes, batch 3 (not committed)
+## Review fixes, batch 3 (committed in 29e32aea)
 
 1. **Leftovers only by proof.** The name-pattern sweep is gone. Before creating a
    temporary, moving a directory aside or creating a file, install/uninstall
@@ -198,6 +198,34 @@ which dev-source QA does not reach; macOS `$TMPDIR` and `/tmp` both pass the rul
 
 All six were small changes. Item 1 uses the small journal file the review
 suggested, because a temporary's content cannot prove it is ours.
+
+## Review fixes, batch 4 (not committed)
+
+1. **Leftovers record validated.** am acts on the record only if it is a regular
+   file owned by the user; otherwise it does nothing with it, install refuses
+   with a plain message, and doctor points at it. Each entry is checked before it
+   is acted on: a `temp` must have the generated `.<target>.am-<uuid>` name, be a
+   regular file, and sit beside a known target of this install/uninstall (links
+   resolved) or in am's state directory; a `created` must be a known target; an
+   `aside` must be a generated `.<name>.am-old-<uuid>` directory beside its
+   original inside am's data or state parent. Anything else is left alone and
+   appended to `leftovers.unrecognized`, which doctor lists for the user to inspect.
+   QA: a recorded user file outside every target directory survives install and
+   uninstall and doctor lists it.
+2. **`created` recorded after the write.** A crash between the write and the note
+   leaves the file unrecorded, so it is treated as the user's.
+3. **One locked staging helper.** `stage_shared` takes the bank lock, re-runs the
+   staged-only check and resets the index only if nothing would be lost; both the
+   after-push path and the nothing-new path use it, and both say so when staging
+   is skipped. (The nothing-new race was checked by reading the code; the push
+   path's ad-hoc test from batch 3 still holds.)
+4. **Moved-aside targets recovered first.** `install`, `update` and `uninstall`
+   (not dry-run, not `update --check`) restore or drop recorded asides under the
+   install lock before reading the source or preflighting targets. QA: a
+   recorded `.runtime.am-old-<uuid>` is back at `runtime/` after install.
+5. **Router time blanked only in the frontmatter.** A `router-updated:` line in
+   the body merges as ordinary text (checked ad hoc: a body line of that form
+   reached the other clone intact).
 
 ### Additional runs (ad hoc, temp HOME, fixtures removed afterwards)
 

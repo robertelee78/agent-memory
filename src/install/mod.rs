@@ -612,36 +612,123 @@ fn no_content(value: &Value) -> bool {
 /// The file listing what an install/uninstall in progress created, so a
 /// killed run's leftovers are cleaned up by proof, never by name pattern.
 const LEFTOVERS: &str = "leftovers";
+/// Recorded entries am would not act on; kept for the user, shown by doctor.
+pub const UNRECOGNIZED: &str = "leftovers.unrecognized";
 
-/// Finish what a killed run recorded: remove its temporary files, put
-/// moved-aside directories back (or drop them once replaced), and return
-/// the files it created (they count as created by this install).
-fn recover_leftovers(state: &Path) -> BTreeSet<PathBuf> {
+/// The record's text, only when it is a regular file owned by this user.
+fn trusted_record(state: &Path) -> Option<String> {
+    use std::os::unix::fs::MetadataExt;
+    let path = state.join(LEFTOVERS);
+    let meta = path.symlink_metadata().ok()?;
+    // SAFETY: geteuid has no preconditions and cannot fail.
+    if !meta.is_file() || meta.uid() != unsafe { libc::geteuid() } {
+        return None;
+    }
+    std::fs::read_to_string(&path).ok()
+}
+
+/// Is `name` the generated `.<target>.am-<infix><uuid>` form? Returns `<target>`.
+fn generated_name<'a>(name: &'a str, infix: &str) -> Option<&'a str> {
+    let rest = name.strip_prefix('.')?;
+    let (target, uuid) = rest.rsplit_once(&format!(".am-{infix}"))?;
+    (!target.is_empty() && crate::util::is_uuid(uuid)).then_some(target)
+}
+
+/// Step 1, before anything else reads the targets: put back directories a
+/// killed run moved aside (or drop them once replaced). Only am's own
+/// `.<name>.am-old-<uuid>` siblings inside its data or state parent count.
+fn recover_asides(locations: &Locations) -> Result<()> {
+    let Some(text) = trusted_record(&locations.state) else {
+        return Ok(());
+    };
+    let own: Vec<&Path> = [Some(locations.data.as_path()), locations.state.parent()]
+        .into_iter()
+        .flatten()
+        .collect();
+    let mut kept = String::new();
+    for line in text.lines() {
+        let fields: Vec<&str> = line.split('\t').collect();
+        let ours = match fields.as_slice() {
+            ["aside", original, aside] => {
+                let (original, aside) = (Path::new(original), Path::new(aside));
+                let name = aside.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                aside.parent() == original.parent()
+                    && aside.parent().is_some_and(|p| own.contains(&p))
+                    && generated_name(name, "old-")
+                        .is_some_and(|t| original.file_name().and_then(|n| n.to_str()) == Some(t))
+                    && aside.symlink_metadata().is_ok_and(|m| m.is_dir())
+            }
+            _ => false,
+        };
+        if !ours {
+            kept.push_str(line);
+            kept.push('\n');
+            continue;
+        }
+        let (original, aside) = (fields[1], fields[2]);
+        let _ = if Path::new(original).symlink_metadata().is_ok() {
+            std::fs::remove_dir_all(aside)
+        } else {
+            std::fs::rename(aside, original)
+        };
+    }
+    if kept.len() != text.len() {
+        write_atomic(&locations.state.join(LEFTOVERS), kept.as_bytes(), 0o600)?;
+    }
+    Ok(())
+}
+
+/// Step 2, with the plan's targets known: remove recorded temporaries that
+/// are am's own (generated name, beside a known target or in am's own
+/// directories), and return recorded created files that are known targets.
+/// Entries that do not look like ours are kept aside for doctor.
+fn recover_leftovers(state: &Path, targets: &[PathBuf]) -> BTreeSet<PathBuf> {
     let mut created = BTreeSet::new();
-    let record = state.join(LEFTOVERS);
-    let text = std::fs::read_to_string(&record).unwrap_or_default();
+    let Some(text) = trusted_record(state) else {
+        return created; // Absent, or not ours to trust: left for doctor.
+    };
+    let mut known: BTreeSet<PathBuf> = BTreeSet::new();
+    for target in targets {
+        known.insert(target.clone());
+        if let Ok(resolved) = target.canonicalize() {
+            known.insert(resolved); // Linked configs are written at the target.
+        }
+    }
+    let own: Vec<&Path> = [Some(state), state.parent()]
+        .into_iter()
+        .flatten()
+        .collect();
+    let mut unrecognized = String::new();
     for line in text.lines() {
         let fields: Vec<&str> = line.split('\t').collect();
         match fields.as_slice() {
             ["temp", temp] => {
-                if Path::new(temp)
-                    .symlink_metadata()
-                    .is_ok_and(|m| m.is_file())
-                {
+                let temp = Path::new(temp);
+                let name = temp.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                let ours = match (temp.parent(), generated_name(name, "")) {
+                    (Some(dir), Some(target)) => {
+                        known.contains(&dir.join(target)) || own.contains(&dir)
+                    }
+                    _ => false,
+                };
+                if ours && temp.symlink_metadata().is_ok_and(|m| m.is_file()) {
                     let _ = std::fs::remove_file(temp);
+                } else if ours {
+                    // Already gone: nothing to do.
+                } else {
+                    unrecognized.push_str(line);
+                    unrecognized.push('\n');
                 }
             }
-            ["aside", original, aside] if Path::new(aside).is_dir() => {
-                let _ = if Path::new(original).symlink_metadata().is_ok() {
-                    std::fs::remove_dir_all(aside)
-                } else {
-                    std::fs::rename(aside, original)
-                };
+            ["created", path] if known.contains(Path::new(path)) => {
+                if Path::new(path).exists() {
+                    created.insert(PathBuf::from(path));
+                }
             }
-            ["created", path] if Path::new(path).exists() => {
-                created.insert(PathBuf::from(path));
+            _ => {
+                unrecognized.push_str(line);
+                unrecognized.push('\n');
             }
-            _ => {}
         }
     }
     // The receipt's own temporary lives in am's state directory.
@@ -654,7 +741,15 @@ fn recover_leftovers(state: &Path) -> BTreeSet<PathBuf> {
             let _ = std::fs::remove_file(entry.path());
         }
     }
-    let _ = std::fs::remove_file(&record);
+    if !unrecognized.is_empty() {
+        use std::io::Write;
+        let _ = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(state.join(UNRECOGNIZED))
+            .and_then(|mut f| f.write_all(unrecognized.as_bytes()));
+    }
+    let _ = std::fs::remove_file(state.join(LEFTOVERS));
     created
 }
 
@@ -695,12 +790,18 @@ struct Journal {
 }
 
 impl Journal {
-    fn open(state: &Path) -> Result<Journal> {
+    fn open(state: &Path, targets: &[PathBuf]) -> Result<Journal> {
         io_at(std::fs::create_dir_all(state), state)?;
+        if state.join(LEFTOVERS).symlink_metadata().is_ok() && trusted_record(state).is_none() {
+            bail!(
+                "{} is not a regular file owned by you, so am will not use it. Inspect and remove it, then retry.",
+                state.join(LEFTOVERS).display()
+            );
+        }
         let journal = Journal {
             entries: Vec::new(),
             record: state.join(LEFTOVERS),
-            created_before: recover_leftovers(state),
+            created_before: recover_leftovers(state, targets),
         };
         for path in &journal.created_before {
             journal.note(&["created", &path.to_string_lossy()])?;
@@ -777,10 +878,13 @@ impl Journal {
                 }
                 let temp = temp_for(path);
                 self.note(&["temp", &temp.to_string_lossy()])?;
+                write_atomic_via(path, &temp, raw, mode)?;
+                // Only after it exists: a crash before this leaves the file
+                // unrecorded, so it is treated as the user's (the safe side).
                 if absent {
                     self.note(&["created", &path.to_string_lossy()])?;
                 }
-                write_atomic_via(path, &temp, raw, mode)
+                Ok(())
             }
             None => io_at(std::fs::remove_file(path), path),
         }
@@ -1184,7 +1288,8 @@ fn activate(
         return Ok(out);
     }
     // Finishes what an interrupted run recorded (we hold the install lock).
-    let mut journal = Journal::open(&locations.state)?;
+    let paths: Vec<PathBuf> = items.iter().map(|i| i.path.clone()).collect();
+    let mut journal = Journal::open(&locations.state, &paths)?;
     let mut owned = Vec::new();
     let mut lines = Vec::new();
     for item in &mut items {
@@ -1298,6 +1403,9 @@ pub fn install(options: &Options) -> Result<String> {
     let _lock = lock(&locations.state.join("lock"))?;
     let prior = read_receipt(&locations)?;
     if !options.dry_run {
+        // Before the source and targets are looked at: put back what a
+        // killed run moved aside (the runtime included).
+        recover_asides(&locations)?;
         sweep_staging(&locations.data); // am's own data directory only
     }
     let prior_kind = prior
@@ -1346,6 +1454,9 @@ pub fn update(check: bool, bootstrap: Option<&Path>) -> Result<String> {
     let locations = locations()?;
     io_at(std::fs::create_dir_all(&locations.state), &locations.state)?;
     let _lock = lock(&locations.state.join("lock"))?;
+    if !check {
+        recover_asides(&locations)?;
+    }
     let Some(prior) = read_receipt(&locations)? else {
         bail!("agent-memory is not installed; run install.sh first.");
     };
@@ -1410,6 +1521,9 @@ pub fn uninstall(dry_run: bool) -> Result<String> {
         return Ok("agent-memory is not installed; nothing to remove.".into());
     };
     let _lock = lock(&locations.state.join("lock"))?;
+    if !dry_run {
+        recover_asides(&locations)?;
+    }
     let mut items: Vec<Item> = targets(&prior)
         .iter()
         .rev()
@@ -1430,7 +1544,8 @@ pub fn uninstall(dry_run: bool) -> Result<String> {
         }
     } else {
         sweep_staging(&locations.data);
-        let mut journal = Journal::open(&locations.state)?;
+        let paths: Vec<PathBuf> = items.iter().map(|i| i.path.clone()).collect();
+        let mut journal = Journal::open(&locations.state, &paths)?;
         for item in &mut items {
             if let Err(e) = apply(item, &mut journal) {
                 journal.rollback();
