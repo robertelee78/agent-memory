@@ -17,6 +17,12 @@ does not by itself establish release readiness. Release acceptance also requires
 the story-specific independent verdicts and delivery evidence in the
 [execution contract](../design/v0.0.1-execution.md).
 
+`fanout_b_omp` serializes its real-clock, bounded-rendezvous and elapsed-time
+tests with a process-wide mutex acquired before their isolated children start.
+Other tests remain parallel; the 950 ms windows and all deadlines are unchanged.
+The recovery-state parent-replacement race uses a token-bound `dev-tools`
+after-open rendezvous, not a sleep to guess when observation has begun.
+
 Every baseline obligation is accounted for in
 `tests/obligations/python-baseline-v1.json`: 1,862 test methods, plus the
 incidents, both matrix files and the evaluation entry points. Each test method

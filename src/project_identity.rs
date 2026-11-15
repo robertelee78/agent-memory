@@ -181,8 +181,8 @@ impl RawIdentityEvidence {
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
-fn io_error(error: impl std::fmt::Display) -> ContractError {
-    ContractError::new(error.to_string())
+fn io_error(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 fn canonical_writer_error(error: storage::CanonicalWriterError) -> ContractError {
     match error {

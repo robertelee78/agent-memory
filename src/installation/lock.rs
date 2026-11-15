@@ -49,7 +49,15 @@ fn seed_lock(state: &Path, path: &Path) -> Result<()> {
         match native_rename(&seed, path, false) {
             Ok(()) => Ok(()),
             // A concurrent seeder won; its lock file is the one to hold.
-            Err(Error::Contract(error)) if lexists(path)? && error.message().contains("exists") => {
+            Err(Error::Contract(error))
+                if matches!(
+                    error.kind(),
+                    crate::error::Kind::Io {
+                        kind: std::io::ErrorKind::AlreadyExists,
+                        ..
+                    }
+                ) =>
+            {
                 Ok(())
             }
             Err(error) => Err(error),
@@ -130,4 +138,28 @@ pub fn locked<T>(env: &Environment, state: &Path, body: impl FnOnce() -> Result<
     let result = body();
     drop(held);
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::seed_lock;
+    use std::os::unix::fs::DirBuilderExt;
+
+    #[test]
+    fn lock_seed_accepts_only_the_existing_destination_collision() {
+        let state = std::fs::canonicalize(std::env::temp_dir())
+            .unwrap()
+            .join(format!("am-lock-seed-{}", crate::host::uuid4().unwrap()));
+        std::fs::DirBuilder::new()
+            .mode(0o700)
+            .create(&state)
+            .unwrap();
+        let path = state.join("lock");
+        let prior = b"concurrent owner";
+        std::fs::write(&path, prior).unwrap();
+        seed_lock(&state, &path).unwrap();
+        assert_eq!(std::fs::read(&path).unwrap(), prior);
+        assert_eq!(std::fs::read_dir(&state).unwrap().count(), 1);
+        std::fs::remove_dir_all(&state).unwrap();
+    }
 }

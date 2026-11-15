@@ -433,8 +433,8 @@ fn scan_uncached(content: &Value, maximum: usize) -> Result<Value> {
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
-fn io_error(error: impl std::fmt::Display) -> ContractError {
-    err(&error.to_string())
+fn io_error(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 fn exact(value: &Value, fields: &[&str]) -> bool {
     value.as_object().is_some_and(|rows| {

@@ -3294,18 +3294,11 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     let (repo, bank, peer, _) = fixture(&mut w)?;
     github(&mut w, &repo, &bank, Some(&peer), false)?;
     let marker = format!("sk-{}", "X".repeat(24));
-    let project =
-        support::record_fixtures::project_id(&fs::read_to_string(bank.join("MEMORY.md"))?)?;
-    let body = support::record_fixtures::record_text(
+    add_record(
+        &bank,
+        "isolated-local",
         &format!("# Isolated evidence\n\n{marker}\n"),
-        project.as_str().unwrap(),
     )?;
-    fs::create_dir_all(bank.join("topics"))?;
-    let held = "topics/isolated-local.md";
-    fs::write(bank.join(held), body)?;
-    let router = fs::read_to_string(bank.join("MEMORY.md"))?;
-    fs::write(bank.join("MEMORY.md"), router.replace("\n## Omitted contexts\n",
-        &format!("| [{held}](<{held}>) | Scoped reviewed lesson | repository | active | When conditions match |\n\n## Omitted contexts\n")))?;
     fs::write(
         bank.join("activeContext.md"),
         "# Current focus\n\nIndependent local learning.\n",
@@ -3317,148 +3310,8 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     git(&w, &peer, &["add", "memory-bank"])?;
     git(&w, &peer, &["commit", "-m", "Independent peer learning"])?;
     git(&w, &peer, &["push", "origin", "HEAD:main"])?;
-    let first_path = w.inside("first-inspection.json")?;
-    good(
-        &w,
-        "am semantic",
-        &[
-            os("inspect-v2"),
-            os("--repo"),
-            repo.as_os_str(),
-            os("--output"),
-            first_path.as_os_str(),
-        ],
-    )?;
-    let first = decode(&fs::read(&first_path)?)?;
-    let rows: BTreeMap<_, _> = get(&first, "sources")
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|row| (text(get(row, "key")), row))
-        .collect();
-    let mut request = get(&first, "request").clone();
-    let selections = get(&first, "changed")
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|key| {
-            let key = text(key);
-            let row = rows[key];
-            let subject = get(row, "target_path")
-                .as_str()
-                .unwrap_or_else(|| text(get(row, "path")));
-            (
-                key.to_owned(),
-                obj([
-                    (
-                        "searches",
-                        Value::Array(vec![s(subject), s(subject.trim_end_matches(".md"))]),
-                    ),
-                    ("paths", Value::Array(vec![s(subject)])),
-                    ("ids", Value::Array(vec![])),
-                    ("complete", Value::Bool(true)),
-                    ("uncertain", Value::Bool(false)),
-                ]),
-            )
-        })
-        .collect();
-    set(&mut request, "selections", Value::Object(selections));
-    let request_path = save(&w, &request, "versioned-request.json")?;
-    let selected_path = w.inside("selected-inspection.json")?;
-    let selected = good(
-        &w,
-        "am semantic",
-        &[
-            os("inspect-v2"),
-            os("--repo"),
-            repo.as_os_str(),
-            os("--input"),
-            request_path.as_os_str(),
-            os("--output"),
-            selected_path.as_os_str(),
-        ],
-    )?;
-    let view = decode(&fs::read(&selected_path)?)?;
-    let mut visible = vec![first.clone(), selected, view.clone()];
-    for page in get(&view, "pages").as_array().unwrap() {
-        let index = get(page, "index").as_int().unwrap().to_string();
-        visible.push(good(
-            &w,
-            "am semantic",
-            &[
-                os("page-v2"),
-                os("--repo"),
-                repo.as_os_str(),
-                os("--input"),
-                selected_path.as_os_str(),
-                os("--page"),
-                os(&index),
-            ],
-        )?);
-    }
-    let mut review = judgment(&view)?;
-    set(
-        &mut review,
-        "schema",
-        s("agent-memory/semantic-sharing-judgment-v2"),
-    );
-    set(&mut review, "request", request);
-    set(
-        &mut review,
-        "manifest_sha256",
-        get(&view, "manifest_sha256").clone(),
-    );
-    set(
-        &mut review,
-        "pages",
-        Value::Array(
-            get(&view, "pages")
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|page| get(page, "sha256").clone())
-                .collect(),
-        ),
-    );
-    let input = save(&w, &review, "versioned-judgment.json")?;
-    let reviewed_path = w.inside("versioned-reviewed.json")?;
-    visible.push(good(
-        &w,
-        "am semantic",
-        &[
-            os("review-v2"),
-            os("--repo"),
-            repo.as_os_str(),
-            os("--input"),
-            input.as_os_str(),
-            os("--output"),
-            reviewed_path.as_os_str(),
-        ],
-    )?);
-    let reviewed = decode(&fs::read(&reviewed_path)?)?;
+    let reviewed = versioned_review(&w, &repo, &marker)?;
     let proof_path = save(&w, get(&reviewed, "proof"), "versioned-proof.json")?;
-    let checked = good(
-        &w,
-        "am semantic",
-        &[
-            os("check"),
-            os("--v2"),
-            os("--repo"),
-            repo.as_os_str(),
-            os("--input"),
-            proof_path.as_os_str(),
-        ],
-    )?;
-    assert!(checked.get("refresh_files").is_none() && checked.get("publish_files").is_none());
-    visible.push(checked);
-    assert!(!encode(&Value::Array(visible))?.contains(&marker));
-    assert!(
-        !get(&view, "withheld_sources")
-            .as_array()
-            .unwrap()
-            .is_empty()
-    );
-    assert_eq!(get(&reviewed, "conflicts_pending"), &Value::Bool(true));
     let prepared = good(
         &w,
         "am publish",
@@ -3528,6 +3381,475 @@ fn missing_private_hold_state_reports_specific_recovery_and_keeps_pending_work()
     )?;
     assert_eq!(get(&recovered, "verified"), &Value::Bool(true));
     assert_eq!(fs::read(&registry)?, original);
+    Ok(())
+}
+
+/// Baseline `SemanticSharingContract.add`: a reviewed record routed from the router.
+fn add_record(bank: &Path, name: &str, body: &str) -> TestResult<(Value, String)> {
+    let project =
+        support::record_fixtures::project_id(&fs::read_to_string(bank.join("MEMORY.md"))?)?;
+    let content = support::record_fixtures::record_text(body, project.as_str().unwrap())?;
+    let (_, meta, _) = agent_memory::records::parse(&content, &[])?;
+    let path = format!("topics/{name}.md");
+    fs::create_dir_all(bank.join("topics"))?;
+    fs::write(bank.join(&path), content)?;
+    let router = fs::read_to_string(bank.join("MEMORY.md"))?;
+    fs::write(bank.join("MEMORY.md"), router.replace("\n## Omitted contexts\n",
+        &format!("| [{path}](<{path}>) | Scoped reviewed lesson | repository | active | When conditions match |\n\n## Omitted contexts\n")))?;
+    Ok((meta, path))
+}
+/// Baseline `ComparisonContract.render`.
+fn render_record(meta: &Value, body: &str) -> TestResult<String> {
+    let mut text = String::from("---\n");
+    for (key, value) in meta.as_object().unwrap() {
+        text.push_str(&format!("{key}: {}\n", encode(value)?));
+    }
+    text.push_str("---\n");
+    text.push_str(body);
+    Ok(text)
+}
+/// Baseline `SemanticSharingContract.publish`.
+fn publish_peer(w: &World, peer: &Path) -> TestResult {
+    git(w, peer, &["add", "memory-bank"])?;
+    git(
+        w,
+        peer,
+        &["commit", "-m", "Isolated shared reviewed learning"],
+    )?;
+    git(w, peer, &["push", "origin", "HEAD:main"])?;
+    Ok(())
+}
+fn names(value: &Value) -> Vec<&str> {
+    match value {
+        Value::Array(items) => items.iter().map(text).collect(),
+        Value::Object(fields) => fields.iter().map(|(k, _)| k.as_str()).collect(),
+        _ => Vec::new(),
+    }
+}
+fn call_streams(w: &World, command: &str, args: &[&OsStr]) -> TestResult<(i32, Value, String)> {
+    let argv: Vec<OsString> = [
+        w.env[OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")].clone(),
+        OsString::from("--json"),
+    ]
+    .into_iter()
+    .chain(native_arguments(command, args)?)
+    .collect();
+    let output = w.run_with(
+        argv,
+        RunOptions {
+            check: false,
+            timeout: Duration::from_secs(120),
+            ..RunOptions::default()
+        },
+    )?;
+    let code = match output.status {
+        agent_memory::process::Status::Code(code) => code,
+        agent_memory::process::Status::Signal(signal) => -signal,
+    };
+    let streams = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    Ok((code, decode(&output.stdout)?, streams))
+}
+
+/// Baseline `QuarantinedSharingVersionTwoContract.versioned_review`.
+fn versioned_review(w: &World, repo: &Path, marker: &str) -> TestResult<Value> {
+    let first_path = w.inside("first-inspection.json")?;
+    good(
+        w,
+        "am semantic",
+        &[
+            os("inspect-v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--output"),
+            first_path.as_os_str(),
+        ],
+    )?;
+    let first = decode(&fs::read(&first_path)?)?;
+    let rows: BTreeMap<_, _> = get(&first, "sources")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| (text(get(row, "key")), row))
+        .collect();
+    let mut request = get(&first, "request").clone();
+    let selections = get(&first, "changed")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|key| {
+            let key = text(key);
+            let row = rows[key];
+            let subject = get(row, "target_path")
+                .as_str()
+                .unwrap_or_else(|| text(get(row, "path")));
+            (
+                key.to_owned(),
+                obj([
+                    (
+                        "searches",
+                        Value::Array(vec![s(subject), s(subject.trim_end_matches(".md"))]),
+                    ),
+                    ("paths", Value::Array(vec![s(subject)])),
+                    ("ids", Value::Array(vec![])),
+                    ("complete", Value::Bool(true)),
+                    ("uncertain", Value::Bool(false)),
+                ]),
+            )
+        })
+        .collect();
+    set(&mut request, "selections", Value::Object(selections));
+    let request_path = save(w, &request, "versioned-request.json")?;
+    let selected_path = w.inside("selected-inspection.json")?;
+    let selected = good(
+        w,
+        "am semantic",
+        &[
+            os("inspect-v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            request_path.as_os_str(),
+            os("--output"),
+            selected_path.as_os_str(),
+        ],
+    )?;
+    let view = decode(&fs::read(&selected_path)?)?;
+    let mut visible = vec![first.clone(), selected, view.clone()];
+    for page in get(&view, "pages").as_array().unwrap() {
+        let index = get(page, "index").as_int().unwrap().to_string();
+        visible.push(good(
+            w,
+            "am semantic",
+            &[
+                os("page-v2"),
+                os("--repo"),
+                repo.as_os_str(),
+                os("--input"),
+                selected_path.as_os_str(),
+                os("--page"),
+                os(&index),
+            ],
+        )?);
+    }
+    let mut review = judgment(&view)?;
+    set(
+        &mut review,
+        "schema",
+        s("agent-memory/semantic-sharing-judgment-v2"),
+    );
+    set(&mut review, "request", request);
+    set(
+        &mut review,
+        "manifest_sha256",
+        get(&view, "manifest_sha256").clone(),
+    );
+    set(
+        &mut review,
+        "pages",
+        Value::Array(
+            get(&view, "pages")
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|page| get(page, "sha256").clone())
+                .collect(),
+        ),
+    );
+    let input = save(w, &review, "versioned-judgment.json")?;
+    let reviewed_path = w.inside("versioned-reviewed.json")?;
+    visible.push(good(
+        w,
+        "am semantic",
+        &[
+            os("review-v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            input.as_os_str(),
+            os("--output"),
+            reviewed_path.as_os_str(),
+        ],
+    )?);
+    let reviewed = decode(&fs::read(&reviewed_path)?)?;
+    let proof_path = save(w, get(&reviewed, "proof"), "versioned-proof.json")?;
+    let checked = good(
+        w,
+        "am semantic",
+        &[
+            os("check"),
+            os("--v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            proof_path.as_os_str(),
+        ],
+    )?;
+    assert!(checked.get("refresh_files").is_none() && checked.get("publish_files").is_none());
+    visible.push(checked);
+    assert!(!encode(&Value::Array(visible))?.contains(marker));
+    assert!(
+        !get(&view, "withheld_sources")
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(get(&reviewed, "conflicts_pending"), &Value::Bool(true));
+    Ok(reviewed)
+}
+fn refresh_request(result: &Value, paths: &[&str], kinds: &[&str]) -> Value {
+    let project = get(
+        get(get(get(result, "proof"), "judgment"), "binding"),
+        "project_id",
+    );
+    obj([
+        ("proof", get(result, "proof").clone()),
+        (
+            "recall",
+            obj([
+                ("project_id", project.clone()),
+                ("query", s("")),
+                ("paths", Value::Array(paths.iter().map(|p| s(*p)).collect())),
+                ("ids", Value::Array(vec![])),
+                ("context", Value::Object(vec![])),
+                ("kinds", Value::Array(kinds.iter().map(|k| s(*k)).collect())),
+                ("minimum_trust", s("reviewed")),
+                ("limit", int(8)),
+                ("include_context", Value::Bool(true)),
+            ]),
+        ),
+    ])
+}
+fn refresh(w: &World, repo: &Path, request: &Path, name: &str) -> TestResult<Value> {
+    let prepared = w.inside(format!("{name}.json"))?;
+    good(
+        w,
+        "am refresh",
+        &[
+            os("prepare"),
+            os("--v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            request.as_os_str(),
+            os("--output"),
+            prepared.as_os_str(),
+        ],
+    )?;
+    let output = w.inside(format!("{name}ed.json"))?;
+    good(
+        w,
+        "am refresh",
+        &[
+            os("apply"),
+            os("--v2"),
+            os("--input"),
+            prepared.as_os_str(),
+            os("--output"),
+            output.as_os_str(),
+        ],
+    )?;
+    decode(&fs::read(&output)?)
+}
+
+// obligation: tests/contracts/test_quarantined_sharing_v2.py::QuarantinedSharingVersionTwoContract.test_local_unsafe_body_stays_local_while_safe_peer_learning_is_imported_and_recalled
+#[test]
+fn local_unsafe_body_stays_local_while_safe_peer_learning_is_imported_and_recalled() -> TestResult {
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
+    let marker = format!("sk-{}", "X".repeat(24));
+    let (_, held) = add_record(
+        &bank,
+        "isolated-local",
+        &format!("# Isolated evidence\n\n{marker}\n"),
+    )?;
+    fs::write(
+        peer.join("memory-bank/projectbrief.md"),
+        "# Project\n\nIndependent peer learning remains useful.\n",
+    )?;
+    publish_peer(&w, &peer)?;
+    let before = state(&w, &repo, &bank)?;
+    let raw = fs::read(bank.join(&held))?;
+    let result = versioned_review(&w, &repo, &marker)?;
+    assert!(names(get(&result, "blocked_paths")).contains(&held.as_str()));
+    assert!(!names(get(&result, "publish_files")).contains(&held.as_str()));
+    assert_eq!(
+        text(get(get(&result, "refresh_files"), &held)).as_bytes(),
+        raw.as_slice()
+    );
+    let request = refresh_request(&result, &["projectbrief.md"], &[]);
+    let request_path = save(&w, &request, "refresh-request.json")?;
+    let mut private_before = BTreeMap::new();
+    files_below(&w.paths["state"], &w.paths["state"], &mut private_before)?;
+    // Actual schema is authoritative even if the small v2 input fits the
+    // legacy input budget and --v2 was not supplied.
+    for flags in [vec![], vec![os("--v2")]] {
+        let mut args = vec![os("prepare")];
+        args.extend(flags);
+        args.extend([
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            request_path.as_os_str(),
+        ]);
+        let (code, value, streams) = call_streams(&w, "am refresh", &args)?;
+        assert_eq!(code, 1, "{value:?}");
+        assert_eq!(get(&value, "failure_code"), &s("private-output-required"));
+        assert!(text(get(&value, "repair")).contains("--output"));
+        assert!(!streams.contains(&marker));
+        assert_eq!(before, state(&w, &repo, &bank)?);
+        let mut private_after = BTreeMap::new();
+        files_below(&w.paths["state"], &w.paths["state"], &mut private_after)?;
+        assert_eq!(private_before, private_after);
+    }
+    let applied = refresh(&w, &repo, &request_path, "refresh")?;
+    assert_eq!(get(&applied, "refresh_applied"), &Value::Bool(true));
+    assert_eq!(get(&applied, "conflicts_pending"), &Value::Bool(true));
+    assert_eq!(
+        get(&applied, "remote_freshness_verified"),
+        &Value::Bool(true)
+    );
+    assert!(
+        fs::read_to_string(bank.join("projectbrief.md"))?.contains("Independent peer learning")
+    );
+    assert_eq!(raw, fs::read(bank.join(&held))?);
+    let after = state(&w, &repo, &bank)?;
+    assert_eq!(
+        (&before.1, &before.2, &before.3, &before.4),
+        (&after.1, &after.2, &after.3, &after.4)
+    );
+    assert!(!encode(&applied)?.contains(&marker));
+    Ok(())
+}
+
+// obligation: tests/contracts/test_quarantined_sharing_v2.py::QuarantinedSharingVersionTwoContract.test_unsafe_authority_body_is_not_imported_and_independent_safe_local_delta_can_publish
+#[test]
+fn unsafe_authority_body_is_not_imported_and_independent_safe_local_delta_can_publish() -> TestResult
+{
+    let mut w = World::new()?;
+    let (repo, bank, peer, _) = fixture(&mut w)?;
+    github(&mut w, &repo, &bank, Some(&peer), false)?;
+    let marker = format!("sk-{}", "Y".repeat(24));
+    let (_, held) = add_record(
+        &peer.join("memory-bank"),
+        "isolated-peer",
+        &format!("# Isolated evidence\n\n{marker}\n"),
+    )?;
+    publish_peer(&w, &peer)?;
+    fs::write(
+        bank.join("activeContext.md"),
+        "# Current focus\n\nIndependent local learning can be shared.\n",
+    )?;
+    let before = state(&w, &repo, &bank)?;
+    let result = versioned_review(&w, &repo, &marker)?;
+    assert!(!names(get(&result, "refresh_files")).contains(&held.as_str()));
+    assert!(names(get(&result, "publish_files")).contains(&held.as_str()));
+    // Public preparation/landing preserve pre-existing authority bytes,
+    // never introduce the quarantined payload from another side.
+    let proof = save(&w, get(&result, "proof"), "publish-proof.json")?;
+    let prepared = good(
+        &w,
+        "am publish",
+        &[
+            os("prepare"),
+            os("--v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--input"),
+            proof.as_os_str(),
+        ],
+    )?;
+    let landed = land(&w, &repo, get(&prepared, "request"))?;
+    assert_eq!(get(&landed, "publication_verified"), &Value::Bool(true));
+    assert_eq!(before, state(&w, &repo, &bank)?);
+    Ok(())
+}
+
+// obligation: tests/contracts/test_quarantined_sharing_v2.py::QuarantinedSharingVersionTwoContract.test_withheld_replacement_also_holds_its_older_claim_during_useful_refresh
+#[test]
+fn withheld_replacement_also_holds_its_older_claim_during_useful_refresh() -> TestResult {
+    for visibility in ["visible", "hidden"] {
+        let mut w = World::new()?;
+        let (repo, _, peer, _) = fixture(&mut w)?;
+        let peer_bank = peer.join("memory-bank");
+        let (old, old_path) = add_record(
+            &peer_bank,
+            "old-isolation",
+            "# Isolation policy\n\nThe former retention rule applies.\n",
+        )?;
+        publish_peer(&w, &peer)?;
+        git(&w, &repo, &["pull", "--ff-only", "origin", "main"])?;
+        let marker = format!("sk-{}", "W".repeat(24));
+        let body = if visibility == "visible" {
+            format!("# Isolation policy\n\n{marker}\n")
+        } else {
+            "# Isolation policy\n\nThe clarified retention rule applies.\n".to_owned()
+        };
+        let (mut new, new_path) = add_record(&peer_bank, "replacement-isolation", &body)?;
+        set(
+            &mut new,
+            "supersedes",
+            Value::Array(vec![obj([
+                ("id", get(&old, "id").clone()),
+                ("version", get(&old, "version").clone()),
+            ])]),
+        );
+        set(&mut new, "visibility", s(visibility));
+        fs::write(peer_bank.join(&new_path), render_record(&new, &body)?)?;
+        fs::write(
+            peer_bank.join("projectbrief.md"),
+            "# Project\n\nIndependent peer orientation can proceed.\n",
+        )?;
+        publish_peer(&w, &peer)?;
+        let result = versioned_review(&w, &repo, &marker)?;
+        let blocked = names(get(&result, "blocked_paths"));
+        assert!(blocked.contains(&old_path.as_str()) && blocked.contains(&new_path.as_str()));
+        assert!(!names(get(&result, "refresh_files")).contains(&new_path.as_str()));
+        let request = refresh_request(&result, &[&old_path, "projectbrief.md"], &["semantic-fact"]);
+        let request_path = save(&w, &request, "linked-refresh-request.json")?;
+        let actual = refresh(&w, &repo, &request_path, "linked-refresh")?;
+        assert_eq!(get(&actual, "refresh_applied"), &Value::Bool(true));
+        let actual = encode(&actual)?;
+        assert!(!actual.contains("former retention"), "{visibility}");
+        assert!(
+            actual.contains("Independent peer orientation"),
+            "{visibility}"
+        );
+    }
+    Ok(())
+}
+
+// obligation: tests/contracts/test_quarantined_sharing_v2.py::QuarantinedSharingVersionTwoContract.test_unsafe_structural_caption_still_refuses_without_disclosing_it
+#[test]
+fn unsafe_structural_caption_still_refuses_without_disclosing_it() -> TestResult {
+    let mut w = World::new()?;
+    let (repo, bank, _, _) = fixture(&mut w)?;
+    let marker = format!("sk-{}", "Z".repeat(24));
+    let router = bank.join("MEMORY.md");
+    let original = fs::read_to_string(&router)?;
+    let changed = original.replace("Session focus", &marker);
+    assert_ne!(changed, original);
+    fs::write(&router, changed)?;
+    let before = state(&w, &repo, &bank)?;
+    let output = w.inside("must-not-exist.json")?;
+    let (code, value) = call(
+        &w,
+        "am semantic",
+        &[
+            os("inspect-v2"),
+            os("--repo"),
+            repo.as_os_str(),
+            os("--output"),
+            output.as_os_str(),
+        ],
+    )?;
+    assert_eq!(code, 1);
+    assert!(!encode(&value)?.contains(&marker));
+    assert!(!output.exists());
+    assert_eq!(before, state(&w, &repo, &bank)?);
     Ok(())
 }
 

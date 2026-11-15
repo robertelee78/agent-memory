@@ -284,7 +284,7 @@ fn compact(f: &Installed) -> (Value, Value, Vec<String>) {
 }
 
 #[test]
-// tests/contracts/test_installed_bank_initialization.py::InstalledBankRoundtrip.test_cold_identity_initialization_and_checkpoint_have_no_bank_dependency
+// obligation: tests/contracts/test_installed_bank_initialization.py::InstalledBankRoundtrip.test_cold_identity_initialization_and_checkpoint_have_no_bank_dependency
 fn cold_identity_initialization_and_checkpoint_have_no_bank_dependency() {
     let w = installed_world();
     let cli = executable(&w);
@@ -465,7 +465,7 @@ fn cold_identity_initialization_and_checkpoint_have_no_bank_dependency() {
 }
 
 #[test]
-// tests/contracts/test_installed_bank_qualified_recall.py::InstalledBankRoundtrip.test_qualified_recall_aliases_preserve_ids_conditions_validity_and_provenance
+// obligation: tests/contracts/test_installed_bank_qualified_recall.py::InstalledBankRoundtrip.test_qualified_recall_aliases_preserve_ids_conditions_validity_and_provenance
 fn qualified_recall_aliases_preserve_ids_conditions_validity_and_provenance() {
     let f = Installed::new();
     let path = f.r.add(
@@ -533,7 +533,7 @@ fn qualified_recall_aliases_preserve_ids_conditions_validity_and_provenance() {
 }
 
 #[test]
-// tests/contracts/test_portable_handoff.py::PortableHandoff.test_unknown_conditions_malformed_framing_and_stale_evidence_stay_qualified
+// obligation: tests/contracts/test_portable_handoff.py::PortableHandoff.test_unknown_conditions_malformed_framing_and_stale_evidence_stay_qualified
 fn unknown_conditions_malformed_framing_and_stale_evidence_stay_qualified() {
     let f = Installed::new();
     fs::write(f.r.repo.join("result.txt"), "Actual source\n").unwrap();
@@ -607,7 +607,7 @@ fn unknown_conditions_malformed_framing_and_stale_evidence_stay_qualified() {
 }
 
 #[test]
-// tests/contracts/test_portable_handoff.py::PortableHandoff.test_preparation_recovery_retains_original_source_pins_and_can_rollback
+// obligation: tests/contracts/test_portable_handoff.py::PortableHandoff.test_preparation_recovery_retains_original_source_pins_and_can_rollback
 fn preparation_recovery_retains_original_source_pins_and_can_rollback() {
     let f = Installed::new();
     fs::remove_file(f.r.bank.join("activeContext.md")).unwrap();
@@ -719,7 +719,7 @@ fn preparation_recovery_retains_original_source_pins_and_can_rollback() {
 }
 
 #[test]
-// tests/contracts/test_unified_cli_operations.py::UnifiedCLIOperations.test_installed_context_requires_an_actual_current_text_bound_token_count
+// obligation: tests/contracts/test_unified_cli_operations.py::UnifiedCLIOperations.test_installed_context_requires_an_actual_current_text_bound_token_count
 fn installed_context_requires_current_text_bound_token_count() {
     let f = Installed::new();
     f.r.add(
@@ -841,7 +841,7 @@ fn installed_context_requires_current_text_bound_token_count() {
 }
 
 #[test]
-// tests/contracts/test_unified_cli_operations.py::UnifiedCLIOperations.test_installed_compaction_preserves_distinct_provenance_history_and_converges
+// obligation: tests/contracts/test_unified_cli_operations.py::UnifiedCLIOperations.test_installed_compaction_preserves_distinct_provenance_history_and_converges
 fn installed_compaction_preserves_provenance_history_and_converges() {
     let f = Installed::new();
     let (proposal, first, paths) = compact(&f);
@@ -868,7 +868,7 @@ fn installed_compaction_preserves_provenance_history_and_converges() {
 }
 
 #[test]
-// tests/contracts/test_recall_observation.py::RecallObservationContract.test_owned_lock_disappearance_or_replacement_refuses_public_maintenance_before_write
+// obligation: tests/contracts/test_recall_observation.py::RecallObservationContract.test_owned_lock_disappearance_or_replacement_refuses_public_maintenance_before_write
 fn owned_lock_disappearance_or_replacement_refuses_before_maintenance_write() {
     for changed in [false, true] {
         let f = Installed::new();
@@ -910,7 +910,7 @@ fn owned_lock_disappearance_or_replacement_refuses_before_maintenance_write() {
 }
 
 #[test]
-// tests/contracts/test_turn_sources.py::Sources.test_real_prompt_registration_steering_stdin_ack_and_cap_blocks_input
+// obligation: tests/contracts/test_turn_sources.py::Sources.test_real_prompt_registration_steering_stdin_ack_and_cap_blocks_input
 fn real_prompt_registration_steering_stdin_ack_and_cap_blocks_input() {
     let f = Installed::new();
     let session = agent_memory::host::uuid4().unwrap();
@@ -1072,7 +1072,7 @@ fn gap_library_worker() {
 }
 
 #[test]
-// tests/contracts/test_checkout_repair.py::CheckoutRepairContract.test_doctor_recognizes_and_persists_old_device_binding
+// obligation: tests/contracts/test_checkout_repair.py::CheckoutRepairContract.test_doctor_recognizes_and_persists_old_device_binding
 fn doctor_recognizes_and_persists_old_device_binding() {
     let f = Installed::new();
     f.r.world
@@ -1147,7 +1147,7 @@ fn doctor_recognizes_and_persists_old_device_binding() {
 }
 
 #[test]
-// tests/contracts/test_checkout_repair.py::CheckoutRepairContract.test_doctor_reports_prompt_and_stop_failures_independently
+// obligation: tests/contracts/test_checkout_repair.py::CheckoutRepairContract.test_doctor_reports_prompt_and_stop_failures_independently
 fn doctor_reports_prompt_and_stop_failures_independently() {
     let f = Installed::new();
     library(
@@ -1171,7 +1171,7 @@ fn doctor_reports_prompt_and_stop_failures_independently() {
 }
 
 #[test]
-// tests/contracts/test_discovery.py::DiscoveryContract.test_discovered_equivalent_cannot_be_omitted_from_comparison_to_admit_duplicate
+// obligation: tests/contracts/test_discovery.py::DiscoveryContract.test_discovered_equivalent_cannot_be_omitted_from_comparison_to_admit_duplicate
 fn discovered_equivalent_cannot_be_omitted_to_admit_duplicate() {
     let f = Installed::new();
     let retained = f.r.add(

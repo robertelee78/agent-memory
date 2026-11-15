@@ -75,6 +75,8 @@ pub fn read_bytes(path: &Path, maximum: usize, missing: bool) -> Result<Option<V
     {
         return Err(ContractError::new(RECORD));
     }
+    #[cfg(feature = "dev-tools")]
+    bank_writes::fault("layout-recovery-state.read.after-open")?;
     let bound = maximum
         .checked_add(1)
         .ok_or_else(|| ContractError::new(RECORD))?;

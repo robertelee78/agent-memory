@@ -700,20 +700,853 @@ fn nested_boundary_and_observed_write_keep_exact_prefix() {
     assert!(has_audit(&w.root.join("state")));
 }
 
+fn save(w: &World, value: &Value, name: &str) -> PathBuf {
+    let path = w.inside(name).unwrap();
+    fs::write(&path, json::encode(value, json::DEFAULT).unwrap()).unwrap();
+    path
+}
+fn fault_call(w: &World, args: &[&str], stage: &str) -> i32 {
+    let command = &w.env[std::ffi::OsStr::new("AGENT_MEMORY_TEST_OWNED_COMMAND")];
+    let env = [
+        ("AGENT_MEMORY_FAULT_STAGE".into(), stage.into()),
+        ("AGENT_MEMORY_FAULT_MODE".into(), "exit".into()),
+    ];
+    let output = w
+        .run_with(
+            [command.as_os_str(), std::ffi::OsStr::new("--json")]
+                .into_iter()
+                .chain(args.iter().map(std::ffi::OsStr::new)),
+            RunOptions {
+                check: false,
+                env: &env,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    match output.status {
+        agent_memory::process::Status::Code(code) => code,
+        other => panic!("unexpected status {other:?}"),
+    }
+}
+fn source_refs(inventory: &Value) -> Vec<String> {
+    at(inventory, "sources")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| text(row, "ref").to_owned())
+        .collect()
+}
+fn markdown(bank: &Path) -> BTreeMap<String, String> {
+    fn visit(base: &Path, dir: &Path, output: &mut BTreeMap<String, String>) {
+        for entry in fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                visit(base, &path, output);
+            } else if path.extension().is_some_and(|e| e == "md") {
+                output.insert(
+                    path.strip_prefix(base)
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .to_owned(),
+                    fs::read_to_string(&path).unwrap(),
+                );
+            }
+        }
+    }
+    let mut files = BTreeMap::new();
+    visit(bank, bank, &mut files);
+    files
+}
+
+// obligation: tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_lost_local_setting_finds_existing_bank_and_preserves_prepared_write
 #[test]
 fn lost_local_setting_discovers_nested_bank_for_boundary() {
     let mut w = World::new().unwrap();
     let (repo, bank) = fixture(&mut w, "docs/shared memory");
+    let repo_text = repo.to_str().unwrap();
     let before = state(&w, &repo, &bank);
+    let content = w.inside("changed.md").unwrap();
+    fs::write(
+        &content,
+        "# Project\n\nA reviewed goal with its own evidence.\n",
+    )
+    .unwrap();
+    let prepared = good(
+        &w,
+        &[
+            "writes",
+            "preview",
+            "--repo",
+            repo_text,
+            "--path",
+            "projectbrief.md",
+            "--content",
+            content.to_str().unwrap(),
+        ],
+    );
     git(
         &w,
         &repo,
         &["config", "--local", "--unset", "agent-memory.bankRoot"],
     );
+    let inventory = good(&w, &["init", "inspect", "--repo", repo_text]);
+    assert_eq!(text(&inventory, "bank_state"), "usable");
+    assert!(
+        !source_refs(&inventory)
+            .iter()
+            .any(|r| r.starts_with("docs/shared memory/"))
+    );
     let value = view(&w, &repo);
     assert_eq!(text(&value, "bank_root"), "docs/shared memory");
     assert_eq!(at(&value, "local_boundary_ready").as_bool(), Some(true));
     assert_eq!(before, state(&w, &repo, &bank));
+    let path = save(&w, &prepared, "prepared.json");
+    let done = good(
+        &w,
+        &["writes", "apply", "--proposal", path.to_str().unwrap()],
+    );
+    assert_eq!(
+        list(&done, "changed_memory_paths"),
+        ["docs/shared memory/projectbrief.md"]
+    );
+    assert!(!repo.join("memory-bank").exists());
+    let after = state(&w, &repo, &bank);
+    assert_eq!(
+        (before.code, before.index, before.head),
+        (after.code, after.index, after.head)
+    );
+}
+
+// obligation: tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_fresh_clone_with_new_private_state_finds_bank_but_requires_explicit_identity_binding
+#[test]
+fn fresh_clone_with_new_private_state_requires_explicit_identity_binding() {
+    let mut w = World::new().unwrap();
+    let (repo, _) = fixture(&mut w, "docs/shared memory");
+    let original = good(
+        &w,
+        &["identity", "status", "--repo", repo.to_str().unwrap()],
+    );
+    let original_id = text(&original, "project_id").to_owned();
+    git(&w, &repo, &["push", "origin", "HEAD:main"]);
+    let clone = w.clone("remote.git", "fresh machine").unwrap();
+    let clone_text = clone.to_str().unwrap();
+    let clone_bank = clone.join("docs/shared memory");
+    let before = state(&w, &clone, &clone_bank);
+    let unset = w
+        .git_with(
+            ["config", "--local", "--get", "agent-memory.bankRoot"],
+            RunOptions {
+                cwd: Some(&clone),
+                check: false,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_ne!(unset.status, agent_memory::process::Status::Code(0));
+    let config = w.inside("new-machine-config").unwrap();
+    let state_home = w.inside("new-machine-state").unwrap();
+    w.env
+        .insert("AGENT_MEMORY_CONFIG_HOME".into(), config.into_os_string());
+    w.env.insert(
+        "AGENT_MEMORY_STATE_HOME".into(),
+        state_home.into_os_string(),
+    );
+    let inventory = good(&w, &["init", "inspect", "--repo", clone_text]);
+    assert_eq!(text(&inventory, "bank_state"), "usable");
+    assert_eq!(text(&inventory, "project_id"), original_id);
+    assert!(
+        !source_refs(&inventory)
+            .iter()
+            .any(|r| r.starts_with("docs/shared memory/"))
+    );
+    let developer = good(
+        &w,
+        &[
+            "developer",
+            "preview",
+            "--create",
+            "--label",
+            "Second machine developer",
+        ],
+    );
+    let path = save(&w, &developer, "second-developer.json");
+    good(
+        &w,
+        &["developer", "apply", "--proposal", path.to_str().unwrap()],
+    );
+    let status = good(&w, &["identity", "status", "--repo", clone_text]);
+    assert_eq!(at(&status, "resolved").as_bool(), Some(false));
+    let (code, _, _) = call(
+        &w,
+        &[
+            "identity",
+            "preview",
+            "--repo",
+            clone_text,
+            "--action",
+            "create",
+            "--reason",
+            "Cannot replace existing shared memory",
+        ],
+    );
+    assert_eq!(code, 1);
+    let bind = good(
+        &w,
+        &[
+            "identity",
+            "preview",
+            "--repo",
+            clone_text,
+            "--action",
+            "bind",
+            "--reason",
+            "Explicit adoption of the existing repository bank",
+        ],
+    );
+    let path = save(&w, &bind, "bind.json");
+    good(
+        &w,
+        &["identity", "apply", "--proposal", path.to_str().unwrap()],
+    );
+    let status = good(&w, &["identity", "status", "--repo", clone_text]);
+    assert_eq!(text(&status, "project_id"), original_id);
+    assert_eq!(text(&view(&w, &clone), "bank_root"), "docs/shared memory");
+    assert!(!clone.join("memory-bank").exists());
+    assert_eq!(before, state(&w, &clone, &clone_bank));
+}
+
+// obligation: tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_nested_multi_file_interruption_recovers_only_original_configuration
+#[test]
+fn nested_multi_file_interruption_recovers_only_original_configuration() {
+    let mut w = World::new().unwrap();
+    let (repo, bank) = fixture(&mut w, "docs/shared memory");
+    let repo_text = repo.to_str().unwrap();
+    let mut desired = markdown(&bank);
+    desired
+        .get_mut("projectbrief.md")
+        .unwrap()
+        .push_str("\nA reviewed follow-up with evidence.\n");
+    let files = Value::Object(
+        desired
+            .iter()
+            .map(|(path, body)| (path.clone(), s(body.as_str())))
+            .collect(),
+    );
+    let files = save(&w, &files, "desired.json");
+    let proposal = good(
+        &w,
+        &[
+            "transaction",
+            "preview",
+            "--repo",
+            repo_text,
+            "--files",
+            files.to_str().unwrap(),
+            "--operation",
+            "compact",
+        ],
+    );
+    let saved = save(&w, &proposal, "transaction.json");
+    assert_eq!(
+        fault_call(
+            &w,
+            &[
+                "transaction",
+                "apply",
+                "--proposal",
+                saved.to_str().unwrap()
+            ],
+            "transaction-after-write:projectbrief.md",
+        ),
+        86
+    );
+    let marker = bank.join(".agent-memory-transaction.md");
+    assert!(marker.exists());
+    let unlock = good(&w, &["writes", "recover", "--repo", repo_text]);
+    let unlock = save(&w, &unlock, "unlock.json");
+    good(
+        &w,
+        &[
+            "writes",
+            "recover",
+            "--repo",
+            repo_text,
+            "--proposal",
+            unlock.to_str().unwrap(),
+        ],
+    );
+    let recovery = good(
+        &w,
+        &[
+            "transaction",
+            "recover",
+            "--repo",
+            repo_text,
+            "--mode",
+            "finish",
+        ],
+    );
+    let recovery = save(&w, &recovery, "recover.json");
+    let finish = [
+        "transaction",
+        "recover",
+        "--repo",
+        repo_text,
+        "--proposal",
+        recovery.to_str().unwrap(),
+    ];
+    // A configuration change cannot reinterpret the original pinned operation.
+    git(
+        &w,
+        &repo,
+        &["config", "--local", "agent-memory.authorityBranch", "trunk"],
+    );
+    assert_eq!(call(&w, &finish).0, 1);
+    assert!(marker.exists());
+    git(
+        &w,
+        &repo,
+        &["config", "--local", "agent-memory.authorityBranch", "main"],
+    );
+    let done = good(&w, &finish);
+    assert_eq!(at(&done, "verified").as_bool(), Some(true));
+    assert_eq!(text(&done, "outcome"), "finished");
+    assert_eq!(desired, markdown(&bank));
+    assert!(!repo.join("memory-bank").exists());
+}
+
+// obligation: tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_tracked_router_deletion_and_locator_inventory_bound_never_establish_absence
+#[test]
+fn tracked_router_deletion_and_locator_bound_never_establish_absence() {
+    let mut w = World::new().unwrap();
+    let (repo, bank) = fixture(&mut w, "docs/shared memory");
+    let repo_text = repo.to_str().unwrap();
+    git(
+        &w,
+        &repo,
+        &["config", "--local", "--unset", "agent-memory.bankRoot"],
+    );
+    fs::remove_file(bank.join("MEMORY.md")).unwrap();
+    let (code, value, _) = call(&w, &["init", "inspect", "--repo", repo_text]);
+    assert_eq!(code, 0, "{value:?}");
+    assert_eq!(text(&value, "bank_state"), "needs-inspection");
+    assert!(!repo.join("memory-bank").exists());
+    for n in 0..65 {
+        let path = repo.join(format!("docs/sample-{n}"));
+        fs::create_dir(&path).unwrap();
+        fs::write(path.join("MEMORY.md"), "# Ordinary documentation\n").unwrap();
+    }
+    let (code, value, _) = call(&w, &["init", "inspect", "--repo", repo_text]);
+    assert_eq!(code, 1);
+    assert!(value.get("sources").is_none());
+    assert!(!repo.join("memory-bank").exists());
+}
+
+// obligation: tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_damaged_working_or_indexed_router_cannot_hide_committed_bank_ownership
+#[test]
+fn damaged_working_or_indexed_router_cannot_hide_committed_bank_ownership() {
+    for staged in [false, true] {
+        for damage in ["empty", "removed-schema", "other-schema"] {
+            let mut w = World::new().unwrap();
+            let (repo, bank) = fixture(&mut w, "docs/shared memory");
+            let repo_text = repo.to_str().unwrap();
+            git(
+                &w,
+                &repo,
+                &["config", "--local", "--unset", "agent-memory.bankRoot"],
+            );
+            let path = bank.join("MEMORY.md");
+            let original = fs::read_to_string(&path).unwrap();
+            let damaged = match damage {
+                "empty" => String::new(),
+                "removed-schema" => {
+                    let mut kept: Vec<&str> = original
+                        .lines()
+                        .filter(|line| !line.starts_with("schema:"))
+                        .collect();
+                    kept.push("");
+                    kept.join("\n")
+                }
+                _ => original.replace("agent-memory/v1", "not-agent-memory/v1"),
+            };
+            assert_ne!(damaged, original, "{damage}");
+            fs::write(&path, damaged).unwrap();
+            if staged {
+                git(&w, &repo, &["add", "--", "docs/shared memory/MEMORY.md"]);
+            }
+            let before = state(&w, &repo, &bank);
+            let (code, inventory, _) = call(&w, &["init", "inspect", "--repo", repo_text]);
+            assert_eq!(code, 0, "{staged} {damage}: {inventory:?}");
+            assert_eq!(text(&inventory, "bank_state"), "needs-inspection");
+            assert!(
+                !source_refs(&inventory)
+                    .iter()
+                    .any(|r| r.starts_with("docs/shared memory/"))
+            );
+            let review = obj([
+                ("inventory", inventory),
+                ("existing_memory_reviewed", Value::Bool(true)),
+                ("claims", Value::Array(vec![])),
+                ("questions", Value::Array(vec![])),
+            ]);
+            let review = save(&w, &review, "review.json");
+            let (code, value, _) = call(
+                &w,
+                &[
+                    "init",
+                    "preview",
+                    "--repo",
+                    repo_text,
+                    "--review",
+                    review.to_str().unwrap(),
+                ],
+            );
+            assert_eq!(code, 1, "{staged} {damage}");
+            assert!(value.get("proposal").is_none());
+            assert!(!repo.join("memory-bank").exists());
+            assert_eq!(before, state(&w, &repo, &bank));
+        }
+    }
+}
+
+// obligation: tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_empty_nested_initialization_links_sources_correctly_and_checkpoint_uses_same_bank
+#[test]
+fn empty_nested_initialization_links_sources_and_checkpoint_uses_same_bank() {
+    let mut w = World::new().unwrap();
+    let runtime = support::installed_runtime::install(&w.root, |argv| {
+        w.run_with(
+            argv,
+            RunOptions {
+                check: false,
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    });
+    w.env.insert(
+        "AGENT_MEMORY_TEST_OWNED_COMMAND".into(),
+        runtime.command.into_os_string(),
+    );
+    let repo = w.repository("repo", false).unwrap();
+    let repo_text = repo.to_str().unwrap();
+    git(
+        &w,
+        &repo,
+        &[
+            "config",
+            "--local",
+            "agent-memory.bankRoot",
+            "docs/shared memory",
+        ],
+    );
+    fs::write(
+        repo.join("README.md"),
+        "# Evidence\n\nProject evidence to inspect.\n",
+    )
+    .unwrap();
+    fs::write(repo.join("code.py"), "VALUE = 1\n").unwrap();
+    git(&w, &repo, &["add", "README.md", "code.py"]);
+    git(&w, &repo, &["commit", "-m", "Source evidence"]);
+    fs::write(repo.join("code.py"), "VALUE = 2\n").unwrap();
+    git(&w, &repo, &["add", "code.py"]);
+    let observe = |w: &World| {
+        (
+            fs::read(repo.join("code.py")).unwrap(),
+            fs::read(repo.join(".git/index")).unwrap(),
+            git(w, &repo, &["rev-parse", "HEAD"]),
+        )
+    };
+    let before = observe(&w);
+    let developer = good(
+        &w,
+        &[
+            "developer",
+            "preview",
+            "--create",
+            "--label",
+            "Test developer",
+        ],
+    );
+    let path = save(&w, &developer, "developer.json");
+    good(
+        &w,
+        &["developer", "apply", "--proposal", path.to_str().unwrap()],
+    );
+    let identity = good(
+        &w,
+        &[
+            "identity",
+            "preview",
+            "--repo",
+            repo_text,
+            "--action",
+            "create",
+            "--reason",
+            "Explicit empty nested bank",
+        ],
+    );
+    let path = save(&w, &identity, "identity.json");
+    good(
+        &w,
+        &["identity", "apply", "--proposal", path.to_str().unwrap()],
+    );
+    let inventory = good(&w, &["init", "inspect", "--repo", repo_text]);
+    assert_eq!(text(&inventory, "bank_state"), "absent");
+    let claim = json::decode(
+        r#"{"context":"techContext.md","fact":"implementation","fact_key":"working-value","summary":"Observed staged VALUE=2; verify current working files before reuse.","value":2,"scope":"repository","conditions":{"branch":"main"},"evidence":["code.py"],"current":true,"applicable":true,"qualified":true,"authority_kind":"code"}"#,
+        Default::default(),
+    )
+    .unwrap();
+    let review = obj([
+        ("inventory", inventory),
+        ("existing_memory_reviewed", Value::Bool(false)),
+        ("claims", Value::Array(vec![claim])),
+        ("questions", Value::Array(vec![])),
+    ]);
+    let review = save(&w, &review, "review.json");
+    let proposal = good(
+        &w,
+        &[
+            "init",
+            "preview",
+            "--repo",
+            repo_text,
+            "--review",
+            review.to_str().unwrap(),
+        ],
+    );
+    let path = save(&w, &proposal, "init.json");
+    let done = good(&w, &["init", "apply", "--proposal", path.to_str().unwrap()]);
+    assert_eq!(at(&done, "verified").as_bool(), Some(true));
+    let bank = repo.join("docs/shared memory");
+    assert!(
+        fs::read_to_string(bank.join("projectbrief.md"))
+            .unwrap()
+            .contains("(../../README.md)")
+    );
+    let tech = fs::read_to_string(bank.join("techContext.md")).unwrap();
+    assert!(tech.contains("(../../code.py)"));
+    assert!(tech.contains("Observed staged VALUE=2"));
+    let inventory = good(&w, &["init", "inspect", "--repo", repo_text]);
+    assert!(
+        !source_refs(&inventory)
+            .iter()
+            .any(|r| r == "docs/shared memory" || r.starts_with("docs/shared memory/"))
+    );
+    let current = good(&w, &["checkpoint", "inspect", "--repo", repo_text]);
+    let mut payload = json::decode(
+        r#"{"focus":"Inspect the next scoped source.","recent_changes":["Read source evidence before making a claim."],"open_questions":[],"next_step":"Verify the source under current conditions.","evidence":["../../README.md"],"conditions":{"branch":"main"},"harness":"custom","session":"test-session"}"#,
+        Default::default(),
+    )
+    .unwrap();
+    if let Value::Object(fields) = &mut payload {
+        fields.push((
+            "observed_active_sha256".into(),
+            at(&current, "observed_active_sha256").clone(),
+        ));
+    }
+    let payload = save(&w, &payload, "checkpoint-input.json");
+    let proposal = good(
+        &w,
+        &[
+            "checkpoint",
+            "preview",
+            "--repo",
+            repo_text,
+            "--input",
+            payload.to_str().unwrap(),
+        ],
+    );
+    let path = save(&w, &proposal, "checkpoint.json");
+    let done = good(
+        &w,
+        &["checkpoint", "apply", "--proposal", path.to_str().unwrap()],
+    );
+    assert_eq!(at(&done, "verified").as_bool(), Some(true));
+    assert_eq!(
+        list(&done, "changed_memory_paths"),
+        ["docs/shared memory/activeContext.md"]
+    );
+    assert!(!repo.join("memory-bank").exists());
+    assert_eq!(before, observe(&w));
+}
+
+fn put(value: &mut Value, key: &str, replacement: Value) {
+    match value.get_mut(key) {
+        Some(slot) => *slot = replacement,
+        None => match value {
+            Value::Object(fields) => fields.push((key.into(), replacement)),
+            _ => panic!("{key}: not an object"),
+        },
+    }
+}
+fn files_below(dir: &Path, output: &mut Vec<PathBuf>) {
+    for entry in fs::read_dir(dir).unwrap() {
+        let path = entry.unwrap().path();
+        if path.is_dir() {
+            files_below(&path, output);
+        } else {
+            output.push(path);
+        }
+    }
+}
+
+// obligation: tests/contracts/test_sharing_boundary.py::SharingBoundaryContract.test_nested_bank_admission_receipts_replay_and_completed_cleanup_keep_exact_configured_prefix
+#[test]
+fn nested_admission_receipts_replay_and_cleanup_keep_exact_configured_prefix() {
+    let mut w = World::new().unwrap();
+    let (repo, bank) = fixture(&mut w, "docs/shared memory");
+    let repo_text = repo.to_str().unwrap();
+    fs::write(
+        repo.join("evidence.md"),
+        "# Confirmed fixture correction\n\nKeep the retry cap conditional.\n",
+    )
+    .unwrap();
+    let status = good(&w, &["identity", "status", "--repo", repo_text]);
+    let project = text(&status, "project_id").to_owned();
+    let actor = text(&status, "developer_id").to_owned();
+    // Baseline AdmissionContract.request / ComparisonContract.candidate.
+    let mut candidate = json::decode(
+        include_str!("../skills/agent-memory/templates/record-proposal.example.json"),
+        Default::default(),
+    )
+    .unwrap();
+    let metadata = candidate.get_mut("metadata").unwrap();
+    put(metadata, "project-id", s(project.as_str()));
+    put(metadata, "scope", s("repository"));
+    put(metadata, "conditions", Value::Object(vec![]));
+    put(
+        metadata,
+        "source",
+        obj([
+            ("kind", s("user")),
+            ("actor", s("Explicit fixture source; not authenticated")),
+        ]),
+    );
+    put(metadata, "evidence", Value::Array(vec![s("evidence.md")]));
+    let origin = metadata.get_mut("origin").unwrap();
+    put(origin, "developer-id", s(actor.as_str()));
+    put(origin, "code-state", s("not-code"));
+    let request = obj([
+        ("project_id", s(project.as_str())),
+        ("candidate", candidate.clone()),
+        ("source_class", s("user")),
+        ("repository_evidence", Value::Null),
+        (
+            "assessment",
+            obj([
+                ("category", s("user-correction")),
+                (
+                    "utility",
+                    s("Prevent repeated excessive retries under these conditions."),
+                ),
+                ("durable", Value::Bool(true)),
+                ("evidence_confidence", s("confirmed")),
+                (
+                    "evidence_reason",
+                    s("The operator explicitly confirmed the correction."),
+                ),
+                ("confirmed", Value::Bool(true)),
+                ("source_redundant", Value::Bool(false)),
+                ("work_state_copy", Value::Bool(false)),
+                ("review", Value::Null),
+            ]),
+        ),
+    ]);
+    let request_path = save(&w, &request, "capture-request.json");
+    let captured = good(
+        &w,
+        &[
+            "capture",
+            "--repo",
+            repo_text,
+            "--request",
+            request_path.to_str().unwrap(),
+        ],
+    );
+    let compared = obj([
+        ("project_id", s(project.as_str())),
+        ("candidate", candidate),
+        (
+            "searches",
+            Value::Array(vec![s("retry policy"), s("attempt cap")]),
+        ),
+        ("read_paths", Value::Array(vec![])),
+    ]);
+    let compared = save(&w, &compared, "comparison-request.json");
+    let compared = compared.to_str().unwrap();
+    let inspected = good(
+        &w,
+        &[
+            "compare",
+            "inspect",
+            "--repo",
+            repo_text,
+            "--request",
+            compared,
+        ],
+    );
+    let decisions = at(&inspected, "matches")
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            obj([
+                ("path", at(row, "path").clone()),
+                ("classification", s("distinct-knowledge")),
+                (
+                    "rationale",
+                    s("The fixture meaning has been assessed with its evidence and conditions."),
+                ),
+            ])
+        })
+        .collect();
+    let judgment = obj([
+        ("observation", at(&inspected, "observation").clone()),
+        ("decisions", Value::Array(decisions)),
+        ("pending_decisions", Value::Array(vec![])),
+        (
+            "rationale",
+            s("Read the actual bounded plausible sources before deciding novelty."),
+        ),
+    ]);
+    let judgment = save(&w, &judgment, "judgment.json");
+    let reviewed = good(
+        &w,
+        &[
+            "compare",
+            "review",
+            "--repo",
+            repo_text,
+            "--request",
+            compared,
+            "--judgment",
+            judgment.to_str().unwrap(),
+        ],
+    );
+    let capture = save(&w, &captured, "capture.json");
+    let proof = save(&w, &reviewed, "proof.json");
+    let previewed = good(
+        &w,
+        &[
+            "admission",
+            "preview",
+            "--repo",
+            repo_text,
+            "--capture",
+            capture.to_str().unwrap(),
+            "--request",
+            compared,
+            "--proof",
+            proof.to_str().unwrap(),
+        ],
+    );
+    let proposal = at(&previewed, "proposal").clone();
+    assert_ne!(proposal, Value::Null);
+    let operation = text(&proposal, "operation_id").to_owned();
+    let admission = save(&w, &proposal, "admission.json");
+    let apply = [
+        "admission",
+        "apply",
+        "--proposal",
+        admission.to_str().unwrap(),
+    ];
+    let before = state(&w, &repo, &bank);
+    assert_eq!(fault_call(&w, &apply, "transaction-after-receipt"), 86);
+    let unlock = good(&w, &["writes", "recover", "--repo", repo_text]);
+    let unlock = save(&w, &unlock, "unlock.json");
+    good(
+        &w,
+        &[
+            "writes",
+            "recover",
+            "--repo",
+            repo_text,
+            "--proposal",
+            unlock.to_str().unwrap(),
+        ],
+    );
+    let mut paths = Vec::new();
+    files_below(&w.root.join("state"), &mut paths);
+    let receipts: Vec<PathBuf> = paths
+        .into_iter()
+        .filter(|p| p.extension().is_some_and(|e| e == "json"))
+        .filter(|p| {
+            json::decode(
+                &fs::read_to_string(p).unwrap_or_default(),
+                Default::default(),
+            )
+            .is_ok_and(|v| {
+                v.get("schema").and_then(Value::as_str)
+                    == Some("agent-memory/transaction-receipt-v1")
+                    && v.get("operation_id").and_then(Value::as_str) == Some(operation.as_str())
+            })
+        })
+        .collect();
+    assert_eq!(receipts.len(), 1);
+    let path = &receipts[0];
+    let original = fs::read(path).unwrap();
+    let mut value =
+        json::decode(std::str::from_utf8(&original).unwrap(), Default::default()).unwrap();
+    assert_eq!(text(&value, "bank_path"), bank.to_str().unwrap());
+    let changed = list(&value, "changed_memory_paths");
+    assert!(
+        changed
+            .iter()
+            .all(|item| item.starts_with("docs/shared memory/"))
+    );
+    let recovery = good(
+        &w,
+        &[
+            "transaction",
+            "recover",
+            "--repo",
+            repo_text,
+            "--mode",
+            "finish",
+        ],
+    );
+    let recovery = save(&w, &recovery, "recover.json");
+    let finish = [
+        "transaction",
+        "recover",
+        "--repo",
+        repo_text,
+        "--mode",
+        "finish",
+        "--proposal",
+        recovery.to_str().unwrap(),
+    ];
+    put(
+        &mut value,
+        "changed_memory_paths",
+        Value::Array(
+            changed
+                .iter()
+                .map(|item| s(item.replacen("docs/shared memory/", "memory-bank/", 1)))
+                .collect(),
+        ),
+    );
+    fs::write(path, json::encode(&value, json::DEFAULT).unwrap()).unwrap();
+    let current = state(&w, &repo, &bank);
+    assert_eq!(call(&w, &finish).0, 1);
+    assert_eq!(current, state(&w, &repo, &bank));
+    assert!(bank.join(".agent-memory-transaction.md").exists());
+    fs::write(path, &original).unwrap();
+    let done = good(&w, &finish);
+    assert_eq!(at(&done, "verified").as_bool(), Some(true));
+    assert_eq!(text(&done, "bank_path"), bank.to_str().unwrap());
+    let (code, replay, _) = call(&w, &apply);
+    assert_eq!(code, 0, "{replay:?}");
+    assert_eq!(at(&replay, "admission_verified").as_bool(), Some(true));
+    assert_eq!(list(&replay, "changed_memory_paths"), changed);
+    let after = state(&w, &repo, &bank);
+    assert_eq!(
+        (before.code, before.index, before.head),
+        (after.code, after.index, after.head)
+    );
+    assert!(!repo.join("memory-bank").exists());
 }
 
 #[test]

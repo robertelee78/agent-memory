@@ -24,8 +24,8 @@ const CAPACITY_REPAIR: &str = "Preserve local learning, pending review, the regi
 fn err(reason: &str) -> ContractError {
     ContractError::new(reason)
 }
-fn io_error(error: impl std::fmt::Display) -> ContractError {
-    ContractError::new(error.to_string())
+fn io_error(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 fn text(path: &Path) -> Result<&str> {
     host::text(path.as_os_str(), "known hold path")

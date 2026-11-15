@@ -65,22 +65,10 @@ fn refuse(message: &str) -> CompletionError {
 fn unavailable<E>(_: E) -> CompletionError {
     CompletionError::Unexpected
 }
-/// `std::io::Error`'s rendering of an OS error: `… (os error N)`.
-fn os_error_text(message: &str) -> bool {
-    message.split("(os error ").skip(1).any(|rest| {
-        let after = rest.trim_start_matches(|c: char| c.is_ascii_digit());
-        after.len() < rest.len() && after.starts_with(')')
-    })
-}
-/// The baseline handler's classification: only a contract refusal keeps its
-/// reason. Ported callees report an `OSError` as a plain contract error that
-/// carries the `std::io::Error` text; that is the baseline's `OSError` and
-/// gets the fixed reason, never its system detail.
+/// Only reviewed contract refusals retain their reason, never I/O details.
 fn classified(error: CompletionError) -> CompletionError {
     match error {
-        CompletionError::Contract(contract)
-            if contract.kind() == &Kind::Contract && os_error_text(contract.message()) =>
-        {
+        CompletionError::Contract(contract) if matches!(contract.kind(), Kind::Io { .. }) => {
             CompletionError::Unexpected
         }
         other => other,
@@ -657,5 +645,29 @@ pub fn command(request: &Request<'_>, input: &mut dyn Read) -> CommandResult {
         exit_code: 1,
         stdout: printed(&failure),
         stderr: String::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CompletionError, ContractError, classified};
+    use std::io;
+
+    #[test]
+    fn completion_failure_classification_uses_type_not_system_error_text() {
+        for error in [
+            io::Error::from_raw_os_error(libc::EACCES),
+            io::Error::new(io::ErrorKind::PermissionDenied, "localized refusal"),
+        ] {
+            assert!(matches!(
+                classified(CompletionError::Contract(ContractError::from_error(error))),
+                CompletionError::Unexpected
+            ));
+        }
+        let refusal = ContractError::new("Reviewed refusal mentioning (os error 13)");
+        match classified(CompletionError::Contract(refusal.clone())) {
+            CompletionError::Contract(actual) => assert_eq!(actual, refusal),
+            CompletionError::Unexpected => panic!("Contract text is not an I/O classification"),
+        }
     }
 }

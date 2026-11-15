@@ -12,7 +12,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 fn io_error(error: io::Error) -> Error {
-    Error::Contract(ContractError::new(error.to_string()))
+    Error::Contract(ContractError::from_error(error))
 }
 
 pub(crate) fn split(path: &Path) -> Result<(&Path, &OsStr)> {

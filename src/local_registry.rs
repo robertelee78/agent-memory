@@ -10,8 +10,8 @@ use std::path::Path;
 /// Approved bounded recovery inventory for a possibly hostile lock marker.
 pub const LOCK_MAX_BYTES: usize = 1024 * 1024;
 
-fn io_error(error: impl std::fmt::Display) -> ContractError {
-    ContractError::new(error.to_string())
+fn io_error(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 struct Temporary<'a> {
     directory: &'a fs::Descriptor,

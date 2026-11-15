@@ -29,7 +29,15 @@ impl fmt::Display for LockError {
         }
     }
 }
-impl std::error::Error for LockError {}
+impl std::error::Error for LockError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io(error) => Some(error),
+            Self::Unsafe(error) => Some(error),
+            Self::Busy => None,
+        }
+    }
+}
 impl From<io::Error> for LockError {
     fn from(error: io::Error) -> Self {
         Self::Io(error)

@@ -29,7 +29,7 @@ pub fn canonical_path(path: &Path, strict: bool) -> Result<PathBuf> {
         path.to_path_buf()
     } else {
         std::env::current_dir()
-            .map_err(|e| ContractError::new(e.to_string()))?
+            .map_err(ContractError::from_error)?
             .join(path)
     };
     let mut pending: VecDeque<OsString> = components(&absolute).into();
@@ -50,8 +50,7 @@ pub fn canonical_path(path: &Path, strict: bool) -> Result<PathBuf> {
                 if links > MAX_SYMLINKS {
                     return Err(loop_refusal());
                 }
-                let target = std::fs::read_link(&candidate)
-                    .map_err(|e| ContractError::new(e.to_string()))?;
+                let target = std::fs::read_link(&candidate).map_err(ContractError::from_error)?;
                 let expansion = components(&target);
                 if pending.len() + expansion.len() > MAX_PENDING_COMPONENTS {
                     return Err(loop_refusal());
@@ -64,7 +63,7 @@ pub fn canonical_path(path: &Path, strict: bool) -> Result<PathBuf> {
                 }
             }
             Ok(_) => resolved.push(part),
-            Err(error) if strict => return Err(ContractError::new(error.to_string())),
+            Err(error) if strict => return Err(ContractError::from_error(error)),
             Err(_) => resolved.push(part),
         }
     }

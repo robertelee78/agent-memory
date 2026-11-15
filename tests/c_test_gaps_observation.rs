@@ -147,7 +147,7 @@ fn routerless() -> (World, (PathBuf, PathBuf), PathBuf, PathBuf) {
     (w, runtime, repo, bank)
 }
 #[test]
-// tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_existing_barrier_deleted_before_open_is_not_recreated
+// obligation: tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_existing_barrier_deleted_before_open_is_not_recreated
 fn existing_barrier_deleted_before_open_is_not_recreated() {
     let (w, runtime, repo, bank) = routerless();
     let base = run(&w, &request(&repo, &runtime, "create-barrier"));
@@ -165,7 +165,7 @@ fn existing_barrier_deleted_before_open_is_not_recreated() {
     assert_eq!(fs::read(bank.join("my-note.md")).unwrap(), before);
 }
 #[test]
-// tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_native_barrier_appearing_during_layout_observation_refuses_without_erasing_it
+// obligation: tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_native_barrier_appearing_during_layout_observation_refuses_without_erasing_it
 fn native_barrier_appearing_during_layout_observation_is_preserved() {
     let (w, runtime, repo, bank) = routerless();
     let before = physical(&bank);
@@ -181,7 +181,7 @@ fn native_barrier_appearing_during_layout_observation_is_preserved() {
     assert_eq!(physical(&bank), before);
 }
 #[test]
-// tests/contracts/test_update_mutable_observations.py::FreshObservationControls.test_mutations_between_router_observations_refuse
+// obligation: tests/contracts/test_update_mutable_observations.py::FreshObservationControls.test_mutations_between_router_observations_refuse
 fn mutations_between_router_observations_refuse() {
     for mutation in ["head", "index", "config", "bank", "lock"] {
         let r = Recall::new();
@@ -277,7 +277,7 @@ fn mutations_between_router_observations_refuse() {
 }
 
 #[test]
-// tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_remote_query_cleanup_failure_cannot_become_successful_discovery
+// obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_remote_query_cleanup_failure_cannot_become_successful_discovery
 fn remote_query_cleanup_failure_never_becomes_successful_discovery() {
     for close_fault in [false, true] {
         let mut r = Recall::new();

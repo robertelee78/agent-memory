@@ -500,10 +500,9 @@ fn unavailable_optional_cache_keeps_canonical_fallback_readonly() {
     assert!(!w.path("state").exists());
 }
 #[test]
-fn malformed_proposals_and_unregistered_operation_kinds_are_typed_refusals() {
+fn malformed_proposals_are_typed_refusals() {
     assert!(txn::proposal_value(&Value::Null).is_err());
     assert!(txn::proposal_value(&object([])).is_err());
-    assert!(txn::register_transaction_validator("unknown", None).is_err());
     assert!(txn::file_hashes(&object([("a", Value::Bool(true))])).is_err());
 }
 #[test]
@@ -574,7 +573,7 @@ fn command_errors_are_json_and_preserve_capacity_details() {
 }
 
 #[test]
-fn governed_evidence_requires_registered_validator_but_raw_mechanical_does_not() {
+fn governed_evidence_calls_its_validator_without_registration() {
     for (operation, key) in [
         ("capture", "admission_evidence"),
         ("compact", "consolidation_evidence"),
@@ -584,10 +583,23 @@ fn governed_evidence_requires_registered_validator_but_raw_mechanical_does_not()
     ] {
         let proposal = object([("operation", string(operation)), (key, object([]))]);
         let error = txn::validate_operation(&proposal, None).unwrap_err();
-        assert_eq!(
-            error.to_string(),
-            format!("Transaction validator is not registered for operation kind: {operation}")
-        );
+        let direct = match key {
+            "admission_evidence" => agent_memory::admission::validate_transaction(&proposal, None),
+            "consolidation_evidence" => {
+                agent_memory::consolidation::validate_transaction(&proposal, None)
+            }
+            "governance_evidence" => {
+                agent_memory::governance::validate_transaction(&proposal, None)
+            }
+            "refresh_evidence" => {
+                agent_memory::memory_refresh::validate_transaction(&proposal, None).map(|_| ())
+            }
+            "initialization_evidence" => {
+                agent_memory::initialization::validate_transaction(&proposal).map(|_| ())
+            }
+            _ => unreachable!(),
+        };
+        assert_eq!(error, direct.unwrap_err());
     }
     for operation in ["replace", "compact", "correct", "forget"] {
         txn::validate_operation(&object([("operation", string(operation))]), None).unwrap();

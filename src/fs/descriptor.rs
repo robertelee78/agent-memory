@@ -84,7 +84,7 @@ pub(crate) fn status(result: libc::c_int) -> io::Result<()> {
 }
 
 pub(crate) fn contract_io(error: io::Error) -> ContractError {
-    ContractError::new(error.to_string())
+    ContractError::from_error(error)
 }
 
 #[derive(Debug)]

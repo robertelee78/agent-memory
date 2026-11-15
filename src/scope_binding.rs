@@ -41,8 +41,8 @@ pub const MAX_BINDING_BYTES: usize = crate::sharing_limits::MAX_PRIVATE;
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
-fn io_error(error: impl std::fmt::Display) -> ContractError {
-    ContractError::new(error.to_string())
+fn io_error(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 fn text<'a>(v: &'a Value, key: &str) -> Result<&'a str> {
     get(v, key)

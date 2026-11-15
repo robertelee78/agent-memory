@@ -227,12 +227,23 @@ pub fn check(ledger: &Value, annotations: &[Annotation]) -> Vec<String> {
 }
 
 pub fn load_annotations(manifest: &Path) -> Result<Vec<Annotation>, String> {
+    // Test targets include shared cases from subdirectories such as tests/support;
+    // tests/fixtures holds captured data, never annotations.
     let tests = manifest.join("tests");
+    let fixtures = tests.join("fixtures");
     let mut paths = Vec::new();
-    for entry in fs::read_dir(&tests).map_err(|e| format!("{}: {e}", tests.display()))? {
-        let entry = entry.map_err(|e| e.to_string())?;
-        if entry.path().extension().is_some_and(|s| s == "rs") {
-            paths.push(entry.path());
+    let mut pending = vec![tests];
+    while let Some(dir) = pending.pop() {
+        for entry in fs::read_dir(&dir).map_err(|e| format!("{}: {e}", dir.display()))? {
+            let entry = entry.map_err(|e| e.to_string())?;
+            let kind = entry.file_type().map_err(|e| e.to_string())?;
+            if kind.is_dir() {
+                if entry.path() != fixtures {
+                    pending.push(entry.path());
+                }
+            } else if kind.is_file() && entry.path().extension().is_some_and(|s| s == "rs") {
+                paths.push(entry.path());
+            }
         }
     }
     paths.sort();

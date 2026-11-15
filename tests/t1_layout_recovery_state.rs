@@ -1,3 +1,5 @@
+mod support;
+
 use agent_memory::codec::json::Value;
 use agent_memory::developer_identity::{digest, encoded};
 use agent_memory::layout_recovery_state as state;
@@ -535,32 +537,62 @@ fn public_bind_and_index_publish_and_preserve_identity() {
 }
 
 #[test]
+#[cfg_attr(not(feature = "dev-tools"), ignore = "requires dev-tools rendezvous")]
 fn replaced_parent_during_real_file_observation_is_refused() {
-    let root = Root::new();
-    let parent = root.join("parent");
+    const STAGE: &str = "layout-recovery-state.read.after-open";
+    if let Ok(root) = support::require_current_world() {
+        refusal(
+            state::read_bytes(&root.join("parent/blob"), MAX_PRIVATE, false),
+            "Recovery evidence or its named parent changed during observation",
+        );
+        return;
+    }
+    let mut world = support::World::new().unwrap();
+    let parent = world.root.join("parent");
     state::private_parent(&parent).unwrap();
     let path = parent.join("blob");
     let raw = vec![0x61; 128 * 1024 * 1024];
     state::put_bytes(&path, &raw).unwrap();
-    let gate = std::sync::Arc::new(std::sync::Barrier::new(2));
-    let worker_gate = gate.clone();
-    let old = root.join("old-parent");
-    let worker_parent = parent.clone();
-    let worker = std::thread::spawn(move || {
-        worker_gate.wait();
-        std::thread::sleep(std::time::Duration::from_millis(2));
-        fs::rename(&worker_parent, &old).unwrap();
-        fs::create_dir(&worker_parent).unwrap();
-        fs::set_permissions(&worker_parent, fs::Permissions::from_mode(0o700)).unwrap();
-    });
-    gate.wait();
-    refusal(
-        state::read_bytes(&path, MAX_PRIVATE, false),
-        "Recovery evidence or its named parent changed during observation",
-    );
-    worker.join().unwrap();
+    let rendezvous = world.root.join("rendezvous");
+    world.env.extend([
+        ("AGENT_MEMORY_FAULT_STAGE".into(), STAGE.into()),
+        ("AGENT_MEMORY_FAULT_MODE".into(), "pause".into()),
+        (
+            "AGENT_MEMORY_FAULT_DIR".into(),
+            rendezvous.clone().into_os_string(),
+        ),
+    ]);
+    let child = world
+        .spawn([
+            std::env::current_exe().unwrap().into_os_string(),
+            "--exact".into(),
+            "replaced_parent_during_real_file_observation_is_refused".into(),
+            "--nocapture".into(),
+        ])
+        .unwrap();
+    let deadline = agent_memory::clock::Deadline::from_seconds(12.0).unwrap();
+    while !rendezvous.join(format!("{STAGE}.ready")).exists() {
+        assert!(!deadline.expired(), "Recovery file was not opened");
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    // Both real descriptors and their initial identities are pinned before
+    // this event. Release only after the named parent has actually changed.
+    fs::rename(&parent, world.root.join("old-parent")).unwrap();
+    fs::create_dir(&parent).unwrap();
+    fs::set_permissions(&parent, fs::Permissions::from_mode(0o700)).unwrap();
+    put(&rendezvous.join(format!("{STAGE}.release")), b"");
+    let output = child.wait().unwrap();
     assert_eq!(
-        fs::metadata(root.join("old-parent/blob")).unwrap().len(),
+        output.status,
+        agent_memory::process::Status::Code(0),
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        fs::metadata(world.root.join("old-parent/blob"))
+            .unwrap()
+            .len(),
         raw.len() as u64
     );
 }

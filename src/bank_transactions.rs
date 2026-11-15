@@ -11,7 +11,6 @@ use crate::{local_registry as storage, repository_config, sharing_limits as limi
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::{OsStr, OsString};
 use std::path::{Component, Path, PathBuf};
-use std::sync::{Arc, RwLock};
 
 pub const MARKER: &str = ".agent-memory-transaction.md";
 pub const SCHEMA: &str = "agent-memory/transaction-proposal-v1";
@@ -60,62 +59,30 @@ pub const MAX_MARKER_BYTES: usize = limits::MAX_PRIVATE;
 pub const MAX_JOURNAL_BYTES: usize = limits::MAX_PRIVATE;
 pub const MAX_RECEIPT_BYTES: usize = limits::MAX_PRIVATE;
 
-/// Operation-keyed semantic/source gate implemented by initialization, admission,
-/// consolidation, governance and memory_refresh. Sources are checked separately
-/// from structural/result validation; historical receipts never refresh sources.
-pub trait TransactionValidator: Send + Sync {
-    fn validate_transaction(&self, proposal: &Value, owned_lock: Option<&[u8]>) -> Result<()>;
-    fn check_sources(&self, proposal: &Value, owner: &[u8], marker: &[u8]) -> Result<()>;
-}
-static VALIDATORS: RwLock<BTreeMap<String, Arc<dyn TransactionValidator>>> =
-    RwLock::new(BTreeMap::new());
-pub fn register_transaction_validator(
-    operation: &str,
-    provider: Option<Arc<dyn TransactionValidator>>,
-) -> Result<()> {
-    if !writes::OPERATIONS.contains(&operation) {
-        return Err(err("Invalid bank transaction operation kind"));
-    }
-    let mut registry = VALIDATORS.write().unwrap_or_else(|e| e.into_inner());
-    if let Some(provider) = provider {
-        registry.insert(operation.to_owned(), provider);
-    } else {
-        registry.remove(operation);
-    }
-    Ok(())
-}
-/// Shared lookup for recovery_transactions; missing governed kinds fail closed.
-pub fn transaction_validator(operation: &str) -> Result<Arc<dyn TransactionValidator>> {
-    VALIDATORS
-        .read()
-        .unwrap_or_else(|e| e.into_inner())
-        .get(operation)
-        .cloned()
-        .ok_or_else(|| {
-            err(&format!(
-                "Transaction validator is not registered for operation kind: {operation}"
-            ))
-        })
-}
-/// The baseline consulted semantic validators only for governed evidence or initialize.
+/// Recheck only the semantic evidence carried by this proposal.
 pub fn validate_operation(proposal: &Value, owned_lock: Option<&[u8]>) -> Result<()> {
-    if governed(proposal) {
-        validator(proposal)?.validate_transaction(proposal, owned_lock)?;
+    if get(proposal, "operation").as_str() == Some("initialize") {
+        crate::initialization::validate_transaction(proposal)?;
+    }
+    if proposal.get("admission_evidence").is_some() {
+        crate::admission::validate_transaction(proposal, owned_lock)?;
+    }
+    if proposal.get("governance_evidence").is_some() {
+        crate::governance::validate_transaction(proposal, owned_lock)?;
+    }
+    if proposal.get("consolidation_evidence").is_some() {
+        crate::consolidation::validate_transaction(proposal, owned_lock)?;
+    }
+    if proposal.get("refresh_evidence").is_some() {
+        crate::memory_refresh::validate_transaction(proposal, owned_lock)?;
     }
     Ok(())
-}
-fn validator(p: &Value) -> Result<Arc<dyn TransactionValidator>> {
-    transaction_validator(text(p, "operation")?)
-}
-fn governed(p: &Value) -> bool {
-    EVIDENCE.iter().take(5).any(|key| p.get(key).is_some())
-        || get(p, "operation").as_str() == Some("initialize")
 }
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
-fn io_error(e: impl std::fmt::Display) -> ContractError {
-    err(&e.to_string())
+fn io_error(e: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(e)
 }
 fn text<'a>(v: &'a Value, key: &str) -> Result<&'a str> {
     get(v, key)
@@ -939,16 +906,17 @@ pub fn validate_outcome(
         if p.get("checkpoint_evidence").is_some() {
             crate::checkpoint::validate_preparation(p, true)?;
         }
-        if [
-            "admission_evidence",
-            "governance_evidence",
-            "consolidation_evidence",
-            "refresh_evidence",
-        ]
-        .iter()
-        .any(|key| p.get(key).is_some())
-        {
-            validator(p)?.check_sources(p, owner, marker)?;
+        if p.get("admission_evidence").is_some() {
+            crate::admission::check_sources(p, Some(owner), Some(marker))?;
+        }
+        if p.get("governance_evidence").is_some() {
+            crate::governance::check_sources(p, Some(owner), Some(marker))?;
+        }
+        if p.get("consolidation_evidence").is_some() {
+            crate::consolidation::check_sources(p, Some(owner), Some(marker))?;
+        }
+        if p.get("refresh_evidence").is_some() {
+            crate::memory_refresh::check_sources(p, Some(owner), Some(marker))?;
         }
     }
     if desired.as_object().is_some_and(|map| map.is_empty()) && first_bank(p) {
@@ -1378,7 +1346,7 @@ pub fn apply(prepared: &Value) -> Result<Value> {
             initializing,
         )?;
         validate(Some(owner))?;
-        if governed(p) || p.get("checkpoint_evidence").is_some() {
+        if operation == "initialize" || EVIDENCE.iter().any(|key| p.get(key).is_some()) {
             let complete_refresh = get(get(get(p, "refresh_evidence"), "proof"), "schema").as_str()
                 == Some("agent-memory/semantic-sharing-proof-v2");
             crate::security::guarded_start(
@@ -1558,7 +1526,7 @@ pub fn recover_with_identity_and_environment(
         crate::checkpoint::validate_preparation(&p, known.is_none())?;
     }
     if mode == "finish" && text(&p, "operation")? == "initialize" {
-        validator(&p)?.validate_transaction(&p, None)?;
+        crate::initialization::validate_transaction(&p)?;
     }
     let observed = writes::hashes(&bank)?;
     allowed_partial(&p, &observed)?;
@@ -1654,7 +1622,7 @@ pub fn recover(repo: &Path, mode: Option<&str>, prepared: Option<&Value>) -> Res
                     receipt_value(&receipt_path, &p)?.is_none(),
                 )?;
             } else {
-                validator(&p)?.validate_transaction(&p, None)?;
+                crate::initialization::validate_transaction(&p)?;
             }
             crate::security::guarded_start(
                 &root,

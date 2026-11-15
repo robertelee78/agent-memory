@@ -53,7 +53,6 @@ fn live_ledger_is_consistent() {
 }
 
 #[test]
-#[ignore = "enable at release freeze"]
 fn no_unported_obligation_remains() {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut bytes = Vec::new();

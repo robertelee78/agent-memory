@@ -11,8 +11,8 @@ use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 pub const SCHEMA: &str = "agent-memory/semantic-sharing-page-export-v1";
-fn io(error: impl std::fmt::Display) -> ContractError {
-    ContractError::new(error.to_string())
+fn io(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 fn parent(path: &Path) -> Result<&Path> {
     path.parent()

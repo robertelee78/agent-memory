@@ -11,6 +11,11 @@ use std::path::{Path, PathBuf};
 pub enum Kind {
     /// A violated data or protocol contract.
     Contract,
+    /// An I/O failure, retaining classification independently of rendered text.
+    Io {
+        kind: std::io::ErrorKind,
+        raw_os_error: Option<i32>,
+    },
     /// An unsafe lifecycle trust path: the path is preserved, not repaired.
     TrustPath { path: PathBuf, reason: String },
     /// A validated canonical bank capacity observation.
@@ -89,6 +94,29 @@ impl ContractError {
         Self {
             kind: Kind::Contract,
             message: message.into(),
+        }
+    }
+
+    /// Preserve I/O classification through bounded-reader and lock error wrappers.
+    pub fn from_error(error: impl std::error::Error + 'static) -> Self {
+        let mut source: &(dyn std::error::Error + 'static) = &error;
+        loop {
+            if let Some(contract) = source.downcast_ref::<Self>() {
+                return contract.clone();
+            }
+            if let Some(io) = source.downcast_ref::<std::io::Error>() {
+                return Self {
+                    kind: Kind::Io {
+                        kind: io.kind(),
+                        raw_os_error: io.raw_os_error(),
+                    },
+                    message: error.to_string(),
+                };
+            }
+            match source.source() {
+                Some(next) => source = next,
+                None => return Self::new(error.to_string()),
+            }
         }
     }
 
@@ -333,5 +361,59 @@ impl ContractError {
             kind: Kind::UntrackedCanonicalMemory,
             message: "Locally untracked canonical memory requires full review.".into(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ContractError, Kind};
+    use crate::fs::{LockError, ReadError};
+    use std::io;
+
+    #[test]
+    fn io_classification_preserves_errno_kind_and_rendering_through_wrappers() {
+        for errno in [
+            libc::ENOENT,
+            libc::EEXIST,
+            libc::ENOTDIR,
+            libc::ELOOP,
+            libc::EXDEV,
+            libc::ENOSPC,
+            libc::EACCES,
+        ] {
+            let expected = io::Error::from_raw_os_error(errno);
+            let kind = Kind::Io {
+                kind: expected.kind(),
+                raw_os_error: Some(errno),
+            };
+            for error in [
+                ContractError::from_error(io::Error::from_raw_os_error(errno)),
+                ContractError::from_error(ReadError::Io(io::Error::from_raw_os_error(errno))),
+                ContractError::from_error(LockError::Io(io::Error::from_raw_os_error(errno))),
+            ] {
+                assert_eq!(error.kind(), &kind);
+                assert_eq!(error.message(), expected.to_string());
+                assert_eq!(ContractError::from_error(error.clone()), error);
+            }
+        }
+    }
+
+    #[test]
+    fn io_kind_without_errno_does_not_depend_on_message() {
+        let error = ContractError::from_error(io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            "localized collision",
+        ));
+        assert_eq!(
+            error.kind(),
+            &Kind::Io {
+                kind: io::ErrorKind::AlreadyExists,
+                raw_os_error: None,
+            }
+        );
+        assert_eq!(error.message(), "localized collision");
+        let refusal = ContractError::new("File exists (os error 17)");
+        assert_eq!(refusal.kind(), &Kind::Contract);
+        assert_eq!(ContractError::from_error(refusal.clone()), refusal);
     }
 }

@@ -2205,17 +2205,6 @@ pub fn require_intent(
     Ok(())
 }
 
-/// Operation-keyed transaction gate for correct, supersede, revoke and forget.
-pub struct Governance;
-impl tx::TransactionValidator for Governance {
-    fn validate_transaction(&self, p: &Value, owner: Option<&[u8]>) -> Result<()> {
-        validate_transaction(p, owner)
-    }
-    fn check_sources(&self, p: &Value, owner: &[u8], marker: &[u8]) -> Result<()> {
-        check_sources(p, Some(owner), Some(marker))
-    }
-}
-
 pub fn command_result(operation: &str, outcome: Result<Value>) -> lifecycle::CommandResult {
     match outcome {
         Ok(value) => lifecycle::CommandResult::json(value, 0, json::INDENT2_UTF8),

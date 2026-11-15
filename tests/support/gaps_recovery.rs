@@ -118,7 +118,7 @@ fn library_worker() {
     );
 }
 #[test]
-// tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_real_verified_hold_remains_readonly_through_grouped_settings_and_enrollment
+// obligation: tests/contracts/test_repository_observation_batch.py::RepositoryObservationBatch.test_real_verified_hold_remains_readonly_through_grouped_settings_and_enrollment
 fn real_verified_hold_remains_readonly_through_grouped_settings_and_enrollment() {
     let f = Fixture::new();
     let before = (
@@ -146,7 +146,7 @@ fn real_verified_hold_remains_readonly_through_grouped_settings_and_enrollment()
     }
 }
 #[test]
-// tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_private_lifecycle_observation_refuses_config_bank_hold_and_attestation_races
+// obligation: tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_private_lifecycle_observation_refuses_config_bank_hold_and_attestation_races
 fn private_lifecycle_observation_refuses_config_bank_hold_and_attestation_races() {
     for kind in ["config", "bank", "hold", "attestation"] {
         let f = Fixture::new();
@@ -313,7 +313,7 @@ fn renewal(f: &Fixture, digest: &str) -> PathBuf {
     PathBuf::from(f.save(&envelope))
 }
 #[test]
-// tests/contracts/test_layout_recovery_runtime_rollback.py::HeldRuntimeRollbackContract.test_interrupted_capable_update_rolls_back_exact_runtime_and_keeps_hold
+// obligation: tests/contracts/test_layout_recovery_runtime_rollback.py::HeldRuntimeRollbackContract.test_interrupted_capable_update_rolls_back_exact_runtime_and_keeps_hold
 fn interrupted_capable_update_rolls_back_exact_runtime_and_keeps_hold() {
     let (f, channel) = signed_hold();
     let receipt_path = support::lifecycle::state(&f.world).join("receipt.json");
@@ -684,7 +684,7 @@ fn mixed(completed: bool) -> Fixture {
     )
 }
 #[test]
-// tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_omp_first_mixed_pending_rejects_actual_published_old_managed_candidate
+// obligation: tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_omp_first_mixed_pending_rejects_actual_published_old_managed_candidate
 fn omp_first_mixed_pending_rejects_retired_managed_candidate() {
     let f = mixed(false);
     let before = (
@@ -727,7 +727,7 @@ fn omp_first_mixed_pending_rejects_retired_managed_candidate() {
     assert_eq!(pending(&f), pending_before);
 }
 #[test]
-// tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_completed_omp_drains_before_layout_then_old_reader_after_both
+// obligation: tests/contracts/test_mixed_private_capabilities.py::MixedPrivateCapabilities.test_completed_omp_drains_before_layout_then_old_reader_after_both
 fn completed_omp_drains_only_after_independent_layout_hold_retires() {
     let f = mixed(true);
     assert!(pending(&f).is_empty());

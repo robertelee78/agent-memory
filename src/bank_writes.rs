@@ -275,8 +275,8 @@ fn err(message: &str) -> ContractError {
 fn missing(message: &str) -> ContractError {
     ContractError::missing_provider(message)
 }
-fn io_error(error: impl std::fmt::Display) -> ContractError {
-    ContractError::new(error.to_string())
+fn io_error(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 fn path_text(path: &Path) -> Result<&str> {
     host::text(path.as_os_str(), "write path")

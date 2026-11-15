@@ -901,6 +901,8 @@ fn hook_timestamps_accept_only_writer_reachable_utc_forms() {
     }
 }
 
+// obligation: tests/contracts/test_compact_turn_check.py::CompactChecks.test_actual_assessment_refresh_failure_dedup_and_recovery
+// obligation: tests/contracts/test_compact_turn_check.py::CompactChecks.test_native_combined_refresh_uses_protected_writable_state_without_review_echo
 #[test]
 fn contract_and_unexpected_completion_failures_remain_distinct() {
     use agent_memory::error::ContractError;
@@ -950,6 +952,7 @@ fn contract_and_unexpected_completion_failures_remain_distinct() {
     );
 }
 
+// obligation: tests/contracts/test_compact_turn_check.py::CompactChecks.test_batch_distinct_observations_and_partial_failure
 #[test]
 fn compact_request_refusal_order_and_json_numeric_equality_match_baseline() {
     let malformed = value(

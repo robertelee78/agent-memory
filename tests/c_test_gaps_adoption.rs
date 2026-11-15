@@ -180,27 +180,27 @@ fn adoption(scenario: &str, alias: bool, collaborative: bool) {
 }
 
 #[test]
-// tests/contracts/test_installer.py::MacOSCommandContract.test_actual_shipped_old_updater_then_install_migrates_without_stranding_ownership
+// obligation: tests/contracts/test_installer.py::MacOSCommandContract.test_actual_shipped_old_updater_then_install_migrates_without_stranding_ownership
 fn captured_old_install_migrates_without_stranding_ownership() {
     adoption("all-copy", false, false);
 }
 #[test]
-// tests/contracts/test_installer.py::MacOSCommandContract.test_shipped_uninstaller_can_remove_new_wrappers_with_aliased_xdg_and_target_paths
+// obligation: tests/contracts/test_installer.py::MacOSCommandContract.test_shipped_uninstaller_can_remove_new_wrappers_with_aliased_xdg_and_target_paths
 fn captured_ownership_removes_native_commands_under_aliased_xdg() {
     adoption("all-link", true, false);
 }
 #[test]
-// tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_actual_released_v002_updater_accepts_changed_runtime_under_umask002
+// obligation: tests/contracts/test_lifecycle_trust.py::LifecycleTrustContract.test_actual_released_v002_updater_accepts_changed_runtime_under_umask002
 fn captured_legacy_ownership_adopts_under_umask002() {
     adoption("all-copy", false, true);
 }
 #[test]
-// tests/contracts/test_public_cli.py::PublicCLIContract.test_actual_legacy_wrapper_gains_flags_and_human_output_without_wrapper_replacement
+// obligation: tests/contracts/test_public_cli.py::PublicCLIContract.test_actual_legacy_wrapper_gains_flags_and_human_output_without_wrapper_replacement
 fn captured_legacy_commands_gain_native_flags_with_explicit_wrapper_cutover() {
     adoption("all-link", false, false);
 }
 #[test]
-// tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_trusted_source_helper_updates_when_the_installed_command_does_not_yet_dispatch_update
+// obligation: tests/contracts/test_runtime_update.py::RuntimeUpdateContract.test_trusted_source_helper_updates_when_the_installed_command_does_not_yet_dispatch_update
 fn trusted_native_binary_adopts_without_executing_legacy_dispatch() {
     adoption("claude-opencode-copy", false, false);
 }
@@ -348,7 +348,7 @@ fn standalone_python_recovery_reads_a_verified_pack_and_refuses_drift() {
 }
 
 #[test]
-// tests/contracts/test_installer.py::MacOSCommandContract.test_current_and_shipped_recovery_read_each_others_wrapper_journals
+// obligation: tests/contracts/test_installer.py::MacOSCommandContract.test_current_and_shipped_recovery_read_each_others_wrapper_journals
 fn captured_and_native_journals_recover_at_the_receipt_boundary() {
     for committed in [false, true] {
         let w = World::new().unwrap();
@@ -470,19 +470,19 @@ fn signed_adoption(deleted_worktree: bool, collaborative: bool) {
     assert_eq!(get(&version, "ok"), &Value::Bool(true));
 }
 #[test]
-// tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_actual_v002_index_refresh_and_deleted_worktree_upgrade_through_signed_one_liner
+// obligation: tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_actual_v002_index_refresh_and_deleted_worktree_upgrade_through_signed_one_liner
 fn captured_old_source_and_deleted_worktree_adopt_to_signed_release() {
     signed_adoption(true, false);
 }
 #[test]
-// tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_actual_v002_process_then_same_version_signed_adoption_under_022_and_002
+// obligation: tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_actual_v002_process_then_same_version_signed_adoption_under_022_and_002
 fn captured_legacy_source_adopts_signed_release_with_collaborative_modes() {
     signed_adoption(false, false);
     signed_adoption(false, true);
 }
 
 #[test]
-// tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_released_v014_sources_preview_then_upgrade_without_inventing_native_authority
+// obligation: tests/contracts/test_private_lifecycle_observation.py::PrivateLifecycleObservation.test_released_v014_sources_preview_then_upgrade_without_inventing_native_authority
 fn captured_pending_sources_preview_and_adopt_without_inventing_native_authority() {
     let mut w = World::new().unwrap();
     // The captured fixture deliberately contains lifecycle records only
@@ -577,7 +577,7 @@ fn captured_pending_sources_preview_and_adopt_without_inventing_native_authority
 }
 
 #[test]
-// tests/contracts/test_managed_source_ownership.py::ManagedSourceOwnershipContract.test_doctor_uses_the_same_legacy_ownership_check
+// obligation: tests/contracts/test_managed_source_ownership.py::ManagedSourceOwnershipContract.test_doctor_uses_the_same_legacy_ownership_check
 fn doctor_checks_captured_ownership_and_preserves_foreign_source() {
     let w = World::new().unwrap();
     let old = captured(&w, "all-copy");

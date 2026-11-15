@@ -263,8 +263,8 @@ use std::path::{Path, PathBuf};
 pub const REGISTRY_MAX_BYTES: usize = 64 * 1024 * 1024;
 pub const LOCK_MAX_BYTES: usize = 1024 * 1024;
 
-fn io_error(e: impl std::fmt::Display) -> ContractError {
-    ContractError::new(e.to_string())
+fn io_error(e: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(e)
 }
 fn nullable(s: Option<String>) -> Value {
     s.map(string).unwrap_or(Value::Null)

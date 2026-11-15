@@ -17,6 +17,15 @@ use support::{RunOptions, World};
 const SESSION: &str = "native-session";
 const LIFE: &str = "11111111-2222-4333-8444-555555555555";
 
+// Real clock windows, rendezvous and elapsed bounds must not compete with
+// each other inside this binary. Acquire before spawning the isolated child.
+static REAL_TIME_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
+fn real_time_test() -> std::sync::MutexGuard<'static, ()> {
+    REAL_TIME_TEST
+        .lock()
+        .unwrap_or_else(|error| error.into_inner())
+}
+
 fn decode(raw: &str) -> Value {
     json::decode(raw, Default::default()).unwrap()
 }
@@ -2550,6 +2559,7 @@ fn fatal_absence(name: &str, family: &str) {
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_native_absence_preserves_interrupts_and_fatal_failures
 #[test]
 fn native_absence_preserves_real_sigint_and_system_exit() {
+    let _real_time = real_time_test();
     fatal_absence(
         "native_absence_preserves_real_sigint_and_system_exit",
         "native",
@@ -2558,6 +2568,7 @@ fn native_absence_preserves_real_sigint_and_system_exit() {
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_completion_absence_preserves_interrupts_and_fatal_failures
 #[test]
 fn completion_absence_preserves_real_sigint_and_system_exit() {
+    let _real_time = real_time_test();
     fatal_absence(
         "completion_absence_preserves_real_sigint_and_system_exit",
         "completion",
@@ -3922,6 +3933,7 @@ fn ready(root: &Path, stage: &str) {
 }
 #[test]
 fn native_operation_child() {
+    let _real_time = real_time_test();
     let Ok(operation) = std::env::var("AGENT_MEMORY_FAULT_OMP_OPERATION") else {
         return;
     };
@@ -4274,6 +4286,7 @@ fn no_verified_response(root: &Path) {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_nonbusy_outcome_failure_never_writes_second_outcome_or_verified_response
 #[test]
 fn nonbusy_outcome_exit_failure_never_publishes_verified_response() {
+    let _real_time = real_time_test();
     isolated(
         "nonbusy_outcome_exit_failure_never_publishes_verified_response",
         |root| {
@@ -4319,6 +4332,7 @@ fn nonbusy_outcome_exit_failure_never_publishes_verified_response() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_captured_source_checkpoint_failure_does_not_verify_or_schedule_drain
 #[test]
 fn captured_source_checkpoint_failure_never_verifies_or_drains() {
+    let _real_time = real_time_test();
     isolated(
         "captured_source_checkpoint_failure_never_verifies_or_drains",
         |root| {
@@ -4389,6 +4403,7 @@ fn checkpoint_swap(root: &Path, name: &str) {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_executor_barrier_fd_swap
 #[test]
 fn checkpoint_rejects_actual_executor_barrier_inode_swap() {
+    let _real_time = real_time_test();
     isolated(
         "checkpoint_rejects_actual_executor_barrier_inode_swap",
         |root| checkpoint_swap(root, "source-barrier.lock"),
@@ -4397,6 +4412,7 @@ fn checkpoint_rejects_actual_executor_barrier_inode_swap() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_source_checkpoint_rejects_actual_transport_fd_swap
 #[test]
 fn checkpoint_rejects_actual_transport_inode_swap() {
+    let _real_time = real_time_test();
     isolated("checkpoint_rejects_actual_transport_inode_swap", |root| {
         checkpoint_swap(root, "omp-transport.lock")
     });
@@ -4476,6 +4492,7 @@ fn assert_verified_pending_source(f: &Fixture, directory: &Path) {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_ack_after_source_started_resolves_only_at_reservation
 #[test]
 fn late_real_clock_ack_is_resolved_at_reservation() {
+    let _real_time = real_time_test();
     isolated("late_real_clock_ack_is_resolved_at_reservation", |root| {
         let f = Fixture::new(root);
         let directory = calibrated_child(root, &f, |_| {});
@@ -4488,6 +4505,7 @@ fn late_real_clock_ack_is_resolved_at_reservation() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_binds_actual_root_after_response_without_changing_old_evidence
 #[test]
 fn offered_decision_binds_actual_root_and_preserves_old_evidence() {
+    let _real_time = real_time_test();
     isolated(
         "offered_decision_binds_actual_root_and_preserves_old_evidence",
         |root| {
@@ -4564,6 +4582,7 @@ fn offered_decision_binds_actual_root_and_preserves_old_evidence() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_spoofed_record_keys_types_digests_and_status_are_unbound_without_contents
 #[test]
 fn spoofed_diagnostic_keys_types_digests_and_status_are_unbound() {
+    let _real_time = real_time_test();
     isolated(
         "spoofed_diagnostic_keys_types_digests_and_status_are_unbound",
         |root| {
@@ -4639,6 +4658,7 @@ fn spoofed_diagnostic_keys_types_digests_and_status_are_unbound() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_canonical_parsed_evidence_digests_survive_noncanonical_json_encoding
 #[test]
 fn parsed_evidence_digests_survive_noncanonical_json_encoding() {
+    let _real_time = real_time_test();
     isolated(
         "parsed_evidence_digests_survive_noncanonical_json_encoding",
         |root| {
@@ -4679,6 +4699,7 @@ fn parsed_evidence_digests_survive_noncanonical_json_encoding() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_root_write_failure_after_actual_reservation_is_unknown_not_replayed
 #[test]
 fn real_root_write_failure_after_reservation_stays_unknown() {
+    let _real_time = real_time_test();
     isolated(
         "real_root_write_failure_after_reservation_stays_unknown",
         |root| {
@@ -4712,6 +4733,7 @@ fn real_root_write_failure_after_reservation_stays_unknown() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_wake_and_observer_unwind_faults_preserve_source_and_actual_reservation_fact
 #[test]
 fn real_transport_exit_swap_preserves_committed_source_and_spent_reservation() {
+    let _real_time = real_time_test();
     isolated(
         "real_transport_exit_swap_preserves_committed_source_and_spent_reservation",
         |root| {
@@ -4804,6 +4826,7 @@ fn sampled_attempt_mutation(root: &Path, deleted: bool) {
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source
 #[test]
 fn changed_sampled_attempt_refuses_even_matching_registered_source() {
+    let _real_time = real_time_test();
     isolated(
         "changed_sampled_attempt_refuses_even_matching_registered_source",
         |root| sampled_attempt_mutation(root, false),
@@ -4812,6 +4835,7 @@ fn changed_sampled_attempt_refuses_even_matching_registered_source() {
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_sampled_attempt_changed_or_deleted_refuses_even_matching_registered_source
 #[test]
 fn deleted_sampled_attempt_refuses_even_matching_registered_source() {
+    let _real_time = real_time_test();
     isolated(
         "deleted_sampled_attempt_refuses_even_matching_registered_source",
         |root| sampled_attempt_mutation(root, true),
@@ -4821,6 +4845,7 @@ fn deleted_sampled_attempt_refuses_even_matching_registered_source() {
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_observation_failure_is_local_memoized_and_fault_lists_are_independent
 #[test]
 fn observation_failure_is_local_memoized_and_fault_lists_are_independent() {
+    let _real_time = real_time_test();
     isolated(
         "observation_failure_is_local_memoized_and_fault_lists_are_independent",
         |root| {
@@ -4873,6 +4898,7 @@ fn observation_failure_is_local_memoized_and_fault_lists_are_independent() {
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_registration_between_row_lookups_cannot_invent_retained_attempt_fault
 #[test]
 fn registration_between_lookups_cannot_invent_retained_attempt_fault() {
+    let _real_time = real_time_test();
     isolated(
         "registration_between_lookups_cannot_invent_retained_attempt_fault",
         |root| {
@@ -4925,6 +4951,7 @@ fn registration_between_lookups_cannot_invent_retained_attempt_fault() {
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_namespace_change_between_both_locked_passes_refuses_every_row
 #[test]
 fn namespace_change_between_locked_passes_refuses_every_row() {
+    let _real_time = real_time_test();
     isolated(
         "namespace_change_between_locked_passes_refuses_every_row",
         |root| {
@@ -5670,6 +5697,7 @@ fn transaction_exit_freshly_refuses_late_authority_config_without_private_writes
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postcommit_pre_reservation_fault_has_no_second_outcome
 #[test]
 fn postcommit_prereservation_refusal_has_no_second_outcome() {
+    let _real_time = real_time_test();
     isolated(
         "postcommit_prereservation_refusal_has_no_second_outcome",
         |root| {
@@ -5700,6 +5728,7 @@ fn postcommit_prereservation_refusal_has_no_second_outcome() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_plain_prereserve_open_read_refuses_drift_after_verified_source
 #[test]
 fn prereserve_open_read_refuses_drift_after_verified_source() {
+    let _real_time = real_time_test();
     isolated(
         "prereserve_open_read_refuses_drift_after_verified_source",
         |root| {
@@ -5735,6 +5764,7 @@ fn prereserve_open_read_refuses_drift_after_verified_source() {
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_wake_failure_after_reservation_preserves_verified_seal_and_single_budget
 #[test]
 fn retained_root_after_cursor_failure_stays_unknown_and_rootless() {
+    let _real_time = real_time_test();
     isolated(
         "retained_root_after_cursor_failure_stays_unknown_and_rootless",
         |root| {
@@ -5791,6 +5821,7 @@ fn retained_root_after_cursor_failure_stays_unknown_and_rootless() {
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_transport_absence_rechecks_normal_and_ordinary_failures
 #[test]
 fn public_readonly_drain_rechecks_raced_transport_absence() {
+    let _real_time = real_time_test();
     isolated(
         "public_readonly_drain_rechecks_raced_transport_absence",
         |root| {
@@ -5825,6 +5856,7 @@ fn public_readonly_drain_rechecks_raced_transport_absence() {
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_native_drain_preserves_interrupts_and_releases_source_barrier
 #[test]
 fn public_native_drain_preserves_real_sigint_and_releases_barrier() {
+    let _real_time = real_time_test();
     isolated(
         "public_native_drain_preserves_real_sigint_and_releases_barrier",
         |root| {
@@ -6075,6 +6107,7 @@ fn assert_capture_succeeds(child: OperationChild) {
 // obligation: tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_public_capture_cannot_interpose_before_verified_outcome
 #[test]
 fn public_capture_cannot_interpose_before_verified_finite_outcome() {
+    let _real_time = real_time_test();
     isolated(
         "public_capture_cannot_interpose_before_verified_finite_outcome",
         |root| {
@@ -6137,6 +6170,7 @@ fn public_capture_cannot_interpose_before_verified_finite_outcome() {
 // obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_public_capture_exhausts_real_shared_barrier_without_canonical_write
 #[test]
 fn public_capture_exhausts_real_shared_barrier_without_canonical_write() {
+    let _real_time = real_time_test();
     isolated(
         "public_capture_exhausts_real_shared_barrier_without_canonical_write",
         |root| {
@@ -6289,6 +6323,7 @@ fn writer_and_observer_order(root: &Path, writer_first: bool) {
 // obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders
 #[test]
 fn actual_capture_before_real_observer_retains_fence_order() {
+    let _real_time = real_time_test();
     isolated(
         "actual_capture_before_real_observer_retains_fence_order",
         |root| writer_and_observer_order(root, true),
@@ -6297,6 +6332,7 @@ fn actual_capture_before_real_observer_retains_fence_order() {
 // obligation: tests/contracts/test_omp_writer_fence.py::InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders
 #[test]
 fn actual_observer_before_real_capture_retains_fence_order() {
+    let _real_time = real_time_test();
     isolated(
         "actual_observer_before_real_capture_retains_fence_order",
         |root| writer_and_observer_order(root, false),
@@ -7047,6 +7083,7 @@ fn response_frames(path: &Path) -> Vec<(String, u64, Value)> {
 // obligation: tests/contracts/test_omp_finite_outcome_fence.py::FiniteOutcomeFence.test_contended_entry_refuses_current_frame_and_stops
 #[test]
 fn contended_entry_refuses_current_frame_and_stops_with_open_input() {
+    let _real_time = real_time_test();
     use std::io::Write;
     isolated(
         "contended_entry_refuses_current_frame_and_stops_with_open_input",
@@ -7647,6 +7684,7 @@ fn weak_historical_event_resolution_never_grants_new_completion() {
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_malformed_wake_state_suppresses_reservation_but_retains_and_enrolls_real_source
 #[test]
 fn malformed_wake_namespace_preserves_sources_without_spending_window() {
+    let _real_time = real_time_test();
     isolated(
         "malformed_wake_namespace_preserves_sources_without_spending_window",
         |root| {
@@ -7749,6 +7787,7 @@ fn resumed_carrier_message_and_unavailable_tail_never_append_to_sealed_parent() 
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_expired_internal_delivery_window_never_reserves_root_wake
 #[test]
 fn expired_real_window_does_not_spend_native_human_budget() {
+    let _real_time = real_time_test();
     isolated(
         "expired_real_window_does_not_spend_native_human_budget",
         |root| {
@@ -8007,6 +8046,7 @@ fn registry_interleave(root: &Path, boundary: &str, replacement: bool) {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_clean_release_at_each_observation_boundary_is_not_recovery
 #[test]
 fn clean_writer_release_at_every_real_probe_boundary_is_not_recovery() {
+    let _real_time = real_time_test();
     isolated(
         "clean_writer_release_at_every_real_probe_boundary_is_not_recovery",
         |root| {
@@ -8032,6 +8072,7 @@ fn clean_writer_release_at_every_real_probe_boundary_is_not_recovery() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_rebound_inode_after_flock_observation_is_not_classified_as_busy
 #[test]
 fn replacement_at_every_checked_probe_boundary_is_a_hard_refusal() {
+    let _real_time = real_time_test();
     isolated(
         "replacement_at_every_checked_probe_boundary_is_a_hard_refusal",
         |root| {
@@ -8097,6 +8138,7 @@ fn empty_writer_slot_requires_private_unlinked_ordinary_file() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_zero_initialization_cannot_rebind_its_pinned_bank
 #[test]
 fn empty_writer_probe_cannot_follow_rebound_pinned_bank() {
+    let _real_time = real_time_test();
     isolated(
         "empty_writer_probe_cannot_follow_rebound_pinned_bank",
         |root| {
@@ -8122,6 +8164,7 @@ fn empty_writer_probe_cannot_follow_rebound_pinned_bank() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_bank_replaced_by_symlink_before_open_is_typed_without_closing_foreign_fds
 #[test]
 fn symlink_rebound_bank_refuses_without_closing_unrelated_descriptor() {
+    let _real_time = real_time_test();
     isolated(
         "symlink_rebound_bank_refuses_without_closing_unrelated_descriptor",
         |root| {
@@ -8169,6 +8212,7 @@ fn real_marker_inspection_permission_failure_is_a_typed_refusal() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_noncontention_first_ex_error_removes_only_creators_empty_slot
 #[test]
 fn forced_first_ex_syscall_errors_cleanup_only_created_empty_slot() {
+    let _real_time = real_time_test();
     isolated(
         "forced_first_ex_syscall_errors_cleanup_only_created_empty_slot",
         |root| {
@@ -8197,6 +8241,7 @@ fn forced_first_ex_syscall_errors_cleanup_only_created_empty_slot() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_nonempty_short_owner_write_remains_interruption_not_initialization
 #[test]
 fn actual_short_owner_publication_retains_only_written_prefix() {
+    let _real_time = real_time_test();
     isolated(
         "actual_short_owner_publication_retains_only_written_prefix",
         |root| {
@@ -8223,6 +8268,7 @@ fn actual_short_owner_publication_retains_only_written_prefix() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_owner_write_oserror_preserves_publication_evidence_and_closes_creator
 #[test]
 fn owner_write_error_keeps_empty_publication_and_releases_actual_descriptor() {
+    let _real_time = real_time_test();
     isolated(
         "owner_write_error_keeps_empty_publication_and_releases_actual_descriptor",
         |root| {
@@ -8647,6 +8693,7 @@ fn protected_private_root_cannot_lose_native_binding_silently() {
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source
 #[test]
 fn native_root_wake_is_once_and_next_human_includes_old_unassessed_sources() {
+    let _real_time = real_time_test();
     isolated(
         "native_root_wake_is_once_and_next_human_includes_old_unassessed_sources",
         |root| {
@@ -8899,6 +8946,7 @@ fn finish_enrollment(root: &Path, child: OperationChild, stage: &str) -> Value {
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival
 #[test]
 fn bounded_sweeps_enroll_oldest_without_losing_new_arrivals() {
+    let _real_time = real_time_test();
     isolated(
         "bounded_sweeps_enroll_oldest_without_losing_new_arrivals",
         |root| {
@@ -9209,6 +9257,7 @@ fn fresh_context_refuses_physical_foreign_bank_identity_without_private_writes()
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_refuses_bank_drift_after_actual_scope_read
 #[test]
 fn fresh_context_refuses_competing_bank_added_after_actual_scope_read() {
+    let _real_time = real_time_test();
     isolated(
         "fresh_context_refuses_competing_bank_added_after_actual_scope_read",
         |root| {
@@ -9305,6 +9354,7 @@ fn raw_locator_refusal(root: &Path, held: bool, kind: &str, late: bool) {
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_raw_nonrouter_refusal_with_and_without_verified_hold
 #[test]
 fn raw_nonrouter_context_refusal_preserves_held_and_ordinary_banks() {
+    let _real_time = real_time_test();
     scenarios(
         "raw_nonrouter_context_refusal_preserves_held_and_ordinary_banks",
         &["ordinary", "held"],
@@ -9314,6 +9364,7 @@ fn raw_nonrouter_context_refusal_preserves_held_and_ordinary_banks() {
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_committed_raw_locator_refusal_with_and_without_verified_hold
 #[test]
 fn committed_missing_raw_locator_refusal_preserves_held_and_ordinary_banks() {
+    let _real_time = real_time_test();
     scenarios(
         "committed_missing_raw_locator_refusal_preserves_held_and_ordinary_banks",
         &["ordinary", "held"],
@@ -9323,6 +9374,7 @@ fn committed_missing_raw_locator_refusal_preserves_held_and_ordinary_banks() {
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_symlink_locator_refusal_with_and_without_verified_hold
 #[test]
 fn symlink_raw_locator_refusal_preserves_held_and_ordinary_banks() {
+    let _real_time = real_time_test();
     scenarios(
         "symlink_raw_locator_refusal_preserves_held_and_ordinary_banks",
         &["ordinary", "held"],
@@ -9332,6 +9384,7 @@ fn symlink_raw_locator_refusal_preserves_held_and_ordinary_banks() {
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_fresh_mint_preserves_late_raw_locator_refusal_with_and_without_verified_hold
 #[test]
 fn late_raw_locator_after_real_scope_read_refuses_held_and_ordinary_contexts() {
+    let _real_time = real_time_test();
     scenarios(
         "late_raw_locator_after_real_scope_read_refuses_held_and_ordinary_contexts",
         &["ordinary", "held"],
@@ -9374,6 +9427,7 @@ fn successful_but_disagreeing_raw_and_ordinary_bank_locators_never_mint_context(
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_reused_locator_keeps_post_source_mutation_scope_check_and_original_fault
 #[test]
 fn reused_locator_rechecks_scope_after_actual_source_publication_and_retains_fault() {
+    let _real_time = real_time_test();
     isolated(
         "reused_locator_rechecks_scope_after_actual_source_publication_and_retains_fault",
         |root| {
@@ -9413,6 +9467,7 @@ fn reused_locator_rechecks_scope_after_actual_source_publication_and_retains_fau
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_concurrent_slot_creation_keeps_both_sources_and_next_hole
 #[test]
 fn concurrent_real_pending_slot_creation_keeps_both_sources_and_next_hole() {
+    let _real_time = real_time_test();
     isolated(
         "concurrent_real_pending_slot_creation_keeps_both_sources_and_next_hole",
         |root| {
@@ -9450,6 +9505,7 @@ fn concurrent_real_pending_slot_creation_keeps_both_sources_and_next_hole() {
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_pending_index_retries_transient_scan_change_and_refuses_persistent_churn
 #[test]
 fn pending_index_retries_real_transient_change_and_refuses_real_persistent_churn() {
+    let _real_time = real_time_test();
     scenarios(
         "pending_index_retries_real_transient_change_and_refuses_real_persistent_churn",
         &["transient", "persistent"],
@@ -9606,6 +9662,7 @@ fn held_read_reuse_keeps_exact_intent_pins_and_refuses_new_source_after_hold_cha
 // obligation: tests/contracts/test_omp_enrollment_progress.py::EnrollmentProgress.test_observe_bank_drift_keeps_original_captures_refuses_final_and_next_frame_freshly_locates
 #[test]
 fn observer_bank_drift_retains_both_original_captures_and_next_frame_freshly_locates() {
+    let _real_time = real_time_test();
     isolated(
         "observer_bank_drift_retains_both_original_captures_and_next_frame_freshly_locates",
         |root| {
@@ -9781,6 +9838,7 @@ fn configured_bank_phase(root: &Path, action: &str, writer: bool) {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_ingest_refuses_without_retirement_or_new_private_state
 #[test]
 fn configured_bank_ingest_drift_refuses_without_retirement_or_new_namespace() {
+    let _real_time = real_time_test();
     isolated(
         "configured_bank_ingest_drift_refuses_without_retirement_or_new_namespace",
         |root| configured_bank_phase(root, "ingest", false),
@@ -9789,6 +9847,7 @@ fn configured_bank_ingest_drift_refuses_without_retirement_or_new_namespace() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_seal_refuses_without_new_private_state
 #[test]
 fn configured_bank_seal_drift_refuses_without_new_namespace() {
+    let _real_time = real_time_test();
     isolated(
         "configured_bank_seal_drift_refuses_without_new_namespace",
         |root| configured_bank_phase(root, "seal", false),
@@ -9797,6 +9856,7 @@ fn configured_bank_seal_drift_refuses_without_new_namespace() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_ingest_canonical_writer_is_busy_before_binding_refusal
 #[test]
 fn configured_bank_ingest_writer_busy_precedes_binding_refusal() {
+    let _real_time = real_time_test();
     isolated(
         "configured_bank_ingest_writer_busy_precedes_binding_refusal",
         |root| configured_bank_phase(root, "ingest", true),
@@ -9805,6 +9865,7 @@ fn configured_bank_ingest_writer_busy_precedes_binding_refusal() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_seal_canonical_writer_is_busy_before_binding_refusal
 #[test]
 fn configured_bank_seal_writer_busy_precedes_binding_refusal() {
+    let _real_time = real_time_test();
     isolated(
         "configured_bank_seal_writer_busy_precedes_binding_refusal",
         |root| configured_bank_phase(root, "seal", true),
@@ -9813,6 +9874,7 @@ fn configured_bank_seal_writer_busy_precedes_binding_refusal() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_configured_bank_change_at_metadata_refuses_without_attempt_or_new_base
 #[test]
 fn configured_bank_metadata_drift_refuses_before_attempt_publication() {
+    let _real_time = real_time_test();
     isolated(
         "configured_bank_metadata_drift_refuses_before_attempt_publication",
         |root| {
@@ -10007,6 +10069,7 @@ fn activated_alias_retarget(root: &Path, action: &str, exclusive: bool, direct: 
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_never_acquires_foreign_exclusive_barrier
 #[test]
 fn retargeted_ingest_never_acquires_foreign_exclusive_barrier() {
+    let _real_time = real_time_test();
     isolated(
         "retargeted_ingest_never_acquires_foreign_exclusive_barrier",
         |root| activated_alias_retarget(root, "ingest", true, false),
@@ -10015,6 +10078,7 @@ fn retargeted_ingest_never_acquires_foreign_exclusive_barrier() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_never_acquires_foreign_exclusive_barrier
 #[test]
 fn retargeted_seal_never_acquires_foreign_exclusive_barrier() {
+    let _real_time = real_time_test();
     isolated(
         "retargeted_seal_never_acquires_foreign_exclusive_barrier",
         |root| activated_alias_retarget(root, "seal", true, false),
@@ -10023,6 +10087,7 @@ fn retargeted_seal_never_acquires_foreign_exclusive_barrier() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_ingest_refuses_before_unreadable_native_binding
 #[test]
 fn retargeted_ingest_refuses_before_unreadable_foreign_binding() {
+    let _real_time = real_time_test();
     isolated(
         "retargeted_ingest_refuses_before_unreadable_foreign_binding",
         |root| activated_alias_retarget(root, "ingest", false, false),
@@ -10031,6 +10096,7 @@ fn retargeted_ingest_refuses_before_unreadable_foreign_binding() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_activated_root_retarget_at_seal_refuses_before_unreadable_native_binding
 #[test]
 fn retargeted_seal_refuses_before_unreadable_foreign_binding() {
+    let _real_time = real_time_test();
     isolated(
         "retargeted_seal_refuses_before_unreadable_foreign_binding",
         |root| activated_alias_retarget(root, "seal", false, false),
@@ -10039,6 +10105,7 @@ fn retargeted_seal_refuses_before_unreadable_foreign_binding() {
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_checkout_retarget_after_view_validation_refuses_before_started_or_source
 #[test]
 fn checkout_alias_retarget_after_validation_refuses_before_started_or_retirement() {
+    let _real_time = real_time_test();
     isolated(
         "checkout_alias_retarget_after_validation_refuses_before_started_or_retirement",
         |root| activated_alias_retarget(root, "seal", false, true),
@@ -10431,6 +10498,7 @@ fn noninstruction_packaged_artifact_retains_actual_ordinary_body_and_details() {
 
 #[test]
 fn owned_manual_verification_rejects_real_binding_payload_and_policy_races() {
+    let _real_time = real_time_test();
     let choices = [
         "copy:directory-substitution",
         "copy:directory-mode",
@@ -10545,6 +10613,7 @@ fn owned_manual_verification_rejects_real_binding_payload_and_policy_races() {
 // obligation: tests/contracts/test_omp_boundary.py::OwnedInstructionBoundary.test_unrelated_ancestor_churn_preserves_witness_and_public_annotation
 #[test]
 fn unrelated_ancestor_churn_preserves_owned_witness_and_public_source_annotation() {
+    let _real_time = real_time_test();
     scenarios(
         "unrelated_ancestor_churn_preserves_owned_witness_and_public_source_annotation",
         &["copy", "link"],
@@ -11016,6 +11085,7 @@ fn run_wake_child(root: &Path, request: &Value, selector: Option<&str>, mode: &s
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_cancel_before_reservation_refuses_and_after_start_preserves_result
 #[test]
 fn cancellation_before_reservation_refuses_but_after_reservation_keeps_one_root() {
+    let _real_time = real_time_test();
     isolated(
         "cancellation_before_reservation_refuses_but_after_reservation_keeps_one_root",
         |root| {
@@ -11049,6 +11119,7 @@ fn cancellation_before_reservation_refuses_but_after_reservation_keeps_one_root(
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_replacement_and_end_after_start_preserve_result
 #[test]
 fn replacing_clock_or_ending_after_reservation_preserves_exact_single_root() {
+    let _real_time = real_time_test();
     scenarios(
         "replacing_clock_or_ending_after_reservation_preserves_exact_single_root",
         &["replacement", "eof"],
@@ -11079,6 +11150,7 @@ fn replacing_clock_or_ending_after_reservation_preserves_exact_single_root() {
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_pre_reservation_wake_exception_does_not_unverify_committed_source
 #[test]
 fn real_prereservation_fault_does_not_unverify_durable_direct_seal() {
+    let _real_time = real_time_test();
     isolated(
         "real_prereservation_fault_does_not_unverify_durable_direct_seal",
         |root| {
@@ -11152,6 +11224,7 @@ fn cancelled_outcome_failure(root: &Path, io_failure: bool) {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_io_failure_never_verifies_partial_seal
 #[test]
 fn cancelled_uncommitted_outcome_real_io_failure_never_verifies_partial_seal() {
+    let _real_time = real_time_test();
     isolated(
         "cancelled_uncommitted_outcome_real_io_failure_never_verifies_partial_seal",
         |root| cancelled_outcome_failure(root, true),
@@ -11160,6 +11233,7 @@ fn cancelled_uncommitted_outcome_real_io_failure_never_verifies_partial_seal() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancelled_uncommitted_outcome_refusal_never_verifies_partial_seal
 #[test]
 fn cancelled_uncommitted_outcome_typed_refusal_never_verifies_partial_seal() {
+    let _real_time = real_time_test();
     isolated(
         "cancelled_uncommitted_outcome_typed_refusal_never_verifies_partial_seal",
         |root| cancelled_outcome_failure(root, false),
@@ -11212,6 +11286,7 @@ fn controlled_reserved_root_exit(root: &Path, control: &str) {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_cancel_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
 fn cancel_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
+    let _real_time = real_time_test();
     isolated(
         "cancel_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root",
         |root| controlled_reserved_root_exit(root, "cancel"),
@@ -11221,6 +11296,7 @@ fn cancel_after_real_reservation_and_transport_exit_drift_retains_one_unknown_ro
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_replacement_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
 fn replacement_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
+    let _real_time = real_time_test();
     isolated(
         "replacement_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root",
         |root| controlled_reserved_root_exit(root, "replacement"),
@@ -11230,6 +11306,7 @@ fn replacement_after_real_reservation_and_transport_exit_drift_retains_one_unkno
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_eof_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
 fn eof_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
+    let _real_time = real_time_test();
     isolated(
         "eof_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root",
         |root| controlled_reserved_root_exit(root, "eof"),
@@ -11239,6 +11316,7 @@ fn eof_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root(
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_output_loss_after_actual_reserve_then_exit_fault_retains_one_unknown_root
 #[test]
 fn output_loss_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root() {
+    let _real_time = real_time_test();
     isolated(
         "output_loss_after_real_reservation_and_transport_exit_drift_retains_one_unknown_root",
         |root| controlled_reserved_root_exit(root, "output-loss"),
@@ -11295,6 +11373,7 @@ fn signaled_owned_child(root: &Path, child: OperationChild) {
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_race_remains_pending_for_normal_and_ordinary_failure
 #[test]
 fn public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_failure() {
+    let _real_time = real_time_test();
     scenarios(
         "public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_failure",
         &["normal", "error"],
@@ -11340,6 +11419,7 @@ fn public_compatibility_absence_race_remains_pending_for_normal_and_ordinary_fai
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_compatibility_preserves_interrupts_and_fatal_failures
 #[test]
 fn public_compatibility_preserves_real_sigint_and_exit_with_raced_evidence() {
+    let _real_time = real_time_test();
     scenarios(
         "public_compatibility_preserves_real_sigint_and_exit_with_raced_evidence",
         &["sigint", "exit"],
@@ -11382,6 +11462,7 @@ fn public_compatibility_preserves_real_sigint_and_exit_with_raced_evidence() {
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_public_source_inspection_preserves_interrupts_with_raced_completion_lock
 #[test]
 fn public_source_inspection_preserves_real_fatal_exits_and_refuses_raced_completion_lock() {
+    let _real_time = real_time_test();
     scenarios(
         "public_source_inspection_preserves_real_fatal_exits_and_refuses_raced_completion_lock",
         &["normal", "error", "sigint", "exit"],
@@ -11455,6 +11536,7 @@ fn public_source_inspection_preserves_real_fatal_exits_and_refuses_raced_complet
 // obligation: tests/contracts/test_private_observer_interrupts.py::PrivateObserverInterrupts.test_unchanged_absence_allows_normal_exit_and_preserves_ordinary_error
 #[test]
 fn unchanged_private_absence_allows_success_and_preserves_original_ordinary_error() {
+    let _real_time = real_time_test();
     scenarios(
         "unchanged_private_absence_allows_success_and_preserves_original_ordinary_error",
         &["native", "completion", "transport"],
@@ -11770,6 +11852,7 @@ fn finite_writer_outcome(root: &Path, window: &str, failure: &str, transaction: 
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_at_outcome_unwinds_then_closes_without_replaying_source
 #[test]
 fn writer_at_outcome_unwinds_and_closes_without_replaying_source() {
+    let _real_time = real_time_test();
     isolated(
         "writer_at_outcome_unwinds_and_closes_without_replaying_source",
         |root| finite_writer_outcome(root, "protected", "", false),
@@ -11779,6 +11862,7 @@ fn writer_at_outcome_unwinds_and_closes_without_replaying_source() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_transaction_at_outcome_waits_without_adopting_its_marker
 #[test]
 fn transaction_at_outcome_waits_without_adopting_real_marker() {
+    let _real_time = real_time_test();
     isolated(
         "transaction_at_outcome_waits_without_adopting_real_marker",
         |root| finite_writer_outcome(root, "protected", "", true),
@@ -11788,6 +11872,7 @@ fn transaction_at_outcome_waits_without_adopting_real_marker() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_pre_ex_empty_publication_defers_without_stealing_its_lock
 #[test]
 fn pre_ex_empty_publication_defers_without_stealing_real_writer_slot() {
+    let _real_time = real_time_test();
     isolated(
         "pre_ex_empty_publication_defers_without_stealing_real_writer_slot",
         |root| finite_writer_outcome(root, "pre-ex", "", false),
@@ -11797,6 +11882,7 @@ fn pre_ex_empty_publication_defers_without_stealing_real_writer_slot() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_writer_full_owner_fsync_window_has_ex_ownership_before_probe
 #[test]
 fn full_owner_fsync_window_has_actual_ex_ownership_before_probe() {
+    let _real_time = real_time_test();
     isolated(
         "full_owner_fsync_window_has_actual_ex_ownership_before_probe",
         |root| finite_writer_outcome(root, "owner-fsync", "", false),
@@ -11806,6 +11892,7 @@ fn full_owner_fsync_window_has_actual_ex_ownership_before_probe() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_actual_writer_metadata_exhaustion_keeps_source_and_open_unknown
 #[test]
 fn actual_writer_metadata_exhaustion_preserves_source_and_open_unknown() {
+    let _real_time = real_time_test();
     isolated(
         "actual_writer_metadata_exhaustion_preserves_source_and_open_unknown",
         |root| finite_writer_outcome(root, "protected", "exhaustion", false),
@@ -11815,6 +11902,7 @@ fn actual_writer_metadata_exhaustion_preserves_source_and_open_unknown() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_real_initializing_writer_exhaustion_cannot_verify_or_close
 #[test]
 fn initializing_writer_real_deadline_cannot_verify_or_close() {
+    let _real_time = real_time_test();
     isolated(
         "initializing_writer_real_deadline_cannot_verify_or_close",
         |root| finite_writer_outcome(root, "pre-ex", "exhaustion", false),
@@ -11824,6 +11912,7 @@ fn initializing_writer_real_deadline_cannot_verify_or_close() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_unheld_empty_publication_exhaustion_retains_source_without_outcome
 #[test]
 fn unheld_empty_publication_real_deadline_retains_source_without_outcome() {
+    let _real_time = real_time_test();
     isolated(
         "unheld_empty_publication_real_deadline_retains_source_without_outcome",
         |root| finite_writer_outcome(root, "unheld-empty", "exhaustion", false),
@@ -11833,6 +11922,7 @@ fn unheld_empty_publication_real_deadline_retains_source_without_outcome() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_released_writer_with_unknown_transaction_is_hard_refusal_not_retry
 #[test]
 fn released_writer_unknown_transaction_is_not_retryable() {
+    let _real_time = real_time_test();
     isolated(
         "released_writer_unknown_transaction_is_not_retryable",
         |root| finite_writer_outcome(root, "protected", "unknown-marker", false),
@@ -11842,6 +11932,7 @@ fn released_writer_unknown_transaction_is_not_retryable() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_transaction_left_after_writer_release_remains_interruption
 #[test]
 fn released_transaction_retained_marker_remains_interruption() {
+    let _real_time = real_time_test();
     isolated(
         "released_transaction_retained_marker_remains_interruption",
         |root| finite_writer_outcome(root, "protected", "left-marker", true),
@@ -11851,6 +11942,7 @@ fn released_transaction_retained_marker_remains_interruption() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_release_rediscovers_identity_instead_of_reusing_frame_scope
 #[test]
 fn writer_release_freshly_rediscovers_changed_project_identity() {
+    let _real_time = real_time_test();
     isolated(
         "writer_release_freshly_rediscovers_changed_project_identity",
         |root| finite_writer_outcome(root, "protected", "identity", false),
@@ -11942,6 +12034,7 @@ fn busy_source_outcome(root: &Path, after_write: bool, exhausted: bool) {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_beforewrite_or_exit_retries_only_identical_source_after_unlock
 #[test]
 fn busy_source_outcome_retries_exact_immutable_source_after_transport_unlock() {
+    let _real_time = real_time_test();
     scenarios(
         "busy_source_outcome_retries_exact_immutable_source_after_transport_unlock",
         &["before", "after"],
@@ -11951,6 +12044,7 @@ fn busy_source_outcome_retries_exact_immutable_source_after_transport_unlock() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_busy_outcome_exit_exhaustion_keeps_retained_record_without_response_or_drain
 #[test]
 fn busy_source_outcome_exit_real_deadline_keeps_record_without_response_or_drain() {
+    let _real_time = real_time_test();
     isolated(
         "busy_source_outcome_exit_real_deadline_keeps_record_without_response_or_drain",
         |root| busy_source_outcome(root, true, true),
@@ -11959,6 +12053,7 @@ fn busy_source_outcome_exit_real_deadline_keeps_record_without_response_or_drain
 // obligation: tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_real_io_failure_does_not_manufacture_invalid_request_refusal
 #[test]
 fn accepted_attempt_publication_failure_is_not_an_invalid_request_refusal() {
+    let _real_time = real_time_test();
     isolated(
         "accepted_attempt_publication_failure_is_not_an_invalid_request_refusal",
         |root| {
@@ -11991,6 +12086,7 @@ fn accepted_attempt_publication_failure_is_not_an_invalid_request_refusal() {
 // obligation: tests/contracts/test_omp_finite_stream.py::MetadataBarrierBoundaries.test_run_final_close_rejects_barrier_inode_replacement_after_metadata_write
 #[test]
 fn final_close_rejects_actual_source_barrier_swap_after_retaining_closed_record() {
+    let _real_time = real_time_test();
     isolated(
         "final_close_rejects_actual_source_barrier_swap_after_retaining_closed_record",
         |root| {
@@ -12040,6 +12136,7 @@ fn signal_registry(root: &Path, signal: &str) {
 // obligation: tests/contracts/test_omp_finite_stream.py::CoverageFixture.test_startup_typed_busy_retries_before_open_and_ready
 #[test]
 fn startup_retries_actual_canonical_busy_before_publishing_open_or_ready() {
+    let _real_time = real_time_test();
     isolated(
         "startup_retries_actual_canonical_busy_before_publishing_open_or_ready",
         |root| {
@@ -12167,6 +12264,7 @@ fn invalid_attempt_busy_retry(root: &Path, kind: &str, corruption: &str) {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_request_durable_attempt_exit_busy_resumes_exactly_once
 #[test]
 fn invalid_request_busy_exit_resumes_exactly_once() {
+    let _real_time = real_time_test();
     isolated("invalid_request_busy_exit_resumes_exactly_once", |root| {
         invalid_attempt_busy_retry(root, "REQUEST", "")
     });
@@ -12175,6 +12273,7 @@ fn invalid_request_busy_exit_resumes_exactly_once() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_refused_frame_durable_attempt_exit_busy_counts_once
 #[test]
 fn invalid_refused_frame_busy_exit_counts_exactly_once() {
+    let _real_time = real_time_test();
     isolated(
         "invalid_refused_frame_busy_exit_counts_exactly_once",
         |root| invalid_attempt_busy_retry(root, "REFUSED-ATTEMPT", ""),
@@ -12184,6 +12283,7 @@ fn invalid_refused_frame_busy_exit_counts_exactly_once() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_partial_retry_record
 #[test]
 fn invalid_attempt_busy_exit_never_adopts_partial_record() {
+    let _real_time = real_time_test();
     isolated(
         "invalid_attempt_busy_exit_never_adopts_partial_record",
         |root| invalid_attempt_busy_retry(root, "REQUEST", "partial"),
@@ -12193,6 +12293,7 @@ fn invalid_attempt_busy_exit_never_adopts_partial_record() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_invalid_attempt_exit_busy_never_adopts_different_retry_record
 #[test]
 fn invalid_attempt_busy_exit_never_adopts_different_record() {
+    let _real_time = real_time_test();
     isolated(
         "invalid_attempt_busy_exit_never_adopts_different_record",
         |root| invalid_attempt_busy_retry(root, "REQUEST", "different"),
@@ -12202,6 +12303,7 @@ fn invalid_attempt_busy_exit_never_adopts_different_record() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_failed_first_ex_preserves_replacement_or_changed_empty_slot
 #[test]
 fn b3_failed_first_ex_preserves_changed_creator_slot() {
+    let _real_time = real_time_test();
     scenarios(
         "b3_failed_first_ex_preserves_changed_creator_slot",
         &["replacement", "mode", "hardlink", "nonempty"],
@@ -12246,6 +12348,7 @@ fn b3_failed_first_ex_preserves_changed_creator_slot() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_real_owner_publication_between_empty_samples_is_only_initialization
 #[test]
 fn b3_real_owner_publication_between_empty_samples_is_initializing() {
+    let _real_time = real_time_test();
     scenarios(
         "b3_real_owner_publication_between_empty_samples_is_initializing",
         &["after-initial-fstat", "after-empty-fstat"],
@@ -12357,6 +12460,7 @@ fn b3_frontier_marker_race(root: &Path, boundary: &str, writer: bool, empty: boo
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_before_frontier_entry_is_exact_writer_deferral
 #[test]
 fn b3_late_transaction_before_frontier_entry_defers() {
+    let _real_time = real_time_test();
     isolated("b3_late_transaction_before_frontier_entry_defers", |root| {
         b3_frontier_marker_race(root, "verified-hold.before-entry", true, false)
     });
@@ -12364,6 +12468,7 @@ fn b3_late_transaction_before_frontier_entry_defers() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_during_failed_marker_read_is_exact_writer_deferral
 #[test]
 fn b3_late_transaction_during_failed_marker_read_defers() {
+    let _real_time = real_time_test();
     isolated(
         "b3_late_transaction_during_failed_marker_read_defers",
         |root| b3_frontier_marker_race(root, "marker.before-read", true, false),
@@ -12372,6 +12477,7 @@ fn b3_late_transaction_during_failed_marker_read_defers() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_late_transaction_after_marker_read_is_exact_writer_deferral
 #[test]
 fn b3_late_transaction_after_marker_read_defers() {
+    let _real_time = real_time_test();
     isolated("b3_late_transaction_after_marker_read_defers", |root| {
         b3_frontier_marker_race(root, "marker.after-read", true, false)
     });
@@ -12379,6 +12485,7 @@ fn b3_late_transaction_after_marker_read_defers() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_arbitrary_marker_read_failure_without_writer_is_not_retryable
 #[test]
 fn b3_marker_read_failure_without_writer_is_not_retryable() {
+    let _real_time = real_time_test();
     isolated(
         "b3_marker_read_failure_without_writer_is_not_retryable",
         |root| b3_frontier_marker_race(root, "marker.before-read", false, false),
@@ -12387,6 +12494,7 @@ fn b3_marker_read_failure_without_writer_is_not_retryable() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_failed_marker_read_with_unproven_empty_slot_keeps_original_refusal
 #[test]
 fn b3_failed_marker_read_with_empty_slot_keeps_refusal() {
+    let _real_time = real_time_test();
     isolated(
         "b3_failed_marker_read_with_empty_slot_keeps_refusal",
         |root| b3_frontier_marker_race(root, "marker.before-read", false, true),
@@ -12395,6 +12503,7 @@ fn b3_failed_marker_read_with_empty_slot_keeps_refusal() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterContention.test_writer_arriving_after_preflight_is_classified_at_actual_identity_guard
 #[test]
 fn b3_writer_after_preflight_defers_at_identity_guard() {
+    let _real_time = real_time_test();
     isolated(
         "b3_writer_after_preflight_defers_at_identity_guard",
         |root| b3_frontier_marker_race(root, "verified-hold.after-entry", true, false),
@@ -12470,6 +12579,7 @@ fn b3_held_barrier_reentrancy_and_contention_preserve_sources() {
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_verified_hold_rejects_location_and_hold_changes_during_observation
 #[test]
 fn b3_verified_hold_rejects_location_and_hold_observation_changes() {
+    let _real_time = real_time_test();
     isolated(
         "b3_verified_hold_rejects_location_and_hold_observation_changes",
         |root| {
@@ -12527,6 +12637,7 @@ fn b3_verified_hold_rejects_location_and_hold_observation_changes() {
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_late_hold_registry_and_ledger_changes_retain_written_source_then_retry
 #[test]
 fn b3_late_hold_changes_retain_source_and_retry_same_observation() {
+    let _real_time = real_time_test();
     isolated(
         "b3_late_hold_changes_retain_source_and_retry_same_observation",
         |root| {
@@ -12771,6 +12882,7 @@ fn b3_operation(root: &Path, operation: &str) {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_real_recovery_wins_first_ex_without_stranding_creators_empty_slot
 #[test]
 fn b3_real_recovery_wins_first_ex_and_creator_cleans_empty_slot() {
+    let _real_time = real_time_test();
     isolated(
         "b3_real_recovery_wins_first_ex_and_creator_cleans_empty_slot",
         |root| {
@@ -12806,6 +12918,7 @@ fn b3_real_recovery_wins_first_ex_and_creator_cleans_empty_slot() {
 // obligation: tests/contracts/test_omp_finite_stream.py::CanonicalWriterObservationBoundaries.test_interrupt_during_marker_read_is_not_reclassified_as_writer_retry
 #[test]
 fn b3_marker_read_fatal_exit_never_becomes_writer_retry() {
+    let _real_time = real_time_test();
     scenarios(
         "b3_marker_read_fatal_exit_never_becomes_writer_retry",
         &["interrupt", "exit"],
@@ -12844,6 +12957,7 @@ fn b3_marker_read_fatal_exit_never_becomes_writer_retry() {
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_no_context_preserves_fresh_per_reference_observations
 #[test]
 fn b3_unscoped_join_freshly_observes_each_reference() {
+    let _real_time = real_time_test();
     isolated("b3_unscoped_join_freshly_observes_each_reference", |root| {
         let f = Fixture::new(root);
         let s = segment(&f, true, false);
@@ -12889,6 +13003,7 @@ fn b3_unscoped_join_freshly_observes_each_reference() {
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_historical_completed_gate_observation_is_not_reused_for_lookup
 #[test]
 fn b3_historical_completed_gate_never_supplies_lookup_inventory() {
+    let _real_time = real_time_test();
     isolated(
         "b3_historical_completed_gate_never_supplies_lookup_inventory",
         |root| {
@@ -12991,6 +13106,7 @@ fn b3_invalid_typed_shared_state_reaches_whole_segment_fault_handling() {
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_completed_snapshots_require_bound_drain_proof_after_marker_removal
 #[test]
 fn b3_completed_snapshots_require_bound_drain_proof() {
+    let _real_time = real_time_test();
     isolated("b3_completed_snapshots_require_bound_drain_proof", |root| {
         let f = Fixture::new(root);
         f.observe(&request(&f, &[human("drain-human")], "seal"));
@@ -13134,6 +13250,7 @@ fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_full_backlog_and_long_unicode_repo_still_offer_one_bounded_wake
 #[test]
 fn b3_full_backlog_unicode_repository_offers_one_bounded_wake() {
+    let _real_time = real_time_test();
     // The 8192-byte wake guidance bound depends on path length, as in the
     // baseline: match its 8-character tempfile World token and UUID session.
     isolated_in(
@@ -13280,6 +13397,7 @@ fn b3_hidden_batch(root: &Path, crash: bool) {
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_exact_own_hidden_batch_does_not_open_a_source_successor
 #[test]
 fn b3_exact_hidden_batch_never_opens_successor() {
+    let _real_time = real_time_test();
     isolated("b3_exact_hidden_batch_never_opens_successor", |root| {
         b3_hidden_batch(root, false)
     });
@@ -13287,6 +13405,7 @@ fn b3_exact_hidden_batch_never_opens_successor() {
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_crashed_pure_snapshot_never_reopens_sealed_parent
 #[test]
 fn b3_crashed_pure_snapshot_never_reopens_parent() {
+    let _real_time = real_time_test();
     isolated("b3_crashed_pure_snapshot_never_reopens_parent", |root| {
         b3_hidden_batch(root, true)
     });
@@ -13651,6 +13770,7 @@ fn b3_real_epipe_drains_before_next_fifo_and_final() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_busy_is_one_batch_and_leaves_discoverable_enrollments
 #[test]
 fn b3_postresponse_busy_is_one_batch_then_next_frame_progresses() {
+    let _real_time = real_time_test();
     isolated(
         "b3_postresponse_busy_is_one_batch_then_next_frame_progresses",
         |root| {
@@ -13698,6 +13818,7 @@ fn b3_postresponse_busy_is_one_batch_then_next_frame_progresses() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_postresponse_control_flow_is_not_masked_or_closed
 #[test]
 fn b3_postresponse_interrupt_preserves_verified_open_source() {
+    let _real_time = real_time_test();
     isolated(
         "b3_postresponse_interrupt_preserves_verified_open_source",
         |root| {
@@ -13729,6 +13850,7 @@ fn b3_postresponse_interrupt_preserves_verified_open_source() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_oldest8_after_response_and_cli_collision_leave_canonical_state_unchanged
 #[test]
 fn b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state() {
+    let _real_time = real_time_test();
     isolated(
         "b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state",
         |root| {
@@ -14301,6 +14423,7 @@ fn b3_public_uninstall_preserves_pending_sources_and_disables_binding() {
 // obligation: tests/contracts/test_omp_segment_inventory_batch.py::SegmentInventoryBatch.test_real_completion_between_result_and_wake_requires_new_inventory
 #[test]
 fn b3_completion_between_seal_and_wake_requires_new_inventory() {
+    let _real_time = real_time_test();
     isolated(
         "b3_completion_between_seal_and_wake_requires_new_inventory",
         |root| {
@@ -14365,6 +14488,7 @@ fn b3_completion_between_seal_and_wake_requires_new_inventory() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_clock_ack_behind_accepted_16mib_frame_reaches_late_reservation
 #[test]
 fn b3_clock_ack_behind_real_16mib_frame_reaches_reservation() {
+    let _real_time = real_time_test();
     isolated(
         "b3_clock_ack_behind_real_16mib_frame_reaches_reservation",
         |root| {
@@ -14449,6 +14573,7 @@ fn b3_clock_ack_behind_real_16mib_frame_reaches_reservation() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_completion_guard_discovers_fresh_locations_and_restores_live_locator
 #[test]
 fn b3_completion_guard_rediscovers_location_then_restores_live_locator() {
+    let _real_time = real_time_test();
     isolated(
         "b3_completion_guard_rediscovers_location_then_restores_live_locator",
         |root| {
@@ -14517,6 +14642,7 @@ fn b3_completion_guard_rediscovers_location_then_restores_live_locator() {
 // obligation: tests/contracts/test_omp_source_phase.py::ArmedSourcePhase.test_reused_header_nonce_decline_and_exit_fault_do_not_claim_own_reservation
 #[test]
 fn b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation() {
+    let _real_time = real_time_test();
     isolated(
         "b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation",
         |root| {
@@ -14599,6 +14725,7 @@ fn b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation() {
 // obligation: tests/contracts/test_omp_stored_authority_v2.py::NativeStoredAuthorityV2.test_legacy_random_root_wake_follows_exact_native_user_without_spending_new_human_budget
 #[test]
 fn b3_legacy_root_wake_follows_exact_native_user_not_new_human_budget() {
+    let _real_time = real_time_test();
     isolated(
         "b3_legacy_root_wake_follows_exact_native_user_not_new_human_budget",
         |root| {
@@ -14839,6 +14966,7 @@ fn b3_random_legacy_root_cannot_acknowledge_reconciled_real_human() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_existing_root_retains_legacy_bare_pending_without_inferred_cause
 #[test]
 fn b3_existing_root_retains_bare_pending_without_inferred_cause() {
+    let _real_time = real_time_test();
     isolated(
         "b3_existing_root_retains_bare_pending_without_inferred_cause",
         |root| {
@@ -14885,6 +15013,7 @@ fn b3_existing_root_retains_bare_pending_without_inferred_cause() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_offered_writer_checks_actual_request_without_cursor_or_root_scan
 #[test]
 fn b3_optional_writer_checks_exact_request_without_cursor_or_root_scan() {
+    let _real_time = real_time_test();
     scenarios(
         "b3_optional_writer_checks_exact_request_without_cursor_or_root_scan",
         &["no-scan", "mismatch"],
@@ -14951,6 +15080,7 @@ fn b3_optional_writer_checks_exact_request_without_cursor_or_root_scan() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_nonseal_and_failed_source_attempts_do_not_acquire_diagnostic_rows
 #[test]
 fn b3_nonseal_and_real_capture_failure_never_acquire_decision_rows() {
+    let _real_time = real_time_test();
     scenarios(
         "b3_nonseal_and_real_capture_failure_never_acquire_decision_rows",
         &["ingest", "failed-seal"],
@@ -15006,6 +15136,7 @@ fn b3_nonseal_and_real_capture_failure_never_acquire_decision_rows() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_bounded_summary_orphans_and_unreadable_namespace_do_not_change_doctor_health
 #[test]
 fn b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health() {
+    let _real_time = real_time_test();
     isolated(
         "b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health",
         |root| {
@@ -15081,6 +15212,7 @@ fn b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health() 
 // obligation: tests/contracts/test_held_source_enrollment.py::HeldSourceEnrollment.test_rolled_back_raw_scope_defers_late_real_held_checkpoint_without_source_loss
 #[test]
 fn b3_rolled_back_raw_scope_defers_late_real_checkpoint_without_source_loss() {
+    let _real_time = real_time_test();
     isolated(
         "b3_rolled_back_raw_scope_defers_late_real_checkpoint_without_source_loss",
         |root| {
@@ -15729,6 +15861,7 @@ fn b3_sha(raw: &[u8]) -> String {
 // obligation: tests/contracts/test_omp_source_phase.py::LateWindowControls.test_nonce_cancel_replacement_eof_output_loss_and_one_shot_lookup
 #[test]
 fn b3_real_clock_controls_revoke_actual_one_shot_delivery() {
+    let _real_time = real_time_test();
     let world = World::new().unwrap();
     assert!(world.root.is_dir());
     // The private late-lookup one-shot cases are additionally exercised by
@@ -15766,6 +15899,7 @@ fn b3_real_clock_controls_revoke_actual_one_shot_delivery() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_malformed_real_result_shapes_are_unknown_without_inventing_a_cause
 #[test]
 fn b3_malformed_real_results_stay_unknown_without_invented_cause() {
+    let _real_time = real_time_test();
     scenarios(
         "b3_malformed_real_results_stay_unknown_without_invented_cause",
         &[
@@ -15837,6 +15971,7 @@ fn b3_malformed_real_results_stay_unknown_without_invented_cause() {
 // obligation: tests/contracts/test_omp_wake_decisions.py::WakeDecisions.test_substituted_oversize_response_never_records_an_offered_continuation
 #[test]
 fn b3_real_oversize_response_substitution_never_records_offered_continuation() {
+    let _real_time = real_time_test();
     isolated(
         "b3_real_oversize_response_substitution_never_records_offered_continuation",
         |root| {

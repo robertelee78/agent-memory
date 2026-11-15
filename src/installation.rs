@@ -245,7 +245,7 @@ impl From<ContractError> for Error {
 }
 impl From<std::io::Error> for Error {
     fn from(error: std::io::Error) -> Self {
-        Self::Contract(ContractError::new(error.to_string()))
+        Self::Contract(ContractError::from_error(error))
     }
 }
 impl From<crate::release_distribution::Error> for Error {
@@ -281,14 +281,14 @@ impl From<crate::pack_validation::Invalid> for Error {
 }
 impl From<crate::fs::ReadError> for Error {
     fn from(error: crate::fs::ReadError) -> Self {
-        Self::Contract(ContractError::new(error.to_string()))
+        Self::Contract(ContractError::from_error(error))
     }
 }
 impl From<crate::fs::LockError> for Error {
     fn from(error: crate::fs::LockError) -> Self {
         match error {
             crate::fs::LockError::Unsafe(error) => Self::Contract(error),
-            other => Self::Contract(ContractError::new(other.to_string())),
+            other => Self::Contract(ContractError::from_error(other)),
         }
     }
 }

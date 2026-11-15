@@ -73,8 +73,8 @@ impl Drop for RestoreBarriers {
 fn refusal(message: &str) -> ContractError {
     ContractError::new(message)
 }
-fn io_error(error: impl std::fmt::Display) -> ContractError {
-    ContractError::new(error.to_string())
+fn io_error(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 fn text(path: &Path) -> Result<&str> {
     host::text(path.as_os_str(), "private-state path")

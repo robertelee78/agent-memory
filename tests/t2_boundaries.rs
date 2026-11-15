@@ -374,6 +374,7 @@ fn claude_route_refuses_mode_mixtures_and_unbounded_stdin() {
     );
 }
 
+// obligation: tests/contracts/test_compact_turn_check.py::CompactChecks.test_actual_cli_one_call_quiet_and_exact_legacy_receipt_scope
 #[test]
 fn codex_route_keeps_fixed_pending_reason_and_quiet_channel() {
     let sandbox = Sandbox::new();

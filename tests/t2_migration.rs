@@ -1325,7 +1325,7 @@ fn gaps_next_lifecycle_worker() {
     );
 }
 #[test]
-// tests/contracts/test_migration_runtime_rollback.py::MigrationRuntimeRollbackContract.test_partial_runtime_update_requires_explicit_retained_backup_restoration_before_rollback
+// obligation: tests/contracts/test_migration_runtime_rollback.py::MigrationRuntimeRollbackContract.test_partial_runtime_update_requires_explicit_retained_backup_restoration_before_rollback
 fn gaps_partial_runtime_update_requires_retained_backup_restoration_before_rollback() {
     let world = World::new().unwrap();
     let channel = support::distribution::Channel::new(&world);

@@ -872,8 +872,11 @@ fn group_reaps_a_child_that_closes_both_pipes_and_lingers() {
     assert_eq!(error.reason, Refusal::Deadline);
     let evidence = error.evidence.unwrap();
     assert!(evidence.killed && evidence.reaped);
+    // Exit polling backs off 1, 2, ... 64 ms (7 wakeups) before reaching the
+    // 100 ms interval (3 more inside the 400 ms deadline); output, the two EOFs
+    // and the deadline add at most 4. A busy loop would be in the thousands.
     assert!(
-        evidence.poll_wakeups <= 12,
+        evidence.poll_wakeups <= 14,
         "Closed-pipe child caused {} poll wakeups",
         evidence.poll_wakeups
     );

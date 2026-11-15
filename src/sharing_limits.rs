@@ -34,7 +34,7 @@ pub fn read_bytes(path: &Path, limit: usize) -> Result<Vec<u8>> {
             crate::fs::ReadError::SizeLimit { .. } => ContractError::new(
                 "Complete private input exceeds its explicit encoded budget; no truncation",
             ),
-            _ => ContractError::new(e.to_string()),
+            _ => ContractError::from_error(e),
         })
 }
 pub fn read_json(path: &Path, limit: usize) -> Result<Value> {

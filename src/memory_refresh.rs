@@ -91,8 +91,8 @@ impl CurrentFailure {
 fn err(message: &str) -> ContractError {
     ContractError::new(message)
 }
-fn io_error(error: impl std::fmt::Display) -> ContractError {
-    err(&error.to_string())
+fn io_error(error: impl std::error::Error + 'static) -> ContractError {
+    ContractError::from_error(error)
 }
 fn text<'a>(value: &'a Value, key: &str) -> Result<&'a str> {
     get(value, key)
@@ -1457,14 +1457,6 @@ pub fn read_input(path: &Path, version2: bool) -> Result<Value> {
 }
 
 pub struct MemoryRefresh;
-impl tx::TransactionValidator for MemoryRefresh {
-    fn validate_transaction(&self, p: &Value, owner: Option<&[u8]>) -> Result<()> {
-        validate_transaction(p, owner).map(|_| ())
-    }
-    fn check_sources(&self, p: &Value, owner: &[u8], marker: &[u8]) -> Result<()> {
-        check_sources(p, Some(owner), Some(marker))
-    }
-}
 impl crate::turn_check::MemoryRefresh for MemoryRefresh {
     fn current_result(&self, repo: &Path) -> crate::turn_check::CompletionResult<Value> {
         current_result(repo).map_err(Into::into)

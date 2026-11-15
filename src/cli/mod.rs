@@ -301,14 +301,6 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
     crate::private_state::register_recovery_quiescence(Some(Arc::new(
         crate::recovery_quiescence::RecoveryQuiescence,
     )));
-    wired(crate::bank_transactions::register_transaction_validator(
-        "initialize",
-        Some(Arc::new(crate::initialization::Validator)),
-    ))?;
-    wired(crate::bank_transactions::register_transaction_validator(
-        "capture",
-        Some(Arc::new(crate::admission::Admission)),
-    ))?;
     // Without a resolvable running executable the activation stays
     // unregistered and every native operation refuses with MissingActivation.
     if let Ok(executable) = crate::host::current_executable() {
@@ -327,17 +319,7 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
                 .map_err(|error| ContractError::new(error.to_string()))
         }))?;
     }
-    wired(crate::bank_transactions::register_transaction_validator(
-        "compact",
-        Some(Arc::new(crate::consolidation::Consolidation)),
-    ))?;
     crate::admission::register_comparison(Some(Arc::new(crate::comparison::Comparison)));
-    for operation in ["correct", "supersede", "revoke", "forget"] {
-        wired(crate::bank_transactions::register_transaction_validator(
-            operation,
-            Some(Arc::new(crate::governance::Governance)),
-        ))?;
-    }
     static MEMORY_REFRESH: std::sync::LazyLock<std::result::Result<(), String>> =
         std::sync::LazyLock::new(|| {
             crate::turn_check::register_memory_refresh(Box::new(
@@ -346,10 +328,6 @@ pub fn register_providers() -> std::result::Result<(), crate::pack_validation::I
             .map_err(|error| error.to_string())
         });
     wired((*MEMORY_REFRESH).clone().map_err(ContractError::new))?;
-    wired(crate::bank_transactions::register_transaction_validator(
-        "refresh",
-        Some(Arc::new(crate::memory_refresh::MemoryRefresh)),
-    ))?;
     let frontier = Arc::new(crate::recovery_frontier::FrontierProvider::new(|| {
         let executable =
             std::env::current_exe().map_err(|error| ContractError::new(error.to_string()))?;

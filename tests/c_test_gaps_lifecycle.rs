@@ -246,22 +246,22 @@ fn recover_replay(committed: bool, phase: &str) {
 }
 
 #[test]
-// tests/contracts/test_recover_commit_write_copy_after.py::LifecycleWriteContract.test_after_every_recover_commit_copy_write
+// obligation: tests/contracts/test_recover_commit_write_copy_after.py::LifecycleWriteContract.test_after_every_recover_commit_copy_write
 fn after_every_recover_commit_copy_write() {
     recover_replay(true, "after");
 }
 #[test]
-// tests/contracts/test_recover_commit_write_copy_before.py::LifecycleWriteContract.test_before_every_recover_commit_copy_write
+// obligation: tests/contracts/test_recover_commit_write_copy_before.py::LifecycleWriteContract.test_before_every_recover_commit_copy_write
 fn before_every_recover_commit_copy_write() {
     recover_replay(true, "before");
 }
 #[test]
-// tests/contracts/test_recover_rollback_write_copy_after.py::LifecycleWriteContract.test_after_every_recover_rollback_copy_write
+// obligation: tests/contracts/test_recover_rollback_write_copy_after.py::LifecycleWriteContract.test_after_every_recover_rollback_copy_write
 fn after_every_recover_rollback_copy_write() {
     recover_replay(false, "after");
 }
 #[test]
-// tests/contracts/test_recover_rollback_write_copy_before.py::LifecycleWriteContract.test_before_every_recover_rollback_copy_write
+// obligation: tests/contracts/test_recover_rollback_write_copy_before.py::LifecycleWriteContract.test_before_every_recover_rollback_copy_write
 fn before_every_recover_rollback_copy_write() {
     recover_replay(false, "before");
 }
@@ -498,7 +498,7 @@ fn private_temp_barrier_native_alias_and_group_write_payloads_work() {
 }
 
 #[test]
-// tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_fresh_and_existing_install_check_and_apply_refuse_unsupported_bank_without_activation
+// obligation: tests/contracts/test_explicit_migration.py::ExplicitMigrationContract.test_fresh_and_existing_install_check_and_apply_refuse_unsupported_bank_without_activation
 fn unsupported_bank_refuses_fresh_and_existing_install_without_activation() {
     for existing in [false, true] {
         for check in [false, true] {
@@ -593,7 +593,7 @@ fn missing_signature_verifier_refuses_before_lifecycle_state_is_created() {
 }
 
 #[test]
-// tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_one_line_install_update_failures_recovery_and_preservation
+// obligation: tests/contracts/test_signed_release_lifecycle.py::SignedReleaseLifecycle.test_one_line_install_update_failures_recovery_and_preservation
 fn signed_install_update_failures_recovery_and_preservation() {
     let mut w = World::new().unwrap();
     let channel = Channel::new(&w);
@@ -738,7 +738,7 @@ fn piped_install(w: &World, channel: &Channel, source: &Path, check: bool) -> St
 }
 
 #[test]
-// tests/contracts/test_installer.py::OneLineBootstrapContract.test_pipe_preview_repeat_update_and_uninstall_preserve_memory_and_user_instructions
+// obligation: tests/contracts/test_installer.py::OneLineBootstrapContract.test_pipe_preview_repeat_update_and_uninstall_preserve_memory_and_user_instructions
 fn pipe_preview_repeat_update_and_uninstall_preserve_memory_and_instructions() {
     let w = World::new().unwrap();
     let channel = Channel::new(&w);
@@ -775,7 +775,7 @@ fn pipe_preview_repeat_update_and_uninstall_preserve_memory_and_instructions() {
 }
 
 #[test]
-// tests/contracts/test_portable_lifecycle.py::PortableLifecycleContract.test_link_custom_only_updates_without_optional_clients_identity_or_a_bank
+// obligation: tests/contracts/test_portable_lifecycle.py::PortableLifecycleContract.test_link_custom_only_updates_without_optional_clients_identity_or_a_bank
 fn link_custom_only_preserves_neighbors_without_identity_or_a_bank() {
     let w = World::new().unwrap();
     let channel = Channel::new(&w);
@@ -846,7 +846,7 @@ fn link_custom_only_preserves_neighbors_without_identity_or_a_bank() {
 }
 
 #[test]
-// tests/contracts/test_portable_lifecycle.py::PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall
+// obligation: tests/contracts/test_portable_lifecycle.py::PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall
 fn copy_all_clients_keep_qualified_memory_through_full_lifecycle() {
     let r = support::cutover::Recall::new();
     let w = &r.world;

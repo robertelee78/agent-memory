@@ -2,7 +2,7 @@
 //!
 //! Baseline `initialization.py` (`am init inspect|read|preview|apply`).
 //! Proposed memory is checked with `security::ensure_safe`; writes go through
-//! the bank transaction protocol, which re-validates through [`Validator`].
+//! the bank transaction protocol, which calls [`validate_transaction`] directly.
 
 use crate::bank_contract as bank;
 use crate::bank_transactions as transactions;
@@ -1801,19 +1801,6 @@ pub fn apply(prepared: &Value) -> Result<Value> {
             ("sharing", string("local-or-pending-sharing")),
         ],
     ))
-}
-
-/// `bank_transactions::TransactionValidator` for `initialize` transactions.
-pub struct Validator;
-
-impl transactions::TransactionValidator for Validator {
-    fn validate_transaction(&self, proposal: &Value, _owned_lock: Option<&[u8]>) -> Result<()> {
-        validate_transaction(proposal).map(|_| ())
-    }
-    fn check_sources(&self, proposal: &Value, _owner: &[u8], _marker: &[u8]) -> Result<()> {
-        let evidence = transaction_evidence(proposal)?;
-        check_sources(get(&evidence, "inventory"))
-    }
 }
 
 /// Baseline `main` output: success as `json.dumps(value, indent=2,
