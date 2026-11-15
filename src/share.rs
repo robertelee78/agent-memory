@@ -141,9 +141,37 @@ fn blobs(repo: &Repo, specs: &[String]) -> Result<Vec<Option<Vec<u8>>>> {
     Ok(result)
 }
 
-/// Three-way merge of `MEMORY.md` rows by path. Returns the text and the
-/// rows both sides changed differently (yours kept).
-fn merge_router(base: Option<&[u8]>, mine: &[u8], theirs: &[u8]) -> Result<(Vec<u8>, Vec<String>)> {
+const ROWS: &str = "<!-- am: routes -->";
+
+/// `MEMORY.md` without its route rows (one marker where they stand) and
+/// with the router time blanked: the part merged as ordinary text.
+fn router_skeleton(text: &str) -> String {
+    let mut out = String::new();
+    let mut marked = false;
+    for line in text.split_inclusive('\n') {
+        if bank::parse_route(line).is_some() {
+            if !marked {
+                out.push_str(ROWS);
+                out.push('\n');
+                marked = true;
+            }
+        } else if line.starts_with("router-updated:") {
+            out.push_str("router-updated: \"\"\n");
+        } else {
+            out.push_str(line);
+        }
+    }
+    out
+}
+
+/// Three-way merge of `MEMORY.md`: rows by path, the rest as text. Returns
+/// the text and what both sides changed differently (yours kept).
+fn merge_router(
+    repo: &Repo,
+    base: Option<&[u8]>,
+    mine: &[u8],
+    theirs: &[u8],
+) -> Result<(Vec<u8>, Vec<String>)> {
     let parse = |raw: &[u8]| Router::parse(String::from_utf8_lossy(raw).into_owned());
     let rows = |router: &Router| -> BTreeMap<String, String> {
         router
@@ -196,6 +224,56 @@ fn merge_router(base: Option<&[u8]>, mine: &[u8], theirs: &[u8]) -> Result<(Vec<
         if !mine_paths.contains(&route.path) && !removed_unchanged {
             text = Router::parse(text)?.with_route(route, &stamp);
         }
+    }
+    // Frontmatter and text around the table.
+    let lossy = |raw: &[u8]| String::from_utf8_lossy(raw).into_owned();
+    let base_skel = router_skeleton(&base.map(lossy).unwrap_or_default());
+    let mine_skel = router_skeleton(&mine.text);
+    let their_skel = router_skeleton(&theirs.text);
+    let skeleton = if their_skel == mine_skel || their_skel == base_skel {
+        None
+    } else if mine_skel == base_skel {
+        Some(their_skel)
+    } else {
+        let merged = merge_text(
+            repo,
+            bank::ROUTER,
+            base_skel.as_bytes(),
+            mine_skel.as_bytes(),
+            their_skel.as_bytes(),
+        )?;
+        match merged {
+            Ok(clean) => Some(lossy(&clean)),
+            Err(_) => {
+                kept.push("text outside the routes table".into());
+                None
+            }
+        }
+    };
+    if let Some(skeleton) = skeleton {
+        let rows: Vec<&str> = text
+            .lines()
+            .filter(|l| bank::parse_route(l).is_some())
+            .collect();
+        let rebuilt = if skeleton.lines().any(|l| l == ROWS) {
+            skeleton
+                .split_inclusive('\n')
+                .map(|l| {
+                    if l.trim_end() == ROWS {
+                        rows.iter().map(|r| format!("{r}\n")).collect()
+                    } else {
+                        l.to_owned()
+                    }
+                })
+                .collect()
+        } else {
+            let mut rebuilt = skeleton;
+            for route in rows.iter().filter_map(|r| bank::parse_route(r)) {
+                rebuilt = Router::parse(rebuilt)?.with_route(&route, &stamp);
+            }
+            rebuilt
+        };
+        text = rebuilt;
     }
     Ok((bank::with_router_time(&text, &stamp).into_bytes(), kept))
 }
@@ -253,9 +331,9 @@ struct Merged {
     kept_rows: Vec<String>,
 }
 
-/// Refuse when the index holds bank content found nowhere else: not in
-/// HEAD, not in the working tree and not in a shared commit.
-fn check_staged(repo: &Repo, command: &str, shared: &[&str]) -> Result<()> {
+/// Bank paths whose index content exists nowhere else: not in HEAD, not in
+/// the working tree and not in one of the `shared` commits.
+fn staged_only(repo: &Repo, command: &str, shared: &[&str]) -> Result<Vec<String>> {
     let pathspec = format!("{}/", repo.bank_rel);
     let output = repo.git(&[
         "status",
@@ -286,14 +364,14 @@ fn check_staged(repo: &Repo, command: &str, shared: &[&str]) -> Result<()> {
         }
     }
     if candidates.is_empty() {
-        return Ok(());
+        return Ok(Vec::new());
     }
     let specs: Vec<String> = candidates
         .iter()
         .flat_map(|(path, _)| shared.iter().map(move |rev| format!("{rev}:{path}")))
         .collect();
     let ids = object_ids(repo, &specs)?;
-    let lost: Vec<&str> = candidates
+    Ok(candidates
         .iter()
         .enumerate()
         .filter(|(i, (_, oid))| {
@@ -301,8 +379,13 @@ fn check_staged(repo: &Repo, command: &str, shared: &[&str]) -> Result<()> {
                 .iter()
                 .any(|id| id.as_deref() == Some(oid.as_str()))
         })
-        .map(|(_, (path, _))| path.as_str())
-        .collect();
+        .map(|(_, (path, _))| path.clone())
+        .collect())
+}
+
+/// Refuse before anything changes when the index holds the only copy.
+fn check_staged(repo: &Repo, command: &str, shared: &[&str]) -> Result<()> {
+    let lost = staged_only(repo, command, shared)?;
     if !lost.is_empty() {
         bail!(
             "You staged memory changes that exist only in the Git index: {}. Commit them, or `git add`/`git restore --staged` them, then run am {command} again.",
@@ -376,7 +459,7 @@ fn merge_into_worktree(repo: &Repo, theirs: &str, base: Option<&str>) -> Result<
         } else {
             match (mine.as_deref(), theirs_raw) {
                 (Some(mine), Some(theirs)) if *path == router_path => {
-                    let (text, kept) = merge_router(base_raw, mine, theirs)?;
+                    let (text, kept) = merge_router(repo, base_raw, mine, theirs)?;
                     merged.kept_rows.extend(kept);
                     Some(text)
                 }
@@ -437,7 +520,7 @@ fn conflict_help(conflicts: &[String]) -> String {
 
 fn kept_note(kept: &[String]) -> String {
     format!(
-        "MEMORY.md rows changed both here and in the shared memory; yours were kept: {}",
+        "MEMORY.md parts changed both here and in the shared memory; yours were kept: {}",
         kept.join(", ")
     )
 }
@@ -519,20 +602,28 @@ pub fn share(message: Option<&str>) -> Result<String> {
     if !marked.is_empty() {
         bail!("{}", conflict_help(&marked));
     }
+    // After a rejected push, the shared commit just merged is the base.
+    let mut merged_base: Option<String> = None;
     for _attempt in 0..3 {
         let shared = observe(&repo)?;
         let branch = &shared.branch;
         let theirs = shared.theirs.as_deref();
+        let base = merged_base.clone().or(shared.base.clone());
         let lock = lock_bank(&repo)?;
-        let known: Vec<&str> = shared.base.as_deref().into_iter().chain(theirs).collect();
+        // What the index may hold: the recorded (staged) commit, the base, theirs.
+        let known: Vec<&str> = [shared.base.as_deref(), base.as_deref(), theirs]
+            .into_iter()
+            .flatten()
+            .collect();
         check_staged(&repo, "share", &known)?;
         let mut merged = Merged::default();
-        if let Some(theirs) = theirs.filter(|t| shared.base.as_deref() != Some(*t)) {
-            merged = merge_into_worktree(&repo, theirs, shared.base.as_deref())?;
+        if let Some(theirs) = theirs.filter(|t| base.as_deref() != Some(*t)) {
+            merged = merge_into_worktree(&repo, theirs, base.as_deref())?;
             if !merged.conflicts.is_empty() {
                 record_shared(&repo, theirs)?;
                 bail!("{}", conflict_help(&merged.conflicts));
             }
+            merged_base = Some(theirs.to_owned());
         }
         let snapshot = commit_bank(&repo, theirs, message)?;
         drop(lock);
@@ -558,9 +649,22 @@ pub fn share(message: Option<&str>) -> Result<String> {
         ])?;
         let short = &commit[..commit.len().min(10)];
         if pushed.ok() {
-            record_shared(&repo, &commit)?;
+            // Re-check under the lock right before staging: the user may
+            // have staged memory while the push ran.
+            let _lock = lock_bank(&repo)?;
+            let mut recent = known.clone();
+            recent.push(&commit);
+            let lost = staged_only(&repo, "share", &recent).unwrap_or_else(|e| vec![e.0]);
+            if lost.is_empty() {
+                record_shared(&repo, &commit)?;
+                return Ok(format!(
+                    "Shared memory to origin/{branch} (commit {short}).\n{STAGED}{notes}"
+                ));
+            }
+            // The recorded base stays as it is, matching what is staged.
             return Ok(format!(
-                "Shared memory to origin/{branch} (commit {short}).\n{STAGED}{notes}"
+                "Shared memory to origin/{branch} (commit {short}). It was not staged, to keep the changes you staged meanwhile: {}.{notes}",
+                lost.join(", ")
             ));
         }
         let error = format!("{}\n{}", pushed.text(), pushed.error_text());

@@ -136,28 +136,37 @@ pub fn read_regular(path: &Path) -> Option<Vec<u8>> {
     Some(raw)
 }
 
-/// Replace `path` atomically: write a sibling temporary file, sync, rename.
-pub fn write_atomic(path: &Path, raw: &[u8], mode: u32) -> Result<()> {
-    use std::os::unix::fs::OpenOptionsExt;
+/// The sibling temporary name `write_atomic` uses for `path`.
+pub fn temp_for(path: &Path) -> PathBuf {
     let parent = path.parent().unwrap_or(Path::new("."));
     let name = path
         .file_name()
         .unwrap_or(OsStr::new("file"))
         .to_string_lossy();
-    let temp = parent.join(format!(".{name}.am-{}", uuid4()));
+    parent.join(format!(".{name}.am-{}", uuid4()))
+}
+
+/// Replace `path` atomically: write a sibling temporary file, sync, rename.
+pub fn write_atomic(path: &Path, raw: &[u8], mode: u32) -> Result<()> {
+    write_atomic_via(path, &temp_for(path), raw, mode)
+}
+
+/// `write_atomic` through a temporary path the caller chose (and recorded).
+pub fn write_atomic_via(path: &Path, temp: &Path, raw: &[u8], mode: u32) -> Result<()> {
+    use std::os::unix::fs::OpenOptionsExt;
     let write = || -> std::io::Result<()> {
         let mut file = std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
             .mode(mode)
-            .open(&temp)?;
+            .open(temp)?;
         file.write_all(raw)?;
         file.sync_all()?;
-        std::fs::rename(&temp, path)
+        std::fs::rename(temp, path)
     };
     let result = write();
     if result.is_err() {
-        let _ = std::fs::remove_file(&temp);
+        let _ = std::fs::remove_file(temp);
     }
     io_at(result, path)
 }

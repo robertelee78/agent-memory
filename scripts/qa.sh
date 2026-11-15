@@ -33,11 +33,21 @@ git config --global pull.rebase false
 # repository and linked into place.
 printf '{\n  "model": "opus"\n}\n' > "$HOME/dotfiles/claude-settings.json"
 ln -s ../dotfiles/claude-settings.json "$HOME/.claude/settings.json"
-# What a killed install leaves: a CLAUDE.md holding only the activation block
-# and abandoned atomic-write temporaries.
+# What a killed install leaves, as its leftovers record proves: a CLAUDE.md
+# it created holding only the activation block, and an abandoned temporary.
+state="$HOME/.local/state/agent-memory/install"
+mkdir -p "$state"
 cp "$src/skills/agent-memory/templates/activation-markdown.txt" "$HOME/.claude/CLAUDE.md"
-touch "$HOME/.claude/.CLAUDE.md.am-0b6c1d2e-3f40-4a51-8b62-7c83d94ea5f6"
-touch "$HOME/.claude/.settings.json.am-1c7d2e3f-4051-4b62-9c73-8d94ea5fb607"
+stale="$HOME/.claude/.CLAUDE.md.am-0b6c1d2e-3f40-4a51-8b62-7c83d94ea5f6"
+touch "$stale"
+printf 'temp\t%s\ncreated\t%s\n' "$stale" "$HOME/.claude/CLAUDE.md" > "$state/leftovers"
+# A user's file that merely looks like an am temporary: never am's to delete.
+lookalike="$HOME/.claude/.settings.json.am-1c7d2e3f-4051-4b62-9c73-8d94ea5fb607"
+printf '{"my": "recovery backup"}\n' > "$lookalike"
+# Pre-existing files with no real content: uninstall must keep them.
+mkdir -p "$HOME/.codex" "$HOME/.config/opencode"
+printf '{"permissions": {"allow": []}}\n' > "$HOME/.codex/hooks.json"
+printf '\n' > "$HOME/.config/opencode/AGENTS.md"
 
 table=""
 failures=0
@@ -74,6 +84,8 @@ expect() { # expect DESCRIPTION COMMAND...
 }
 
 # --------------------------------------------------------------- install
+step "install --dry-run" "$work" "$src/target/release/am" install --dry-run --development-source "$src" --presets agents,codex,claude,opencode,omp --omp-agent-dir "$HOME/.omp/agent"
+expect "dry-run deletes nothing" sh -c "test -e '$stale' && test -e '$lookalike' && test -e '$state/leftovers'"
 step install "$work" "$src/target/release/am" install --development-source "$src" --presets agents,codex,claude,opencode,omp --omp-agent-dir "$HOME/.omp/agent"
 # From here on `am` is the installed command on PATH.
 expect "am on PATH is the installed link" test -L "$HOME/.local/bin/am"
@@ -83,7 +95,9 @@ expect "existing Claude setting kept" grep -q '"model": "opus"' "$HOME/dotfiles/
 expect "Codex SessionStart hook registered" grep -q 'hook session-start --client codex' "$HOME/.codex/hooks.json"
 expect "omp extension written" test -f "$HOME/.omp/agent/extensions/agent-memory.ts"
 expect "skill linked for Claude" test -f "$HOME/.claude/skills/agent-memory/SKILL.md"
-expect "interrupted-install temporaries removed" sh -c "! ls -A '$HOME/.claude' | grep -q '\\.am-'"
+expect "recorded interrupted-install temporary removed" test ! -e "$stale"
+expect "look-alike user file survives install" grep -q 'recovery backup' "$lookalike"
+expect "doctor mentions the look-alike" sh -c "am doctor | grep -q 'looks like an am temporary'"
 step "help (subcommand)" "$work" am remember --help
 expect "am install -h prints its usage" sh -c "am install -h | grep -q 'Usage: am install'"
 
@@ -181,10 +195,12 @@ step doctor "$work/a" am doctor
 step "uninstall" "$work" am uninstall
 expect "commands removed" test ! -e "$HOME/.local/bin/am"
 expect "Claude settings restored through the link" sh -c "test -L '$HOME/.claude/settings.json' && ! grep -q session-start '$HOME/dotfiles/claude-settings.json' && grep -q '\"model\": \"opus\"' '$HOME/dotfiles/claude-settings.json'"
-expect "CLAUDE.md holding only the block removed" test ! -e "$HOME/.claude/CLAUDE.md"
-expect "codex hooks.json removed (was absent)" test ! -e "$HOME/.codex/hooks.json"
+expect "CLAUDE.md an interrupted install created (recorded) removed" test ! -e "$HOME/.claude/CLAUDE.md"
+expect "pre-existing empty-ish codex hooks.json kept" sh -c "grep -q permissions '$HOME/.codex/hooks.json' && ! grep -q session-start '$HOME/.codex/hooks.json'"
+expect "pre-existing whitespace-only AGENTS.md kept" test -e "$HOME/.config/opencode/AGENTS.md"
 expect "omp extension removed" test ! -e "$HOME/.omp/agent/extensions/agent-memory.ts"
-expect "no am temporaries left" sh -c "test -z \"\$(find '$HOME' -name '.*.am-*')\""
+expect "look-alike user file survives uninstall" grep -q 'recovery backup' "$lookalike"
+expect "no other am temporaries left" sh -c "test \"\$(find '$HOME' -name '.*.am-*')\" = '$lookalike'"
 expect "banks untouched" test -f "$work/a/memory-bank/MEMORY.md"
 
 # --------------------------------------------------------------- v0.0.14 takeover

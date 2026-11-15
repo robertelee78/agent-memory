@@ -6,8 +6,10 @@ pub mod release;
 use crate::bail;
 use crate::json::{self, Value, obj, s};
 use crate::util::{
-    Error, Result, env_dir, home, io_at, lock, read_optional, sha256_hex, uuid4, write_atomic,
+    Error, Result, env_dir, home, io_at, lock, read_optional, sha256_hex, temp_for, uuid4,
+    write_atomic, write_atomic_via,
 };
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -504,11 +506,13 @@ fn remove_group(document: &mut Value, entry: &Value, event: &str, shape: Option<
 }
 
 /// A client's hook configuration after removing prior groups and adding
-/// the desired one; `(bytes or None to delete, receipt fields)`.
+/// the desired one; `(bytes or None to delete, receipt fields)`. `created`:
+/// an interrupted earlier install created the file (recorded proof).
 fn edit_hooks(
     path: &Path,
     prior: Option<&Value>,
     desired: Option<&Value>,
+    created: bool,
 ) -> Result<(Option<Vec<u8>>, Value)> {
     let raw = read_optional(path)?;
     let mut document = match &raw {
@@ -527,7 +531,7 @@ fn edit_hooks(
             path.display()
         );
     }
-    let mut originally_absent = raw.is_none();
+    let mut originally_absent = raw.is_none() || created;
     if let Some(prior) = prior {
         let event = prior.str("event").unwrap_or("UserPromptSubmit");
         if let Some(entry) = prior.get("hook_entry") {
@@ -590,10 +594,9 @@ fn edit_hooks(
             ("originally_absent", Value::Bool(originally_absent)),
         ]);
     }
-    // Nothing but empty objects and arrays left once ours is removed: the
-    // file holds no user content, so release removes it.
-    let empty = desired.is_none() && no_content(&document)
-        || document.as_object().is_some_and(<[_]>::is_empty) && originally_absent;
+    // Only a file the installer created, left with nothing but empty
+    // objects and arrays, is removed; anything else keeps the user's file.
+    let empty = originally_absent && no_content(&document);
     let bytes = (!empty).then(|| json::pretty_file(&document));
     Ok((bytes, fields))
 }
@@ -606,27 +609,69 @@ fn no_content(value: &Value) -> bool {
     }
 }
 
-/// Remove `.<name>.am-*` temporary files and `.am-old-*` directories that
-/// an interrupted `am` left beside `path`.
-fn sweep_temps(path: &Path) {
+/// The file listing what an install/uninstall in progress created, so a
+/// killed run's leftovers are cleaned up by proof, never by name pattern.
+const LEFTOVERS: &str = "leftovers";
+
+/// Finish what a killed run recorded: remove its temporary files, put
+/// moved-aside directories back (or drop them once replaced), and return
+/// the files it created (they count as created by this install).
+fn recover_leftovers(state: &Path) -> BTreeSet<PathBuf> {
+    let mut created = BTreeSet::new();
+    let record = state.join(LEFTOVERS);
+    let text = std::fs::read_to_string(&record).unwrap_or_default();
+    for line in text.lines() {
+        let fields: Vec<&str> = line.split('\t').collect();
+        match fields.as_slice() {
+            ["temp", temp] => {
+                if Path::new(temp)
+                    .symlink_metadata()
+                    .is_ok_and(|m| m.is_file())
+                {
+                    let _ = std::fs::remove_file(temp);
+                }
+            }
+            ["aside", original, aside] if Path::new(aside).is_dir() => {
+                let _ = if Path::new(original).symlink_metadata().is_ok() {
+                    std::fs::remove_dir_all(aside)
+                } else {
+                    std::fs::rename(aside, original)
+                };
+            }
+            ["created", path] if Path::new(path).exists() => {
+                created.insert(PathBuf::from(path));
+            }
+            _ => {}
+        }
+    }
+    // The receipt's own temporary lives in am's state directory.
+    for entry in std::fs::read_dir(state).into_iter().flatten().flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if name
+            .strip_prefix(".receipt.json.am-")
+            .is_some_and(crate::util::is_uuid)
+        {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
+    let _ = std::fs::remove_file(&record);
+    created
+}
+
+/// `.<name>.am-*` files beside `path` that no am run recorded: possibly a
+/// user's, so they are left in place and only reported.
+pub fn lookalikes(path: &Path) -> Vec<PathBuf> {
     let (Some(parent), Some(name)) = (path.parent(), path.file_name()) else {
-        return;
+        return Vec::new();
     };
     let prefix = format!(".{}.am-", name.to_string_lossy());
-    for entry in std::fs::read_dir(parent).into_iter().flatten().flatten() {
-        let file = entry.file_name().to_string_lossy().into_owned();
-        let Some(rest) = file.strip_prefix(&prefix) else {
-            continue;
-        };
-        if !crate::util::is_uuid(rest.strip_prefix("old-").unwrap_or(rest)) {
-            continue;
-        }
-        let stale = entry.path();
-        let _ = match entry.file_type() {
-            Ok(kind) if kind.is_dir() => std::fs::remove_dir_all(&stale),
-            _ => std::fs::remove_file(&stale),
-        };
-    }
+    std::fs::read_dir(parent)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().starts_with(&prefix))
+        .map(|e| e.path())
+        .collect()
 }
 
 // ------------------------------------------------------------ transactions
@@ -639,13 +684,44 @@ enum Before {
     Aside(PathBuf),
 }
 
-/// Applied changes, undone in reverse when a later step fails.
-#[derive(Default)]
+/// Applied changes, undone in reverse when a later step fails. Every
+/// temporary, moved-aside or created path is written to the leftovers
+/// record first, so a killed run can be finished safely.
 struct Journal {
     entries: Vec<(PathBuf, Before)>,
+    record: PathBuf,
+    /// Files an interrupted earlier run created.
+    created_before: BTreeSet<PathBuf>,
 }
 
 impl Journal {
+    fn open(state: &Path) -> Result<Journal> {
+        io_at(std::fs::create_dir_all(state), state)?;
+        let journal = Journal {
+            entries: Vec::new(),
+            record: state.join(LEFTOVERS),
+            created_before: recover_leftovers(state),
+        };
+        for path in &journal.created_before {
+            journal.note(&["created", &path.to_string_lossy()])?;
+        }
+        Ok(journal)
+    }
+    fn note(&self, fields: &[&str]) -> Result<()> {
+        use std::io::Write;
+        if fields.iter().any(|f| f.contains(['\t', '\n'])) {
+            bail!("Installation paths must not contain tabs or newlines");
+        }
+        let mut file = io_at(
+            std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&self.record),
+            &self.record,
+        )?;
+        io_at(writeln!(file, "{}", fields.join("\t")), &self.record)?;
+        io_at(file.sync_all(), &self.record)
+    }
     /// Move whatever is at `path` out of the way, remembering it.
     fn clear(&mut self, path: &Path) -> Result<()> {
         let before = match path.symlink_metadata() {
@@ -654,6 +730,7 @@ impl Journal {
             Ok(meta) if meta.is_dir() => {
                 let name = path.file_name().unwrap_or_default().to_string_lossy();
                 let aside = path.with_file_name(format!(".{name}.am-old-{}", uuid4()));
+                self.note(&["aside", &path.to_string_lossy(), &aside.to_string_lossy()])?;
                 io_at(std::fs::rename(path, &aside), path)?;
                 Before::Aside(aside)
             }
@@ -687,6 +764,7 @@ impl Journal {
             .metadata()
             .map(|m| m.permissions().mode() & 0o7777)
             .unwrap_or(0o644);
+        let absent = old.is_none();
         let before = match old {
             Some(raw) => Before::File(raw, mode),
             None => Before::Absent,
@@ -697,12 +775,18 @@ impl Journal {
                 if let Some(parent) = path.parent() {
                     io_at(std::fs::create_dir_all(parent), parent)?;
                 }
-                write_atomic(path, raw, mode)
+                let temp = temp_for(path);
+                self.note(&["temp", &temp.to_string_lossy()])?;
+                if absent {
+                    self.note(&["created", &path.to_string_lossy()])?;
+                }
+                write_atomic_via(path, &temp, raw, mode)
             }
             None => io_at(std::fs::remove_file(path), path),
         }
     }
     fn rollback(self) {
+        let record = self.record.clone();
         for (path, before) in self.entries.into_iter().rev() {
             match path.symlink_metadata() {
                 Ok(meta) if meta.is_dir() => drop(std::fs::remove_dir_all(&path)),
@@ -718,6 +802,7 @@ impl Journal {
                 Before::Aside(aside) => std::fs::rename(aside, &path),
             };
         }
+        let _ = std::fs::remove_file(record);
     }
     fn commit(self) {
         for (_, before) in self.entries {
@@ -725,6 +810,7 @@ impl Journal {
                 let _ = std::fs::remove_dir_all(aside);
             }
         }
+        let _ = std::fs::remove_file(self.record);
     }
 }
 
@@ -891,7 +977,7 @@ fn preflight(items: &[Item], releasing: bool) -> Result<Vec<String>> {
                 }
             }
             (Some(Want::Hooks(..)), prior) => {
-                if let Err(e) = edit_hooks(&item.path, prior.as_ref(), None) {
+                if let Err(e) = edit_hooks(&item.path, prior.as_ref(), None, false) {
                     problems.push(e.0);
                 }
             }
@@ -915,7 +1001,7 @@ fn preflight(items: &[Item], releasing: bool) -> Result<Vec<String>> {
                         )
                         .is_some()
                     }),
-                    "hook-config" => edit_hooks(&item.path, Some(prior), None).is_ok(),
+                    "hook-config" => edit_hooks(&item.path, Some(prior), None, false).is_ok(),
                     _ => {
                         item.path.symlink_metadata().is_err() || identity_matches(prior, &item.path)
                     }
@@ -963,9 +1049,10 @@ fn apply(item: &mut Item, journal: &mut Journal) -> Result<Option<Value>> {
             let text = read_optional(&item.path)?.map(|r| String::from_utf8_lossy(&r).into_owned());
             let hash = prior.as_ref().and_then(|p| p.str("block_hash"));
             let updated = with_activation(text.as_deref().unwrap_or(""), hash)?;
+            // Created by this install, or by an interrupted one (recorded).
             let originally_absent = match &prior {
                 Some(p) => p.get("originally_absent") == Some(&Value::Bool(true)),
-                None => text.is_none(),
+                None => text.is_none() || journal.created_before.contains(&item.path),
             };
             if text.as_deref() != Some(updated.as_str()) {
                 journal.write(&item.path, Some(updated.as_bytes()))?;
@@ -976,7 +1063,8 @@ fn apply(item: &mut Item, journal: &mut Journal) -> Result<Option<Value>> {
             ]))))
         }
         Some(Want::Hooks(client, entry)) => {
-            let (raw, mut fields) = edit_hooks(&item.path, prior.as_ref(), Some(&entry))?;
+            let created = journal.created_before.contains(&item.path);
+            let (raw, mut fields) = edit_hooks(&item.path, prior.as_ref(), Some(&entry), created)?;
             if read_optional(&item.path)? != raw {
                 journal.write(&item.path, raw.as_deref())?;
             }
@@ -998,7 +1086,7 @@ fn apply(item: &mut Item, journal: &mut Journal) -> Result<Option<Value>> {
                         io_at(std::os::unix::fs::symlink(to, &item.path), &item.path)?
                     }
                     Want::Copy(from) => copy_tree(from, &item.path)?,
-                    Want::File(raw) => write_atomic(&item.path, raw, 0o644)?,
+                    Want::File(raw) => journal.write(&item.path, Some(raw))?,
                     _ => {}
                 }
             }
@@ -1013,15 +1101,17 @@ fn apply(item: &mut Item, journal: &mut Journal) -> Result<Option<Value>> {
                         if let Some(rest) =
                             without_activation(&text, prior.str("block_hash").unwrap_or(""))
                         {
-                            // Only whitespace left: no user content to keep.
-                            // A linked file is emptied at its target instead.
-                            let delete = rest.trim().is_empty() && !is_link(&item.path);
+                            // Delete the whole file only when the installer
+                            // created it and nothing else is left in it.
+                            let created =
+                                prior.get("originally_absent") == Some(&Value::Bool(true));
+                            let delete = created && rest.trim().is_empty() && !is_link(&item.path);
                             journal.write(&item.path, (!delete).then_some(rest.as_bytes()))?;
                         }
                     }
                 }
                 "hook-config" => {
-                    if let Ok((raw, _)) = edit_hooks(&item.path, Some(&prior), None) {
+                    if let Ok((raw, _)) = edit_hooks(&item.path, Some(&prior), None, false) {
                         // A linked config is kept (as `{}`) rather than unlinked.
                         let raw = raw.or_else(|| is_link(&item.path).then(|| b"{}\n".to_vec()));
                         if read_optional(&item.path)? != raw {
@@ -1093,12 +1183,8 @@ fn activate(
         }
         return Ok(out);
     }
-    // Leftovers of an interrupted run (we hold the install lock).
-    for item in &items {
-        sweep_temps(&item.path);
-    }
-    sweep_temps(&locations.state.join("receipt.json"));
-    let mut journal = Journal::default();
+    // Finishes what an interrupted run recorded (we hold the install lock).
+    let mut journal = Journal::open(&locations.state)?;
     let mut owned = Vec::new();
     let mut lines = Vec::new();
     for item in &mut items {
@@ -1211,7 +1297,9 @@ pub fn install(options: &Options) -> Result<String> {
     io_at(std::fs::create_dir_all(&locations.state), &locations.state)?;
     let _lock = lock(&locations.state.join("lock"))?;
     let prior = read_receipt(&locations)?;
-    sweep_staging(&locations.data);
+    if !options.dry_run {
+        sweep_staging(&locations.data); // am's own data directory only
+    }
     let prior_kind = prior
         .as_ref()
         .and_then(|p| p.get("source"))
@@ -1341,11 +1429,8 @@ pub fn uninstall(dry_run: bool) -> Result<String> {
             let _ = writeln!(out, "  {} {}", item.kind(), item.path.display());
         }
     } else {
-        for item in &items {
-            sweep_temps(&item.path);
-        }
         sweep_staging(&locations.data);
-        let mut journal = Journal::default();
+        let mut journal = Journal::open(&locations.state)?;
         for item in &mut items {
             if let Err(e) = apply(item, &mut journal) {
                 journal.rollback();
@@ -1354,7 +1439,6 @@ pub fn uninstall(dry_run: bool) -> Result<String> {
         }
         journal.commit();
         let receipt = locations.state.join("receipt.json");
-        sweep_temps(&receipt);
         io_at(std::fs::remove_file(&receipt), &receipt)?;
         let _ = std::fs::remove_file(locations.state.join("lock"));
         let _ = std::fs::remove_dir(&locations.state);

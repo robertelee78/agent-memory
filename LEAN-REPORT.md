@@ -1,20 +1,20 @@
 # v0.0.15 lean `am` — rebuild report
 
 Branch `lean/v0.0.15`, built against [docs/design/v0.0.15-lean.md](docs/design/v0.0.15-lean.md).
-The first build is committed; the review fixes below are not.
+The first build and review batches 1–2 are committed (1cf10b44); batch 3 below is not.
 
 ## Line count (product)
 
 | | Before | After |
 | --- | ---: | ---: |
-| Rust `src/` (am + am-dev) | 133,453 | **5,622** |
+| Rust `src/` (am + am-dev) | 133,453 | **5,834** |
 | `tests/` | 189,253 (209 files) | 0 |
 | Skill pack `skills/agent-memory/` | 9,285 (71 files) | 648 (14 files) |
 | `install.sh` | 369 | 356 |
 
-Rust by file: `install/mod.rs` 1,419 · `install/release.rs` 782 · `share.rs` 678 ·
-`bank.rs` 456 · `json.rs` 451 · `memory.rs` 404 · `main.rs` 321 · `doctor.rs` 295 ·
-`util.rs` 289 · `repo.rs` 194 · `hook.rs` 74 · `lib.rs` 10 · `bin/am_dev/main.rs` 249.
+Rust by file: `install/mod.rs` 1,503 · `install/release.rs` 782 · `share.rs` 782 ·
+`bank.rs` 456 · `json.rs` 451 · `memory.rs` 404 · `main.rs` 321 · `doctor.rs` 310 ·
+`util.rs` 298 · `repo.rs` 194 · `hook.rs` 74 · `lib.rs` 10 · `bin/am_dev/main.rs` 249.
 Dependencies: `sha2`, `flate2`, `libc` (only `geteuid` for the temp-dir check;
 already in the lockfile through `sha2`). Dropped `sha1`, `regex`, `unicode-normalization`.
 
@@ -37,8 +37,10 @@ already in the lockfile through `sha2`). Dropped `sha1`, `regex`, `unicode-norma
 ## User smoke test (macOS arm64, temp HOME)
 
 `scripts/qa.sh <worktree>` (new, kept in the repo) drives the real binary. Final
-run after the review fixes: **0 failures, 39 steps (35 `am`, 4 plain git; 2 are
-expected refusals) + 41 checks**.
+run after review batch 3: **0 failures, 40 steps (36 `am`, 4 plain git; 2 are
+expected refusals) + 46 checks**. Timings below are from the batch-2 run; the
+batch-3 run matched them (share 124–156 ms, refresh 73–135 ms, install 74 ms,
+`install --dry-run` 128 ms, uninstall 28 ms, takeover 28 ms).
 
 | Step | Time |
 | --- | ---: |
@@ -92,7 +94,7 @@ when `origin/HEAD` was unset, two `rev-parse`s, a pre-push update-ref/reset and
 a tree comparison). Five consecutive local shares: 117–136 ms (was 151–170 ms
 here, 226–263 ms in the live omp run); `push` itself dominates.
 
-## Review fixes (not committed)
+## Review fixes, batches 1–2 (committed in 1cf10b44)
 
 Batch 1 (real-use reports):
 1. Doctor no longer counts missing context files as problems; it lists them as
@@ -107,13 +109,9 @@ Batch 1 (real-use reports):
    client via `--harness`.
 4. `am <command> --help` / `-h` (and `am help <command>`) print that command's
    usage and exit 0; argument errors point to it.
-5. Install and uninstall remove `.<name>.am-<uuid>` temporaries and `.am-old-*`
-   directories beside every target and the receipt, plus stale `.staging-*`
-   runtime roots. Uninstall deletes an activation file left with only
-   whitespace and a hook config left with only empty objects/arrays; install no
-   longer counts its own leftover hook group as the file's original shape.
-   QA seeds the leftovers; the report's kill -9 repro (1–10 ms) left nothing after
-   re-install + uninstall.
+5. (Superseded by batch 3, item 1.) Interrupted-install cleanup; uninstall
+   deletes block-only and empty hook files; install no longer counts its own
+   leftover hook group as the file's original shape.
 6. Share/refresh git calls cut as listed above; timings above.
 
 Batch 2 (independent review):
@@ -155,6 +153,51 @@ All items were done with small changes; none needed new machinery. Batch-2 item 
 is exercised only on the signed-release path (downloads and signature checks),
 which dev-source QA does not reach; macOS `$TMPDIR` and `/tmp` both pass the rule
 (checked with `stat -L`).
+
+## Review fixes, batch 3 (not committed)
+
+1. **Leftovers only by proof.** The name-pattern sweep is gone. Before creating a
+   temporary, moving a directory aside or creating a file, install/uninstall
+   append it to `$XDG_STATE_HOME/agent-memory/install/leftovers` (fsynced). The
+   next run removes only recorded temporaries, puts recorded moved-aside
+   directories back (or drops them once the original is in place), and treats
+   recorded created files as created by the installer; the record is deleted on
+   commit or rollback. Unrecorded receipt temporaries and `.staging-*` roots are
+   swept only inside am's own state/data directories. `am doctor` reports any
+   unrecorded `.<name>.am-*` file beside a target as left in place, and a pending
+   record. `--dry-run` deletes nothing (staging sweep skipped too). QA: a
+   look-alike user file survives dry-run, install and uninstall and doctor names
+   it; a recorded temporary is removed; dry-run leaves both and the record.
+2. **Staging after push.** After a successful push `share` re-takes the bank lock
+   and re-runs the staged-only check right before the index reset. If the user
+   staged something meanwhile, the reset (and base update) is skipped and the
+   output says the share succeeded but was not staged. Ad hoc: a pre-receive hook
+   slept 1 s while a background job staged `progress.md`; the share reported it
+   and the staged copy survived.
+3. **Whole-file deletes only for files am created.** Activation files and hook
+   configs are deleted on release only when the receipt says `originally_absent`
+   (from the install that created them, a recorded interrupted install, or a
+   v0.0.14 receipt) and nothing else is left; otherwise only our block/entries are
+   removed. QA: a pre-existing `{"permissions":{"allow":[]}}` hooks.json and a
+   whitespace-only AGENTS.md survive uninstall.
+4. **MEMORY.md text merge.** Besides rows, the router's frontmatter and text
+   around the table merge three-way (`git merge-file` on the text with rows
+   replaced by one marker and the router time blanked). A both-sided text clash
+   keeps yours and says so. Ad hoc: A's intro-line edit reached B while B had a
+   local row.
+5. **Retry base.** After a rejected push, the shared commit just merged is the
+   base for the retry (and is accepted as a known staged blob). Ad hoc: a
+   pre-receive hook moved `main` to a teammate's commit and rejected the first
+   push; the retry landed on top of it with both notes.
+6. **`.github/workflows/verify-release.yml`** (`workflow_dispatch`,
+   `release: published`; macos-15, ubuntu-24.04, ubuntu-24.04-arm): the one-line
+   installer from `main` in a temp HOME, `am --version` = release tag, `am status`,
+   `am update` ("up to date"), init/remember/recall in a temp repo, `am uninstall`,
+   then fails if any file or link is left in HOME (besides `.gitconfig`); per-step
+   timings go to the step summary. Not run yet: it needs a published release.
+
+All six were small changes. Item 1 uses the small journal file the review
+suggested, because a temporary's content cannot prove it is ours.
 
 ### Additional runs (ad hoc, temp HOME, fixtures removed afterwards)
 

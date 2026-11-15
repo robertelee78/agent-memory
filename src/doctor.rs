@@ -109,6 +109,21 @@ fn installation(report: &mut Report, deep: bool) {
             report.line(format!("  ok  {} {}", check.kind, check.path));
         }
     }
+    if deep {
+        // Files named like am temporaries that no am run recorded are left
+        // alone: they may be the user's.
+        for check in &checks {
+            for path in install::lookalikes(std::path::Path::new(&check.path)) {
+                report.line(format!(
+                    "  note: {} looks like an am temporary file but no am run recorded it, so it was left in place; remove it if you do not need it",
+                    path.display()
+                ));
+            }
+        }
+        if locations.state.join("leftovers").exists() {
+            report.line("  note: an interrupted install or uninstall left work to finish; the next `am install` completes it");
+        }
+    }
     let binary = source.and_then(|s| s.str("binary")).unwrap_or("");
     match crate::util::which("am") {
         Some(found) => {

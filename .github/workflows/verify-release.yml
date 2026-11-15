@@ -1,0 +1,66 @@
+name: Verify published release
+
+# Installs the published signed release exactly as a user does (the one-line
+# installer from main), uses it briefly, updates and uninstalls it.
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04, ubuntu-24.04-arm]
+    steps:
+      - name: Install, use, update and uninstall the signed release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          tag=${RELEASE_TAG:-$(gh release view --repo "$REPO" --json tagName --jq .tagName)}
+          export HOME=$(mktemp -d)
+          export PATH="$HOME/.local/bin:$PATH"
+          work=$(mktemp -d)
+          git config --global user.name "Release check"
+          git config --global user.email release-check@example.com
+          git config --global init.defaultBranch main
+          now_ms() { perl -MTime::HiRes=time -e 'printf "%d\n", time * 1000'; }
+          timed() { # timed LABEL COMMAND...
+            local label=$1; shift
+            local start=$(now_ms)
+            "$@" | tee "$work/out"
+            rows+="| $label | $(( $(now_ms) - start )) ms |"$'\n'
+          }
+          timed "install.sh (one line, from main)" sh -c "curl -fsSL https://raw.githubusercontent.com/$REPO/main/install.sh | sh"
+          timed "am --version" am --version
+          grep -qx "am ${tag#v}" "$work/out"
+          timed "am status" am status
+          timed "am update" am update
+          grep -q "up to date" "$work/out"
+          mkdir "$work/repo" && cd "$work/repo" && git init -q
+          timed "am init" am init
+          timed "am remember" am remember --kind fact --title "Release check" --body "The signed release works on this host."
+          timed "am recall" am recall release
+          grep -q "signed release works" "$work/out"
+          cd "$work"
+          timed "am uninstall" am uninstall
+          left=$(find "$HOME" \( -type f -o -type l \) ! -name .gitconfig)
+          if [ -n "$left" ]; then echo "Left after uninstall:"; echo "$left"; exit 1; fi
+          {
+            echo "### ${{ matrix.os }}: $tag"
+            echo
+            echo "| Step | Time |"
+            echo "| --- | ---: |"
+            printf '%s' "$rows"
+          } >> "$GITHUB_STEP_SUMMARY"

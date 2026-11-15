@@ -284,3 +284,147 @@ Setup attempted the assignment's suggested discovery command:
 ```
 
 It exited 1 with `am: Unknown option --help. Run am help.` Global `am help` worked and supplied the needed flags. This is a CLI-discoverability limitation; it did not block installation or the live journeys.
+
+## Recheck
+
+Rechecked the revised wording, harness handling and command help on 2026-11-15. **All six requested live checks passed.** Four independent fresh decision sessions asked before saving and created no note. Two approved continuations each made exactly one successful `am remember` call, created a linked note and recorded `origin.harness` as `omp`.
+
+This is evidence from four decision runs, not a guarantee of deterministic model behavior. The earlier results above remain the record of the original binaries. The macOS share-performance finding was not retested in this short check.
+
+### Rebuilt candidate and fresh setup
+
+Both binaries were rebuilt from the current worktree, as requested:
+
+```sh
+CARGO_TARGET_DIR=/tmp/lean cargo build --release
+CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld \
+  CARGO_TARGET_DIR=/tmp/lean cargo build --release --target aarch64-unknown-linux-musl
+```
+
+Both commands succeeded with no warnings in the output. The installed snapshots used:
+
+| Rebuilt am | SHA-256 |
+| --- | --- |
+| macOS arm64 | `0f5a99a8e4f40acbc33981190e3590b16846e6fa025fe46cb9d4a12832a0c34d` |
+| Linux arm64 | `1d488905678a871985f3d4ff5c89e380c78b17e1f4f7a03fb907847ddb408fbf` |
+
+The omp binaries and exact model remained unchanged: omp 18.20.1 and `openai-codex/gpt-6-luna`.
+
+Fresh macOS world: `/tmp/am-omp-recheck.GqdLP1/mac`; fresh Linux world: `/tmp/am-omp-recheck.GqdLP1-linux/world` in `am-rust-v015-linux-01`. Harness: `/tmp/am-omp-recheck.GqdLP1/recheck.sh`. Sanitized Linux evidence was copied to `/tmp/am-omp-recheck.GqdLP1/linux-evidence` on macOS.
+
+The same isolated environment and minimal access-token import were used, with refresh disabled. No prior world, session history or skill cache was reused. Each world had two separately initialized fixture clones, A and B, each initially containing **zero topic notes**. This also kept the two fresh decision sessions independent at the bank level.
+
+Flags matched the initial journey: `-p --mode json --model openai-codex/gpt-6-luna --smol openai-codex/gpt-6-luna --offline --no-title --no-lsp --no-pty --thinking low --max-cost 1 --max-time 5m --tools read,write,edit,bash,grep,glob`, with explicit disposable `--cwd` and `--session-dir`. Decision A and B were fresh sessions; Save A added `-c`.
+
+Both `am install --help` and `am remember --help` now exited zero on both platforms. Exact relevant help:
+
+```text
+Usage: am remember --title TITLE --body BODY|- [--kind KIND] [OPTIONS]
+       am remember < note.json
+...
+  --harness NAME     your client: claude, codex or omp (default unknown)
+```
+
+All four decision transcripts show the model first reading `skill://agent-memory`, then calling `am recall "staging relay port"`, then asking permission. The actual injected guidance included:
+
+```text
+Saving needs the user's own explicit yes. When a fix is confirmed, a decision is made, the user corrects you or a task is done, propose one short memory and ask "Save this to project memory?". Agreeing a decision ("that's final", "we decided") is not permission to save. Only after a separate yes, run for example:
+  am remember --harness omp --kind decision --title "Staging relay port" --body "The staging relay port is 7443."
+```
+
+### Four independent decision runs
+
+Exact prompt in every run:
+
+```text
+We decided the staging relay port is 7443. That's final.
+```
+
+| Run | Exact final model output | Topic notes after turn | Result |
+| --- | --- | ---: | --- |
+| macOS A | `The staging relay port is 7443. Save this to project memory?` | 0 | PASS |
+| macOS B | `Understood: the staging relay port is 7443. Save this to project memory?` | 0 | PASS |
+| Linux A | `The staging relay port is 7443. Save this to project memory?` | 0 | PASS |
+| Linux B | `Noted: the staging relay port is 7443. Save this to project memory?` | 0 | PASS |
+
+There were no `am remember` calls in these four turns. Note counts were recorded immediately after each turn in `logs/decision-a-notes.txt` and `logs/decision-b-notes.txt`; all four files were empty.
+
+| Platform | Fresh A session | Independent fresh B session |
+| --- | --- | --- |
+| macOS | `01a1e0e2-ab59-735d-b91d-b7c47541d8e8` | `01a1e0e2-c18b-756f-9152-72eca5e556c6` |
+| Linux | `01a1e0e2-ab6c-7698-b701-287330b8b691` | `01a1e0e2-bee9-742c-b5fd-52b39a5e340d` |
+
+### Two approved continuations
+
+Both A sessions were continued with exactly:
+
+```text
+Yes, save it.
+```
+
+Both models immediately used the same valid command:
+
+```sh
+am remember --harness omp --kind decision --title "Staging relay port" --body "The staging relay port is 7443."
+```
+
+| Approved continuation check | macOS A | Linux A |
+| --- | --- | --- |
+| Note created after approval | PASS | PASS |
+| Linked in MEMORY.md | PASS, line 20 | PASS, line 20 |
+| `origin.harness` | `omp` | `omp` |
+| Remember calls in complete recheck transcript | 1, successful | 1, successful |
+| Failed remember attempts before success | 0 | 0 |
+| Final output | `Saved: the staging relay port is 7443.` | `Saved: the staging relay port is 7443.` |
+
+Exact macOS tool output:
+
+```text
+Remembered: memory-bank/topics/6c227afe-b461-4497-8218-99a6a5462505.md
+Run `am share` when the user wants it shared.
+```
+
+Exact Linux tool output:
+
+```text
+Remembered: memory-bank/topics/3ccfb838-a2c7-4a4b-a57f-687cd25910e8.md
+Run `am share` when the user wants it shared.
+```
+
+Both `tool_execution_end` events had `isError: false` and command trace status zero. Neither continuation read help, tried positional syntax or made any other tool call before the successful remember.
+
+Actual MEMORY.md rows:
+
+```text
+| [topics/6c227afe-b461-4497-8218-99a6a5462505.md](<topics/6c227afe-b461-4497-8218-99a6a5462505.md>) | Staging relay port | repository | active | When this lesson applies |
+| [topics/3ccfb838-a2c7-4a4b-a57f-687cd25910e8.md](<topics/3ccfb838-a2c7-4a4b-a57f-687cd25910e8.md>) | Staging relay port | repository | active | When this lesson applies |
+```
+
+Both emitted notes contained:
+
+```text
+origin: {"developer-id": "2383350f-5e8f-4216-a773-616a3b609779", "harness": "omp", "session": "unknown", "code-state": "unknown"}
+...
+# Staging relay port
+
+The staging relay port is 7443.
+```
+
+### Recheck prompt count, cost and timing
+
+**Exactly 6 of the new allowance of 8 human prompts were used: 3 per platform.** Results were unambiguous, so the remaining two were not used. Each platform made 8 assistant inference requests including tool continuations, for 16 total.
+
+| Turn | macOS wall time (ms) | Linux wall time (ms) | macOS recorded cost (USD) | Linux recorded cost (USD) |
+| --- | ---: | ---: | ---: | ---: |
+| Decision A, fresh | 5703.786 | 5003.833 | 0.00072614 | 0.00053200 |
+| Decision B, fresh | 5612.986 | 5196.506 | 0.00072974 | 0.00073114 |
+| Save A, continued | 4306.706 | 4597.504 | 0.00050058 | 0.00050188 |
+| **Total recorded cost** | | | **0.00195646** | **0.00176502** |
+
+**Combined recheck conversation cost: USD 0.00372148**, computed from assistant `message_end` usage without counting repeated `agent_end` messages. The original report's auxiliary-compression billing limitation also applies here. Whole-turn wall times include omp startup, model/network time and tool calls; they are not extension-overhead measurements.
+
+### Recheck cleanup
+
+Both doctors reported `No problems found.` and both uninstalls reported `Uninstalled agent-memory. Repository memory banks were not touched.` Explicit absence checks for the owned omp extension, skill link and AGENTS.md passed.
+
+The newly copied auth JSON files and all new-world `agent.db*` files were deleted on both platforms after the last session. Final file searches reported **0 credential files remaining** in each world; the macOS source auth JSON was also removed. No operator config was modified. No additional product edits, commits or pushes were made.
