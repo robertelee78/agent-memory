@@ -156,6 +156,7 @@ impl World {
         )
     }
 }
+#[cfg(feature = "dev-tools")]
 pub fn in_world(name: &str, body: impl FnOnce(&World)) {
     use std::io::Write;
     use std::os::unix::fs::OpenOptionsExt;

@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Memory publication and source-preserving layout publication contracts.
 //!
 //! The offline GitHub protocol fixture (`publication_github.py`) is ported as

@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! hooks: the native `am hook <name>` commands (baseline pack `hooks/*.py`),
 //! the retargeted OpenCode/OMP adapters and the client hook command rewrite.
 //! Real-binary cases run `am` with a private 0700 world environment; library

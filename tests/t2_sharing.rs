@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 use agent_memory::codec::json::{self, Value};
 use agent_memory::sharing_frontier as frontier;
 use std::collections::{BTreeMap, BTreeSet};

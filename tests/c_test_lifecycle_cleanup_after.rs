@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 mod support;
 
 // obligation: tests/contracts/test_lifecycle_cleanup_after.py::CleanupAfterContract.test_after_error_cleanup_write

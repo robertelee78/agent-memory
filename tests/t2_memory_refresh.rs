@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Real filesystem and credential-free Git contracts for memory refresh.
 mod support;
 use agent_memory::{

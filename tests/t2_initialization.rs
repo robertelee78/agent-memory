@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Initialization lane: `am init inspect|read|preview|apply` (baseline
 //! `initialization.py`) in isolated Worlds. Commands run through the real
 //! CLI dispatch in a child test binary or the World's installed native command.

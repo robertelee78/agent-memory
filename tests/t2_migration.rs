@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Explicit migration, recovery and restoration with production and
 //! test-only codecs in disposable Worlds.
 //!

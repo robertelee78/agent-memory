@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Journaled metadata-probe interruptions at the layout_recovery_temps
 //! boundary, with real fault injection in an owned child process.
 //!

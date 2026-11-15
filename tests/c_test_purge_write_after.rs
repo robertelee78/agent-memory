@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 mod support;
 
 // obligation: tests/contracts/test_purge_write_after.py::PurgeWriteContract.test_after_every_purge_write

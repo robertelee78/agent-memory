@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 use agent_memory::{
     admission, bank_contract,
     codec::json::{self, Value},

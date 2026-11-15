@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Governed invalidation contracts (baseline tests/contracts/test_governance*.py).
 //!
 //! Desired-state contracts retain exact canonical files; public journeys use

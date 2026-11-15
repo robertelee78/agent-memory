@@ -127,11 +127,63 @@ am_detect() {
   esac
 }
 
+# Numeric ownership and symbolic modes work with both BSD and GNU/BusyBox ls.
+# Ignore any ACL/xattr suffix after the ten permission characters.
+am_trusted_directory() (
+  set -f
+  am_metadata=$(LC_ALL=C ls -Ldn "$1" 2>/dev/null) || exit 1
+  set -- $am_metadata
+  [ "$#" -ge 3 ] || exit 1
+  case $1 in d?????????*) ;; *) exit 1 ;; esac
+  [ "$3" = 0 ] || [ "$3" = "$am_uid" ] || exit 1
+  case $1 in
+    ?????w*|????????w*)
+      case $1 in ?????????t*|?????????T*) ;; *) exit 1 ;; esac
+      ;;
+  esac
+)
+
+# Check the spelling as well as its physical path: resolving a symlink must
+# not hide a writable ancestor that could replace that symlink.
+am_trusted_ancestry() (
+  am_node=/
+  am_remaining=${1#/}
+  while :; do
+    if [ ! -e "$am_node" ] && [ ! -h "$am_node" ]; then
+      exit 0
+    fi
+    am_trusted_directory "$am_node" || exit 1
+    [ -n "$am_remaining" ] || exit 0
+    am_part=${am_remaining%%/*}
+    case $am_remaining in
+      */*) am_remaining=${am_remaining#*/} ;;
+      *) am_remaining= ;;
+    esac
+    am_node=${am_node%/}/$am_part
+  done
+)
+
 am_workspace() {
   case ${TMPDIR:-} in
     /*) am_parent=${TMPDIR%/} ;;
     *) am_parent=/tmp ;;
   esac
+  [ -n "$am_parent" ] || am_parent=/
+  am_uid=$(id -u 2>/dev/null) || am_uid=
+  case $am_uid in
+    ''|*[!0-9]*) am_parent_safe=no ;;
+    *) am_parent_safe=yes ;;
+  esac
+  if [ "$am_parent_safe" != yes ] || ! am_trusted_ancestry "$am_parent"; then
+    am_refuse workspace unsafe-temporary-parent 1 'Temporary-directory ancestors must be owned by root or the current user and not writable by others unless sticky. Choose a protected TMPDIR.'
+  fi
+  am_physical=$(CDPATH= cd -P "$am_parent" 2>/dev/null && pwd -P) || am_physical=
+  if [ -n "$am_physical" ]; then
+    if ! am_trusted_ancestry "$am_physical"; then
+      am_refuse workspace unsafe-temporary-parent 1 'Temporary-directory ancestors must be owned by root or the current user and not writable by others unless sticky. Choose a protected TMPDIR.'
+    fi
+    am_parent=$am_physical
+  fi
   umask 077
   # Do not exit before the assignment records the directory to clean up.
   trap '' HUP INT TERM

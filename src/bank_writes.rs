@@ -10,6 +10,7 @@ use crate::{bank_capacity, local_registry as storage, repository_config};
 use std::ffi::{OsStr, OsString};
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, RwLock};
+#[cfg(feature = "dev-tools")]
 use std::time::Duration;
 
 pub const OPERATIONS: &[&str] = &[
@@ -568,10 +569,10 @@ pub fn proposal_value(prepared: &Value) -> Result<&Value> {
     Ok(proposal)
 }
 /// Faults are opt-in, token-bound disposable worlds; Markdown never enables them.
+#[cfg(feature = "dev-tools")]
 pub fn fault(stage: &str) -> Result<()> {
     let selector = std::env::var("AGENT_MEMORY_FAULT_STAGE").ok();
     let selected = selector.as_deref() == Some(stage);
-    #[cfg(feature = "dev-tools")]
     let selected = if let Some(list) = selector.as_deref().filter(|list| list.contains(',')) {
         let mut seen = std::collections::BTreeSet::new();
         for entry in list.split(',') {
@@ -623,7 +624,6 @@ pub fn fault(stage: &str) -> Result<()> {
     }
     let mode = std::env::var("AGENT_MEMORY_FAULT_MODE").ok();
     let selected_mode = mode.as_deref();
-    #[cfg(feature = "dev-tools")]
     let selected_mode = if let Some(modes) = mode.as_deref().filter(|modes| modes.contains(',')) {
         let stages = selector.as_deref().ok_or_else(invalid)?;
         let count = stages.split(',').count();
@@ -695,6 +695,13 @@ pub fn fault(stage: &str) -> Result<()> {
             "Injected write failure at {stage}"
         ))),
     }
+}
+
+/// Production writes never consult the disposable-world fault environment.
+#[cfg(not(feature = "dev-tools"))]
+#[inline(always)]
+pub fn fault(_stage: &str) -> Result<()> {
+    Ok(())
 }
 pub fn record(receipt_path: &Path, payload: &[u8]) -> Result<()> {
     storage::private_mkdir(

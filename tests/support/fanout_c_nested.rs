@@ -250,6 +250,7 @@ fn nested_receipt(stage: &str, mode: &str, partial: bool) {
         f.save(&proposal),
     ]);
     assert_eq!(g(&history, "already_applied"), &Value::Bool(true));
+    assert_eq!(g(&history, "writes_performed"), &Value::Bool(false));
     assert_eq!(fs::read(audit).unwrap(), audit_bytes);
     assert_eq!(f.snapshot(), committed);
     for (p, mode) in old_modes {
@@ -257,6 +258,115 @@ fn nested_receipt(stage: &str, mode: &str, partial: bool) {
     }
     assert_eq!(originals(&f), source);
     unchanged(&f, &work);
+}
+
+// Native half of LayoutLegacyHoldReceipt.journey: old-runtime refusal remains
+// a release-qualification obligation, while the exact retry contract runs here.
+fn prior_receipt_retry(stage: &str) {
+    let f = Fixture::new();
+    let work = feature(&f);
+    let source = originals(&f);
+    let hold = fs::read(f.bank.join(".agent-memory-transaction.md")).unwrap();
+    let status = f.layout(
+        "status",
+        vec!["--operation".into(), f.operation.clone().into()],
+        0,
+    );
+    let (first, _, _) = f.admission(false);
+    let admitted = f.good(vec![
+        "admission".into(),
+        "apply".into(),
+        "--proposal".into(),
+        f.save(&first),
+    ]);
+    let receipt_path = PathBuf::from(t(&admitted, "receipt_path"));
+    let receipt_bytes = fs::read(&receipt_path).unwrap();
+    assert_eq!(g(&read(&receipt_path), "verified"), &Value::Bool(true));
+    let before = f.snapshot();
+    let (proposal, nested, target) = f.admission(false);
+    f.fault_admission(&proposal, stage, "exit");
+    let interrupted = f.snapshot();
+    let before_marker = stage == "layout-recovery-before-nested-marker";
+    if before_marker {
+        // No canonical receipt exists at this boundary. Retrying must apply
+        // once, not confuse the prior operation's real receipt with this one.
+        assert_eq!(interrupted, before);
+        assert!(!interrupted.contains_key(&target));
+    } else {
+        assert_eq!(
+            interrupted[&target],
+            t(g(g(&proposal, "proposal"), "files"), &target).as_bytes()
+        );
+        if stage != "layout-recovery-after-hold-restore" {
+            refused_preview(&f, &nested, "rollback");
+            f.recover(&f.nested_preview(&nested, "finish"), 0);
+        }
+        assert_eq!(f.snapshot(), interrupted);
+    }
+    let apply = || {
+        f.good(vec![
+            "admission".into(),
+            "apply".into(),
+            "--proposal".into(),
+            f.save(&proposal),
+        ])
+    };
+    if before_marker {
+        let retry = apply();
+        assert_eq!(g(&retry, "already_applied"), &Value::Bool(false));
+        assert_eq!(g(&retry, "writes_performed"), &Value::Bool(true));
+    }
+    let bank = bytes(&f.bank);
+    let retained = bytes(&f.directory);
+    let receipts = bytes(receipt_path.parent().unwrap());
+    let retry = apply();
+    assert_eq!(g(&retry, "already_applied"), &Value::Bool(true));
+    assert_eq!(g(&retry, "writes_performed"), &Value::Bool(false));
+    // Full path/byte snapshots also forbid a new topic, history event, receipt
+    // or private ledger artifact on the historical retry.
+    assert_eq!(bytes(&f.bank), bank);
+    assert_eq!(bytes(&f.directory), retained);
+    assert_eq!(bytes(receipt_path.parent().unwrap()), receipts);
+    assert_eq!(fs::read(&receipt_path).unwrap(), receipt_bytes);
+    assert_eq!(
+        fs::read(f.bank.join(".agent-memory-transaction.md")).unwrap(),
+        hold
+    );
+    let current = f.layout(
+        "status",
+        vec!["--operation".into(), f.operation.clone().into()],
+        0,
+    );
+    assert_eq!(
+        g(&current, "pending_unit_ids"),
+        g(&status, "pending_unit_ids")
+    );
+    assert_eq!(
+        g(&current, "semantic_recovery_complete"),
+        &Value::Bool(false)
+    );
+    assert_eq!(originals(&f), source);
+    unchanged(&f, &work);
+}
+
+#[test]
+fn prior_receipt_retry_before_nested_marker() {
+    prior_receipt_retry("layout-recovery-before-nested-marker");
+}
+
+#[test]
+fn prior_receipt_retry_after_nested_receipt() {
+    prior_receipt_retry("layout-recovery-nested-after-receipt");
+}
+
+#[test]
+fn prior_receipt_retry_before_hold_restore() {
+    prior_receipt_retry("layout-recovery-before-hold-restore");
+}
+
+#[test]
+fn prior_receipt_retry_after_hold_restore() {
+    prior_receipt_retry("layout-recovery-after-hold-restore");
 }
 
 const SCRATCH: &str =

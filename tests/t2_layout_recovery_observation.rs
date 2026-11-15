@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 #[allow(unused_imports)]
 mod support;
 

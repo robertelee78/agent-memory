@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 #[path = "support/fault_partitions.rs"]
 mod fault_partitions;
 mod support;

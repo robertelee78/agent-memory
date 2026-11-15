@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 mod support;
 use agent_memory::codec::json::{self, Value};
 use std::os::unix::fs::symlink;

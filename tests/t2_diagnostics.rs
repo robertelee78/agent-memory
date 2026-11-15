@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Diagnostics lane: `am version|status|doctor` (baseline `diagnostics.py`)
 //! in isolated Worlds. Every report is produced in a child copy of this test
 //! binary whose whole environment is the World's, so the process-wide

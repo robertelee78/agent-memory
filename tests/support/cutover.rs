@@ -676,6 +676,7 @@ impl Recall {
 
 /// Re-executed component dispatch against the genuinely installed fixture pack.
 /// Tests using this helper define `cutover_dispatch_worker` and delegate to it.
+#[cfg(feature = "dev-tools")]
 pub fn dispatch_worker() {
     let Some(input) = std::env::var_os("AGENT_MEMORY_FAULT_DISPATCH_INPUT") else {
         return;

@@ -53,6 +53,9 @@ jobs:
       - name: Test
         shell: sh
         run: cargo test --locked --no-fail-fast --features dev-tools --target '${{ matrix.target }}'
+      - name: Release-feature isolation (no dev-tools)
+        shell: sh
+        run: cargo test --locked --test t2_fault_isolation --test t2_bootstrap --target '${{ matrix.target }}'
 
   musl:
     name: Release build (${{ matrix.target }})

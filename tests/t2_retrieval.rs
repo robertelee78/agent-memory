@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 #[allow(unused_imports)] // Shared fixture module re-exports its complete support surface.
 mod support;
 use agent_memory::{

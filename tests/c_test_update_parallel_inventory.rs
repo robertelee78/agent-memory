@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 mod support;
 use agent_memory::codec::json::Value;
 use support::World;

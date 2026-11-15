@@ -155,6 +155,7 @@ fn component_runtime() -> agent_memory::error::Result<(PathBuf, PathBuf)> {
 /// Select the genuinely installed command for isolated component consumers.
 /// The dev-tools pack override is locator input, not native execution proof;
 /// native children must invoke `NativeRuntime::command` with their strict locator.
+#[cfg(feature = "dev-tools")]
 pub fn register_component_runtime() {
     use std::sync::Arc;
     let (pack, _) = component_runtime().unwrap();

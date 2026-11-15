@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Lifecycle lane: `am update` (Rust-to-Rust from a locally signed
 //! release-v2 channel), `am uninstall`, `am purge-data` and doctor repair,
 //! in isolated Worlds. Fixture lifecycle faults run in this test binary;

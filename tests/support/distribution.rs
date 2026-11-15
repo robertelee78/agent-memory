@@ -1,10 +1,15 @@
-use super::lifecycle::{get, mode, text};
+#[cfg(feature = "dev-tools")]
+use super::lifecycle::text;
+use super::lifecycle::{get, mode};
 use super::{RunOptions, World};
 use agent_memory::codec::json::{self, Value};
-use agent_memory::installation::{self as install, Environment, ReleaseAccess, Services};
+use agent_memory::installation::{self as install, ReleaseAccess};
+#[cfg(feature = "dev-tools")]
+use agent_memory::installation::{Environment, Services};
 use agent_memory::release_distribution::{self as release, BinaryIdentity, ReleaseManifest};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
+#[cfg(feature = "dev-tools")]
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -326,6 +331,7 @@ impl Channel {
     }
 }
 
+#[cfg(feature = "dev-tools")]
 #[test]
 fn driver_entry() {
     let Ok(raw) = std::env::var("AGENT_MEMORY_FAULT_FANOUT_REQUEST") else {

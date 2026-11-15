@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Source-preserving layout recovery and exact-file retention contracts.
 //! Public component journeys use real direct APIs and genuine installed runtime
 //! authority, including publication-dependent retention and historical retry.

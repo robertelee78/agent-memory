@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 use agent_memory::codec::json::Value;
 use agent_memory::error::{Kind, Result};
 use sha2::{Digest, Sha256};

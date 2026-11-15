@@ -177,14 +177,29 @@ impl Scratch {
             .filter(|path| path.is_absolute())
             .unwrap_or_else(|| PathBuf::from("/tmp"));
         let parent = crate::fs::canonical_path(&base, true)?;
-        crate::fs::trust::inspect(&parent, Default::default())?;
+        let parent_chain = DirectoryChain::open(&parent)?;
+        let uid = unsafe { libc::geteuid() };
+        for directory in parent_chain.descriptors() {
+            let info = directory.stat()?;
+            if (info.uid != 0 && info.uid != uid)
+                || (info.mode & 0o022 != 0 && info.mode & libc::S_ISVTX as u32 == 0)
+            {
+                return Err(ContractError::trust_path(
+                    &parent,
+                    "temporary-directory ancestors require root/current-user ownership and no group/other write access unless sticky",
+                )
+                .into());
+            }
+        }
+        parent_chain.recheck()?;
         let path = parent.join(format!("{prefix}{}", crate::host::uuid4()?));
-        let parent_dir = Descriptor::open_directory(&parent)?;
+        let parent_dir = parent_chain.directory();
         parent_dir.create_directory(
             path.file_name()
                 .ok_or_else(|| ContractError::new("Invalid scratch name"))?,
             0o700,
         )?;
+        parent_chain.recheck()?;
         Ok(Self {
             path,
             retained: false,

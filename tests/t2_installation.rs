@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Installation lane: runtime faults, lifecycle lock and records, fresh
 //! installs, journaled recovery and Python-era adoption in isolated Worlds.
 //! Fault-injection scenarios run in a child copy of this test binary so the

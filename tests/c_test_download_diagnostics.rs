@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 mod support;
 use agent_memory::codec::json::{self, Value};
 use agent_memory::console::{Channel as Stream, Transcript};

@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 use agent_memory::{
     bank_contract as bank,
     codec::{

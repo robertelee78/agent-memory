@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! Remaining native-source contracts, using real installed ownership and private World fixtures.
 mod support;
 

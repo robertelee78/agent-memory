@@ -41,6 +41,7 @@ const TOOLS: &[&str] = &[
     "cat",
     "ls",
     "grep",
+    "id",
 ];
 
 fn locate(name: &str) -> Option<PathBuf> {
@@ -641,6 +642,105 @@ fn unusable_temporary_directory_refuses() {
             "Could not create a private temporary directory. Check TMPDIR space and permissions.",
         );
         world.assert_refused(&output, 1, &expected);
+    }
+}
+
+#[test]
+fn unsafe_temporary_ancestry_refuses_before_download() {
+    let world = World::new();
+    world.publish_default();
+    let log = world.fake_curl("never-match", "");
+    let unsafe_parent = world.root.join("unsafe parent");
+    let private_child = unsafe_parent.join("private child");
+    fs::create_dir_all(&private_child).unwrap();
+    fs::set_permissions(&private_child, fs::Permissions::from_mode(0o700)).unwrap();
+    for mode in [0o777, 0o770, 0o707] {
+        fs::set_permissions(&unsafe_parent, fs::Permissions::from_mode(mode)).unwrap();
+        for shell in shells() {
+            let output = world
+                .command(&shell)
+                .env("TMPDIR", &private_child)
+                .arg(&world.script)
+                .output()
+                .unwrap();
+            world.assert_refused(
+                &output,
+                1,
+                &failure(
+                    "workspace",
+                    "unsafe-temporary-parent",
+                    "linux",
+                    "x86_64",
+                    "null",
+                    "null",
+                    "Temporary-directory ancestors must be owned by root or the current user and not writable by others unless sticky. Choose a protected TMPDIR.",
+                ),
+            );
+            assert!(!log.exists(), "unsafe ancestry must refuse before curl");
+        }
+    }
+}
+
+#[test]
+fn system_and_sticky_temporary_parents_pass() {
+    let world = World::new();
+    world.publish_default();
+    let sticky = world.root.join("sticky");
+    fs::create_dir(&sticky).unwrap();
+    fs::set_permissions(&sticky, fs::Permissions::from_mode(0o1777)).unwrap();
+    let mut parents = vec![PathBuf::from("/tmp"), sticky];
+    if cfg!(target_os = "macos") {
+        let native = std::env::var_os("TMPDIR").expect("macOS supplies its /var/folders TMPDIR");
+        assert!(Path::new(&native).starts_with("/var/folders"));
+        parents.push(native.into());
+    }
+    for parent in parents {
+        for shell in shells() {
+            let output = world
+                .command(&shell)
+                .env("TMPDIR", &parent)
+                .arg(&world.script)
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(7), "{}", text(&output.stdout));
+            assert_eq!(text(&output.stdout), "fake am ran\n");
+            let binary = PathBuf::from(world.record("argv0").unwrap().trim());
+            assert!(!binary.exists());
+        }
+    }
+}
+
+#[test]
+fn scratch_parent_trust_worker() {
+    let Ok(expectation) = std::env::var("AM_SCRATCH_TRUST_EXPECT") else {
+        return;
+    };
+    let scratch = agent_memory::release_distribution::Scratch::new("am-scratch-trust-");
+    assert_eq!(scratch.is_ok(), expectation == "trusted");
+}
+
+#[test]
+fn native_scratch_requires_the_same_full_temporary_ancestry() {
+    let world = World::new();
+    let parent = world.root.join("native parent");
+    let private_child = parent.join("private child");
+    fs::create_dir_all(&private_child).unwrap();
+    fs::set_permissions(&private_child, fs::Permissions::from_mode(0o700)).unwrap();
+    for (mode, expectation) in [
+        (0o777, "unsafe"),
+        (0o770, "unsafe"),
+        (0o707, "unsafe"),
+        (0o1777, "trusted"),
+        (0o700, "trusted"),
+    ] {
+        fs::set_permissions(&parent, fs::Permissions::from_mode(mode)).unwrap();
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", "scratch_parent_trust_worker", "--nocapture"])
+            .env("TMPDIR", &private_child)
+            .env("AM_SCRATCH_TRUST_EXPECT", expectation)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{}", text(&output.stdout));
     }
 }
 

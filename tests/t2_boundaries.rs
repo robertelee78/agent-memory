@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 //! claude_boundary and codex_boundary: legacy source-bound acknowledgment of
 //! retained pending boundaries, observation dispatch, pending inventories and
 //! the `am claude-boundary` / `am codex-boundary` routes. Every case runs the

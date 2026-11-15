@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 mod support;
 use agent_memory::codec::json::{self, Value};
 use sha2::{Digest, Sha256};

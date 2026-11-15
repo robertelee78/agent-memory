@@ -1,3 +1,4 @@
+#![cfg(feature = "dev-tools")]
 use agent_memory::codec::{
     frontmatter,
     json::{self, Value},
