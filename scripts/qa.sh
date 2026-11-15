@@ -33,13 +33,18 @@ git config --global pull.rebase false
 # repository and linked into place.
 printf '{\n  "model": "opus"\n}\n' > "$HOME/dotfiles/claude-settings.json"
 ln -s ../dotfiles/claude-settings.json "$HOME/.claude/settings.json"
-# What a killed install leaves, as its leftovers record proves: a CLAUDE.md
-# it created holding only the activation block, and an abandoned temporary.
+sha() { if command -v sha256sum > /dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi | cut -d' ' -f1; }
+# What a killed install leaves, as its leftovers record proves (each entry
+# with the SHA-256 of the bytes am wrote): a CLAUDE.md it created holding
+# only the activation block, and an abandoned temporary.
 state="$HOME/.local/state/agent-memory/install"
-mkdir -p "$state"
+mkdir -p "$state" "$HOME/.codex"
 cp "$src/skills/agent-memory/templates/activation-markdown.txt" "$HOME/.claude/CLAUDE.md"
 stale="$HOME/.claude/.CLAUDE.md.am-0b6c1d2e-3f40-4a51-8b62-7c83d94ea5f6"
-touch "$stale"
+printf 'bytes am wrote\n' > "$stale"
+# A recorded temporary path that now holds a user's different file.
+replaced="$HOME/.codex/.AGENTS.md.am-4fa05162-7384-4e95-8fa6-b07182930a41"
+printf "the user's own text\n" > "$replaced"
 # A runtime directory the killed run had moved aside, which install must put
 # back first; and a recorded entry that is not am's (a user's file outside any
 # target directory), which am must leave alone and doctor must report.
@@ -49,7 +54,13 @@ mkdir -p "$aside" && printf 'previous runtime\n' > "$aside/marker"
 mkdir -p "$HOME/notes"
 foreign="$HOME/notes/.todo.md.am-3e9f4051-6273-4d84-9e95-af6b07182930"
 printf 'my todo draft\n' > "$foreign"
-printf 'temp\t%s\ncreated\t%s\naside\t%s\t%s\ntemp\t%s\n' "$stale" "$HOME/.claude/CLAUDE.md" "$data/runtime" "$aside" "$foreign" > "$state/leftovers"
+{
+  printf 'temp\t%s\t%s\n' "$stale" "$(sha "$stale")"
+  printf 'created\t%s\t%s\n' "$HOME/.claude/CLAUDE.md" "$(sha "$HOME/.claude/CLAUDE.md")"
+  printf 'temp\t%s\t%s\n' "$replaced" "$(printf 'bytes am meant to write\n' | sha)"
+  printf 'aside\t%s\t%s\n' "$data/runtime" "$aside"
+  printf 'temp\t%s\t%s\n' "$foreign" "$(sha "$foreign")"
+} > "$state/leftovers"
 # A user's file that merely looks like an am temporary: never am's to delete.
 lookalike="$HOME/.claude/.settings.json.am-1c7d2e3f-4051-4b62-9c73-8d94ea5fb607"
 printf '{"my": "recovery backup"}\n' > "$lookalike"
@@ -110,6 +121,8 @@ expect "doctor mentions the look-alike" sh -c "am doctor | grep -q 'looks like a
 expect "moved-aside runtime put back before install" grep -q 'previous runtime' "$data/runtime/marker"
 expect "unrecognized recorded entry left alone" grep -q 'my todo draft' "$foreign"
 expect "doctor lists the entry am did not act on" sh -c "am doctor | grep -q '.todo.md.am-'"
+expect "recorded temp path now holding a user's different file survives" grep -q "the user's own text" "$replaced"
+expect "doctor lists the changed recorded temp" sh -c "am doctor | grep -q '.AGENTS.md.am-4fa05162'"
 step "help (subcommand)" "$work" am remember --help
 expect "am install -h prints its usage" sh -c "am install -h | grep -q 'Usage: am install'"
 
@@ -212,7 +225,7 @@ expect "pre-existing empty-ish codex hooks.json kept" sh -c "grep -q permissions
 expect "pre-existing whitespace-only AGENTS.md kept" test -e "$HOME/.config/opencode/AGENTS.md"
 expect "omp extension removed" test ! -e "$HOME/.omp/agent/extensions/agent-memory.ts"
 expect "look-alike user file survives uninstall" grep -q 'recovery backup' "$lookalike"
-expect "no am temporaries left (the user's two look-alikes stay)" sh -c "test -z \"\$(find '$HOME' -name '.*.am-*' ! -path '$lookalike' ! -path '$foreign')\" && test -e '$foreign'"
+expect "no am temporaries left (the user's look-alikes stay)" sh -c "test -z \"\$(find '$HOME' -name '.*.am-*' ! -path '$lookalike' ! -path '$foreign' ! -path '$replaced')\" && test -e '$foreign' && test -e '$replaced'"
 expect "banks untouched" test -f "$work/a/memory-bank/MEMORY.md"
 
 # --------------------------------------------------------------- v0.0.14 takeover
@@ -246,7 +259,6 @@ cat > "$C/settings.json" <<EOF
   }
 }
 EOF
-sha() { if command -v sha256sum > /dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi | cut -d' ' -f1; }
 block_hash=$(printf '%s' "$block" | sha)
 wrapper_hash=$(sha "$HOME/.local/bin/am")
 cat > "$HOME/.local/state/agent-memory/install/receipt.json" <<EOF

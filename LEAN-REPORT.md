@@ -1,18 +1,18 @@
 # v0.0.15 lean `am` — rebuild report
 
 Branch `lean/v0.0.15`, built against [docs/design/v0.0.15-lean.md](docs/design/v0.0.15-lean.md).
-Committed through review batch 3 (29e32aea); batch 4 below is not.
+Committed through review batch 4 (c557117b); batch 5 below is not.
 
 ## Line count (product)
 
 | | Before | After |
 | --- | ---: | ---: |
-| Rust `src/` (am + am-dev) | 133,453 | **5,984** |
+| Rust `src/` (am + am-dev) | 133,453 | **6,000** |
 | `tests/` | 189,253 (209 files) | 0 |
 | Skill pack `skills/agent-memory/` | 9,285 (71 files) | 648 (14 files) |
 | `install.sh` | 369 | 356 |
 
-Rust by file: `install/mod.rs` 1,618 · `share.rs` 804 · `install/release.rs` 782 ·
+Rust by file: `install/mod.rs` 1,634 · `share.rs` 804 · `install/release.rs` 782 ·
 `bank.rs` 456 · `json.rs` 451 · `memory.rs` 404 · `doctor.rs` 323 · `main.rs` 321 ·
 `util.rs` 298 · `repo.rs` 194 · `hook.rs` 74 · `lib.rs` 10 · `bin/am_dev/main.rs` 249.
 Dependencies: `sha2`, `flate2`, `libc` (only `geteuid` for the temp-dir check;
@@ -37,8 +37,8 @@ already in the lockfile through `sha2`). Dropped `sha1`, `regex`, `unicode-norma
 ## User smoke test (macOS arm64, temp HOME)
 
 `scripts/qa.sh <worktree>` (new, kept in the repo) drives the real binary. Final
-run after review batch 4: **0 failures, 40 steps (36 `am`, 4 plain git; 2 are
-expected refusals) + 49 checks**. Timings below are from the batch-2 run; the
+run after review batch 5: **0 failures, 40 steps (36 `am`, 4 plain git; 2 are
+expected refusals) + 51 checks**. Timings below are from the batch-2 run; the
 batch-3 run matched them (share 124–156 ms, refresh 73–135 ms, install 74 ms,
 `install --dry-run` 128 ms, uninstall 28 ms, takeover 28 ms).
 
@@ -199,7 +199,7 @@ which dev-source QA does not reach; macOS `$TMPDIR` and `/tmp` both pass the rul
 All six were small changes. Item 1 uses the small journal file the review
 suggested, because a temporary's content cannot prove it is ours.
 
-## Review fixes, batch 4 (not committed)
+## Review fixes, batch 4 (committed in c557117b)
 
 1. **Leftovers record validated.** am acts on the record only if it is a regular
    file owned by the user; otherwise it does nothing with it, install refuses
@@ -226,6 +226,22 @@ suggested, because a temporary's content cannot prove it is ours.
 5. **Router time blanked only in the frontmatter.** A `router-updated:` line in
    the body merges as ordinary text (checked ad hoc: a body line of that form
    reached the other clone intact).
+
+## Review fix, batch 5 (not committed)
+
+- **Leftovers prove their bytes.** `temp` and `created` entries now record the
+  SHA-256 of the bytes am writes (temp before the write, created after it). A
+  temporary is deleted, and a file counts as created by am, only if its current
+  hash matches; otherwise it is left as the user's and listed by doctor via
+  `leftovers.unrecognized`. A partial write does not match, so it is kept and
+  reported. Entries without a hash (older format) are treated the same way. QA: a
+  recorded temporary path now holding a user's different file survives install
+  and uninstall, and doctor lists it; the matching recorded temporary is removed.
+  The receipt needs no hash: uninstall deletes a whole file only when it was
+  created by am (`originally_absent`) **and** nothing but am's content is left
+  (activation file whitespace-only after removing the block; hook config holding
+  only empty objects/arrays after removing our entries). Any user content keeps
+  the file, with only am's block or entries removed.
 
 ### Additional runs (ad hoc, temp HOME, fixtures removed afterwards)
 

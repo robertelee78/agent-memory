@@ -702,7 +702,7 @@ fn recover_leftovers(state: &Path, targets: &[PathBuf]) -> BTreeSet<PathBuf> {
     for line in text.lines() {
         let fields: Vec<&str> = line.split('\t').collect();
         match fields.as_slice() {
-            ["temp", temp] => {
+            ["temp", temp, sha] => {
                 let temp = Path::new(temp);
                 let name = temp.file_name().and_then(|n| n.to_str()).unwrap_or("");
                 let ours = match (temp.parent(), generated_name(name, "")) {
@@ -711,18 +711,26 @@ fn recover_leftovers(state: &Path, targets: &[PathBuf]) -> BTreeSet<PathBuf> {
                     }
                     _ => false,
                 };
-                if ours && temp.symlink_metadata().is_ok_and(|m| m.is_file()) {
+                let present = temp.symlink_metadata().is_ok();
+                if ours && present && file_sha(temp).as_deref() == Some(*sha) {
                     let _ = std::fs::remove_file(temp);
-                } else if ours {
+                } else if ours && !present {
                     // Already gone: nothing to do.
                 } else {
+                    // Not ours, or no longer the bytes am wrote (a partial
+                    // write or a user's file): leave it and report it.
                     unrecognized.push_str(line);
                     unrecognized.push('\n');
                 }
             }
-            ["created", path] if known.contains(Path::new(path)) => {
-                if Path::new(path).exists() {
-                    created.insert(PathBuf::from(path));
+            ["created", path, sha] if known.contains(Path::new(path)) => {
+                let path = Path::new(path);
+                if file_sha(path).as_deref() == Some(*sha) {
+                    created.insert(path.to_path_buf());
+                } else if path.symlink_metadata().is_ok() {
+                    // Changed since am wrote it: the user's file now.
+                    unrecognized.push_str(line);
+                    unrecognized.push('\n');
                 }
             }
             _ => {
@@ -751,6 +759,11 @@ fn recover_leftovers(state: &Path, targets: &[PathBuf]) -> BTreeSet<PathBuf> {
     }
     let _ = std::fs::remove_file(state.join(LEFTOVERS));
     created
+}
+
+/// SHA-256 of a regular file's bytes; `None` when absent, a link or unreadable.
+fn file_sha(path: &Path) -> Option<String> {
+    crate::util::read_regular(path).map(|raw| sha256_hex(&raw))
 }
 
 /// `.<name>.am-*` files beside `path` that no am run recorded: possibly a
@@ -804,7 +817,8 @@ impl Journal {
             created_before: recover_leftovers(state, targets),
         };
         for path in &journal.created_before {
-            journal.note(&["created", &path.to_string_lossy()])?;
+            let sha = file_sha(path).unwrap_or_default();
+            journal.note(&["created", &path.to_string_lossy(), &sha])?;
         }
         Ok(journal)
     }
@@ -877,12 +891,14 @@ impl Journal {
                     io_at(std::fs::create_dir_all(parent), parent)?;
                 }
                 let temp = temp_for(path);
-                self.note(&["temp", &temp.to_string_lossy()])?;
+                let sha = sha256_hex(raw);
+                self.note(&["temp", &temp.to_string_lossy(), &sha])?;
                 write_atomic_via(path, &temp, raw, mode)?;
                 // Only after it exists: a crash before this leaves the file
                 // unrecorded, so it is treated as the user's (the safe side).
+                // The hash proves later that it is still exactly what am wrote.
                 if absent {
-                    self.note(&["created", &path.to_string_lossy()])?;
+                    self.note(&["created", &path.to_string_lossy(), &sha])?;
                 }
                 Ok(())
             }
