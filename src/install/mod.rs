@@ -761,9 +761,24 @@ fn recover_leftovers(state: &Path, targets: &[PathBuf]) -> BTreeSet<PathBuf> {
     created
 }
 
-/// SHA-256 of a regular file's bytes; `None` when absent, a link or unreadable.
+/// SHA-256 of a regular file's complete bytes (streamed, never truncated);
+/// `None` when absent, a link or unreadable.
 fn file_sha(path: &Path) -> Option<String> {
-    crate::util::read_regular(path).map(|raw| sha256_hex(&raw))
+    use sha2::{Digest, Sha256};
+    use std::io::Read;
+    if !path.symlink_metadata().ok()?.is_file() {
+        return None;
+    }
+    let mut file = std::fs::File::open(path).ok()?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        match file.read(&mut buffer).ok()? {
+            0 => break,
+            n => hasher.update(&buffer[..n]),
+        }
+    }
+    Some(crate::util::hex(&hasher.finalize()))
 }
 
 /// `.<name>.am-*` files beside `path` that no am run recorded: possibly a
