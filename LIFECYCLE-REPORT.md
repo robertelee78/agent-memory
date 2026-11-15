@@ -116,3 +116,27 @@ A fresh bank was populated directly with 2,000 distinct Markdown notes and 2,000
 ### Odd repositories
 
 On each platform, in a fresh Git repository with neither a remote nor configured `user.email` (global and system Git configuration disabled), `am init` and `am status` exited 0. The repository path contained spaces and `ü`; `am recall` from its subdirectory exited 0. After `git config agent-memory.bankroot 'custom bank'`, `am init` created `custom bank/` and `am recall` reported that bank. After committing and creating a linked Git worktree, `am recall` in the worktree also found `custom bank/` and exited 0. Status's unrelated PATH warning in this particular run is described in the scale section. Git author environment variables were supplied solely to create the worktree's initial commit; no `user.email` configuration was set.
+
+## Published v0.0.15
+
+Ran the real production-signed GitHub release on macOS arm64 and Linux arm64 in separate disposable homes. To prepare a genuine v0.0.14 installation after v0.0.15 became latest, the published v0.0.14 installer used a temporary `curl` selector only for its `/releases/latest` response, selecting tag `v0.0.14`; all actual v0.0.14 assets came from GitHub and were verified with the original publisher key. The selector was not on PATH for either the old `am update` or any subsequent command. Each old runtime created a sparse bank via its public developer, identity and init preview/apply workflows.
+
+| Check | macOS arm64 | Linux arm64 |
+| --- | --- | --- |
+| Old `am update` against published v0.0.15 | Pass: clean refusal, exit 1; recursive home and bank diffs empty | Pass: same |
+| Published one-line `curl ... install.sh \| sh` | Pass, exit 0, receipt-v1 takeover | Pass, exit 0, receipt-v1 takeover |
+| `am --version` | Pass: `am 0.0.15` | Pass: `am 0.0.15` |
+| `am status`, `am doctor` in repository | Pass: both exit 0, `No problems found.` | Pass: same |
+| Existing bank and recall | Pass: recursive bank diff empty; recall prints old project brief and active context | Pass: same |
+| User client settings and hooks | Pass: Claude and Codex user values preserved; hooks call signed runtime `bin/am hook session-start` | Pass: same |
+| New `am update` | Pass: exit 0, `agent-memory 0.0.15 is up to date.` | Pass: same |
+| `am uninstall` | Pass: exit 0; both client JSON files semantically equal to their pre-v0.0.14 content | Pass: same |
+
+The old updater produced exactly this on both platforms, with exit code 1:
+
+```text
+am: Unknown release manifest fields
+Preserve the active runtime and receipts. Check the trusted release, curl and OpenSSH signature support from an operator-trusted installer; never fall back to unsigned bytes.
+```
+
+The recursive home and bank comparisons used file content comparison; no change was observed. After takeover, doctor noted the four context files absent from this older bank as optional, then reported `No problems found.` Settings comparisons after uninstall were JSON-semantic, not byte-format comparisons. A separate initial attempt to run the old installer unmodified after v0.0.15 became latest failed with `am: Unknown release manifest fields`; it cannot itself select v0.0.14 without an explicit selector or previously cached release.
