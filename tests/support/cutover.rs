@@ -40,6 +40,7 @@ pub fn put(v: &mut Value, key: &str, value: Value) {
 pub fn save(w: &World, value: &Value, name: &str) -> PathBuf {
     let path = w.inside(name).unwrap();
     fs::write(&path, json::encode(value, json::DEFAULT).unwrap()).unwrap();
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
     path
 }
 /// Install real receipt-owned bytes before selecting native consumer dispatch.

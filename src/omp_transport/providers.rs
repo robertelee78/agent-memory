@@ -1,7 +1,7 @@
 //! Direct boundary inventory, installed stream transport and observer scope,
 //! and the T2f half of the OMP activation interface.
 use super::inventory::{list_pending, pending_inventory};
-use super::observe::{Observation, ObserverScope, context_value, drain_after_response, observe};
+use super::observe::{Observation, ObserverScope, drain_after_response, observe};
 use super::{Site, all_segments, err, lexists, native_disposition_ids};
 use crate::codec::json::Value;
 use crate::error::{ContractError, Result};
@@ -10,9 +10,8 @@ use crate::omp_boundary;
 use crate::omp_installation::{
     self, HeldSource, NativeDiagnostics, ObserverBinding, StreamDiagnostics,
 };
-use crate::omp_projection::same;
 use crate::omp_stream::{self, FrameProof, Installed, ObserveCall, ObserveError};
-use crate::scope_binding::{self, PrivateEnrollmentContext, RuntimeAuthority};
+use crate::scope_binding::{PrivateEnrollmentContext, RuntimeAuthority};
 use crate::turn_sources::{self, SourceBarrier};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -27,8 +26,9 @@ fn installation_error(error: omp_installation::Error) -> ContractError {
 }
 
 /// The installed observer scope: the frame's verified executable binding
-/// (`omp_installation::observe_observer_binding`) around the marker, with the
-/// live private enrollment context minted under that held scope.
+/// (`omp_installation::observe_observer_binding`) around the marker, yielding
+/// the one live private enrollment context the marker minted (baseline
+/// `_observe_observer_binding`); its read scope rechecks it once at exit.
 pub struct InstalledScope<'a> {
     pub receipt: Option<&'a Value>,
     pub proof: &'a FrameProof,
@@ -50,18 +50,8 @@ impl ObserverScope for InstalledScope<'_> {
             .downcast_ref::<ObserverBinding>()
             .ok_or_else(|| err("Native observer requires its exact internally verified binding"))?;
         let held = held.map(|barrier| barrier as &dyn HeldSource);
-        omp_installation::observe_observer_binding(repo, receipt, proof, held, |observed| {
-            // The marker scope hands a context value; the transport needs the
-            // live context itself. Mint it inside the same held scope and
-            // require the identical root, bank, project, scope and hold.
-            let context = scope_binding::private_enrollment_context(repo, self.runtime_root)?;
-            if !same(&context_value(&context)?, observed) {
-                return Err(
-                    err("Native observer enrollment context changed during verification").into(),
-                );
-            }
-            scope_binding::private_enrollment_reads(&context, |context| body(context))
-                .map_err(omp_installation::Error::Contract)
+        omp_installation::observe_observer_binding(repo, receipt, proof, held, |context| {
+            body(context).map_err(omp_installation::Error::Contract)
         })
         .map_err(installation_error)
     }
@@ -192,7 +182,7 @@ impl crate::installation::OmpHarness for InstalledHarness {
         &self,
         repo: &Path,
         held: Option<&dyn HeldSource>,
-        operation: &mut dyn FnMut(&Value) -> omp_installation::Result<()>,
+        operation: &mut dyn FnMut(&PrivateEnrollmentContext) -> omp_installation::Result<()>,
     ) -> omp_installation::Result<()> {
         crate::installation::OmpHarness::observe_marker(
             &Harness::installed()?,
@@ -259,7 +249,7 @@ impl crate::installation::OmpHarness for Harness {
         &self,
         repo: &Path,
         held: Option<&dyn HeldSource>,
-        operation: &mut dyn FnMut(&Value) -> omp_installation::Result<()>,
+        operation: &mut dyn FnMut(&PrivateEnrollmentContext) -> omp_installation::Result<()>,
     ) -> omp_installation::Result<()> {
         let runtime_root = &self.pack_root;
         match held {

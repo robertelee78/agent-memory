@@ -16,6 +16,27 @@ use std::time::Duration;
 
 pub const MAX_SOURCES: usize = 128;
 pub const MAX_TURNS: usize = 4096;
+
+/// The pending-turn slot bound: `MAX_TURNS` in every production build.
+/// Dev-tools builds mirror the baseline tests' `turn_sources.MAX_TURNS`
+/// patch only when `AGENT_MEMORY_FAULT_TURN_LIMIT` names a smaller positive
+/// bound inside a validated disposable World (marker token check); any other
+/// value, or no valid World, keeps `MAX_TURNS`.
+#[cfg(feature = "dev-tools")]
+static TURN_LIMIT: std::sync::LazyLock<usize> = std::sync::LazyLock::new(|| {
+    std::env::var("AGENT_MEMORY_FAULT_TURN_LIMIT")
+        .ok()
+        .and_then(|value| value.parse::<usize>().ok())
+        .filter(|limit| (1..MAX_TURNS).contains(limit))
+        .filter(|_| crate::runtime_faults::test_root().is_ok())
+        .unwrap_or(MAX_TURNS)
+});
+pub fn max_turns() -> usize {
+    #[cfg(feature = "dev-tools")]
+    return *TURN_LIMIT;
+    #[cfg(not(feature = "dev-tools"))]
+    MAX_TURNS
+}
 pub const MAX_SOURCE: usize = 4096;
 pub const MAX_COMPLETION: usize = 65536;
 pub const MAX_INTENT: usize = 8192;
@@ -719,7 +740,7 @@ pub fn index(ns: &Namespace, context: Option<&PrivateEnrollmentContext>) -> Resu
     for _ in 0..2 {
         let Some(names) = entries_snapshot(
             &target,
-            2 * MAX_TURNS,
+            2 * max_turns(),
             "Pending turn directory exceeds its inventory bound; preserve sources and inspect backlog",
         )?
         else {
@@ -730,10 +751,10 @@ pub fn index(ns: &Namespace, context: Option<&PrivateEnrollmentContext>) -> Resu
             .filter_map(|name| {
                 let number = name.to_str()?.strip_suffix(".json")?;
                 let parsed = number.parse::<usize>().ok()?;
-                (parsed < MAX_TURNS && number == parsed.to_string()).then_some(parsed)
+                (parsed < max_turns() && number == parsed.to_string()).then_some(parsed)
             })
             .collect();
-        let mut free = (0..MAX_TURNS).find(|n| !occupied.contains(n));
+        let mut free = (0..max_turns()).find(|n| !occupied.contains(n));
         let mut matching = None;
         for i in occupied {
             let path = target.join(format!("{i}.json"));
@@ -1918,7 +1939,7 @@ pub fn cleanup(ns: &Namespace) -> Result<()> {
         return Ok(());
     }
     let expected = reference(&ns.directory, &ns.identity)?;
-    for i in 0..MAX_TURNS {
+    for i in 0..max_turns() {
         let path = pending.join(format!("{i}.json"));
         let Ok(Some(raw)) = read_bytes(&path, MAX_SOURCE) else {
             continue;
@@ -2126,7 +2147,7 @@ pub fn backlog(
     runtime_root: &Path,
 ) -> Result<Value> {
     operation(repo, runtime_root, || {
-        if offset > MAX_TURNS || legacy_offset > 4096 || enrollment_offset > MAX_NAMESPACES {
+        if offset > max_turns() || legacy_offset > 4096 || enrollment_offset > MAX_NAMESPACES {
             return Err(err("Invalid backlog page offset"));
         }
         let (ns, context) = private_namespace(
@@ -2151,7 +2172,7 @@ pub fn backlog(
         let pending = ns.base.join("pending");
         if named(&pending)?.is_some() {
             fs::trust::state(&pending)?;
-            for i in 0..MAX_TURNS {
+            for i in 0..max_turns() {
                 let value = match read(&pending.join(format!("{i}.json")), MAX_SOURCE) {
                     Ok(Some(v)) => v,
                     Ok(None) => continue,

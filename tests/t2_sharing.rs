@@ -818,6 +818,8 @@ impl SharingFixture {
     fn save(&self, value: &Value, name: &str) -> PathBuf {
         let path = self.w.inside(name).unwrap();
         std::fs::write(&path, json::encode(value, json::DEFAULT).unwrap()).unwrap();
+        std::fs::set_permissions(&path, std::os::unix::fs::PermissionsExt::from_mode(0o600))
+            .unwrap();
         path
     }
     fn call(&self, operation: &str, extra: &[OsString]) -> (i32, Value) {

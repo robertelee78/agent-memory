@@ -32,6 +32,7 @@ pub use inventory::{
     complete, historical_completed_family, list_pending, pending_inventory, segment_inventory,
     source,
 };
+pub(crate) use observe::context_value;
 pub use observe::{
     Observation, ObserverScope, checked_payload_coverage, observe, resolve_tool_result, wake,
 };
@@ -1784,10 +1785,10 @@ fn pending_slots(site: &Site<'_>, ns: &Namespace) -> Result<(usize, bool)> {
     let expected = turn_sources::reference(&ns.directory, &ns.identity)?;
     let mut occupied = 0;
     let mut exists = false;
-    for name in listing(&pending, turn_sources::MAX_TURNS, message)? {
+    for name in listing(&pending, turn_sources::max_turns(), message)? {
         let number = name.strip_suffix(".json").ok_or_else(|| err(message))?;
         let index: usize = number.parse().map_err(|_| err(message))?;
-        if number != index.to_string() || index >= turn_sources::MAX_TURNS {
+        if number != index.to_string() || index >= turn_sources::max_turns() {
             return Err(err(message));
         }
         let value = read(&pending.join(&name), MAX_RECORD)?;
@@ -1831,7 +1832,7 @@ pub fn registration(
     }
     let ns = shared(site, cursor)?;
     let (occupied, exists) = pending_slots(site, &ns)?;
-    if !exists && occupied >= turn_sources::MAX_TURNS {
+    if !exists && occupied >= turn_sources::max_turns() {
         return Ok((None, Vec::new()));
     }
     // Lifecycle authority is inventory-only, never source registration authority.

@@ -1347,11 +1347,7 @@ fn run_for_retains_read_fault_bytes_and_kill_reap_evidence() {
 #[test]
 fn closed_output_short_child_does_not_wait_for_the_exit_poll_cap() {
     let dir = PrivateDir::new();
-    let args = argv(&[
-        "/bin/sh",
-        "-c",
-        "exec 1>&- 2>&-; exec /bin/sleep 0.02",
-    ]);
+    let args = argv(&["/bin/sh", "-c", "exec 1>&- 2>&-; exec /bin/sleep 0.02"]);
     let requests = [spec(&args, &dir.0)];
     let mut group = Group::launch(&requests, Duration::from_secs(1)).unwrap();
     // A fixed poll at this cap would miss the unchanged launch deadline.

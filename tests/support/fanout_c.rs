@@ -1433,31 +1433,12 @@ fn inspect_identity_refusal(w: &World, kind: &str) {
         }
         "xattr" => {
             let p = f.bank.join("projectbrief.md");
-            let output = if cfg!(target_os = "macos") {
-                w.command(
-                    &[
-                        "xattr".into(),
-                        "-w".into(),
-                        "com.agent-memory.test".into(),
-                        "preserve".into(),
-                        p.into_os_string(),
-                    ],
-                    &[],
-                )
+            let name = if cfg!(target_os = "macos") {
+                "com.agent-memory.test"
             } else {
-                w.command(
-                    &[
-                        "setfattr".into(),
-                        "-n".into(),
-                        "user.agent-memory-test".into(),
-                        "-v".into(),
-                        "preserve".into(),
-                        p.into_os_string(),
-                    ],
-                    &[],
-                )
+                "agent-memory-test"
             };
-            assert_eq!(output.status, agent_memory::process::Status::Code(0));
+            add_xattr(w, &p, name, "preserve");
         }
         "acl" => {
             let p = f.bank.join("projectbrief.md");
@@ -1751,9 +1732,10 @@ fn root_semantics(w: &World, kind: &str) {
     unchanged(w, &f, &work);
 }
 
-fn add_xattr(w: &World, path: &Path, name: &str, value: &str) {
-    let output = if cfg!(target_os = "macos") {
-        w.command(
+fn add_xattr(_w: &World, path: &Path, name: &str, value: &str) {
+    #[cfg(target_os = "macos")]
+    {
+        let output = _w.command(
             &[
                 "xattr".into(),
                 "-w".into(),
@@ -1762,21 +1744,29 @@ fn add_xattr(w: &World, path: &Path, name: &str, value: &str) {
                 path.as_os_str().to_owned(),
             ],
             &[],
-        )
-    } else {
-        w.command(
-            &[
-                "setfattr".into(),
-                "-n".into(),
-                format!("user.{name}").into(),
-                "-v".into(),
-                value.into(),
-                path.as_os_str().to_owned(),
-            ],
-            &[],
-        )
-    };
-    assert_eq!(output.status, agent_memory::process::Status::Code(0));
+        );
+        assert_eq!(output.status, agent_memory::process::Status::Code(0));
+    }
+    #[cfg(target_os = "linux")]
+    {
+        use std::ffi::CString;
+        use std::os::unix::ffi::OsStrExt;
+
+        let path = CString::new(path.as_os_str().as_bytes()).unwrap();
+        let name = CString::new(format!("user.{name}")).unwrap();
+        // Baseline os.setxattr(..., follow_symlinks=False), without an attr
+        // package dependency that the Python fixture does not require.
+        let result = unsafe {
+            libc::lsetxattr(
+                path.as_ptr(),
+                name.as_ptr(),
+                value.as_ptr().cast(),
+                value.len(),
+                0,
+            )
+        };
+        assert_eq!(result, 0, "{}", std::io::Error::last_os_error());
+    }
 }
 fn provenance(w: &World, kind: &str) {
     let f = fixture(w, false);

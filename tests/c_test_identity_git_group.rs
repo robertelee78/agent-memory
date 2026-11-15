@@ -234,7 +234,7 @@ fn interrupt_worker() {
     let stage = std::env::var("AGENT_MEMORY_FAULT_INTERRUPT_STAGE").unwrap();
     let twice = std::env::var("AGENT_MEMORY_FAULT_INTERRUPT_TWICE").unwrap() == "yes";
     let argv: Vec<_> = (0..3).map(|index| args(&format!(
-        "trap 'printf x >> cancel-{index}' TERM; printf '%s\\n' $$ > child-{index}; while [ ! -e rescue ]; do :; done"
+        "trap 'printf x >> cancel-{index}; : > cancel-{index}.ready' TERM; printf '%s\\n' $$ > child-{index}; while [ ! -e rescue ]; do :; done"
     ))).collect();
     // This process is deliberately outside the supervisor's ownership registry.
     let mut foreign = std::process::Command::new("/bin/sleep")
@@ -255,9 +255,9 @@ fn interrupt_worker() {
             }
         }
         if signal_stage == "ordinary" || signal_stage == "timeout" {
-            // A child's handler is evidence that cancellation already happened:
-            // the owner is now in the ordinary/timeout reap, not in polling.
-            wait_file(&signal_root.join("cancel-0"));
+            // Publish readiness only after the handler's append has completed:
+            // opening cancel-0 creates it before printf writes its byte.
+            wait_file(&signal_root.join("cancel-0.ready"));
         } else if signal_stage == "parse" {
             wait_file(&signal_root.join("parsing"));
         } else {
@@ -268,10 +268,9 @@ fn interrupt_worker() {
             0
         );
         if twice {
-            // TERM handlers keep every child alive throughout the reap window;
-            // a child's handler output proves the reap has begun, so the second
-            // real SIGINT necessarily interrupts that window (no wall-clock wait).
-            wait_file(&signal_root.join("cancel-0"));
+            // The handler publishes this event after writing its cancellation
+            // evidence, while every child stays alive throughout the reap.
+            wait_file(&signal_root.join("cancel-0.ready"));
             assert_eq!(
                 unsafe { libc::pthread_kill(thread as libc::pthread_t, libc::SIGINT) },
                 0
@@ -347,7 +346,7 @@ fn interrupt_worker() {
     );
     for index in 0..count {
         let path = root.join(format!("cancel-{index}"));
-        wait_file(&path);
+        wait_file(&root.join(format!("cancel-{index}.ready")));
         assert_eq!(
             fs::read(path).unwrap(),
             b"x",

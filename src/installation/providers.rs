@@ -13,6 +13,7 @@ use crate::lifecycle::{get, text};
 use crate::omp_installation::{
     self, HeldSource, NativeDiagnostics, OmpActivation, RuntimeLocations,
 };
+use crate::scope_binding::PrivateEnrollmentContext;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -128,7 +129,7 @@ pub trait OmpHarness: Send + Sync {
         &self,
         repo: &Path,
         held: Option<&dyn HeldSource>,
-        operation: &mut dyn FnMut(&Value) -> omp_installation::Result<()>,
+        operation: &mut dyn FnMut(&PrivateEnrollmentContext) -> omp_installation::Result<()>,
     ) -> omp_installation::Result<()>;
     fn instruction_uri(&self, relative: &str) -> Option<String>;
 }
@@ -172,7 +173,7 @@ impl<H: OmpHarness> OmpActivation for InstallationActivation<H> {
         &self,
         repo: &Path,
         held: Option<&dyn HeldSource>,
-        operation: &mut dyn FnMut(&Value) -> omp_installation::Result<()>,
+        operation: &mut dyn FnMut(&PrivateEnrollmentContext) -> omp_installation::Result<()>,
     ) -> omp_installation::Result<()> {
         self.harness.observe_marker(repo, held, operation)
     }

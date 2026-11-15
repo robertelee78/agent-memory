@@ -369,6 +369,36 @@ impl ClockWindows {
             image.close();
         }
     }
+    /// Baseline test fixture `LiveDeliveryWindow` (its private `_WINDOW_MINT`):
+    /// a live verified window with `L = 0`, `j3` = local now and a 60 s
+    /// deadline, minted without CLOCK calibration. Development builds only,
+    /// and only inside a validated disposable test World.
+    #[cfg(feature = "dev-tools")]
+    pub fn mint_live_window(&self, nonce: &str) -> Result<()> {
+        crate::runtime_faults::test_root()?;
+        super::uuid_text(nonce)?;
+        let owner = &self.owner;
+        let j3 = u128::from((owner.monotonic)());
+        let mut state = owner.lock();
+        if state.ended {
+            return Err(err("Ended callback clock cannot mint a window"));
+        }
+        if let Some(previous) = state.verified.take() {
+            previous.cancelled.store(true, Ordering::SeqCst);
+        }
+        state.verified = Some(Arc::new(VerifiedNativeDeliveryWindow {
+            lower: 0,
+            j3,
+            j_deadline: j3 + 60_000_000_000,
+            nonce: nonce.to_owned(),
+            instance: owner.instance.clone(),
+            platform: owner.platform,
+            owner: Arc::downgrade(owner),
+            cancelled: AtomicBool::new(false),
+            reserving: AtomicBool::new(false),
+        }));
+        Ok(())
+    }
 }
 
 /// One nonce-bound lookup, never a calibration or caller-supplied deadline.

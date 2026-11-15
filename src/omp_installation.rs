@@ -4,6 +4,7 @@ use crate::error::ContractError;
 use crate::fs::{self, Descriptor, DirectoryChain, Fingerprint, Identity};
 use crate::lifecycle::{get, object, string, text};
 use crate::pack_validation::sha256;
+use crate::scope_binding::PrivateEnrollmentContext;
 use std::fmt;
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, RwLock};
@@ -391,13 +392,15 @@ pub trait OmpActivation: Send + Sync {
     /// barrier + marker verification. Wake failures use the unavailable summary;
     /// marker refusal yields false, never enrollment or promotion.
     fn diagnostics(&self, repo: &Path) -> Result<NativeDiagnostics>;
-    /// Acquire/borrow source barrier, observe marker, run callback, and freshly
-    /// recheck marker/bank binding at exit even when callback refuses. No writes.
+    /// Acquire/borrow source barrier, observe marker, run callback with the
+    /// one live enrollment context minted there (baseline `_observe_marker`
+    /// yields it; never re-mint), and freshly recheck marker/bank binding at
+    /// exit even when callback refuses. No writes.
     fn observe_marker(
         &self,
         repo: &Path,
         held: Option<&dyn HeldSource>,
-        operation: &mut dyn FnMut(&Value) -> Result<()>,
+        operation: &mut dyn FnMut(&PrivateEnrollmentContext) -> Result<()>,
     ) -> Result<()>;
     /// Canonical projection instruction URI, never a normalized alias.
     fn instruction_uri(&self, relative: &str) -> Option<String>;
@@ -707,7 +710,7 @@ pub fn observe_observer_binding<T>(
     receipt: &Value,
     proof: &ObserverBinding,
     held_source: Option<&dyn HeldSource>,
-    operation: impl FnOnce(&Value) -> Result<T>,
+    operation: impl FnOnce(&PrivateEnrollmentContext) -> Result<T>,
 ) -> Result<T> {
     require(
         receipt.as_object().is_some()
@@ -743,7 +746,9 @@ pub fn verify_observer_binding(
     receipt: &Value,
     proof: &ObserverBinding,
 ) -> Result<Value> {
-    observe_observer_binding(repo, receipt, proof, None, |context| Ok(context.clone()))
+    observe_observer_binding(repo, receipt, proof, None, |context| {
+        Ok(crate::omp_transport::context_value(context)?)
+    })
 }
 
 #[derive(Debug, PartialEq)]

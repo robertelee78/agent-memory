@@ -159,8 +159,9 @@ impl StreamAuthority for Installed {
             .ok_or_else(|| err("Native observer requires its exact internally verified binding"))?;
         let held = held.map(|barrier| barrier as &dyn HeldSource);
         omp_installation::observe_observer_binding(repo, receipt, proof, held, |context| {
-            check_scope(context, binding).map_err(omp_installation::Error::Contract)?;
-            body(context).map_err(omp_installation::Error::Contract)
+            let context = crate::omp_transport::context_value(context)?;
+            check_scope(&context, binding).map_err(omp_installation::Error::Contract)?;
+            body(&context).map_err(omp_installation::Error::Contract)
         })
         .map_err(installation_error)
     }

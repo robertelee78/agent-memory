@@ -43,6 +43,10 @@ jobs:
         run: |
           host=$(rustc --version --verbose | sed -n 's/^host: //p')
           test "${host%%-*}" = "$(printf '%s' '${{ matrix.target }}' | cut -d- -f1)"
+      - name: Install the ACL tools the layout-recovery contracts use (Linux)
+        if: endsWith(matrix.target, '-linux-musl')
+        shell: sh
+        run: command -v setfacl || { sudo apt-get update -q && sudo apt-get install -y -q acl; }
       - name: Format
         shell: sh
         run: cargo fmt --check

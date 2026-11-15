@@ -270,7 +270,8 @@ fn render_bank(w: &World, bank: &Path) -> TestResult {
         if let Some(parent) = target.parent() {
             fs::create_dir_all(parent)?;
         }
-        fs::write(target, text(body))?;
+        fs::write(&target, text(body))?;
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o644))?;
     }
     Ok(())
 }
@@ -312,6 +313,10 @@ fn fixture(w: &mut World) -> TestResult<(PathBuf, PathBuf, PathBuf, String)> {
     fs::write(
         bank.join("activeContext.md"),
         "# Current focus\n\nA useful isolated session focus.\n",
+    )?;
+    fs::set_permissions(
+        bank.join("activeContext.md"),
+        fs::Permissions::from_mode(0o644),
     )?;
     let router = bank.join("MEMORY.md");
     let original = fs::read_to_string(&router)?;
@@ -3935,6 +3940,10 @@ fn public_repair_with_pending(w: &mut World, handoff: Option<&str>) -> TestResul
     );
     if let Some(handoff) = handoff {
         fs::write(bank.join("handoff-prompt.md"), handoff)?;
+        fs::set_permissions(
+            bank.join("handoff-prompt.md"),
+            fs::Permissions::from_mode(0o644),
+        )?;
     }
     let before = state(w, &repo, &bank)?;
     let (inspected, applied) = repair(w, &repo, &intended)?;
@@ -4205,6 +4214,10 @@ fn pending_handoff(
     fs::write(
         bank.join("handoff-prompt.md"),
         "# Unconfirmed synthetic handoff\n\nUnknown provenance requires independent review.\n",
+    )?;
+    fs::set_permissions(
+        bank.join("handoff-prompt.md"),
+        fs::Permissions::from_mode(0o644),
     )?;
     let (inspected, applied) = repair(w, repo, intended)?;
     assert_eq!(

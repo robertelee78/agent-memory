@@ -49,13 +49,18 @@ fn write(path: &Path, raw: impl AsRef<[u8]>, mode: u32) {
 /// In-process workers are not the installed `am`. Their frontier observes
 /// through the runtime pair the World's own (possibly later) installation
 /// records, and `pack(root)` is the development source every fixture installs.
+/// Before that installation exists there is no runtime pair, exactly as the
+/// production composition root's `executing_runtime_if_installed`.
 fn register_providers(root: &Path) {
-    fn installed_pair() -> agent_memory::error::Result<(PathBuf, PathBuf)> {
+    fn installed_pair() -> agent_memory::error::Result<Option<(PathBuf, PathBuf)>> {
         use agent_memory::error::ContractError;
         let root = support::require_current_world()
             .map_err(|error| ContractError::new(error.to_string()))?;
-        let raw = std::fs::read(root.join("state/agent-memory/install/receipt.json"))
-            .map_err(|error| ContractError::new(error.to_string()))?;
+        let raw = match std::fs::read(root.join("state/agent-memory/install/receipt.json")) {
+            Ok(raw) => raw,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(ContractError::new(error.to_string())),
+        };
         let receipt = json::decode_bytes(&raw, Default::default())?;
         let binary = agent_memory::installation::source_binary(get(&receipt, "source"))
             .map_err(|error| ContractError::new(error.to_string()))?;
@@ -63,11 +68,12 @@ fn register_providers(root: &Path) {
             &agent_memory::installation::Environment::process(),
             &binary,
         )
+        .map(Some)
         .map_err(|error| ContractError::new(error.to_string()))
     }
     agent_memory::cli::register_providers().unwrap();
     let frontier = Arc::new(agent_memory::recovery_frontier::FrontierProvider::new(
-        || installed_pair().map(Some),
+        installed_pair,
     ));
     agent_memory::bank_writes::register_recovery_frontier(Some(frontier.clone()));
     agent_memory::bank_contract::register_recovery_coverage(Some(frontier));
@@ -76,12 +82,15 @@ fn register_providers(root: &Path) {
     ));
 }
 fn isolated(name: &str, body: impl FnOnce(&Path)) {
+    isolated_in(name, || World::new().unwrap(), body);
+}
+fn isolated_in(name: &str, world: fn() -> World, body: impl FnOnce(&Path)) {
     if let Ok(root) = support::require_current_world() {
         register_providers(&root);
         body(&root);
         return;
     }
-    let world = World::new().unwrap();
+    let world = world();
     let output = world
         .run_with(
             [
@@ -137,6 +146,62 @@ fn command(root: &Path, args: &[OsString]) -> agent_memory::process::Output {
     );
     out
 }
+/// Baseline `RefreshFixture`: a real `main` authority exists before the bank
+/// is bound, and the bound bank is committed and pushed to it, so a
+/// post-unlock `--refresh` distinguishes contention from stale memory.
+fn synchronized_fixture(root: &Path) -> Fixture {
+    let (runtime, receipt, proof) = install_only(root, "copy");
+    let repo = root.join("repo");
+    let remote = root.join("remote.git");
+    let git = |cwd: &Path, args: &[&str]| {
+        let argv = std::iter::once("git")
+            .chain(args.iter().copied())
+            .map(OsString::from)
+            .collect::<Vec<_>>();
+        command(cwd, &argv);
+    };
+    git(
+        root,
+        &[
+            "init",
+            "--quiet",
+            "--bare",
+            "--initial-branch=main",
+            remote.to_str().unwrap(),
+        ],
+    );
+    git(
+        root,
+        &[
+            "init",
+            "--quiet",
+            "--initial-branch=main",
+            repo.to_str().unwrap(),
+        ],
+    );
+    git(
+        &repo,
+        &["remote", "add", "origin", remote.to_str().unwrap()],
+    );
+    git(
+        &repo,
+        &["config", "--local", "agent-memory.authorityBranch", "main"],
+    );
+    let repo = bank_fixture_at(root, repo);
+    git(&repo, &["add", "memory-bank"]);
+    git(
+        &repo,
+        &["commit", "--quiet", "-m", "Fixture canonical memory"],
+    );
+    git(&repo, &["push", "--quiet", "origin", "HEAD:main"]);
+    boundary::activate_marker(&repo, false, &runtime).unwrap();
+    Fixture {
+        repo,
+        runtime,
+        receipt,
+        proof,
+    }
+}
 fn pack(root: &Path) -> PathBuf {
     let source = root.join("development-source");
     let pack = source.join("skills/agent-memory");
@@ -177,6 +242,45 @@ impl Fixture {
             proof,
         }
     }
+    /// Baseline `layout_recovery_fixtures.installed`: a `--presets none`
+    /// runtime without any native route; the bank marker is activated
+    /// directly, so a later `--presets omp` install is a fresh native route.
+    fn without_native_route(root: &Path) -> Self {
+        let source = pack(root);
+        let output = command(
+            root,
+            &[
+                env!("CARGO_BIN_EXE_am").into(),
+                "--json".into(),
+                "install".into(),
+                "--development-source".into(),
+                source.into_os_string(),
+                "--presets".into(),
+                "none".into(),
+                "--mode".into(),
+                "copy".into(),
+            ],
+        );
+        let applied = json::decode_bytes(&output.stdout, Default::default()).unwrap();
+        assert_eq!(get(&applied, "verified"), &Value::Bool(true));
+        let receipt = turn_sources::read(
+            &root.join("state/agent-memory/install/receipt.json"),
+            16 * 1024 * 1024,
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(get(&receipt, "omp_binding"), &Value::Null);
+        let runtime = PathBuf::from(text(get(&receipt, "source"), "pack"));
+        install_activation(&receipt);
+        let repo = bank_fixture(root);
+        boundary::activate_marker(&repo, false, &runtime).unwrap();
+        Self {
+            repo,
+            runtime,
+            receipt,
+            proof: Arc::new(()),
+        }
+    }
     fn site(&self) -> transport::Site<'_> {
         transport::Site::new(&self.repo, &self.runtime)
     }
@@ -197,10 +301,40 @@ impl Fixture {
         )
         .unwrap()
     }
+    /// Baseline `NativeSources.observe_request`: the low-level synthetic
+    /// observer replaces only the installed receipt check by the live marker.
+    fn observe_marker(&self, request: &Value) -> Value {
+        transport::observe(
+            &self.repo,
+            &self.runtime,
+            request,
+            transport::Observation::default(),
+            &MarkerScope(&self.runtime),
+        )
+        .unwrap()
+    }
     fn pending(&self) -> Vec<Value> {
         let (rows, faults) = transport::pending_inventory(&self.site()).unwrap();
         assert!(faults.is_empty(), "{faults:?}");
         rows
+    }
+}
+struct MarkerScope<'a>(&'a Path);
+impl transport::ObserverScope for MarkerScope<'_> {
+    fn observe(
+        &self,
+        repo: &Path,
+        held: Option<&turn_sources::SourceBarrier>,
+        body: &mut dyn FnMut(
+            &agent_memory::scope_binding::PrivateEnrollmentContext,
+        ) -> agent_memory::error::Result<()>,
+    ) -> agent_memory::error::Result<()> {
+        boundary::observe_marker(
+            repo,
+            held.map(|barrier| barrier as &dyn omp_installation::HeldSource),
+            self.0,
+            |context| body(context),
+        )
     }
 }
 fn entry(id: &str, role: &str, content: Value) -> Value {
@@ -864,6 +998,31 @@ fn finite(
     stream::FiniteExecutor,
     Arc<stream::ResponseWriter>,
 ) {
+    finite_with(f, |instance| {
+        stream::ResponseWriter::unstarted(instance, vec![])
+    })
+}
+/// Baseline `PhaseResponses` accepts every frame; a started writer draining to
+/// a sink is that recipient, never the 4-frame unstarted queue.
+fn finite_draining(
+    f: &Fixture,
+) -> (
+    stream::Coverage,
+    stream::FiniteExecutor,
+    Arc<stream::ResponseWriter>,
+) {
+    finite_with(f, |instance| {
+        stream::ResponseWriter::start(stream::Output::Stream(Box::new(std::io::sink())), instance)
+    })
+}
+fn finite_with(
+    f: &Fixture,
+    writer: fn(&str) -> stream::ResponseWriter,
+) -> (
+    stream::Coverage,
+    stream::FiniteExecutor,
+    Arc<stream::ResponseWriter>,
+) {
     let instance = agent_memory::host::uuid4().unwrap();
     let binding =
         boundary::stream_startup(&f.repo, SESSION, &instance, LIFE, &f.receipt, &f.runtime)
@@ -879,7 +1038,7 @@ fn finite(
         Some(&f.receipt),
     )
     .unwrap();
-    let writer = Arc::new(stream::ResponseWriter::unstarted(&instance, vec![]));
+    let writer = Arc::new(writer(&instance));
     let clocks = stream::ClockWindows::system(&instance, Arc::new(|| true));
     let executor = stream::FiniteExecutor::new(
         writer.clone(),
@@ -2544,6 +2703,9 @@ fn held_fixture_with_context(root: &Path, checkpoint: bool) -> HeldFixture {
     } else {
         Fixture::new(root)
     };
+    held_fixture_on(f)
+}
+fn held_fixture_on(f: Fixture) -> HeldFixture {
     let bank = f.repo.join("memory-bank");
     let operation = uid();
     let proposal_id = uid();
@@ -2692,7 +2854,7 @@ fn held_fixture_with_context(root: &Path, checkpoint: bool) -> HeldFixture {
         ),
         (
             "statement",
-            string("All authorized legacy routes are disabled or quiesced."),
+            string(agent_memory::recovery_quiescence::ATTESTATION_STATEMENT),
         ),
         ("review_id", get(&review, "review_id").clone()),
     ]);
@@ -3823,6 +3985,10 @@ fn native_operation_child() {
     }
     if matches!(operation.as_str(), "finite-run" | "finite-run-open") {
         run_finite_child(&root, &f, request, operation == "finite-run-open");
+        return;
+    }
+    if operation == "finite-control-reader" {
+        control_reader_operation(&root, &f);
         return;
     }
     if operation == "observe" {
@@ -6712,6 +6878,149 @@ fn run_finite_child(root: &Path, f: &Fixture, request: Value, open_input: bool) 
         std::process::exit(code);
     }
 }
+/// Baseline `test_clock_ack_behind_accepted_16mib_frame_reaches_late_reservation`
+/// runner: one real `FrameReader` over the wire; its source frame executes
+/// while an independent control reader applies the CLOCK/CLOCK-ACK frames
+/// queued behind it, only once source capture began (the real
+/// `omp.capture.before-commit` pause stands in for the patched
+/// `transport.capture`). Only reservation arithmetic is frozen, at the
+/// static CLOCK stamp + 2 from `case-frozen-clock`.
+fn control_reader_operation(root: &Path, f: &Fixture) {
+    const CAPTURE: &str = "omp.capture.before-commit";
+    let instance = uid();
+    let binding =
+        boundary::stream_startup(&f.repo, SESSION, &instance, LIFE, &f.receipt, &f.runtime)
+            .unwrap()
+            .unwrap();
+    let mut coverage = stream::Coverage::open(
+        Arc::new(stream::Installed::new(&f.runtime)),
+        &f.repo,
+        SESSION,
+        &instance,
+        LIFE,
+        &binding,
+        Some(&f.receipt),
+    )
+    .unwrap();
+    write(
+        &root.join("finite-directory"),
+        coverage.directory().to_str().unwrap(),
+        0o600,
+    );
+    let writer = Arc::new(stream::ResponseWriter::unstarted(&instance, vec![]));
+    let recipient = writer.clone();
+    let frozen: u64 = std::fs::read_to_string(root.join("case-frozen-clock"))
+        .unwrap()
+        .parse()
+        .unwrap();
+    let clocks = stream::ClockWindows::new(
+        &instance,
+        Arc::new(move || recipient.live()),
+        stream::Platform::Darwin,
+        Arc::new(move || frozen),
+        None,
+    );
+    let budget = Arc::new(stream::Budget::new());
+    let mut reader = stream::FrameReader::new(
+        std::fs::File::open(root.join("finite-input.raw")).unwrap(),
+        budget.clone(),
+    );
+    let source = reader.read().unwrap().unwrap();
+    assert_eq!(source.raw.len(), stream::MAX_FRAME);
+    let nonce = source.nonce.clone().unwrap();
+    let controls = {
+        let (clocks, writer, root) = (clocks.clone(), writer.clone(), root.to_owned());
+        std::thread::spawn(move || {
+            let applied = (|| -> Result<(), String> {
+                let ready = root.join("rendezvous").join(format!("{CAPTURE}.ready"));
+                let deadline =
+                    agent_memory::clock::Deadline::after(Duration::from_secs(20)).unwrap();
+                while !ready.exists() {
+                    if deadline.expired() {
+                        return Err("source did not begin".into());
+                    }
+                    std::thread::sleep(Duration::from_millis(10));
+                }
+                if clocks.window(&nonce).is_some() {
+                    return Err("window resolved before source capture".into());
+                }
+                for _ in 0..2 {
+                    let frame = reader
+                        .read()
+                        .map_err(|e| e.to_string())?
+                        .ok_or("missing control frame")?;
+                    let value = json::decode_bytes(&frame.raw, Default::default())
+                        .map_err(|e| e.to_string())?;
+                    budget.release(frame.raw.len());
+                    clocks
+                        .control(&frame.kind, &value, writer.as_ref())
+                        .map_err(|e| e.to_string())?;
+                }
+                Ok(())
+            })();
+            // Baseline `finally: acknowledged.set()`: never strand the source.
+            release(&root, CAPTURE);
+            applied
+        })
+    };
+    let executor = stream::FiniteExecutor::new(
+        writer.clone(),
+        clocks.clone(),
+        Some(f.receipt.clone()),
+        None,
+        stream::Timing::system(),
+    );
+    let result = executor.execute(
+        &mut coverage,
+        &source.kind,
+        source.sequence,
+        source.nonce.as_deref(),
+        &source.raw,
+    );
+    let failures = match controls.join() {
+        Ok(Ok(())) => Value::Array(vec![]),
+        Ok(Err(error)) => Value::Array(vec![string(&error)]),
+        Err(_) => Value::Array(vec![string("control reader panicked")]),
+    };
+    write(
+        &root.join("operation-result.json"),
+        turn_sources::encoded(&object([
+            (
+                "status",
+                match result {
+                    Ok(()) => object([("ok", Value::Bool(true))]),
+                    Err(error) => error_value(&error),
+                },
+            ),
+            ("control_failures", failures),
+        ]))
+        .unwrap(),
+        0o600,
+    );
+    write(
+        &root.join("responses.json"),
+        turn_sources::encoded(&Value::Array(
+            writer
+                .queued()
+                .iter()
+                .map(|(kind, raw)| {
+                    let start = raw.iter().position(|b| *b == b'\n').unwrap() + 1;
+                    object([
+                        ("kind", string(kind)),
+                        (
+                            "body",
+                            json::decode_bytes(&raw[start..], Default::default()).unwrap(),
+                        ),
+                    ])
+                })
+                .collect(),
+        ))
+        .unwrap(),
+        0o600,
+    );
+    coverage.close_live();
+    clocks.end();
+}
 fn response_frames(path: &Path) -> Vec<(String, u64, Value)> {
     let bytes = std::fs::read(path).unwrap();
     let mut rest = bytes.as_slice();
@@ -6910,6 +7219,21 @@ fn wake_request(result: &Value) -> Value {
         ("lifecycle", get(result, "lifecycle").clone()),
         ("payload", get(result, "wake_payload").clone()),
     ])
+}
+fn live_window() -> (stream::ClockWindows, Arc<stream::ResponseWriter>, String) {
+    let instance = uid();
+    let writer = Arc::new(stream::ResponseWriter::unstarted(&instance, vec![]));
+    let recipient = writer.clone();
+    let clocks = stream::ClockWindows::new(
+        &instance,
+        Arc::new(move || recipient.live()),
+        stream::Platform::Darwin,
+        Arc::new(agent_memory::clock::monotonic_ns),
+        None,
+    );
+    let nonce = uid();
+    clocks.mint_live_window(&nonce).unwrap();
+    (clocks, writer, nonce)
 }
 fn real_window() -> (stream::ClockWindows, Arc<stream::ResponseWriter>, String) {
     let instance = uid();
@@ -8469,6 +8793,18 @@ fn enrollment_operation(root: &Path, f: &Fixture, value: &Value, operation: &str
                     result
                 },
             )
+        } else if let Ok(churn) = std::fs::read(root.join("case-scan-churn")) {
+            let churn = json::decode_bytes(&churn, Default::default()).unwrap();
+            let pending = PathBuf::from(text(&churn, "pending"));
+            let persistent = get(&churn, "persistent") == &Value::Bool(true);
+            let finished = std::sync::atomic::AtomicBool::new(false);
+            std::thread::scope(|scope| {
+                let helper = scope.spawn(|| scan_churn(root, &pending, persistent, &finished));
+                let result = run(None);
+                finished.store(true, std::sync::atomic::Ordering::SeqCst);
+                helper.join().unwrap();
+                result
+            })
         } else {
             run(None)
         }
@@ -8482,6 +8818,60 @@ fn enrollment_operation(root: &Path, f: &Fixture, value: &Value, operation: &str
         .unwrap(),
         0o600,
     );
+}
+/// Baseline `changing_scan`: inside a real `pending` scan (its
+/// `enrollment.index.during-scan` pause), retain one more concurrent entry
+/// and force an observed directory change (+2 s mtime, regardless of
+/// iteration order or timestamp granularity). Transient churn changes only
+/// the first scan; persistent churn changes every scan, each in its own
+/// rendezvous so no earlier release lets a later scan run unchanged.
+fn scan_churn(
+    root: &Path,
+    pending: &Path,
+    persistent: bool,
+    finished: &std::sync::atomic::AtomicBool,
+) {
+    const STAGE: &str = "enrollment.index.during-scan";
+    for scan in 0usize.. {
+        let directory = if scan == 0 {
+            root.join("rendezvous")
+        } else {
+            root.join(format!("rendezvous-{scan}"))
+        };
+        let ready = directory.join(format!("{STAGE}.ready"));
+        while !ready.exists() {
+            if finished.load(std::sync::atomic::Ordering::SeqCst) {
+                return;
+            }
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        let before = std::fs::metadata(pending).unwrap().modified().unwrap();
+        write(
+            &pending.join(format!("late-unrelated-{scan}")),
+            b"retained concurrent entry\n",
+            0o600,
+        );
+        std::fs::File::open(pending)
+            .unwrap()
+            .set_times(std::fs::FileTimes::new().set_modified(before + Duration::from_secs(2)))
+            .unwrap();
+        if persistent {
+            // SAFETY: the register thread, this child's only other working
+            // thread, is blocked in this scan's fault pause loop (`.ready`
+            // exists, `.release` does not yet), which reads no environment;
+            // its next scan reads this rendezvous only after the release.
+            unsafe {
+                std::env::set_var(
+                    "AGENT_MEMORY_FAULT_DIR",
+                    root.join(format!("rendezvous-{}", scan + 1)),
+                );
+            }
+        }
+        write(&directory.join(format!("{STAGE}.release")), b"", 0o600);
+        if !persistent {
+            return;
+        }
+    }
 }
 fn register_request(session: &str, native: &str, digest: &str) -> Value {
     object([
@@ -9064,7 +9454,6 @@ fn pending_index_retries_real_transient_change_and_refuses_real_persistent_churn
         "pending_index_retries_real_transient_change_and_refuses_real_persistent_churn",
         &["transient", "persistent"],
         |root, mode| {
-            use std::sync::atomic::{AtomicBool, Ordering};
             let f = Fixture::new(root);
             let first = register_source(&f, SESSION, "original-scanned-source", &"a".repeat(64));
             let ns =
@@ -9072,48 +9461,34 @@ fn pending_index_retries_real_transient_change_and_refuses_real_persistent_churn
                     .unwrap()
                     .0;
             let pending = ns.base.join("pending");
-            let reference = std::fs::read(pending.join("0.json")).unwrap();
-            for n in 2..4096 {
-                write(&pending.join(format!("{n}.json")), &reference, 0o600);
-            }
-            let stage = "enrollment.index.during-scan";
-            let child = start_enrollment(
-                root,
-                &register_request("new-session", "scanned-source", &"b".repeat(64)),
-                stage,
-                "enrollment-register",
-            );
+            // Baseline `patch.object(os, 'scandir', changing_scan)`: the child's
+            // own scan helper changes `pending` inside the real scan.
             write(
-                &pending.join("late-unrelated"),
-                b"Retain concurrent evidence\n",
+                &root.join("case-scan-churn"),
+                turn_sources::encoded(&object([
+                    ("pending", string(pending.to_str().unwrap())),
+                    ("persistent", Value::Bool(mode == "persistent")),
+                ]))
+                .unwrap(),
                 0o600,
             );
-            let stop = Arc::new(AtomicBool::new(false));
-            let mutator = if mode == "persistent" {
-                let stop = stop.clone();
-                let pending = pending.clone();
-                Some(std::thread::spawn(move || {
-                    let directory = std::fs::File::open(pending).unwrap();
-                    let mut generation = 1u64;
-                    while !stop.load(Ordering::SeqCst) {
-                        directory
-                            .set_times(std::fs::FileTimes::new().set_modified(
-                                std::time::UNIX_EPOCH + Duration::from_secs(generation * 2),
-                            ))
-                            .unwrap();
-                        generation += 1;
-                    }
-                }))
-            } else {
-                None
-            };
-            release(root, stage);
-            let output = child.wait();
-            stop.store(true, Ordering::SeqCst);
-            if let Some(mutator) = mutator {
-                mutator.join().unwrap();
-            }
-            assert_eq!(output.status, agent_memory::process::Status::Code(0));
+            write(
+                &root.join("case-request.json"),
+                turn_sources::encoded(&register_request(
+                    "new-session",
+                    "scanned-source",
+                    &"b".repeat(64),
+                ))
+                .unwrap(),
+                0o600,
+            );
+            let child = operation_child(
+                root,
+                Some("enrollment.index.during-scan"),
+                "pause",
+                "enrollment-register",
+            );
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
             let result = registry_result(root);
             let new_ns = turn_sources::private_namespace(
                 &f.repo,
@@ -9126,7 +9501,11 @@ fn pending_index_retries_real_transient_change_and_refuses_real_persistent_churn
             .unwrap()
             .0;
             if mode == "persistent" {
-                assert!(result.get("error").is_some());
+                assert_eq!(
+                    text(&result, "error"),
+                    "Pending turn index changed concurrently; preserve sources and retry input",
+                    "{result:?}"
+                );
                 assert!(!new_ns.directory.join("source-0.json").exists());
                 assert!(!pending.join("1.json").exists());
             } else {
@@ -10586,7 +10965,13 @@ fn start_window_controller(
     }))
 }
 fn wake_operation(root: &Path, f: &Fixture, value: &Value) {
-    let (owner, writer, nonce) = real_window();
+    // Baseline `LiveDeliveryWindow()`: a 60 s fixture window for the cases
+    // whose baseline wake uses it instead of a real 950 ms calibration.
+    let (owner, writer, nonce) = if root.join("case-live-window").exists() {
+        live_window()
+    } else {
+        real_window()
+    };
     if let Ok(before) = std::fs::read_to_string(root.join("wake-before-control")) {
         if before == "cancel" {
             owner.revoke();
@@ -12655,9 +13040,18 @@ fn b3_completed_snapshots_require_bound_drain_proof() {
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_capacity_retains_arrival_then_reuses_reference_after_capacity_frees
 #[test]
 fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
-    isolated(
+    // Baseline patches `turn_sources.MAX_TURNS` to 1 for this fixture.
+    isolated_in(
         "b3_full_capacity_retains_arrival_then_reuses_exact_reference",
+        || {
+            let mut world = World::new().unwrap();
+            world
+                .env
+                .insert("AGENT_MEMORY_FAULT_TURN_LIMIT".into(), "1".into());
+            world
+        },
         |root| {
+            assert_eq!(turn_sources::max_turns(), 1);
             let f = Fixture::new(root);
             let other = turn_sources::register(
                 &f.repo,
@@ -12676,7 +13070,7 @@ fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
                     .unwrap();
             let pending = ns.base.join("pending");
             let original = std::fs::read(pending.join("0.json")).unwrap();
-            for n in 1..turn_sources::MAX_TURNS {
+            for n in 1..turn_sources::max_turns() {
                 write(&pending.join(format!("{n}.json")), &original, 0o600);
             }
             f.observe(&request(&f, &[human("queued-human")], "seal"));
@@ -12720,7 +13114,7 @@ fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
                 &f.runtime,
             )
             .unwrap();
-            for n in 1..turn_sources::MAX_TURNS {
+            for n in 1..turn_sources::max_turns() {
                 std::fs::remove_file(pending.join(format!("{n}.json"))).unwrap();
             }
             f.observe(&request(&f, &[], "ingest"));
@@ -12740,8 +13134,11 @@ fn b3_full_capacity_retains_arrival_then_reuses_exact_reference() {
 // obligation: tests/contracts/test_omp_boundary.py::NativeSources.test_full_backlog_and_long_unicode_repo_still_offer_one_bounded_wake
 #[test]
 fn b3_full_backlog_unicode_repository_offers_one_bounded_wake() {
-    isolated(
+    // The 8192-byte wake guidance bound depends on path length, as in the
+    // baseline: match its 8-character tempfile World token and UUID session.
+    isolated_in(
         "b3_full_backlog_unicode_repository_offers_one_bounded_wake",
+        || World::with_token_length(8).unwrap(),
         |root| {
             let (runtime, receipt, proof) = install_only(root, "copy");
             let long = root
@@ -12762,24 +13159,38 @@ fn b3_full_backlog_unicode_repository_offers_one_bounded_wake() {
                 receipt,
                 proof,
             };
+            let session = uid();
+            let in_session = |mut value: Value| {
+                set(&mut value, "session", string(&session));
+                if let Some(view) = value
+                    .get_mut("payload")
+                    .and_then(|payload| payload.get_mut("view"))
+                {
+                    set(view, "session", string(&session));
+                    set(view.get_mut("header").unwrap(), "id", string(&session));
+                }
+                value
+            };
             let mut entries = vec![];
             let mut result = Value::Null;
             for n in 0..15 {
                 entries.push(human(&format!("human-{n}")));
-                result = f.observe(&if n == 0 {
+                result = f.observe(&in_session(if n == 0 {
                     request(&f, &entries, "seal")
                 } else {
                     replay_request(&f, &entries, "seal", &result)
-                });
+                }));
             }
             let refs = f
                 .pending()
                 .iter()
                 .map(|r| text(r, "source_reference").to_owned())
                 .collect::<std::collections::BTreeSet<_>>();
-            let wake_request = wake_request(&result);
+            let wake_request = in_session(wake_request(&result));
+            // Baseline: both wakes use the 60 s `LiveDeliveryWindow()` fixture.
+            write(&root.join("case-live-window"), b"", 0o600);
             let wake = run_wake_child(root, &wake_request, None, "");
-            assert_eq!(get(&wake, "continue"), &Value::Bool(true));
+            assert_eq!(get(&wake, "continue"), &Value::Bool(true), "{wake:?}");
             assert_eq!(get(&wake, "inventory_complete"), &Value::Bool(false));
             assert!(text(&wake, "additionalContext").len() <= 8192);
             assert_eq!(
@@ -13321,7 +13732,7 @@ fn b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state() 
     isolated(
         "b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state",
         |root| {
-            let f = Fixture::new(root);
+            let f = synchronized_fixture(root);
             f.observe(&request(
                 &f,
                 &[human("historical-human"), answer("historical-answer")],
@@ -13970,6 +14381,12 @@ fn b3_clock_ack_behind_real_16mib_frame_reaches_reservation() {
             let mut wire = format!("AM249 REQUEST 1 {} {nonce}\n", raw.len()).into_bytes();
             wire.extend(raw);
             let now = agent_memory::clock::monotonic_ns();
+            // Baseline: `patch.object(stream.time, 'monotonic_ns', return_value=now + 2)`.
+            write(
+                &root.join("case-frozen-clock"),
+                (now + 2).to_string(),
+                0o600,
+            );
             wire.extend(
                 stream::encode_frame(
                     "CLOCK",
@@ -13996,20 +14413,33 @@ fn b3_clock_ack_behind_real_16mib_frame_reaches_reservation() {
                 )
                 .unwrap(),
             );
-            wire.extend(stream::encode_frame("FINAL", 2, &decode(r#"{"last_attempt_seq":1,"refused_count":0,"last_event_ordinal":1,"transition":null}"#), None).unwrap());
             write(&root.join("finite-input.raw"), wire, 0o600);
-            let child = operation_child(root, None, "", "finite-run");
-            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
-            let frames = response_frames(&root.join("finite-response-wire"));
-            assert!(frames.iter().any(|(kind, _, _)| kind == "CLOCK-REPLY"));
-            let result = frames
-                .iter()
-                .find(|(kind, seq, _)| kind == "OBSERVED" && *seq == 1)
-                .unwrap();
-            assert_eq!(
-                get(get(&result.2, "result"), "continue"),
-                &Value::Bool(true)
+            let child = operation_child(
+                root,
+                Some("omp.capture.before-commit"),
+                "pause",
+                "finite-control-reader",
             );
+            assert_eq!(child.wait().status, agent_memory::process::Status::Code(0));
+            let outcome = registry_result(root);
+            assert_eq!(
+                get(&outcome, "status"),
+                &object([("ok", Value::Bool(true))]),
+                "{outcome:?}"
+            );
+            assert_eq!(get(&outcome, "control_failures"), &Value::Array(vec![]));
+            let responses =
+                transport::read(&root.join("responses.json"), transport::MAX_PAYLOAD).unwrap();
+            let responses = responses.as_array().unwrap();
+            assert!(responses.iter().any(|r| text(r, "kind") == "CLOCK-REPLY"));
+            let result = responses
+                .iter()
+                .find(|r| text(r, "kind") == "OBSERVED")
+                .map(|r| get(get(r, "body"), "result"))
+                .unwrap();
+            assert_eq!(get(result, "verified"), &Value::Bool(true));
+            assert_eq!(get(result, "source_coverage_complete"), &Value::Bool(false));
+            assert_eq!(get(result, "continue"), &Value::Bool(true), "{result:?}");
             assert_eq!(root_wakes(&f).len(), 1);
             assert_verified_pending_source(&f, &child_directory(root));
         },
@@ -14092,7 +14522,9 @@ fn b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation() {
         |root| {
             let f = Fixture::new(root);
             let first = armed_request(&f);
-            let second = request(
+            // Baseline `self.body(ordinal=2)` keeps `armed=True`: the reused
+            // header nonce reaches a real (declined) second reservation.
+            let mut second = request(
                 &f,
                 &[
                     human("phase-human"),
@@ -14101,6 +14533,11 @@ fn b3_reused_header_nonce_and_real_exit_fault_do_not_claim_reservation() {
                     answer("second-answer"),
                 ],
                 "seal",
+            );
+            set(
+                second.get_mut("payload").unwrap(),
+                "request_wake",
+                Value::Bool(true),
             );
             write(
                 &root.join("case-request.json"),
@@ -14573,7 +15010,7 @@ fn b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health() 
         "b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health",
         |root| {
             let f = Fixture::new(root);
-            let (mut coverage, executor, _) = finite(&f);
+            let (mut coverage, executor, writer) = finite_draining(&f);
             for sequence in 1..=66 {
                 execute_seal(
                     &f,
@@ -14606,7 +15043,8 @@ fn b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health() 
             assert_eq!(get(summary, "truncated"), &Value::Bool(true));
             assert_eq!(
                 get(get(summary, "counts"), "not-armed"),
-                &Value::Int(66u8.into())
+                &Value::Int(66u8.into()),
+                "{summary:?}"
             );
             let optional = stream::wake_decision_directory(coverage.directory()).unwrap();
             let orphan = optional.parent().unwrap().join(uid());
@@ -14635,6 +15073,7 @@ fn b3_bounded_diagnostics_and_unreadable_namespace_never_change_doctor_health() 
                 get(get(&baseline, "omp"), "transport_qualification")
             );
             coverage.close_live();
+            writer.finish();
         },
     );
 }
@@ -15087,9 +15526,12 @@ fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication()
     isolated(
         "b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication",
         |root| {
-            let h = held_fixture(root);
+            // Baseline `layout_recovery_fixtures.small_pending`: a `--presets
+            // none` runtime whose held bank receives low-level synthetic native
+            // sources; the reviewed install then opens a fresh native root.
+            let h = held_fixture_on(Fixture::without_native_route(root));
             let f = &h.fixture;
-            f.observe(&request(f, &[human("held-preview-human")], "seal"));
+            f.observe_marker(&request(f, &[human("held-preview-human")], "seal"));
             let rows = f.pending();
             assert!(!rows.is_empty());
             let proposal_path = std::fs::read_dir(h.directory.join("proposals"))
@@ -15100,7 +15542,8 @@ fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication()
                 .path();
             let proposal = transport::read(&proposal_path, transport::MAX_PAYLOAD).unwrap();
             let mut attestation = get(&proposal, "quiescence_attestation").clone();
-            let agent = PathBuf::from(text(get(&f.receipt, "omp_binding"), "agent_dir"));
+            let agent = root.join("held native root");
+            std::fs::create_dir(&agent).unwrap();
             let source = root.join("candidate-source");
             command(
                 root,
@@ -15111,27 +15554,27 @@ fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication()
                     source.as_os_str().to_owned(),
                 ],
             );
-            set(
-                &mut attestation,
-                "declared_invocation_routes",
-                Value::Array(vec![
-                    string(agent.join("skills/agent-memory").to_str().unwrap()),
-                    string(agent.join("extensions/agent-memory.ts").to_str().unwrap()),
-                    string(agent.join("AGENTS.md").to_str().unwrap()),
-                    string(
-                        Path::new(text(&f.receipt, "bin_dir"))
-                            .join("am")
-                            .to_str()
-                            .unwrap(),
-                    ),
-                    string(
-                        Path::new(text(&f.receipt, "bin_dir"))
-                            .join("agent-memory")
-                            .to_str()
-                            .unwrap(),
-                    ),
-                ]),
+            let Value::Array(routes) = attestation.get_mut("declared_invocation_routes").unwrap()
+            else {
+                unreachable!()
+            };
+            routes.extend(
+                [
+                    "skills/agent-memory",
+                    "extensions/agent-memory.ts",
+                    "AGENTS.md",
+                ]
+                .map(|path| string(agent.join(path).to_str().unwrap())),
             );
+            // The baseline review request already declared the installed `am`.
+            routes.extend(["am", "agent-memory"].map(|name| {
+                string(
+                    Path::new(text(&f.receipt, "bin_dir"))
+                        .join(name)
+                        .to_str()
+                        .unwrap(),
+                )
+            }));
             let envelope = |attestation: Value| {
                 object([
                     (
@@ -15235,6 +15678,21 @@ fn b3_held_native_preview_consumes_exact_reviewed_envelope_without_publication()
             assert_eq!(
                 get(&preview, "installation_writes_performed"),
                 &Value::Bool(false)
+            );
+            assert_eq!(
+                get(
+                    get(&preview, "private_compatibility"),
+                    "required_capabilities"
+                ),
+                &Value::Array(
+                    [
+                        "layout-frontier-v1",
+                        "omp-harness-v1",
+                        "omp-stored-source-v2"
+                    ]
+                    .map(string)
+                    .to_vec()
+                )
             );
             assert_eq!(
                 (

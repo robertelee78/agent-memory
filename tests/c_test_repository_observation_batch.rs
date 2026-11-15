@@ -277,7 +277,13 @@ fn malformed_config_child_output_never_accepts_speculative_names() {
         let value = library(&r.world, &r.repo, "settings", "");
         assert!(!yes(&value, "ok"));
         assert!(string(&value, "error").contains("Repository memory configuration"));
-        assert_eq!(physical(&r.repo), before);
+        let after = physical(&r.repo);
+        let changed: std::collections::BTreeSet<_> = before
+            .keys()
+            .chain(after.keys())
+            .filter(|path| before.get(*path) != after.get(*path))
+            .collect();
+        assert!(changed.is_empty(), "repository paths changed: {changed:?}");
         no_live_queries(&r.world);
     }
 }
@@ -351,7 +357,7 @@ fn sampled_head_is_immutable_and_next_settings_read_observes_later_commit() {
     let mut r = fixture();
     let marker = r.world.root.join("committed-once");
     let body = format!(
-        "for a do if [ \"$a\" = 'ls-files' ] && [ ! -e '{marker}' ]; then : > '{marker}'; mkdir '{repo}/late-commit'; cp '{repo}/memory-bank/MEMORY.md' '{repo}/late-commit/MEMORY.md'; /usr/bin/git -C '{repo}' add late-commit/MEMORY.md; /usr/bin/git -C '{repo}' commit -m 'Late committed router' >/dev/null; /usr/bin/git -C '{repo}' rm late-commit/MEMORY.md >/dev/null; fi; done",
+        "for a do if [ \"$a\" = 'ls-files' ] && [ ! -e '{marker}' ]; then : > '{marker}'; mkdir '{repo}/late-commit'; cp '{repo}/memory-bank/MEMORY.md' '{repo}/late-commit/MEMORY.md'; /usr/bin/git -C '{repo}' add late-commit/MEMORY.md; /usr/bin/git -C '{repo}' -c user.name='Test Developer' -c user.email=test@example.invalid commit -m 'Late committed router' >/dev/null; /usr/bin/git -C '{repo}' rm late-commit/MEMORY.md >/dev/null; fi; done",
         marker = marker.display(),
         repo = r.repo.display()
     );

@@ -2098,22 +2098,33 @@ fn unpack(raw: &str) -> (Value, String) {
     let (meta, body) = agent_memory::codec::frontmatter::read(raw, &allowed).unwrap();
     (Value::Object(meta), body.to_owned())
 }
-fn add_record(f: &mut Fixture, name: &str, body: &str) -> (Value, String) {
+fn add_record<const N: usize>(
+    f: &mut Fixture,
+    name: &str,
+    body: &str,
+    updates: [(&str, Value); N],
+) -> (Value, String) {
+    // Match ComparisonContract.add: render the requested lifecycle before applying
+    // updates, so historical defaults and the final router row retain that state.
     let raw = record_fixtures::record_text_with_ids(
         body,
         &f.project,
-        Default::default(),
+        record_fixtures::RecordOptions {
+            status: updates
+                .iter()
+                .find(|(key, _)| *key == "status")
+                .map(|(_, value)| value.as_str().unwrap())
+                .unwrap_or("active"),
+            ..Default::default()
+        },
         &uuid(),
         &f.actor,
     )
     .unwrap();
     let (mut meta, body) = unpack(&raw);
-    for (key, value) in [
-        ("trust", "reviewed"),
-        ("visibility", "visible"),
-        ("admission-reason", "Controlled prior-guidance fixture"),
-    ] {
-        set(&mut meta, key, s(value));
+    set(&mut meta, "evidence", Value::Array(vec![s("evidence.md")]));
+    for (key, value) in updates {
+        set(&mut meta, key, value);
     }
     let path = format!("topics/{name}.md");
     let raw = agent_memory::codec::frontmatter::write(meta.as_object().unwrap()).unwrap() + &body;
@@ -2127,7 +2138,9 @@ fn add_record(f: &mut Fixture, name: &str, body: &str) -> (Value, String) {
     // route row as router text; it never re-renders or bounds the router, so a
     // fixture may pass 64 rows before regrouping them under indexes.
     let row = format!(
-        "| [{path}](<{path}>) | Synthetic historical source | repository | active | When comparing fixture meaning |\n"
+        "| [{path}](<{path}>) | Reviewed fixture learning | {} | {} | When comparing related concepts |\n",
+        t(&meta, "scope"),
+        t(&meta, "status"),
     );
     let router = t(&f.native, "MEMORY.md").replacen(
         "\n## Omitted contexts",
@@ -2150,6 +2163,7 @@ fn boundary_fixture(count: usize) -> Fixture {
                     &format!(
                         "# Attempt cap\n\nFor synthetic environment {number:02} retain attempt cap evidence before retrying.\n"
                     ),
+                    [],
                 );
             }
         },
@@ -2467,8 +2481,9 @@ fn consumer_flow(route: &str, pending: bool, plan_negative: bool) {
                 } else {
                     POLICY
                 },
+                [],
             );
-            add_record(f, "consumer-second", POLICY);
+            add_record(f, "consumer-second", POLICY, []);
         },
         |_| {},
     );
@@ -3347,6 +3362,7 @@ fn selective_frontier() {
                             "# Capacity fixture\n\ncommonfrontier {}\n",
                             if i == 0 { "selectivefrontier" } else { "other" }
                         ),
+                        [],
                     )
                     .1,
                 );
@@ -3415,7 +3431,7 @@ fn mixed_rows() {
                 } else {
                     format!("p{i:02}")
                 };
-                let (_, path) = add_record(f, &name, if i == 50 { "other" } else { "cap" });
+                let (_, path) = add_record(f, &name, if i == 50 { "other" } else { "cap" }, []);
                 let (mut metadata, body) = unpack(&fs::read_to_string(f.bank.join(&path)).unwrap());
                 for (key, value) in [
                     ("kind", "result"),
@@ -3770,74 +3786,36 @@ fn version_pair() {
         false,
         "# Approved policy\n\nThe source does not resolve which version applies.\n",
         |f| {
-            let (mut old, old_path) = add_record(f, "historical-version", POLICY);
-            set(&mut old, "status", s("superseded"));
-            set(
-                &mut old,
-                "state-reason",
-                s("The independently reviewed correction retains this historical version."),
+            let (old, _) = add_record(
+                f,
+                "historical-version",
+                "# Attempt cap\n\nStop after three attempts; retain the source conditions.\n",
+                [
+                    ("status", s("superseded")),
+                    (
+                        "state-reason",
+                        s("The independently reviewed correction retains this historical version."),
+                    ),
+                ],
             );
-            let raw =
-                agent_memory::codec::frontmatter::write(old.as_object().unwrap()).unwrap() + POLICY;
-            fs::write(f.bank.join(&old_path), &raw).unwrap();
-            set(&mut f.native, &old_path, s(raw));
-            let (mut current, current_path) = add_record(
+            add_record(
                 f,
                 "current-version",
                 "# Revised policy\n\nThe corrected fixture allows four attempts.\n",
-            );
-            set(&mut current, "id", g(&old, "id").clone());
-            set(&mut current, "version", n(2));
-            set(
-                &mut current,
-                "corrects",
-                Value::Array(vec![obj([
+                [
                     ("id", g(&old, "id").clone()),
-                    ("version", g(&old, "version").clone()),
-                ])]),
+                    ("version", n(2)),
+                    (
+                        "corrects",
+                        Value::Array(vec![obj([
+                            ("id", g(&old, "id").clone()),
+                            ("version", g(&old, "version").clone()),
+                        ])]),
+                    ),
+                ],
             );
-            let raw = agent_memory::codec::frontmatter::write(current.as_object().unwrap())
-                .unwrap()
-                + "# Revised policy\n\nThe corrected fixture allows four attempts.\n";
-            fs::write(f.bank.join(&current_path), &raw).unwrap();
-            set(&mut f.native, &current_path, s(raw));
-            let router = t(&f.native, "MEMORY.md").replace(
-                "repository | active | When comparing fixture meaning",
-                "repository | superseded | When comparing fixture meaning",
-            );
-            fs::write(f.bank.join("MEMORY.md"), &router).unwrap();
-            set(&mut f.native, "MEMORY.md", s(router));
         },
-        |req| {
-            // Bind exact typed identities, including the retained historical version.
-            let files = g(req, "intended_files").clone();
-            for unit in req
-                .get_mut("unit_map")
-                .unwrap()
-                .get_mut("units")
-                .unwrap()
-                .as_array_mut()
-                .unwrap()
-            {
-                let target = array(g(unit, "targets"))
-                    .first()
-                    .map(|r| t(r, "path").to_owned());
-                if let Some(path) = target {
-                    if path.starts_with("topics/") {
-                        let (meta, _) = unpack(t(&files, &path));
-                        set(
-                            unit,
-                            "existing_record",
-                            obj([
-                                ("id", g(&meta, "id").clone()),
-                                ("version", g(&meta, "version").clone()),
-                            ]),
-                        );
-                    }
-                }
-            }
-            bind_review(req);
-        },
+        |_| {},
     );
     assert_eq!(
         fs::read_to_string(f.bank.join("topics/historical-version.md")).unwrap(),
@@ -4103,8 +4081,8 @@ fn route_frontiers() {
         false,
         POLICY,
         |f| {
-            add_record(f, "route-first", POLICY);
-            add_record(f, "route-second", POLICY);
+            add_record(f, "route-first", POLICY, []);
+            add_record(f, "route-second", POLICY, []);
         },
         |_| {},
     );

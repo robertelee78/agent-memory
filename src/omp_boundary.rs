@@ -261,17 +261,6 @@ pub fn marker(base: &Path) -> Result<Option<&'static str>> {
     Err(err("Unknown or malformed source compatibility marker"))
 }
 
-/// The observer context shared with omp_installation/omp_stream callbacks.
-fn context_value(context: &PrivateEnrollmentContext) -> Result<Value> {
-    Ok(object([
-        ("root", path_value(context.root())?),
-        ("bank", path_value(context.bank())?),
-        ("project_id", context.project_id().clone()),
-        ("scope", context.scope()),
-        ("held", Value::Bool(context.held())),
-    ]))
-}
-
 /// Entry checks of baseline `_observe_marker`, minted inside this boundary.
 fn checked_marker(
     repo: &Path,
@@ -350,18 +339,17 @@ pub fn verify_marker_with_authority(
 }
 
 /// The `OmpActivation::observe_marker` half owned by this module: the callback
-/// receives `{root, bank, project_id, scope, held}`.
+/// receives the live context minted at entry (baseline `_observe_marker`).
 pub fn observe_marker_operation(
     repo: &Path,
     held: Option<&dyn HeldSource>,
     runtime_root: &Path,
-    operation: &mut dyn FnMut(&Value) -> omp_installation::Result<()>,
+    operation: &mut dyn FnMut(&PrivateEnrollmentContext) -> omp_installation::Result<()>,
 ) -> omp_installation::Result<()> {
     let mut failure = None;
     observe_marker(repo, held, runtime_root, |context| {
-        let value = context_value(context)?;
         // A refused operation still receives the enrollment and marker rechecks.
-        if let Err(error) = operation(&value) {
+        if let Err(error) = operation(context) {
             failure = Some(error);
         }
         Ok(())
@@ -723,7 +711,7 @@ fn orphan_pending(base: &Path) -> Result<()> {
         return Ok(());
     }
     fs::trust::state(&pending)?;
-    let names = listing(&pending, turn_sources::MAX_TURNS)?
+    let names = listing(&pending, turn_sources::max_turns())?
         .ok_or_else(|| err("Private pending source inventory exceeds bound"))?;
     for name in names {
         let value = turn_sources::read(&pending.join(&name), MAX_RECORD)?
@@ -923,7 +911,7 @@ pub fn omp_index_with_authority(
     fs::trust::state(&directory)?;
     let context = scope::private_enrollment_context_with_authority(repo, runtime)?;
     let refusal = || err("Unverifiable shared source index inventory");
-    let names = listing(&directory, turn_sources::MAX_TURNS)?.ok_or_else(refusal)?;
+    let names = listing(&directory, turn_sources::max_turns())?.ok_or_else(refusal)?;
     let mut result = Vec::new();
     for name in names {
         let name = name.to_str().ok_or_else(refusal)?;
@@ -935,7 +923,7 @@ pub fn omp_index_with_authority(
         if !canonical
             || number
                 .parse::<usize>()
-                .map_or(true, |n| n >= turn_sources::MAX_TURNS)
+                .map_or(true, |n| n >= turn_sources::max_turns())
         {
             return Err(refusal());
         }

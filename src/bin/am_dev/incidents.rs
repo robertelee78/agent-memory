@@ -75,8 +75,13 @@ fn native_test(root: &Path, case: &Value) -> Result<(String, String)> {
     }
     Ok((target.to_owned(), function.to_owned()))
 }
-fn test_binary(target: &str) -> Result<PathBuf> {
-    let executable = std::env::current_exe()?;
+fn test_binary(
+    target: &str,
+    function: &str,
+    environment: &[(OsString, OsString)],
+    cwd: &Path,
+) -> Result<PathBuf> {
+    let executable = std::env::current_exe()?.canonicalize()?;
     let root = executable
         .parent()
         .ok_or_else(|| error("Developer binary has no parent"))?
@@ -100,18 +105,47 @@ fn test_binary(target: &str) -> Result<PathBuf> {
         }
         let identity = directory.directory().stat_at(&name)?;
         if identity.is_regular() && identity.mode & 0o111 != 0 {
-            candidates.push(root.join(name));
+            candidates.push((identity.mtime_ns, root.join(name)));
         }
     }
     directory.recheck()?;
-    if candidates.len() != 1 {
-        return Err(error(
-            "Build the incident's native test target into this am-dev profile; preserve exactly one executable per target",
-        ));
+    candidates.sort_unstable();
+    let listed_test = format!("{function}: test");
+    for (_, path) in candidates.into_iter().rev() {
+        let argv = [
+            path.as_os_str().to_owned(),
+            "--list".into(),
+            "--exact".into(),
+            function.into(),
+        ];
+        let listed = process::run_for(
+            &Spec {
+                argv: &argv,
+                search_path: false,
+                env: environment,
+                cwd: Some(cwd),
+                stdin: Input::Null,
+                stdout: Target::Capture { limit: MAX_OUTPUT },
+                stderr: Target::Capture { limit: MAX_OUTPUT },
+                deadline: Deadline::after(TIMEOUT)?,
+                new_session: false,
+                file_size_limit: None,
+                umask: Some(0o077),
+                pass_fds: &[],
+            },
+            TIMEOUT,
+        );
+        if listed.is_ok_and(|output| {
+            output.status == Status::Code(0)
+                && std::str::from_utf8(&output.stdout)
+                    .is_ok_and(|stdout| stdout.lines().any(|line| line == listed_test))
+        }) {
+            return Ok(path);
+        }
     }
-    candidates
-        .pop()
-        .ok_or_else(|| error("Missing native test executable"))
+    Err(error(
+        "Build the incident's native test target containing its annotated test into this am-dev profile",
+    ))
 }
 fn run(root: &Path, id: &str) -> Result<Value> {
     let catalog = json::decode_bytes(
@@ -174,7 +208,7 @@ fn run(root: &Path, id: &str) -> Result<Value> {
     let mut skipped = 0;
     for case in cases {
         let (target, function) = native_test(root, case)?;
-        let binary = test_binary(&target)?;
+        let binary = test_binary(&target, &function, &environment, root)?;
         let argv: Vec<OsString> = [
             binary.as_os_str().to_owned(),
             function.into(),

@@ -238,8 +238,13 @@ pub struct World {
 
 impl World {
     pub fn new() -> Result<Self> {
+        Self::with_token_length(48)
+    }
+    /// A caller-chosen token length, e.g. the baseline tempfile's 8 random
+    /// characters where a fixture's byte bound depends on the World path.
+    pub fn with_token_length(length: usize) -> Result<Self> {
         let temporary = agent_memory::fs::canonical_path(Path::new("/tmp"), true)?;
-        let token = random_token()?;
+        let token = random_token(length)?;
         let root = temporary.join(format!("agent-memory-test-{token}"));
         fs::DirBuilder::new().mode(0o700).create(&root)?;
         // Construct the guard before any fallible setup so partial setup is removed.
@@ -339,12 +344,18 @@ impl World {
         ] {
             world.env.insert(key.into(), value.into());
         }
-        for (key, name) in [
-            ("GIT_CONFIG_SYSTEM", "git-system.config"),
-            ("GIT_CONFIG_GLOBAL", "git-global.config"),
+        // Commits must not leave detached maintenance changing preservation
+        // snapshots after their owned Git child has already exited.
+        for (key, name, contents) in [
+            ("GIT_CONFIG_SYSTEM", "git-system.config", ""),
+            (
+                "GIT_CONFIG_GLOBAL",
+                "git-global.config",
+                "[maintenance]\n\tauto = false\n[gc]\n\tauto = 0\n",
+            ),
         ] {
             let path = world.root.join("credentials").join(name);
-            fs::write(&path, b"")?;
+            fs::write(&path, contents)?;
             world.env.insert(key.into(), path.into_os_string());
         }
         world.env.insert(
@@ -567,13 +578,13 @@ impl World {
     }
 }
 
-fn random_token() -> Result<String> {
-    let mut token = String::with_capacity(48);
-    while token.len() < 48 {
+fn random_token(length: usize) -> Result<String> {
+    let mut token = String::with_capacity(length);
+    while token.len() < length {
         let uuid = agent_memory::host::uuid4()?;
         for (index, digit) in uuid.chars().filter(|digit| *digit != '-').enumerate() {
             // Omit UUID version/variant nibbles so the token has 192 random bits.
-            if index != 12 && index != 16 && token.len() < 48 {
+            if index != 12 && index != 16 && token.len() < length {
                 token.push(digit);
             }
         }

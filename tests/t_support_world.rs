@@ -120,11 +120,11 @@ fn world_worker() {
         }
         "sleep" => {
             let root = PathBuf::from(std::env::var_os("AGENT_MEMORY_TEST_ROOT").unwrap());
-            fs::write(
-                root.join("worker.pid"),
-                agent_memory::host::pid().to_string(),
-            )
-            .unwrap();
+            // File existence must mean the complete PID is immutable; create
+            // and write a private sibling before publishing the rendezvous.
+            let pending = root.join("worker.pid.pending");
+            fs::write(&pending, agent_memory::host::pid().to_string()).unwrap();
+            fs::rename(pending, root.join("worker.pid")).unwrap();
             println!("owned child started");
             std::thread::sleep(Duration::from_secs(30));
         }
@@ -224,7 +224,12 @@ fn private_canonical_roots_directories_tokens_and_path_are_isolated() {
     for key in ["GIT_CONFIG_SYSTEM", "GIT_CONFIG_GLOBAL"] {
         let path = PathBuf::from(world.env.get(OsStr::new(key)).unwrap());
         assert!(path.starts_with(&world.root.join("credentials")));
-        assert!(read(&path).is_empty());
+        let expected: &[u8] = if key == "GIT_CONFIG_GLOBAL" {
+            b"[maintenance]\n\tauto = false\n[gc]\n\tauto = 0\n"
+        } else {
+            b""
+        };
+        assert_eq!(read(&path), expected);
     }
     let path: Vec<_> = std::env::split_paths(world.env.get(OsStr::new("PATH")).unwrap()).collect();
     assert_eq!(
@@ -426,6 +431,15 @@ fn run_collection_failures_are_not_swallowed_by_check_false_or_group_mode() {
 fn real_git_repository_bare_clone_and_fixed_author_ignore_host_identity() {
     let world = World::new().unwrap();
     let repo = world.repository("repo", false).unwrap();
+    for (key, expected) in [
+        ("maintenance.auto", b"false\n".as_slice()),
+        ("gc.auto", b"0\n"),
+    ] {
+        assert_eq!(
+            world.git(["config", "--get", key]).unwrap().stdout,
+            expected
+        );
+    }
     fs::write(repo.join("tracked"), b"preserved repository bytes\n").unwrap();
     world.git(["add", "--", "tracked"]).unwrap();
     world
