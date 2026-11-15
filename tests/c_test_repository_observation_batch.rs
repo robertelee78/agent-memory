@@ -133,6 +133,22 @@ fn repository_worker() {
         agent_memory::project_identity::discover(repo, None, Default::default())
     } else if mode == "status" {
         scope_binding::status(repo, &[], None, None)
+    } else if mode == "nested-settings" {
+        config::observe_settings(repo, || {
+            let initial = config::settings(repo)?;
+            for _ in 0..mutation.parse::<usize>().unwrap_or(1) {
+                config::observe_settings(repo, || {
+                    assert_eq!(config::settings(repo)?, initial);
+                    Ok(())
+                })?;
+            }
+            if mutation == "changed" {
+                let other = repo.join("late-locator/MEMORY.md");
+                fs::create_dir_all(other.parent().unwrap()).unwrap();
+                fs::copy(repo.join("memory-bank/MEMORY.md"), other).unwrap();
+            }
+            Ok(object([("bank_root", text(initial.bank_root))]))
+        })
     } else {
         let pack = agent_memory::cli::pack_root().unwrap();
         scope_binding::private_enrollment_context(repo, &pack).and_then(|context| {
@@ -192,6 +208,48 @@ fn repository_worker() {
         "AM-REPOSITORY:{}",
         json::encode(&output, json::COMPACT_ASCII).unwrap()
     );
+}
+
+#[test]
+fn stock_git_observation_preserves_settings_and_detects_locator_changes() {
+    let r = fixture();
+    let ordinary = library(&r.world, &r.repo, "settings", "");
+    let observed = library(&r.world, &r.repo, "nested-settings", "20");
+    assert_eq!(get(&ordinary, "ok"), &Value::Bool(true));
+    assert_eq!(get(&observed, "ok"), &Value::Bool(true));
+    assert_eq!(
+        get(get(&ordinary, "value"), "bank_root"),
+        get(get(&observed, "value"), "bank_root")
+    );
+    let changed = library(&r.world, &r.repo, "nested-settings", "changed");
+    assert_eq!(get(&changed, "ok"), &Value::Bool(false));
+    assert_eq!(
+        get(&library(&r.world, &r.repo, "settings", ""), "ok"),
+        &Value::Bool(false)
+    );
+}
+
+#[test]
+fn nested_settings_share_queries_only_inside_one_observation() {
+    let mut r = fixture();
+    shim(&mut r.world, "");
+    let first = library(&r.world, &r.repo, "nested-settings", "1");
+    assert_eq!(get(&first, "ok"), &Value::Bool(true));
+    let path = r.world.root.join("query-pids");
+    let one = fs::read_to_string(&path).unwrap().lines().count();
+    fs::write(&path, "").unwrap();
+    let many = library(&r.world, &r.repo, "nested-settings", "20");
+    assert_eq!(get(&many, "ok"), &Value::Bool(true));
+    assert_eq!(fs::read_to_string(&path).unwrap().lines().count(), one);
+    assert!(
+        one > 0,
+        "the outer operation must still resolve fresh inputs"
+    );
+    let changed = library(&r.world, &r.repo, "nested-settings", "changed");
+    assert_eq!(get(&changed, "ok"), &Value::Bool(false));
+    let next = library(&r.world, &r.repo, "settings", "");
+    assert_eq!(get(&next, "ok"), &Value::Bool(false));
+    no_live_queries(&r.world);
 }
 
 #[test]

@@ -471,7 +471,7 @@ fn portable_binary_and_untrusted_markdown_remain_data() {
     }
     let built = source.join("target/release/am");
     fs::create_dir_all(built.parent().unwrap()).unwrap();
-    fs::copy(env!("CARGO_BIN_EXE_am"), &built).unwrap();
+    support::copy_executable(env!("CARGO_BIN_EXE_am").as_ref(), &built);
     support::lifecycle::mode(&built, 0o755);
     let installed = w
         .run([

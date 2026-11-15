@@ -704,6 +704,8 @@ fn nested_boundary_and_observed_write_keep_exact_prefix() {
 fn save(w: &World, value: &Value, name: &str) -> PathBuf {
     let path = w.inside(name).unwrap();
     fs::write(&path, json::encode(value, json::DEFAULT).unwrap()).unwrap();
+    // Admission inputs must be protected regardless of the host umask.
+    fs::set_permissions(&path, std::os::unix::fs::PermissionsExt::from_mode(0o600)).unwrap();
     path
 }
 fn fault_call(w: &World, args: &[&str], stage: &str) -> i32 {

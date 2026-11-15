@@ -3848,8 +3848,18 @@ fn operation_child(
     mode: &str,
     operation: &str,
 ) -> OperationChild {
+    operation_child_with(root, stage, mode, operation, &[])
+}
+fn operation_child_with(
+    root: &Path,
+    stage: Option<&str>,
+    mode: &str,
+    operation: &str,
+    extra: &[(&str, &str)],
+) -> OperationChild {
     let mut env = std::env::vars_os().collect::<Vec<_>>();
     env.push(("AGENT_MEMORY_FAULT_OMP_OPERATION".into(), operation.into()));
+    env.extend(extra.iter().map(|(k, v)| ((*k).into(), (*v).into())));
     let calibration_stage = "omp.reservation.before-reserve";
     let late_calibration = operation == "finite-auto-calibrated"
         && !stage.is_some_and(|stages| stages.split(',').any(|s| s == calibration_stage));
@@ -13874,11 +13884,14 @@ fn b3_postresponse_oldest_eight_and_public_collision_preserve_canonical_state() 
             b3_postresponse_request(root, &f, 6, false);
             let before = "omp.postresponse.before-drain";
             let after = "omp.postresponse.after-drain";
-            let child = operation_child(
+            // The baseline ran these collisions inside the drain call with no
+            // pause budget; allow the pause the full operation-child bound.
+            let child = operation_child_with(
                 root,
                 Some(&format!("{before},{after}")),
                 "pause,pause",
                 "finite",
+                &[("AGENT_MEMORY_FAULT_PAUSE_SECONDS", "40")],
             );
             ready(root, before);
             // Retain the actual transport lock while the public commands collide.
@@ -15130,6 +15143,137 @@ fn b3_nonseal_and_real_capture_failure_never_acquire_decision_rows() {
                     .iter()
                     .all(|(_, count)| count.as_int().unwrap().as_u64() == Some(0))
             );
+        },
+    );
+}
+
+#[test]
+fn foreign_session_snapshot_faults_preserve_ingest_outcomes() {
+    isolated(
+        "foreign_session_snapshot_faults_preserve_ingest_outcomes",
+        |root| {
+            let f = Fixture::new(root);
+            let mut foreign = request(
+                &f,
+                &[human("foreign-human"), answer("foreign-answer")],
+                "seal",
+            );
+            set(&mut foreign, "session", string("other-native-session"));
+            let view = foreign.get_mut("payload").unwrap().get_mut("view").unwrap();
+            set(view, "session", string("other-native-session"));
+            set(
+                view.get_mut("header").unwrap(),
+                "id",
+                string("other-native-session"),
+            );
+            f.observe(&foreign);
+            let segment = transport::segments(&f.site(), "other-native-session")
+                .unwrap()
+                .remove(0);
+            let path = transport::files(&segment.directory, "snapshots", transport::Names::Hex64)
+                .unwrap()
+                .remove(0);
+            let original = std::fs::read(&path).unwrap();
+            let own = request(
+                &f,
+                &[human("current-human"), answer("current-answer")],
+                "ingest",
+            );
+            let compare = |baseline: &Value, observed: &Value| {
+                for field in ["verified", "status", "faults", "source_coverage_complete"] {
+                    assert_eq!(get(observed, field), get(baseline, field), "{field}");
+                }
+            };
+            let pending = f.observe(&own);
+            let observed =
+                agent_memory::repository_config::observe_settings(&f.repo, || Ok(f.observe(&own)))
+                    .unwrap();
+            compare(&pending, &observed);
+            assert_eq!(get(&pending, "faults"), &Value::Array(vec![]));
+            write(&path, b"{partial", 0o600);
+            let observe_corrupt = || {
+                transport::observe(
+                    &f.repo,
+                    &f.runtime,
+                    &own,
+                    transport::Observation {
+                        receipt: Some(&f.receipt),
+                        ..Default::default()
+                    },
+                    &transport::InstalledScope {
+                        receipt: Some(&f.receipt),
+                        proof: &f.proof,
+                        runtime_root: &f.runtime,
+                    },
+                )
+            };
+            let corrupt = observe_corrupt().unwrap_err();
+            let observed =
+                agent_memory::repository_config::observe_settings(&f.repo, observe_corrupt)
+                    .unwrap_err();
+            assert_eq!(observed.kind(), corrupt.kind());
+            assert_eq!(observed.message(), corrupt.message());
+            assert_eq!(std::fs::read(&path).unwrap(), b"{partial");
+            write(&path, &original, 0o600);
+            agent_memory::repository_config::observe_settings(&f.repo, || {
+                let (_, faults) = transport::pending_inventory(&f.site())?;
+                assert!(faults.is_empty());
+                write(&path, b"{partial", 0o600);
+                let (_, faults) = transport::pending_inventory(&f.site())?;
+                assert!(faults.contains(&"native-enrollment-unverifiable".to_owned()));
+                Ok(())
+            })
+            .unwrap();
+        },
+    );
+}
+
+#[test]
+fn live_native_boundary_contention_is_busy_not_doctor_failure() {
+    isolated(
+        "live_native_boundary_contention_is_busy_not_doctor_failure",
+        |root| {
+            let f = Fixture::new(root);
+            let (mut coverage, executor, writer) = finite_draining(&f);
+            execute_seal(
+                &f,
+                &mut coverage,
+                &executor,
+                &[human("busy-human"), answer("busy-answer")],
+                false,
+                1,
+            );
+            let base = boundary::base(&f.repo).unwrap();
+            let before = snapshot(&base.join("omp-source-v1"));
+            let held =
+                turn_sources::private_lock(&base.join("omp-transport.lock"), false, false).unwrap();
+            let report = b3_json(
+                b3_cli(
+                    root,
+                    &f.repo,
+                    &["--json", "doctor", "--repo", f.repo.to_str().unwrap()],
+                    None,
+                    &[],
+                ),
+                0,
+            );
+            assert_eq!(get(&report, "ok"), &Value::Bool(true));
+            assert_eq!(text(get(&report, "omp"), "observer_evidence"), "busy");
+            assert_eq!(
+                text(get(&report, "omp"), "stored_source_activation"),
+                "required-or-unverified"
+            );
+            assert_eq!(snapshot(&base.join("omp-source-v1")), before);
+            held.finish().unwrap();
+            assert_ne!(
+                text(
+                    &omp_installation::diagnostics(&f.repo, Some(&f.receipt)).unwrap(),
+                    "observer_evidence"
+                ),
+                "busy"
+            );
+            coverage.close_live();
+            writer.finish();
         },
     );
 }

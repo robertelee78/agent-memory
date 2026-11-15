@@ -178,7 +178,7 @@ fn start(
         .now_ns()
         .saturating_add(BUSY_SECONDS * 1_000_000_000);
     loop {
-        let attempt = (|| -> Result<Option<Coverage>> {
+        let attempt = crate::repository_config::observe_settings(repo, || {
             let Some(value) = startup(repo, session, instance_id, lifecycle)? else {
                 return Ok(None);
             };
@@ -194,7 +194,7 @@ fn start(
                 options.receipt.as_ref(),
             )
             .map(Some)
-        })();
+        });
         match attempt {
             Ok(Some(coverage)) => return Ok(coverage),
             Ok(None) => {

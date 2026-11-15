@@ -506,7 +506,24 @@ pub fn diagnostics(repo: &Path, receipt: Option<&Value>) -> Result<Value> {
             answer_first_qualification(provider.as_ref(), receipt),
         ),
     ];
-    let native = provider.diagnostics(repo)?;
+    let native = crate::repository_config::observe_settings(repo, || {
+        provider.diagnostics(repo).map_err(|error| match error {
+            Error::Contract(error) => error,
+            Error::MissingActivation => ContractError::missing_provider(error.to_string()),
+        })
+    });
+    let native = match native {
+        Ok(native) => native,
+        Err(error) if matches!(error.kind(), crate::error::Kind::SourceTransportBusy { .. }) => {
+            result.push(("observer_evidence".into(), string("busy")));
+            result.push((
+                "stored_source_activation".into(),
+                string("required-or-unverified"),
+            ));
+            return Ok(Value::Object(result));
+        }
+        Err(error) => return Err(error.into()),
+    };
     result.push((
         "observer_evidence".into(),
         string(if native.pending.is_some() {

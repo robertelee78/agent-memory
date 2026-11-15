@@ -12,7 +12,7 @@ fn router_and_relocated_binary_use_the_same_scope_contract() {
     let pack = w.inside("portable scope pack").unwrap();
     fs::create_dir(&pack).unwrap();
     let binary = pack.join("am");
-    fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
+    support::copy_executable(env!("CARGO_BIN_EXE_am").as_ref(), &binary);
     let request = object([
         ("bank_project_id", text(PROJECT)),
         ("project_id", text(PROJECT)),

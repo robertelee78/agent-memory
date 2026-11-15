@@ -196,7 +196,7 @@ fn portable_binary_uses_the_same_canonical_tombstone_history() {
     let pack = w.inside("portable pack with spaces").unwrap();
     fs::create_dir(&pack).unwrap();
     let binary = pack.join("am");
-    fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
+    support::copy_executable(env!("CARGO_BIN_EXE_am").as_ref(), &binary);
     let output = w
         .run([
             binary.into_os_string(),

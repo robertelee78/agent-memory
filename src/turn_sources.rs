@@ -14,6 +14,18 @@ use std::sync::{Arc, Weak};
 use std::thread::ThreadId;
 use std::time::Duration;
 
+mod read_observation;
+
+pub(crate) fn observe_reads() -> read_observation::Guard {
+    read_observation::observe()
+}
+pub(crate) fn recheck_reads() -> Result<()> {
+    read_observation::recheck()
+}
+pub(crate) fn finish_reads() {
+    read_observation::finish();
+}
+
 pub const MAX_SOURCES: usize = 128;
 pub const MAX_TURNS: usize = 4096;
 
@@ -147,6 +159,9 @@ pub fn private_mkdir(path: &Path) -> Result<()> {
     fs::private_mkdir_with_sync(path, true)
 }
 pub fn read_bytes(path: &Path, maximum: usize) -> Result<Option<Vec<u8>>> {
+    if let Some(result) = read_observation::read(path, maximum) {
+        return result;
+    }
     fs::trust::inspect(path, fs::trust::InspectOptions::default())?;
     if named(path)?.is_none() {
         return Ok(None);

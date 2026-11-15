@@ -186,6 +186,36 @@ fn append_trace(trace: &Path, line: &str) -> Result<()> {
         .map_err(|e| ContractError::new(e.to_string()))
 }
 
+/// Optional content-free timing in a token-bound disposable world only.
+pub(crate) fn omp_post_reservation(sequence: u64, start_ns: u64, end_ns: u64) -> Result<()> {
+    if environment("AGENT_MEMORY_OMP_TIMING").as_deref() != Some("1") {
+        return Ok(());
+    }
+    let root = test_root()?;
+    let row = object([
+        ("pid", Value::Int(std::process::id().into())),
+        ("sequence", Value::Int(sequence.into())),
+        ("reservation_start_ns", Value::Int(start_ns.into())),
+        ("observed_queued_ns", Value::Int(end_ns.into())),
+    ]);
+    append_trace(
+        &root.join("omp-timing.jsonl"),
+        &(json::encode(&row, json::COMPACT_ASCII)? + "\n"),
+    )
+}
+
+/// Actual identity-query child launches; no arguments or repository data.
+pub(crate) fn git_spawn(pid: u32) -> Result<()> {
+    if environment("AGENT_MEMORY_OMP_TIMING").as_deref() != Some("1") {
+        return Ok(());
+    }
+    let root = test_root()?;
+    append_trace(
+        &root.join("logs/git-spawns.tsv"),
+        &format!("{pid}\t{}\tidentity-query\n", std::process::id()),
+    )
+}
+
 fn boundary(current: &Current, step: u64, kind: &str, phase: &str) -> Result<()> {
     let point = format!("{}-write-{step}-{phase}", current.name);
     if let Some(trace) = &current.trace {

@@ -68,10 +68,16 @@ pub struct SourceCompletion<'c> {
     source_bytes: RefCell<Option<Vec<u8>>>,
     live: Cell<bool>,
     offered_root_wake_path: RefCell<Option<PathBuf>>,
+    #[cfg(feature = "dev-tools")]
+    reservation_start_ns: Cell<Option<u64>>,
 }
 impl<'c> SourceCompletion<'c> {
     pub fn window(&self) -> &LateNativeDeliveryWindow {
         &self.window
+    }
+    #[cfg(feature = "dev-tools")]
+    pub(crate) fn mark_reservation_attempt(&self) {
+        self.reservation_start_ns.set(Some(self.timing.now_ns()));
     }
     pub fn attempted(&self) -> bool {
         self.attempted.get()
@@ -118,6 +124,7 @@ impl<'c> SourceCompletion<'c> {
         {
             return Err(err("Invalid finite source completion"));
         }
+        crate::repository_config::recheck_observed(self.coverage.repo())?;
         let raw = turn_sources::encoded(result)?;
         if raw.len() > MAX_RETAINED {
             return Err(err(
@@ -146,6 +153,7 @@ impl<'c> SourceCompletion<'c> {
         if !self.live.get() || !self.source_committed.get() {
             return Err(err("Wake requires a committed finite source"));
         }
+        crate::repository_config::recheck_observed(coverage.repo())?;
         #[cfg(feature = "dev-tools")]
         crate::bank_writes::fault("omp.before-reserve.before-open")?;
         super::with_lock(&coverage.lock_path, false, false, || {
@@ -290,6 +298,7 @@ impl FiniteExecutor {
         metadata(&self.timing, || {
             coverage.outcome(sequence, &digest, "durable-refusal", "invalid-request", &[])
         })?;
+        crate::repository_config::finish_observed(coverage.repo())?;
         self.writer.send(
             "REFUSED",
             sequence,
@@ -304,6 +313,20 @@ impl FiniteExecutor {
     /// Execute one source frame under the source barrier. Retry only its
     /// acquisition: once entered, the finite frame is never replayed.
     pub fn execute(
+        &self,
+        coverage: &mut Coverage,
+        kind: &str,
+        sequence: u64,
+        nonce: Option<&str>,
+        raw: &[u8],
+    ) -> Result<()> {
+        let repo = coverage.repo.clone();
+        crate::repository_config::observe_frame(&repo, || {
+            self.execute_observed(coverage, kind, sequence, nonce, raw)
+        })
+    }
+
+    fn execute_observed(
         &self,
         coverage: &mut Coverage,
         kind: &str,
@@ -471,6 +494,7 @@ impl FiniteExecutor {
             metadata(&self.timing, || {
                 coverage.outcome(sequence, &digest, "durable-refusal", reason, &[])
             })?;
+            crate::repository_config::finish_observed(coverage.repo())?;
             self.writer.send(
                 "REFUSED",
                 sequence,
@@ -485,6 +509,7 @@ impl FiniteExecutor {
             metadata(&self.timing, || {
                 coverage.outcome(sequence, &digest, "verified", "hint-recorded", &[])
             })?;
+            crate::repository_config::finish_observed(coverage.repo())?;
             self.writer.send(
                 "OBSERVED",
                 sequence,
@@ -530,6 +555,8 @@ impl FiniteExecutor {
                 source_bytes: RefCell::new(None),
                 live: Cell::new(true),
                 offered_root_wake_path: RefCell::new(None),
+                #[cfg(feature = "dev-tools")]
+                reservation_start_ns: Cell::new(None),
             }),
             None => None,
         };
@@ -717,6 +744,7 @@ impl FiniteExecutor {
                 coverage.outcome(sequence, digest, outcome, code, &refs)
             })?;
         }
+        crate::repository_config::finish_observed(coverage.repo())?;
         if outcome != "verified" {
             self.writer.send(
                 "OBSERVED",
@@ -734,6 +762,18 @@ impl FiniteExecutor {
             sequence,
             vec![("result".into(), result.clone())],
         );
+        #[cfg(feature = "dev-tools")]
+        if sent == Sent::Queued {
+            if let Some(completion) = completion.filter(|c| c.window.reservation_started()) {
+                if let Some(start) = completion.reservation_start_ns.get() {
+                    let _ = crate::runtime_faults::omp_post_reservation(
+                        sequence,
+                        start,
+                        self.timing.now_ns(),
+                    );
+                }
+            }
+        }
         if sent == Sent::Queued
             && started.get()
             && parsed.action == "seal"

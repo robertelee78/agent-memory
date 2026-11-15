@@ -78,7 +78,7 @@ fn relocated_binary_preserves_nested_bank_and_unknown_interruption_evidence() {
     let pack = w.inside("copied layout pack").unwrap();
     fs::create_dir(&pack).unwrap();
     let binary = pack.join("am");
-    fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
+    support::copy_executable(env!("CARGO_BIN_EXE_am").as_ref(), &binary);
     let invoke = || {
         w.run_with(
             [

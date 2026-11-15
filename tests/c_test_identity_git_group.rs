@@ -61,8 +61,9 @@ fn wait_pid(path: &Path) -> u32 {
 fn closed_pipe_observation(quiet_sibling: bool) {
     let world = World::new().unwrap();
     let root = world.inside("repo").unwrap();
-    let first =
-        args("printf '%s\\n' $$ > first.pid; exec 1>&- 2>&-; while [ ! -e release ]; do :; done");
+    let first = args(
+        "printf '%s\\n' $$ > first.pid; exec 1>&- 2>&-; while [ ! -e release ] && [ -e first.pid ]; do :; done",
+    );
     let second = args("printf '%s\\n' $$ > second.pid; exec /bin/sleep 30");
     let mut requests = vec![spec(&first, &root)];
     if quiet_sibling {
@@ -115,7 +116,7 @@ fn descendant_held_pipes_timeout_without_waiting_for_descendant_eof() {
     let world = World::new().unwrap();
     let root = world.inside("repo").unwrap();
     let argv = args(
-        "(printf '%s\\n' \"$!\" > unused; while [ ! -e release ]; do :; done; printf released > descendant-released) & printf '%s\\n' $! > descendant.pid; exit 0",
+        "(printf '%s\\n' \"$!\" > unused; while [ ! -e release ] && [ -e unused ]; do :; done; printf released > descendant-released) & printf '%s\\n' $! > descendant.pid; exit 0",
     );
     let requests = [spec(&argv, &root)];
     let mut group = Group::launch(&requests, Duration::from_millis(300)).unwrap();
@@ -228,13 +229,25 @@ fn interrupt_worker() {
         return;
     };
     let root = std::path::PathBuf::from(root);
+    // A panic before the rescue below would otherwise leave the children spinning.
+    struct Rescue(std::path::PathBuf);
+    impl Drop for Rescue {
+        fn drop(&mut self) {
+            if std::thread::panicking() {
+                let _ = fs::write(self.0.join("rescue"), b"rescue");
+            }
+        }
+    }
+    let _rescue = Rescue(root.clone());
     process::install_termination_handler().unwrap();
     process::set_cancellation_signal(libc::SIGTERM).unwrap();
     let before = descriptors();
     let stage = std::env::var("AGENT_MEMORY_FAULT_INTERRUPT_STAGE").unwrap();
     let twice = std::env::var("AGENT_MEMORY_FAULT_INTERRUPT_TWICE").unwrap() == "yes";
+    // The children also stop once the World removes their directory, so a killed
+    // worker cannot orphan them.
     let argv: Vec<_> = (0..3).map(|index| args(&format!(
-        "trap 'printf x >> cancel-{index}; : > cancel-{index}.ready' TERM; printf '%s\\n' $$ > child-{index}; while [ ! -e rescue ]; do :; done"
+        "trap 'printf x >> cancel-{index}; : > cancel-{index}.ready' TERM; printf '%s\\n' $$ > child-{index}; while [ ! -e rescue ] && [ -e child-{index} ]; do :; done"
     ))).collect();
     // This process is deliberately outside the supervisor's ownership registry.
     let mut foreign = std::process::Command::new("/bin/sleep")
@@ -596,7 +609,7 @@ fn staged_infrastructure(root: &Path, mode: &str) {
         if mode == "system-exit" && index == 0 {
             args("printf '%s\\n' $$ > staged-0; exit 7")
         } else {
-            args(&format!("trap 'printf x > cancelled-{index}' TERM; printf '%s\\n' $$ > staged-{index}; while [ ! -e release ]; do :; done"))
+            args(&format!("trap 'printf x > cancelled-{index}' TERM; printf '%s\\n' $$ > staged-{index}; while [ ! -e release ] && [ -e staged-{index} ]; do :; done"))
         }
     }).collect();
     let stage = match mode {

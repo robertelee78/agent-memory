@@ -147,8 +147,10 @@ impl omp_stream::OmpTransport for Transport {
             proof,
             runtime_root: &runtime_root,
         };
-        drain_after_response(repo, &runtime_root, &scope);
-        Ok(())
+        crate::repository_config::observe_settings(repo, || {
+            drain_after_response(repo, &runtime_root, &scope);
+            Ok(())
+        })
     }
     fn native_disposition_ids(&self, repo: &Path, session: &str) -> Result<BTreeSet<String>> {
         let runtime_root = self.runtime_root()?;

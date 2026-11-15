@@ -41,6 +41,10 @@ pub const PROPOSAL_FIELDS: &[&str] = &[
 pub const MAX_RECEIPT_BYTES: usize = 64 * 1024 * 1024;
 pub const MAX_FAULT_WORLD_BYTES: usize = 1024 * 1024;
 pub const FAULT_PAUSE_SECONDS: f64 = 10.0;
+/// A disposable world may lengthen one pause up to the 40 s operation-child
+/// bound, for parents whose work inside the pause the baseline ran unbounded
+/// in-process (for example public CLI collisions during a drain).
+pub const MAX_FAULT_PAUSE_SECONDS: f64 = 40.0;
 
 pub trait RecoveryFrontier: Send + Sync {
     /// Resolve the strict executing runtime pair matching the supplied pack root.
@@ -675,7 +679,16 @@ pub fn fault(stage: &str) -> Result<()> {
             if !file.stat().map_err(io_error)?.is_regular() {
                 return Err(err("Fault rendezvous requires ordinary files"));
             }
-            let deadline = crate::clock::Deadline::from_seconds(FAULT_PAUSE_SECONDS)?;
+            let seconds = match std::env::var("AGENT_MEMORY_FAULT_PAUSE_SECONDS") {
+                Err(std::env::VarError::NotPresent) => FAULT_PAUSE_SECONDS,
+                Ok(raw) => raw
+                    .parse::<f64>()
+                    .ok()
+                    .filter(|s| *s > 0.0 && *s <= MAX_FAULT_PAUSE_SECONDS)
+                    .ok_or_else(invalid)?,
+                Err(_) => return Err(invalid()),
+            };
+            let deadline = crate::clock::Deadline::from_seconds(seconds)?;
             loop {
                 chain.recheck().map_err(io_error)?;
                 match chain.directory().stat_at(&release) {

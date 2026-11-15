@@ -16,19 +16,23 @@ env:
 
 jobs:
   test:
-    name: Test (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
+    name: Test (${{ matrix.platform.target }}, shard ${{ matrix.shard }}/3)
+    runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
-        include:
+        shard: [0, 1, 2]
+        platform:
           - os: macos-15
             target: aarch64-apple-darwin
           - os: ubuntu-24.04
             target: x86_64-unknown-linux-musl
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-musl
+    env:
+      TARGET: ${{ matrix.platform.target }}
+      SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -42,20 +46,26 @@ jobs:
         shell: sh
         run: |
           host=$(rustc --version --verbose | sed -n 's/^host: //p')
-          test "${host%%-*}" = "$(printf '%s' '${{ matrix.target }}' | cut -d- -f1)"
+          test "${host%%-*}" = "${TARGET%%-*}"
       - name: Install the ACL tools the layout-recovery contracts use (Linux)
-        if: endsWith(matrix.target, '-linux-musl')
+        if: endsWith(matrix.platform.target, '-linux-musl')
         shell: sh
         run: command -v setfacl || { sudo apt-get update -q && sudo apt-get install -y -q acl; }
       - name: Format
         shell: sh
         run: cargo fmt --check
-      - name: Test
+      - name: Test (every third integration target, plus lib, bins and doctests on shard 0)
         shell: sh
-        run: cargo test --locked --no-fail-fast --features dev-tools --target '${{ matrix.target }}'
+        run: |
+          set -- $(ls tests/*.rs | sed 's|^tests/||; s|\.rs$||' | awk -v i="$SHARD" '(NR - 1) % 3 == i { printf "--test %s ", $0 }')
+          test "$#" -gt 0
+          if [ "$SHARD" = 0 ]; then set -- --lib --bins "$@"; fi
+          cargo test --locked --no-fail-fast --features dev-tools --target "$TARGET" "$@"
+          if [ "$SHARD" = 0 ]; then cargo test --locked --features dev-tools --target "$TARGET" --doc; fi
       - name: Release-feature isolation (no dev-tools)
+        if: matrix.shard == 0
         shell: sh
-        run: cargo test --locked --test t2_fault_isolation --test t2_bootstrap --target '${{ matrix.target }}'
+        run: cargo test --locked --test t2_fault_isolation --test t2_bootstrap --target "$TARGET"
 
   musl:
     name: Release build (${{ matrix.target }})

@@ -3,11 +3,14 @@
 use crate::clock::Deadline;
 use crate::error::ContractError;
 use crate::process::{self, Input, Output, ProcessError, Refusal, Spec, Status, Target};
+use std::cell::RefCell;
 use std::ffi::{OsStr, OsString};
 use std::fmt;
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
+
+mod observation;
 
 pub const _QUERY_TIMEOUT: f64 = 10.0;
 pub const _EXIT_POLL_INTERVAL: f64 = 0.05;
@@ -62,6 +65,7 @@ impl std::error::Error for Error {
 }
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
+#[derive(Clone, PartialEq, Eq)]
 pub struct Invocation {
     pub argv: Vec<OsString>,
     pub env: Vec<(OsString, OsString)>,
@@ -114,12 +118,173 @@ pub fn invocation_with_env(
     Invocation { argv, env }
 }
 
+struct QueryObservation {
+    root: PathBuf,
+    values: Vec<(Invocation, Output)>,
+    facts: Option<observation::Facts>,
+}
+thread_local! {
+    static QUERIES: RefCell<Option<QueryObservation>> = const { RefCell::new(None) };
+}
+pub(crate) struct QueryObservationGuard(Option<QueryObservation>);
+impl Drop for QueryObservationGuard {
+    fn drop(&mut self) {
+        QUERIES.with(|queries| *queries.borrow_mut() = self.0.take());
+    }
+}
+pub(crate) fn observe_queries(root: &Path) -> QueryObservationGuard {
+    let facts = observation::Facts::capture(root);
+    QueryObservationGuard(QUERIES.with(|queries| {
+        queries.replace(Some(QueryObservation {
+            root: root.to_path_buf(),
+            values: Vec::new(),
+            facts,
+        }))
+    }))
+}
+pub(crate) fn finish_queries() {
+    QUERIES.with(|queries| *queries.borrow_mut() = None);
+}
+fn copy_output(output: &Output) -> Output {
+    Output {
+        pid: output.pid,
+        status: output.status,
+        stdout: output.stdout.clone(),
+        stderr: output.stderr.clone(),
+        elapsed_ns: output.elapsed_ns,
+        launch_elapsed_ns: output.launch_elapsed_ns,
+        poll_wakeups: output.poll_wakeups,
+    }
+}
+fn observed_query(invocation: &Invocation) -> Option<Output> {
+    QUERIES.with(|queries| {
+        let queries = queries.borrow();
+        let observation = queries.as_ref()?;
+        observation
+            .facts
+            .as_ref()
+            .and_then(|facts| facts.output(invocation))
+            .or_else(|| {
+                observation
+                    .values
+                    .iter()
+                    .find(|(key, _)| key == invocation)
+                    .map(|(_, output)| copy_output(output))
+            })
+    })
+}
+fn batch_value(invocation: &Invocation) -> Option<Option<OsString>> {
+    QUERIES.with(|queries| queries.borrow().as_ref()?.facts.as_ref()?.value(invocation))
+}
+fn accepted_value(value: Option<OsString>, optional: bool) -> Result<Option<OsString>> {
+    if value.is_some() || optional {
+        Ok(value)
+    } else {
+        Err(Error::Contract(ContractError::new(
+            "Cannot inspect repository evidence with Git; no identity change performed",
+        )))
+    }
+}
+fn retain_query(invocation: &Invocation, output: &Output) {
+    // Only the local read-only identity commands participate. No mutation,
+    // failed supervision or different repository enters the observation.
+    let args = &invocation.argv[10..];
+    let read_only = match args.first().and_then(|arg| arg.to_str()) {
+        Some("rev-parse" | "ls-files" | "ls-tree" | "cat-file") => true,
+        Some("config") => args
+            .iter()
+            .any(|arg| matches!(arg.to_str(), Some("--get-all" | "--get-regexp" | "--get"))),
+        Some("remote") => args.len() == 1 || args.get(1).is_some_and(|arg| arg == "get-url"),
+        _ => false,
+    };
+    if !read_only {
+        return;
+    }
+    QUERIES.with(|queries| {
+        if let Some(observation) = queries.borrow_mut().as_mut() {
+            if invocation.argv.get(9).map(OsString::as_os_str) == Some(observation.root.as_os_str())
+                && !observation.values.iter().any(|(key, _)| key == invocation)
+            {
+                observation
+                    .values
+                    .push((invocation.clone(), copy_output(output)));
+            }
+        }
+    });
+}
+/// Re-run every sampled Git query in bounded groups before publishing a result.
+/// Filesystem/source validators still run normally; these bytes are never
+/// retained beyond the owning repository observation.
+pub(crate) fn recheck_queries() -> crate::error::Result<()> {
+    QUERIES.with(|queries| {
+        let queries = queries.borrow();
+        let Some(observation) = queries.as_ref() else {
+            return Ok(());
+        };
+        if let Some(facts) = &observation.facts {
+            facts.recheck()?;
+        }
+        // Finish enumeration children before launching per-object readers.
+        // A later scalar read must never overlap the discovery that selected it.
+        let enumeration = |invocation: &Invocation| {
+            let args = &invocation.argv[10..];
+            matches!(
+                args.first().and_then(|arg| arg.to_str()),
+                Some("ls-files" | "ls-tree" | "remote")
+            ) || args.iter().any(|arg| arg == "--get-regexp")
+        };
+        for phase in [true, false] {
+            let selected: Vec<_> = observation
+                .values
+                .iter()
+                .filter(|(invocation, _)| enumeration(invocation) == phase)
+                .collect();
+            for chunk in selected.chunks(3) {
+                let specs: Vec<_> = chunk
+                    .iter()
+                    .map(|(invocation, _)| spec(invocation, Deadline::from_absolute_ns(u64::MAX)))
+                    .collect();
+                let mut group = process::Group::launch(&specs, Duration::from_secs(10))
+                    .map_err(|error| ContractError::new(error.to_string()))?;
+                let checked = (|| {
+                    for (index, (_, expected)) in chunk.iter().enumerate() {
+                        let current = group
+                            .value(index)
+                            .map_err(|error| ContractError::new(error.to_string()))?;
+                        #[cfg(feature = "dev-tools")]
+                        let _ = crate::runtime_faults::git_spawn(current.pid);
+                        if current.status != expected.status || current.stdout != expected.stdout {
+                            return Err(ContractError::identity_unresolved(
+                                "Repository identity evidence changed during observation",
+                            ));
+                        }
+                    }
+                    Ok(())
+                })();
+                let finished = group
+                    .finish()
+                    .map_err(|error| ContractError::new(error.to_string()));
+                checked?;
+                finished?;
+            }
+        }
+        Ok(())
+    })
+}
+
+pub(crate) fn recheck_operation_queries() -> crate::error::Result<()> {
+    recheck_queries()
+}
+
 pub fn _run(
     repo: &Path,
     args: &[OsString],
     glob_pathspecs: bool,
 ) -> std::result::Result<Output, ProcessError> {
     let invocation = _invocation(repo, args, glob_pathspecs);
+    if let Some(output) = observed_query(&invocation) {
+        return Ok(output);
+    }
     let result = run_invocation_for(&invocation, Duration::from_secs(10));
     #[cfg(feature = "dev-tools")]
     if args.first().is_some_and(|arg| arg == "remote")
@@ -154,6 +319,9 @@ pub fn _run(
             return Err(error);
         }
     }
+    if let Ok(output) = &result {
+        retain_query(&invocation, output);
+    }
     result
 }
 /// Separate deadline/environment injection lets the caller retain its own fixed
@@ -169,10 +337,15 @@ pub fn run_invocation_for(
     invocation: &Invocation,
     timeout: Duration,
 ) -> std::result::Result<Output, ProcessError> {
-    process::run_for(
+    let result = process::run_for(
         &spec(invocation, Deadline::from_absolute_ns(u64::MAX)),
         timeout,
-    )
+    );
+    #[cfg(feature = "dev-tools")]
+    if let Ok(output) = &result {
+        let _ = crate::runtime_faults::git_spawn(output.pid);
+    }
+    result
 }
 fn spec(invocation: &Invocation, deadline: Deadline) -> Spec<'_> {
     Spec {
@@ -241,10 +414,33 @@ pub fn git(
     optional: bool,
     glob_pathspecs: bool,
 ) -> Result<Option<OsString>> {
+    if let Some(value) = batch_value(&_invocation(repo, args, glob_pathspecs)) {
+        return accepted_value(value, optional);
+    }
     _git_output(_run(repo, args, glob_pathspecs), optional)
 }
 
 pub fn root_head(repo: &Path) -> Result<(Option<OsString>, Option<String>)> {
+    if let Some(value) = QUERIES.with(|queries| {
+        queries
+            .borrow()
+            .as_ref()
+            .filter(|observation| observation.root == repo)
+            .and_then(|observation| {
+                let current = _invocation(
+                    repo,
+                    &["rev-parse", "--show-toplevel"].map(OsString::from),
+                    false,
+                );
+                observation
+                    .facts
+                    .as_ref()
+                    .filter(|facts| facts.value(&current).is_some())
+                    .map(observation::Facts::root_head)
+            })
+    }) {
+        return Ok(value);
+    }
     let args = [
         "rev-parse",
         "--show-toplevel",
@@ -301,8 +497,14 @@ pub fn root_head_output(command: &Output) -> Result<(Option<OsString>, Option<St
 }
 
 /// A query's owned process never escapes the invoking closure.
+enum CachedValue {
+    Process(Output),
+    Batch(Option<OsString>),
+}
 pub struct GitGroup<'a> {
-    group: process::Group<'a>,
+    group: Option<process::Group<'a>>,
+    cached: Vec<Option<CachedValue>>,
+    invocations: &'a [Invocation],
     next: usize,
     len: usize,
     failed: bool,
@@ -320,7 +522,20 @@ impl GitGroup<'_> {
                 source: None,
             });
         }
-        let outcome = self.group.value(index);
+        if self.group.is_none() {
+            let value = self.cached[index]
+                .take()
+                .expect("Ordered cached Git output");
+            self.next += 1;
+            return match value {
+                CachedValue::Process(output) => _git_output(Ok(output), optional),
+                CachedValue::Batch(value) => accepted_value(value, optional),
+            };
+        }
+        let outcome = match &mut self.group {
+            Some(group) => group.value(index),
+            None => unreachable!("Cached Git value already consumed"),
+        };
         if let Err(error) = &outcome {
             if error.reason == Refusal::Infrastructure {
                 self.failed = true;
@@ -331,6 +546,13 @@ impl GitGroup<'_> {
             }
         }
         self.next += 1;
+        if let Ok(output) = &outcome {
+            #[cfg(feature = "dev-tools")]
+            let _ = crate::runtime_faults::git_spawn(output.pid);
+            if let Some(invocation) = self.invocations.get(index) {
+                retain_query(invocation, output);
+            }
+        }
         _git_output(outcome, optional)
     }
 }
@@ -343,6 +565,39 @@ pub fn _git_group<T>(
     specs: &[(Vec<OsString>, bool)],
     body: impl FnOnce(&mut GitGroup<'_>) -> Result<T>,
 ) -> Result<T> {
+    if !(1..=3).contains(&specs.len()) {
+        return Err(Error::InvalidInput(
+            "A Git query group requires one to three fixed commands",
+        ));
+    }
+    if QUERIES.with(|queries| queries.borrow().is_some()) {
+        let cached: Option<Vec<_>> = specs
+            .iter()
+            .map(|(args, glob)| {
+                let invocation = _invocation(repo, args, *glob);
+                batch_value(&invocation)
+                    .map(CachedValue::Batch)
+                    .or_else(|| observed_query(&invocation).map(CachedValue::Process))
+            })
+            .collect();
+        if let Some(cached) = cached {
+            let mut group = GitGroup {
+                group: None,
+                cached: cached.into_iter().map(Some).collect(),
+                invocations: &[],
+                next: 0,
+                len: specs.len(),
+                failed: false,
+            };
+            let result = body(&mut group)?;
+            if group.next != group.len {
+                return Err(Error::InvalidInput(
+                    "Incomplete ordered Git query observation",
+                ));
+            }
+            return Ok(result);
+        }
+    }
     git_group_with(
         repo,
         specs,
@@ -386,16 +641,19 @@ pub fn git_group_with<T>(
             source: Some(source),
         })?;
     let mut owned = GitGroup {
-        group,
+        group: Some(group),
+        cached: Vec::new(),
+        invocations: &invocations,
         next: 0,
         len: specs.len(),
         failed: false,
     };
     let primary = body(&mut owned);
     let incomplete = owned.next != owned.len;
-    let failed = owned.failed || owned.group.failed();
+    let group = owned.group.take().expect("Owned Git query group");
+    let failed = owned.failed || group.failed();
     // Explicit finish is mandatory: Drop is solely the panic/early-exit safety net.
-    let cleanup = owned.group.finish();
+    let cleanup = group.finish();
     match primary {
         Err(primary) => match cleanup {
             Ok(()) => Err(primary),

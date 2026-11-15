@@ -18,6 +18,18 @@ pub mod distribution;
 pub mod lifecycle;
 pub mod purge_replay;
 
+/// Copy an executable through `/bin/cp` so this multi-threaded test process
+/// never holds a write descriptor a concurrently forked child could inherit;
+/// that descriptor makes Linux refuse the later exec with ETXTBSY.
+pub fn copy_executable(from: &std::path::Path, to: &std::path::Path) {
+    let status = std::process::Command::new("/bin/cp")
+        .arg(from)
+        .arg(to)
+        .status()
+        .unwrap();
+    assert!(status.success(), "cp {from:?} {to:?}: {status}");
+}
+
 /// Run a direct-domain consumer against the real frontier in a private World.
 /// This injects test runtime locations only; native am children still use receipts.
 pub fn with_frontier(name: &str, body: impl FnOnce()) {

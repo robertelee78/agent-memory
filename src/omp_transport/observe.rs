@@ -245,6 +245,10 @@ pub fn wake(
     }
     #[cfg(feature = "dev-tools")]
     crate::bank_writes::fault("omp.reservation.before-reserve")?;
+    #[cfg(feature = "dev-tools")]
+    if let Some(completion) = source_completion {
+        completion.mark_reservation_attempt();
+    }
     if !delivery_window.is_some_and(DeliveryWindow::reserve) {
         return Ok(pending("pending-undeliverable-window"));
     }
@@ -1923,41 +1927,43 @@ pub fn observe(
     scope: &dyn ObserverScope,
 ) -> Result<Value> {
     let request = request(repo, value)?;
-    let owned;
-    let source = match call.held_source {
-        Some(held) => {
-            held.recheck()?;
-            held
-        }
-        None => {
-            owned = turn_sources::source_barrier(repo, false, false, None, runtime_root)?;
-            &owned
-        }
-    };
-    let base = source.base();
-    let transport = turn_sources::private_lock(&base.join("omp-transport.lock"), false, false)?;
-    let locks = Locks {
-        source,
-        transport: &transport,
-        base,
-    };
-    let mut output = None;
-    let held = call.held_source;
-    scope.observe(repo, held, &mut |context| {
-        output = Some(observed(
-            repo,
-            runtime_root,
-            value,
-            &request,
-            &mut call,
-            context,
-            &locks,
-        )?);
-        Ok(())
-    })?;
-    transport.finish()?;
-    source.recheck()?;
-    output.ok_or_else(|| err("Native observer scope did not run its operation"))
+    crate::repository_config::fresh_settings(repo, || {
+        let owned;
+        let source = match call.held_source {
+            Some(held) => {
+                held.recheck()?;
+                held
+            }
+            None => {
+                owned = turn_sources::source_barrier(repo, false, false, None, runtime_root)?;
+                &owned
+            }
+        };
+        let base = source.base();
+        let transport = turn_sources::private_lock(&base.join("omp-transport.lock"), false, false)?;
+        let locks = Locks {
+            source,
+            transport: &transport,
+            base,
+        };
+        let mut output = None;
+        let held = call.held_source;
+        scope.observe(repo, held, &mut |context| {
+            output = Some(observed(
+                repo,
+                runtime_root,
+                value,
+                &request,
+                &mut call,
+                context,
+                &locks,
+            )?);
+            Ok(())
+        })?;
+        transport.finish()?;
+        source.recheck()?;
+        output.ok_or_else(|| err("Native observer scope did not run its operation"))
+    })
 }
 
 /// Baseline `_drain_after_response`: one oldest-eight batch with its own

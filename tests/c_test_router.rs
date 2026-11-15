@@ -192,7 +192,7 @@ fn relocated_native_binary_reads_the_same_router() {
     let directory = w.inside("portable pack").unwrap();
     fs::create_dir(&directory).unwrap();
     let binary = directory.join("am");
-    fs::copy(env!("CARGO_BIN_EXE_am"), &binary).unwrap();
+    support::copy_executable(env!("CARGO_BIN_EXE_am").as_ref(), &binary);
     let output = w
         .run([
             binary.into_os_string(),

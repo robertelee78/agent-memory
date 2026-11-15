@@ -2035,7 +2035,7 @@ fn native_candidate_reinstall_renews_real_pending_hold_without_check_writes() {
             }
             let candidate_binary = candidate_source.join("target/release/am");
             fs::create_dir_all(candidate_binary.parent().unwrap()).unwrap();
-            fs::copy(env!("CARGO_BIN_EXE_am"), &candidate_binary).unwrap();
+            support::copy_executable(env!("CARGO_BIN_EXE_am").as_ref(), &candidate_binary);
             fs::set_permissions(&candidate_binary, fs::Permissions::from_mode(0o755)).unwrap();
             assert_ne!(candidate_binary, current_binary);
             let guide = candidate_pack.join("offline/GUIDE.md");

@@ -562,23 +562,26 @@ impl Coverage {
 
     /// Binding check, then the stream lock, then an unchanged OPEN.
     pub(crate) fn control<T>(&self, body: impl FnOnce() -> Result<T>) -> Result<T> {
-        let result = verified(
-            &*self.authority,
-            &self.repo,
-            &self.binding,
-            self.receipt.as_ref(),
-            &self.frame_proof,
-            self.frame_source.as_ref(),
-            |_| {
-                with_lock(&self.lock_path, false, false, || {
-                    let current = read_required(&self.directory.join("open.json"), MAX_METADATA)?;
-                    if !same(&current, &self.open) {
-                        return Err(err("Finite stream OPEN binding changed"));
-                    }
-                    body()
-                })
-            },
-        );
+        let result = crate::repository_config::fresh_settings(&self.repo, || {
+            verified(
+                &*self.authority,
+                &self.repo,
+                &self.binding,
+                self.receipt.as_ref(),
+                &self.frame_proof,
+                self.frame_source.as_ref(),
+                |_| {
+                    with_lock(&self.lock_path, false, false, || {
+                        let current =
+                            read_required(&self.directory.join("open.json"), MAX_METADATA)?;
+                        if !same(&current, &self.open) {
+                            return Err(err("Finite stream OPEN binding changed"));
+                        }
+                        body()
+                    })
+                },
+            )
+        });
         #[cfg(feature = "dev-tools")]
         if result.as_ref().is_err_and(super::busy) {
             crate::bank_writes::fault("omp.metadata.after-busy")?;

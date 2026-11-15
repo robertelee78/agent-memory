@@ -844,14 +844,108 @@ impl Drop for RestoreObservation {
         OBSERVED.with(|v| *v.borrow_mut() = self.0.take());
     }
 }
+
+fn recheck_queries(root: &Path) -> Result<()> {
+    match crate::identity_git::recheck_queries() {
+        Err(error) if matches!(error.kind(), crate::error::Kind::IdentityUnresolved) => {
+            // Rediscovery owns a new raw observation: report the baseline's
+            // specific configuration refusal before a generic changed-input one.
+            let _fresh = crate::identity_git::observe_queries(root);
+            pair(root)?;
+            Err(error)
+        }
+        result => result,
+    }
+}
+/// Revalidate the sampled inputs before publishing a result.
+pub(crate) fn recheck_observed(repo: &Path) -> Result<()> {
+    recheck_queries(repo)?;
+    crate::turn_sources::recheck_reads()?;
+    let root = crate::fs::canonical_path(repo, false)?;
+    let initial = OBSERVED.with(|v| {
+        v.borrow()
+            .as_ref()
+            .filter(|(path, _, _)| path == &root)
+            .map(|(_, ordinary, raw)| (ordinary.clone(), raw.clone()))
+    });
+    if let Some(initial) = initial {
+        if pair(&root)? != initial {
+            return Err(err(
+                "Private enrollment bank configuration changed during observation",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// A new source operation starts with freshly checked Git facts, while unchanged
+/// raw query bytes may be reused inside the enclosing frame observation.
+pub(crate) fn fresh_settings<T>(repo: &Path, body: impl FnOnce() -> Result<T>) -> Result<T> {
+    let root = crate::fs::canonical_path(repo, false)?;
+    if !OBSERVED.with(|v| {
+        v.borrow()
+            .as_ref()
+            .is_some_and(|(path, _, _)| path == &root)
+    }) {
+        return observe_settings(repo, body);
+    }
+    match crate::identity_git::recheck_operation_queries() {
+        Ok(()) => {
+            crate::turn_sources::recheck_reads()?;
+            let current = pair(&root)?;
+            let previous = OBSERVED.with(|v| v.replace(Some((root, current.0, current.1))));
+            let _restore = RestoreObservation(previous);
+            body()
+        }
+        Err(error) if matches!(error.kind(), crate::error::Kind::IdentityUnresolved) => {
+            let previous = OBSERVED.with(|v| v.borrow_mut().take());
+            let _restore = RestoreObservation(previous);
+            observe_settings(repo, body)
+        }
+        Err(error) => Err(error),
+    }
+}
+
+/// Frame publication consumes its observation before optional diagnostics and
+/// the separately guarded post-response registration operation.
+pub(crate) fn finish_observed(repo: &Path) -> Result<()> {
+    recheck_observed(repo)?;
+    OBSERVED.with(|v| *v.borrow_mut() = None);
+    crate::identity_git::finish_queries();
+    crate::turn_sources::finish_reads();
+    Ok(())
+}
+
+pub(crate) fn observe_frame<T>(repo: &Path, body: impl FnOnce() -> Result<T>) -> Result<T> {
+    let previous = OBSERVED.with(|v| v.borrow_mut().take());
+    let _restore = RestoreObservation(previous);
+    observe_settings(repo, body)
+}
+
 /// Observe entry and successful exit independently; nested scopes restore their parent.
 pub fn observe_settings<T>(repo: &Path, body: impl FnOnce() -> Result<T>) -> Result<T> {
     let root = crate::fs::canonical_path(repo, false)?;
+    // Nested readers borrow only this live observation. The owner still
+    // independently resolves all Git/configuration inputs at entry and exit.
+    if OBSERVED.with(|v| {
+        v.borrow()
+            .as_ref()
+            .is_some_and(|(path, _, _)| path == &root)
+    }) {
+        return body();
+    }
+    let _queries = crate::identity_git::observe_queries(&root);
+    let _source_reads = crate::turn_sources::observe_reads();
     let previous = OBSERVED.with(|v| v.borrow_mut().take());
     let _restore = RestoreObservation(previous);
     let initial = pair(&root)?;
     OBSERVED.with(|v| *v.borrow_mut() = Some((root.clone(), initial.0.clone(), initial.1.clone())));
     let result = body()?;
+    if OBSERVED.with(|v| v.borrow().is_none()) {
+        return Ok(result);
+    }
+    recheck_queries(&root)?;
+    crate::turn_sources::recheck_reads()?;
     OBSERVED.with(|v| *v.borrow_mut() = None);
     if pair(&root)? != initial {
         return Err(err(
