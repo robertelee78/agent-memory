@@ -10,7 +10,7 @@
 - Install works on a fresh machine, after the lean `am uninstall`, and after
   the v0.0.14 `am uninstall` (its leftover receipt counts as no install).
 - A plain `git pull` works after refresh and share with `pull.rebase` true or
-  false (42-cell matrix in [LEAN-REPORT.md](../LEAN-REPORT.md)); the printed
+  false, also with `pull.ff=only` (128-cell matrix in [LEAN-REPORT.md](../LEAN-REPORT.md)); the printed
   message names the step first needed in the cells where it cannot.
 - `scripts/qa.sh` passes on macOS arm64; every command under 200 ms locally.
 - v0.0.15 is published; v0.0.14 takeover verified from a real install and an

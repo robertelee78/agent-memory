@@ -183,27 +183,38 @@ struct Preset {
 }
 
 /// omp's agent directory, resolved as omp itself does (18.20): a non-empty
-/// `PI_CODING_AGENT_DIR`, else `~/<PI_CONFIG_DIR or .omp>/agent`. omp loads
-/// `extensions/`, `skills/` and `AGENTS.md` from it.
-fn detected_omp_dir() -> Result<PathBuf> {
+/// `PI_CODING_AGENT_DIR` (relative to the current directory, `..` resolved
+/// like Node's `path.resolve`), else `~/<PI_CONFIG_DIR or .omp>/agent`. omp
+/// loads `extensions/`, `skills/` and `AGENTS.md` from it. `None` when it
+/// cannot be worked out; detection never fails an install.
+fn detected_omp_dir() -> Option<PathBuf> {
     let set = |key: &str| std::env::var_os(key).filter(|v| !v.is_empty());
     if let Some(dir) = set("PI_CODING_AGENT_DIR") {
-        return absolute(&std::env::current_dir()?.join(dir));
+        let mut resolved = PathBuf::new();
+        for part in std::env::current_dir().ok()?.join(dir).components() {
+            match part {
+                std::path::Component::ParentDir => {
+                    resolved.pop();
+                }
+                std::path::Component::CurDir => {}
+                other => resolved.push(other),
+            }
+        }
+        return Some(resolved);
     }
     let config = set("PI_CONFIG_DIR").unwrap_or_else(|| ".omp".into());
-    Ok(home()?.join(config).join("agent"))
+    Some(home().ok()?.join(config).join("agent"))
 }
 
-/// The omp agent directory to set up: the chosen or recorded one, else the
-/// detected one. `all` includes omp only when it is chosen or already exists.
-fn omp_dir(cfg: &Config) -> Result<(PathBuf, bool)> {
+/// The omp agent directory to set up and whether `all` includes it: the
+/// chosen or recorded one, else the detected one when it exists.
+fn omp_dir(cfg: &Config) -> Option<(PathBuf, bool)> {
     match &cfg.omp_agent_dir {
-        Some(dir) => Ok((dir.clone(), true)),
-        None => {
-            let dir = detected_omp_dir()?;
+        Some(dir) => Some((dir.clone(), true)),
+        None => detected_omp_dir().map(|dir| {
             let present = dir.is_dir();
-            Ok((dir, present))
-        }
+            (dir, present)
+        }),
     }
 }
 
@@ -211,7 +222,8 @@ fn presets(cfg: &Config) -> Result<Vec<Preset>> {
     let codex = env_dir("CODEX_HOME", ".codex")?;
     let claude = env_dir("CLAUDE_CONFIG_DIR", ".claude")?;
     let config = env_dir("XDG_CONFIG_HOME", ".config")?;
-    let (omp, omp_present) = omp_dir(cfg)?;
+    let omp = omp_dir(cfg);
+    let omp_present = omp.as_ref().is_some_and(|(_, present)| *present);
     let names = match cfg.presets.as_str() {
         "all" if omp_present => "agents,codex,claude,opencode,omp",
         "all" => "agents,codex,claude,opencode",
@@ -249,13 +261,20 @@ fn presets(cfg: &Config) -> Result<Vec<Preset>> {
                 hook_config: None,
                 extension: None,
             },
-            "omp" => Preset {
-                name: "omp",
-                skills: omp.join("skills"),
-                guidance: Some(omp.join("AGENTS.md")),
-                hook_config: None,
-                extension: Some(omp.join("extensions/agent-memory.ts")),
-            },
+            "omp" => {
+                let Some((omp, _)) = &omp else {
+                    bail!(
+                        "omp's agent directory could not be worked out; pass --omp-agent-dir PATH"
+                    );
+                };
+                Preset {
+                    name: "omp",
+                    skills: omp.join("skills"),
+                    guidance: Some(omp.join("AGENTS.md")),
+                    hook_config: None,
+                    extension: Some(omp.join("extensions/agent-memory.ts")),
+                }
+            }
             other => bail!(
                 "Unknown preset {other:?}; use all, none or a comma list of agents,codex,claude,opencode,omp"
             ),
@@ -1236,7 +1255,12 @@ fn apply(item: &mut Item, journal: &mut Journal) -> Result<Option<Value>> {
             fields.set("client", s(client));
             Ok(Some(record(fields)))
         }
-        Some(Want::Runtime(None)) => Ok(Some(record(identity(&item.path)?))),
+        // The kept runtime stays owned as recorded: a fresh fingerprint would
+        // adopt files the user put there since.
+        Some(Want::Runtime(None)) => Ok(Some(match prior {
+            Some(prior) => prior,
+            None => record(identity(&item.path)?),
+        })),
         Some(want) => {
             if !item_already(&item.path, &want) {
                 journal.clear(&item.path)?;

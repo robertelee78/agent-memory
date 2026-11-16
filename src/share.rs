@@ -582,21 +582,32 @@ enum Settled {
     Staged { pull_works: bool },
 }
 
+/// How `git pull` behaves on the current branch.
+#[derive(Default)]
+struct Pull {
+    /// It rebases (`branch.<name>.rebase`, else `pull.rebase`).
+    rebase: bool,
+    /// `pull.ff=only`: it refuses anything but a fast-forward.
+    ff_only: bool,
+    /// The branch has an upstream to pull from.
+    upstream: bool,
+}
+
 /// After `record_shared(commit)`, leave a state a plain `git pull` accepts.
 /// When the branch tracks the shared branch and only memory lies between
-/// HEAD and `commit`, move the branch there. When HEAD is behind `commit`
-/// and `git pull` merges, keep the memory staged: the fast-forward takes it.
+/// HEAD and `commit`, move the branch there. When `git pull` merges and HEAD
+/// is behind `commit` (or `pull.ff=only` allows nothing else), or the branch
+/// has no upstream, keep the memory staged: a fast-forward takes it.
 /// Otherwise, when the branch's own commits leave the bank alone, commit the
 /// shared bank on its own: a rebase onto commits that hold it drops that
 /// commit, a merge finds the same files on both sides. Such a commit made
 /// earlier for `previous` and not yet upstream is replaced, not stacked.
-/// Returns the outcome and whether `git pull` rebases.
 fn settle(
     repo: &Repo,
     shared: &str,
     commit: &str,
     previous: Option<&str>,
-) -> Result<(Settled, bool)> {
+) -> Result<(Settled, Pull)> {
     let stuck = Settled::Staged { pull_works: false };
     let symbolic = repo.git(&["symbolic-ref", "-q", "HEAD"])?;
     let Some(name) = symbolic
@@ -604,9 +615,18 @@ fn settle(
         .then(|| symbolic.text())
         .and_then(|r| r.strip_prefix("refs/heads/").map(str::to_owned))
     else {
-        return Ok((stuck, false)); // detached HEAD
+        return Ok((stuck, Pull::default())); // detached HEAD
     };
+    let config = |key: &str| repo.config.get(&format!("branch.{name}.{key}"));
     let rebase = pull_rebases(repo, &name);
+    let pull = Pull {
+        rebase,
+        ff_only: repo
+            .config
+            .get("pull.ff")
+            .is_some_and(|v| v.eq_ignore_ascii_case("only")),
+        upstream: config("merge").is_some(),
+    };
     let none = "0".repeat(40); // names no object
     let fork = repo.git(&["merge-base", "HEAD", commit])?;
     let fork = if fork.ok() { fork.text() } else { none.clone() };
@@ -627,14 +647,14 @@ fn settle(
         ],
     )?;
     let Some(head) = ids[0].clone() else {
-        return Ok((stuck, rebase)); // no commit yet
+        return Ok((stuck, pull)); // no commit yet
     };
     if ids[1..4].iter().any(Option::is_some) {
-        return Ok((stuck, rebase)); // a merge, cherry-pick or revert is in progress
+        return Ok((stuck, pull)); // a merge, cherry-pick or revert is in progress
     }
     let (head_bank, fork_bank, parent_bank) = (&ids[5], &ids[7], &ids[8]);
     if head_bank == &ids[6] {
-        return Ok((Settled::Clean, rebase));
+        return Ok((Settled::Clean, pull));
     }
     let prefix = format!("{bank}/");
     let only_memory = |from: &str, to: &str| -> Result<bool> {
@@ -644,7 +664,6 @@ fn settle(
             .filter(|p| !p.is_empty())
             .all(|p| p.starts_with(&prefix)))
     };
-    let config = |key: &str| repo.config.get(&format!("branch.{name}.{key}"));
     let tracks = config("remote").is_some_and(|r| r == "origin")
         && config("merge").is_some_and(|m| *m == format!("refs/heads/{shared}"));
     if tracks && fork == head && only_memory(&head, commit)? {
@@ -657,11 +676,14 @@ fn settle(
             &head,
         ])?;
         if moved.ok() {
-            return Ok((Settled::Moved(name), rebase));
+            return Ok((Settled::Moved(name), pull));
         }
     }
-    if !rebase && fork == head {
-        return Ok((Settled::Staged { pull_works: true }, rebase));
+    // With `pull.ff=only` a merging pull only fast-forwards: the staged
+    // memory suits that, unless this branch already diverged from the shared
+    // one, where a memory commit lets `git pull --no-ff` merge cleanly.
+    if !pull.upstream || (!rebase && (fork == head || (pull.ff_only && !tracks))) {
+        return Ok((Settled::Staged { pull_works: true }, pull));
     }
     let parent = if head_bank == fork_bank {
         head.clone()
@@ -676,7 +698,7 @@ fn settle(
     {
         format!("{head}^")
     } else {
-        return Ok((stuck, rebase)); // the branch has its own memory commits
+        return Ok((stuck, pull)); // the branch has its own memory commits
     };
     let made = temp_index(repo, |git| {
         git(&["read-tree", &parent])?;
@@ -688,7 +710,7 @@ fn settle(
         git(&["commit-tree", &tree, "-p", &parent, "-m", &message])
     });
     let Ok(new) = made else {
-        return Ok((stuck, rebase));
+        return Ok((stuck, pull));
     };
     let moved = repo.git(&[
         "update-ref",
@@ -704,13 +726,13 @@ fn settle(
         } else {
             stuck
         },
-        rebase,
+        pull,
     ))
 }
 
 /// `settle`, in words.
 fn settle_note(repo: &Repo, shared: &str, commit: &str, previous: Option<&str>) -> Result<String> {
-    let (settled, rebase) = settle(repo, shared, commit, previous)?;
+    let (settled, pull) = settle(repo, shared, commit, previous)?;
     let bank = &repo.bank_rel;
     let done = match &settled {
         Settled::Clean => return Ok(String::new()),
@@ -728,21 +750,65 @@ fn settle_note(repo: &Repo, shared: &str, commit: &str, previous: Option<&str>) 
         ),
         Settled::Staged { pull_works: true } => "The shared memory is staged.".into(),
     };
-    // A rebasing pull refuses uncommitted changes, such as unshared memory edits.
-    let edited = rebase
-        && !repo
-            .git(&["diff", "--quiet", "--", &format!("{bank}/")])?
-            .ok();
-    let pull = if edited {
-        "Your memory edits that are not shared yet are uncommitted, so `git pull` (rebase) refuses to run until you share them (am share) or use git pull --autostash."
-    } else {
-        "`git pull` works as usual."
+    if !pull.upstream {
+        return Ok(format!(
+            "{done} This branch has no upstream branch, so there is nothing for `git pull` to pull."
+        ));
+    }
+    // A rebasing pull refuses uncommitted changes to tracked files, any file.
+    let mut dirty = None;
+    if pull.rebase {
+        let status = repo.git(&[
+            "status",
+            "--porcelain",
+            "-z",
+            "--untracked-files=no",
+            "--no-renames",
+        ])?;
+        if !status.ok() {
+            bail!("git status failed: {}", status.error_text());
+        }
+        let status = String::from_utf8_lossy(&status.stdout);
+        let paths: Vec<&str> = status
+            .split('\0')
+            .filter_map(|entry| entry.get(3..))
+            .collect();
+        if !paths.is_empty() {
+            let prefix = format!("{bank}/");
+            dirty = Some(paths.iter().any(|p| p.starts_with(&prefix)));
+        }
+    }
+    // pull.ff=only refuses to rebase or merge the memory commit.
+    let command =
+        (pull.ff_only && matches!(settled, Settled::Committed(_))).then_some(if pull.rebase {
+            "git pull --rebase"
+        } else {
+            "git pull --no-ff"
+        });
+    let sentence = match (dirty, command) {
+        (None, None) => "`git pull` works as usual.".to_owned(),
+        (None, Some(command)) => format!(
+            "Pull with `{command}`: with pull.ff=only a plain `git pull` refuses, as this branch has a commit its upstream lacks."
+        ),
+        (Some(memory), command) => format!(
+            "You have uncommitted changes{}; git will ask you to commit or stash them before a rebasing pull.{}",
+            if memory {
+                " (memory edits not shared yet: am share shares them)"
+            } else {
+                ""
+            },
+            command
+                .map(|c| format!(
+                    " Then pull with `{c}` (with pull.ff=only a plain `git pull` refuses)."
+                ))
+                .unwrap_or_default(),
+        ),
     };
     Ok(match settled {
-        Settled::Moved(_) => format!("{done} {pull}"),
-        _ => {
-            format!("{done} {pull} If more memory is shared before you pull, run am refresh first.")
-        }
+        Settled::Moved(_) => format!("{done} {sentence}"),
+        _ => format!(
+            "{done} {sentence} If more memory is shared before you pull, run am refresh first."
+        ),
     })
 }
 

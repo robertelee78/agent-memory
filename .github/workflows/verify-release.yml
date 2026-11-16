@@ -30,6 +30,7 @@ jobs:
           set -euo pipefail
           tag=${RELEASE_TAG:-$(gh release view --repo "$REPO" --json tagName --jq .tagName)}
           export HOME=$(mktemp -d)
+          unset PI_CODING_AGENT_DIR PI_CONFIG_DIR # keep omp detection inside the temporary HOME
           export PATH="$HOME/.local/bin:$PATH"
           work=$(mktemp -d)
           git config --global user.name "Release check"

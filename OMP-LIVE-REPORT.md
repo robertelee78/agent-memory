@@ -428,3 +428,172 @@ The staging relay port is 7443.
 Both doctors reported `No problems found.` and both uninstalls reported `Uninstalled agent-memory. Repository memory banks were not touched.` Explicit absence checks for the owned omp extension, skill link and AGENTS.md passed.
 
 The newly copied auth JSON files and all new-world `agent.db*` files were deleted on both platforms after the last session. Final file searches reported **0 credential files remaining** in each world; the macOS source auth JSON was also removed. No operator config was modified. No additional product edits, commits or pushes were made.
+
+## v0.0.16
+
+Qualified the default omp setup change for #268, requested source `fix/v0.0.16` at `0d30d596`, on macOS arm64 and Linux arm64. **All four requested functional checks passed on both platforms.** No product edits or commits were made.
+
+| Requested behavior | macOS arm64 | Linux arm64 |
+| --- | --- | --- |
+| Plain install discovers existing PI_CODING_AGENT_DIR and sets up omp | PASS | PASS |
+| Status lists omp alongside Claude and Codex hooks | PASS | PASS |
+| Unrelated `extensions/other.ts` byte-identical after install | PASS | PASS |
+| Real fresh omp session receives the session-start message and answers the distinctive fact | PASS | PASS |
+| Plain install in a second world without an omp directory creates no omp folders | PASS | PASS |
+| Uninstall removes our omp files and preserves byte-identical `other.ts` | PASS | PASS |
+| Copied credentials deleted | PASS | PASS |
+
+### Build and isolation
+
+Rebuilt both binaries from the current worktree using:
+
+```sh
+CARGO_TARGET_DIR=/tmp/lean cargo build --release
+CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld \
+  CARGO_TARGET_DIR=/tmp/lean cargo build --release --target aarch64-unknown-linux-musl
+```
+
+Both commands succeeded; output identified agent-memory v0.0.16, with no warnings.
+
+| Candidate binary | SHA-256 |
+| --- | --- |
+| macOS arm64 | `581e5ef65108ecd5192d02e5757e5ee026276d2be7850a3e6fcecaa3386687c7` |
+| Linux arm64 | `60a093574b7373fcd4409f06e04c8508cec24c2b5a7d19cf34b89c02bca654be` |
+
+Fresh macOS worlds: `/tmp/am-omp-v016.T1rJ1Q/mac-present` and `/tmp/am-omp-v016.T1rJ1Q/mac-absent`. Fresh Linux worlds: `/tmp/am-omp-v016.T1rJ1Q-linux/present` and `/tmp/am-omp-v016.T1rJ1Q-linux/absent` in Lima `am-rust-v015-linux-01`. Harness: `/tmp/am-omp-v016.T1rJ1Q/journey.sh`. Sanitized Linux evidence: `/tmp/am-omp-v016.T1rJ1Q/linux-evidence`. Each world's `logs/` contains exact stdout/stderr, return codes and timings; present-world `sessions/` contains the saved real session.
+
+Commands again ran through `env -i` with disposable HOME, TMPDIR, XDG roots and `PI_CODING_AGENT_DIR`. The latter pointed to `$W/omp-agent` in both present and absent cases. Only the present case created that directory before install. The operator's client config was not modified.
+
+The existing unrelated extension contained exactly:
+
+```ts
+export default function unrelatedQualificationExtension(_pi: unknown) {}
+```
+
+Its baseline and final SHA-256 on both platforms was `75933a4ef30c7b1dea2d3d9b964f0d9514f930be454e95ed8f14bce98861a091`. `cmp` passed immediately after installation and again after uninstall.
+
+### Plain install with omp already present
+
+There were **no preset flags or omp-directory flags** in either install command:
+
+```sh
+# macOS, isolated present world
+/tmp/am-omp-v016.T1rJ1Q/mac-source/target/release/am install \
+  --development-source /tmp/am-omp-v016.T1rJ1Q/mac-source
+
+# Linux, isolated present world
+/tmp/am-omp-v016.T1rJ1Q-linux/source/target/release/am install \
+  --development-source /tmp/am-omp-v016.T1rJ1Q-linux/source
+```
+
+Both printed `Installed agent-memory 0.0.16 (development).` and set up the other default clients as well as omp. Exact omp-specific install lines:
+
+```text
+  link                    /tmp/am-omp-v016.T1rJ1Q/mac-present/omp-agent/skills/agent-memory -> /private/tmp/am-omp-v016.T1rJ1Q/mac-source/skills/agent-memory
+  activation block in     /tmp/am-omp-v016.T1rJ1Q/mac-present/omp-agent/AGENTS.md
+  write omp extension     /tmp/am-omp-v016.T1rJ1Q/mac-present/omp-agent/extensions/agent-memory.ts
+```
+
+```text
+  link                    /tmp/am-omp-v016.T1rJ1Q-linux/present/omp-agent/skills/agent-memory -> /tmp/am-omp-v016.T1rJ1Q-linux/source/skills/agent-memory
+  activation block in     /tmp/am-omp-v016.T1rJ1Q-linux/present/omp-agent/AGENTS.md
+  write omp extension     /tmp/am-omp-v016.T1rJ1Q-linux/present/omp-agent/extensions/agent-memory.ts
+```
+
+Both `am status` outputs contained exactly:
+
+```text
+Session-start hooks: codex ok, claude ok, omp ok
+Memory bank: memory-bank/ with 6 routes and 0 active lessons
+No problems found.
+```
+
+### Real sessions
+
+Each present world had a new Git repo, an `am init` bank and this project brief:
+
+```text
+This disposable project is the v0.0.16 default-omp fixture.
+The release codename is OSPREY-16.
+```
+
+**Exactly 2 real human prompts were used out of the allowance of 4: one per platform.** The other two were unnecessary. Both used omp 18.20.1, `openai-codex/gpt-6-luna`, and the same isolation and print-mode flags as the earlier checks.
+
+Exact prompt on both:
+
+```text
+What is this project's release codename?
+```
+
+Exact final answer on both:
+
+```text
+The release codename is **OSPREY-16**.
+```
+
+Both transcripts contain a hidden `message_end` with `customType: "agent-memory-session-start"` whose content includes:
+
+```text
+# Project memory (memory-bank/)
+
+## projectbrief.md
+
+This disposable project is the v0.0.16 default-omp fixture.
+The release codename is OSPREY-16.
+
+## Lessons (0)
+```
+
+Both models also ran `am recall 'release codename'` (Linux used double quotes), which returned the same project-brief fact. Thus the answer is accompanied by direct evidence of the requested extension injection, even though the models additionally recalled the fact through a tool.
+
+| Platform | Session ID | Assistant inference requests | Recorded conversation cost (USD) |
+| --- | --- | ---: | ---: |
+| macOS | `01a1e26d-06f0-718a-b508-3a19c8b88e63` | 2 | 0.00053846 |
+| Linux | `01a1e26d-06eb-70d4-b044-42a058669d2e` | 2 | 0.00053886 |
+
+Combined recorded cost: **USD 0.00107732**, summed from assistant `message_end` usage only. As in prior sections, auxiliary startup description-compression billing is not exposed in these transcripts and is not included in that exact conversation-cost figure.
+
+### Plain install without omp
+
+The second world on each platform had neither `$PI_CODING_AGENT_DIR` nor `$HOME/.omp` before install. It ran the same plain install command and did not launch omp. Both installs succeeded and status omitted omp:
+
+```text
+Session-start hooks: codex ok, claude ok
+```
+
+Assertions confirmed both locations remained absent after install and after uninstall. A directory search for `*omp*` within each absent world produced **zero lines** (`logs/omp-dirs.txt`), confirming no omp folders were created.
+
+### Uninstall and cleanup
+
+Both present-world doctors reported `No problems found.` Both uninstalls returned:
+
+```text
+Uninstalled agent-memory. Repository memory banks were not touched.
+```
+
+Both final fixture checks returned:
+
+```text
+Owned omp files removed; other.ts byte-identical; memory bank preserved.
+```
+
+Those checks explicitly required absence of `omp-agent/extensions/agent-memory.ts`, `omp-agent/skills/agent-memory` and `omp-agent/AGENTS.md`, preserved the unrelated extension, and kept the repository memory bank.
+
+Only one minimal OpenAI Codex access credential per present world was imported, with refresh disabled. Source/import JSON files and all copied `agent.db*` files were deleted afterwards. Final searches across both worlds on each platform reported **0 credential files remaining**. Absent worlds never received credentials.
+
+### Timings and remaining observation
+
+Wall-clock milliseconds; Linux figures exclude limactl transport:
+
+| Operation | macOS ms | Linux ms |
+| --- | ---: | ---: |
+| Plain install, omp present | 208.286 | 6.588 |
+| Status, omp present | 13.168 | 0.787 |
+| Plain install, omp absent | 69.626 | 8.058 |
+| Status, omp absent | 45.176 | 0.634 |
+| Real omp invocation | 4670.017 | 4103.046 |
+| Doctor, omp present | 14.820 | 0.977 |
+| Uninstall, omp present | 4.104 | 0.516 |
+| Uninstall, omp absent | 3.273 | 0.732 |
+
+No functional defect was found in the requested default-omp behavior. The single macOS present-world install took **208.286 ms**, narrowly over the design's 200 ms command target. Reproduction is the plain present-world install above; no additional run was used to characterize that timing.

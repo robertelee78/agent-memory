@@ -9,12 +9,14 @@
 # beside a user's own omp extension) over a linked Claude settings file and
 # interrupted-install leftovers, init, remember, recall, share and refresh
 # between clones of a bare remote, plain git pull after refresh and share
-# with git set to merge and to rebase on pull, refusals that protect data
+# with git set to merge and to rebase on pull (also pull.ff=only, an
+# uncommitted code edit, a branch without upstream), refusals that protect data
 # (staged-only memory, links inside the bank, an odd bank path), subcommand
 # help, an existing bank without every context file, the session-start hook,
 # status, doctor, uninstall, the takeover of a small offline v0.0.14 install,
 # install on a fresh machine and again after `am uninstall` (the lean one and
-# the v0.0.14 one), and omp installed after agent-memory. Needs bash 5
+# the v0.0.14 one), omp installed after agent-memory and a relative
+# PI_CODING_AGENT_DIR. Needs bash 5
 # (EPOCHREALTIME) and git.
 set -euo pipefail
 [ -n "${EPOCHREALTIME:-}" ] || { echo "qa.sh needs bash 5 or newer (macOS: brew install bash)" >&2; exit 2; }
@@ -26,7 +28,9 @@ work=$(cd "$work" && pwd -P)
 trap 'rm -rf "$work"' EXIT
 
 export HOME="$work/home"
-unset XDG_STATE_HOME XDG_DATA_HOME XDG_CONFIG_HOME CODEX_HOME CLAUDE_CONFIG_DIR GIT_DIR GIT_WORK_TREE
+# Inherited omp locations would point default omp detection outside the
+# temporary HOME; the scenarios that need them set them explicitly.
+unset XDG_STATE_HOME XDG_DATA_HOME XDG_CONFIG_HOME CODEX_HOME CLAUDE_CONFIG_DIR GIT_DIR GIT_WORK_TREE PI_CODING_AGENT_DIR PI_CONFIG_DIR
 mkdir -p "$HOME/.claude" "$HOME/.omp/agent/extensions" "$HOME/dotfiles"
 # omp is on this machine, with an extension of the user's own.
 printf '// my own omp extension\n' > "$HOME/.omp/agent/extensions/vox.ts"
@@ -262,7 +266,7 @@ expect "R clean at origin/main with the later note" sh -c "cd '$work/r' && test 
 (cd "$work/r" && printf '\nUnshared local edit.\n' >> memory-bank/activeContext.md)
 teammate_code "teammate code 4"; teammate_note "Rebase eight"
 step "refresh with unshared edits (rebase pull)" "$work/r" am refresh
-expect "refresh says git pull refuses and what to run" grep -q 'refuses to run until you share them (am share) or use git pull --autostash' "$work/out"
+expect "refresh says the uncommitted edits stop a rebasing pull" grep -q 'You have uncommitted changes (memory edits not shared yet: am share shares them); git will ask you to commit or stash them before a rebasing pull.' "$work/out"
 expect "the unshared edit is kept" grep -q 'Unshared local edit' "$work/r/memory-bank/activeContext.md"
 step "am share, then git pull (rebase)" "$work/r" sh -c 'am share > /dev/null && git pull -q'
 expect "R clean at origin/main, the edit shared" sh -c "cd '$work/r' && test -z \"\$(git status --porcelain)\" && git show origin/main:memory-bank/activeContext.md | grep -q 'Unshared local edit'"
@@ -277,6 +281,38 @@ teammate_code "teammate code 6"
 step "share (merge pull, behind code)" "$work/m" am share
 step "git pull (merge) after share, behind" "$work/m" git pull -q
 expect "M clean at origin/main after share and pull" at_origin "$work/m"
+# pull.ff=only with a rebasing pull: a plain `git pull` refuses the memory-only
+# commit, so am says to use `git pull --rebase`; with a merging pull the
+# memory stays staged and the fast-forward takes it.
+git clone -q "$work/pull.git" "$work/f"
+git -C "$work/f" config pull.rebase true
+git -C "$work/f" config pull.ff only
+teammate_code "teammate code 7"; teammate_note "FF one"
+step "refresh (rebase pull, pull.ff=only, behind)" "$work/f" am refresh
+expect "refresh says to pull with git pull --rebase" grep -q 'Pull with `git pull --rebase`: with pull.ff=only a plain `git pull` refuses' "$work/out"
+refuse "plain git pull (rebase, pull.ff=only) refuses, as said" "$work/f" git pull -q
+step "git pull --rebase (pull.ff=only)" "$work/f" git pull -q --rebase
+expect "F clean at origin/main" at_origin "$work/f"
+git -C "$work/f" config pull.rebase false
+teammate_code "teammate code 8"; teammate_note "FF two"
+step "refresh (merge pull, pull.ff=only, behind)" "$work/f" am refresh
+expect "F keeps the memory staged and says git pull works" grep -q 'The shared memory is staged. `git pull` works as usual.' "$work/out"
+step "git pull (merge, pull.ff=only)" "$work/f" git pull -q
+expect "F clean at origin/main (merge, pull.ff=only)" at_origin "$work/f"
+# A code edit stops a rebasing pull whatever am does; am says so.
+(cd "$work/r" && git pull -q && echo v1 > mine.txt && git add mine.txt && git commit -qm mine && git push -q origin main && echo "my code edit" >> mine.txt)
+teammate_code "teammate code 9"; teammate_note "Code edit one"
+step "refresh with an uncommitted code edit (rebase pull)" "$work/r" am refresh
+expect "refresh says git will ask to commit or stash" grep -q 'You have uncommitted changes; git will ask you to commit or stash them before a rebasing pull.' "$work/out"
+refuse "plain git pull with the code edit (rebase) refuses, as said" "$work/r" git pull -q
+step "git stash, git pull, git stash pop (rebase)" "$work/r" sh -c 'git stash -q && git pull -q && git stash pop -q'
+expect "R has origin/main and keeps the code edit" sh -c "cd '$work/r' && test \"\$(git rev-parse HEAD)\" = \"\$(git rev-parse origin/main)\" && grep -q 'my code edit' mine.txt && test -z \"\$(git diff --cached --name-only)\""
+(cd "$work/r" && git checkout -q mine.txt)
+# A branch without an upstream: nothing to pull, and am says so.
+(cd "$work/r" && git checkout -q -b local-only && echo local > local.txt && git add local.txt && git commit -qm local)
+teammate_note "No upstream one"
+step "refresh on a branch without upstream" "$work/r" am refresh
+expect "refresh says there is no upstream to pull" grep -q 'This branch has no upstream branch, so there is nothing for `git pull` to pull.' "$work/out"
 
 # --------------------------------------------------------------- hooks, health
 step "hook claude" "$work/a" sh -c "printf '{\"cwd\":\"$work/a\",\"hook_event_name\":\"SessionStart\"}' | am hook session-start --client claude"
@@ -385,6 +421,12 @@ step "update again (nothing to do)" "$work" am update
 mkdir -p "$HOME/pi-agent"
 step "install --dry-run with PI_CODING_AGENT_DIR" "$work" env PI_CODING_AGENT_DIR="$HOME/pi-agent" am install --dry-run
 expect "PI_CODING_AGENT_DIR is the omp agent directory" grep -q "$HOME/pi-agent/extensions/agent-memory.ts" "$work/out"
+# A relative PI_CODING_AGENT_DIR is resolved against the current directory,
+# as omp does; it never blocks an install that leaves omp out.
+mkdir -p "$HOME/project" "$HOME/shared-agent"
+step "install --dry-run with a relative PI_CODING_AGENT_DIR" "$HOME/project" env PI_CODING_AGENT_DIR=../shared-agent am install --dry-run
+expect "../shared-agent resolves like omp does" grep -q "$HOME/shared-agent/extensions/agent-memory.ts" "$work/out"
+step "install --dry-run --presets without omp, relative PI_CODING_AGENT_DIR" "$HOME/project" env PI_CODING_AGENT_DIR=../../../missing-agent am install --dry-run --presets agents,codex,claude,opencode
 step "uninstall (omp set up)" "$work" am uninstall
 expect "uninstall removed only agent-memory's omp files" sh -c "test ! -e '$HOME/.omp/agent/extensions/agent-memory.ts' && test ! -e '$HOME/.omp/agent/skills/agent-memory' && test ! -e '$HOME/.omp/agent/AGENTS.md' && grep -q 'my own omp extension' '$HOME/.omp/agent/extensions/vox.ts'"
 

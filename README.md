@@ -85,10 +85,12 @@ them, `am` moves the branch to the shared memory (nothing is staged). When
 your git rebases on pull, or your branch has its own commits, `am` adds one
 commit that changes only `memory-bank/`; a rebasing pull drops it once the
 shared branch holds that memory. Otherwise (a merging pull that
-fast-forwards) the shared memory is staged. `am` says which it did. Two cases
-need a step first, and `am` says so: memory shared again before you pull (run
-`am refresh` again), and, with a rebasing pull, your own memory edits not
-shared yet (`am share`, or `git pull --autostash`).
+fast-forwards) the shared memory is staged. `am` says which it did, and names
+the step first needed where a plain `git pull` cannot work: `am refresh` again
+when more memory was shared before you pull; with a rebasing pull, committing
+or stashing uncommitted changes (`am share` for memory edits); with
+`pull.ff=only`, `git pull --rebase` or `git pull --no-ff` for its memory
+commit; and it says when the branch has no upstream to pull from.
 
 ## The memory bank
 
