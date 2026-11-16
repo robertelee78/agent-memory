@@ -49,12 +49,17 @@ pub fn locations() -> Result<Locations> {
     })
 }
 
+/// The installation receipt; `None` when there is none, or when an earlier
+/// `am uninstall` (v0.0.14) left it behind marked `"uninstalled": true`.
 pub fn read_receipt(locations: &Locations) -> Result<Option<Value>> {
     let path = locations.state.join("receipt.json");
     let Some(raw) = read_optional(&path)? else {
         return Ok(None);
     };
     let value = json::parse(&raw).map_err(|e| Error::new(format!("{}: {e}", path.display())))?;
+    if value.get("uninstalled") == Some(&Value::Bool(true)) {
+        return Ok(None);
+    }
     let schema = value.str("schema").unwrap_or("");
     if !READABLE.contains(&schema) {
         bail!(
@@ -177,11 +182,50 @@ struct Preset {
     extension: Option<PathBuf>,
 }
 
+/// omp's agent directory, resolved as omp itself does (18.20): a non-empty
+/// `PI_CODING_AGENT_DIR` (relative to the current directory, `..` resolved
+/// like Node's `path.resolve`), else `~/<PI_CONFIG_DIR or .omp>/agent`. omp
+/// loads `extensions/`, `skills/` and `AGENTS.md` from it. `None` when it
+/// cannot be worked out; detection never fails an install.
+fn detected_omp_dir() -> Option<PathBuf> {
+    let set = |key: &str| std::env::var_os(key).filter(|v| !v.is_empty());
+    if let Some(dir) = set("PI_CODING_AGENT_DIR") {
+        let mut resolved = PathBuf::new();
+        for part in std::env::current_dir().ok()?.join(dir).components() {
+            match part {
+                std::path::Component::ParentDir => {
+                    resolved.pop();
+                }
+                std::path::Component::CurDir => {}
+                other => resolved.push(other),
+            }
+        }
+        return Some(resolved);
+    }
+    let config = set("PI_CONFIG_DIR").unwrap_or_else(|| ".omp".into());
+    Some(home().ok()?.join(config).join("agent"))
+}
+
+/// The omp agent directory to set up and whether `all` includes it: the
+/// chosen or recorded one, else the detected one when it exists.
+fn omp_dir(cfg: &Config) -> Option<(PathBuf, bool)> {
+    match &cfg.omp_agent_dir {
+        Some(dir) => Some((dir.clone(), true)),
+        None => detected_omp_dir().map(|dir| {
+            let present = dir.is_dir();
+            (dir, present)
+        }),
+    }
+}
+
 fn presets(cfg: &Config) -> Result<Vec<Preset>> {
     let codex = env_dir("CODEX_HOME", ".codex")?;
     let claude = env_dir("CLAUDE_CONFIG_DIR", ".claude")?;
     let config = env_dir("XDG_CONFIG_HOME", ".config")?;
+    let omp = omp_dir(cfg);
+    let omp_present = omp.as_ref().is_some_and(|(_, present)| *present);
     let names = match cfg.presets.as_str() {
+        "all" if omp_present => "agents,codex,claude,opencode,omp",
         "all" => "agents,codex,claude,opencode",
         "none" => "",
         other => other,
@@ -218,17 +262,17 @@ fn presets(cfg: &Config) -> Result<Vec<Preset>> {
                 extension: None,
             },
             "omp" => {
-                let Some(root) = &cfg.omp_agent_dir else {
+                let Some((omp, _)) = &omp else {
                     bail!(
-                        "The omp preset needs --omp-agent-dir ABSOLUTE_ROOT (your omp agent directory)."
+                        "omp's agent directory could not be worked out; pass --omp-agent-dir PATH"
                     );
                 };
                 Preset {
                     name: "omp",
-                    skills: root.join("skills"),
-                    guidance: Some(root.join("AGENTS.md")),
+                    skills: omp.join("skills"),
+                    guidance: Some(omp.join("AGENTS.md")),
                     hook_config: None,
-                    extension: Some(root.join("extensions/agent-memory.ts")),
+                    extension: Some(omp.join("extensions/agent-memory.ts")),
                 }
             }
             other => bail!(
@@ -1118,7 +1162,12 @@ fn preflight(items: &[Item], releasing: bool) -> Result<Vec<String>> {
             }
             (Some(Want::Runtime(None)), _) => {}
             (Some(_), Some(prior)) => {
-                if !identity_matches(prior, &item.path) && !item.already() {
+                // A recorded target that is gone (for example after the old
+                // `am uninstall`) is simply installed again.
+                if item.path.symlink_metadata().is_ok()
+                    && !identity_matches(prior, &item.path)
+                    && !item.already()
+                {
                     problems.push(format!("{path} changed since agent-memory installed it; move it away or restore it, then retry"));
                 }
             }
@@ -1206,7 +1255,12 @@ fn apply(item: &mut Item, journal: &mut Journal) -> Result<Option<Value>> {
             fields.set("client", s(client));
             Ok(Some(record(fields)))
         }
-        Some(Want::Runtime(None)) => Ok(Some(record(identity(&item.path)?))),
+        // The kept runtime stays owned as recorded: a fresh fingerprint would
+        // adopt files the user put there since.
+        Some(Want::Runtime(None)) => Ok(Some(match prior {
+            Some(prior) => prior,
+            None => record(identity(&item.path)?),
+        })),
         Some(want) => {
             if !item_already(&item.path, &want) {
                 journal.clear(&item.path)?;
@@ -1530,7 +1584,16 @@ pub fn update(check: bool, bootstrap: Option<&Path>) -> Result<String> {
         });
     }
     if !newer && intact && bootstrap.is_none() {
-        return Ok(format!("agent-memory {installed} is up to date."));
+        // Same release: still set up what the install now covers (omp
+        // installed since, for example) and drop what it no longer does.
+        let source = current_release(&locations)?;
+        if plan(&source, &cfg, Some(&prior))?
+            .iter()
+            .all(|item| item.want.is_some() && item.prior.is_some())
+        {
+            return Ok(format!("agent-memory {installed} is up to date."));
+        }
+        return activate(&locations, source, cfg, Some(&prior), false);
     }
     if release::version_key(&latest) < release::version_key(&installed) {
         bail!(
@@ -1598,6 +1661,18 @@ pub fn uninstall(dry_run: bool) -> Result<String> {
         let _ = writeln!(out, "  {note}");
     }
     Ok(out)
+}
+
+/// The omp agent directory this installation covers but has not set up
+/// (omp was installed after agent-memory); `am update` sets it up.
+pub fn omp_pending(receipt: &Value) -> Option<PathBuf> {
+    let cfg = config(&Options::default(), Some(receipt)).ok()?;
+    let omp = presets(&cfg).ok()?.into_iter().find(|p| p.name == "omp")?;
+    let link = omp.skills.join("agent-memory");
+    let recorded = targets(receipt)
+        .iter()
+        .any(|t| t.str("path").is_some_and(|p| Path::new(p) == link));
+    (!recorded).then(|| omp.skills.parent().map(Path::to_path_buf))?
 }
 
 /// A receipt target and whether it still holds what was installed.

@@ -1,7 +1,7 @@
 ---
 name: agent-memory
 description: Shared project memory in the repository's memory-bank/. Use at session start to learn what the project is, how it is built and its lessons; at milestones to suggest a memory, ask the user and save it with am remember.
-metadata: {"version": "0.0.15"}
+metadata: {"version": "0.0.16"}
 ---
 
 # Agent memory
@@ -78,12 +78,13 @@ am share     # commit only memory-bank/ changes and push them (or open a PR)
 am refresh   # bring teammates' memory into this working tree
 ```
 
-`am share` never touches code or the current branch: it commits the bank on top
-of the shared branch (`git config agent-memory.authoritybranch`, default the
-remote's default branch) and pushes. A protected branch gets a memory branch and
-a pull request. Share when the user asks or agrees. `am share` and `am refresh`
-stage the shared `memory-bank/`, so a plain `git pull` works; on a branch with
-its own commits, commit that staged memory first.
+`am share` never touches code: it commits the bank on top of the shared branch
+(`git config agent-memory.authoritybranch`, default the remote's default
+branch) and pushes. A protected branch gets a memory branch and a pull request.
+Share when the user asks or agrees. After `am share` or `am refresh` a plain
+`git pull` works: `am` moves the branch over memory-only commits, adds one
+memory-only commit, or stages the memory, and prints which, plus any step the
+user must take first. Relay that message to the user as it is.
 
 ## A new project
 
@@ -97,3 +98,5 @@ ask the user to confirm, then `am share`.
 - `am doctor` — every check in plain words; it never rewrites memory.
 - `am install`, `am update`, `am uninstall` — signed releases, owned files only.
   Install with `install.sh`; it verifies the signed binary before running it.
+  It sets up Claude, Codex, OpenCode and, when it is on the machine, omp;
+  `am update` sets up omp if it was installed later.

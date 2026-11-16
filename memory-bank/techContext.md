@@ -29,9 +29,11 @@ scripts/qa.sh "$PWD"                  # the quality gate: real use of am, timed
 ```
 
 There are no unit or contract tests. `scripts/qa.sh` drives the real `am` in a
-temporary HOME (install, init, remember, recall, share/refresh between clones,
-plain `git pull`, refusals that protect data, hooks, doctor, uninstall, v0.0.14
-takeover) and records each command's time. CI (`.github/workflows/build.yml`)
+temporary HOME (install with omp present, init, remember, recall, share/refresh
+between clones, plain `git pull` in merge and rebase mode, refusals that
+protect data, hooks, doctor, uninstall, v0.0.14 takeover, install on a fresh
+machine and after `am uninstall` of v0.0.14 and of the current version, omp
+installed later) and records each command's time. CI (`.github/workflows/build.yml`)
 runs fmt, a warning-free build and `qa.sh` on all three targets;
 `verify-release.yml` installs a published release the way a user does.
 

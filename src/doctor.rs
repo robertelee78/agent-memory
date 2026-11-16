@@ -99,8 +99,20 @@ fn installation(report: &mut Report, deep: bool) {
     } else {
         report.line(format!("Session-start hooks: {}", hooks.join(", ")));
     }
+    if let Some(dir) = install::omp_pending(&receipt) {
+        report.problem(format!(
+            "omp is installed ({}) but agent-memory is not set up for it yet. Run `am update`.",
+            dir.display()
+        ));
+    }
     for check in &checks {
-        if !check.ok {
+        if !check.ok && check.kind == "source" {
+            // Never adopted (install keeps its recorded identity), so name the fix.
+            report.problem(format!(
+                "The runtime {} differs from what agent-memory installed. Move out any file you added there, or move the directory away and re-run install.sh; until then uninstall leaves it in place.",
+                check.path
+            ));
+        } else if !check.ok {
             report.problem(format!(
                 "{} {} no longer holds what agent-memory installed. Run `am install` to repair it.",
                 check.kind, check.path

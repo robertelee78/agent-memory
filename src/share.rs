@@ -1,5 +1,6 @@
 //! `am refresh` and `am share`: move memory through Git without touching
-//! code or HEAD; only `memory-bank/` entries of the index are updated.
+//! code; only `memory-bank/` entries of the index are updated, and HEAD only
+//! moves over memory-only commits (see `settle`).
 use crate::bail;
 use crate::bank::{self, Router};
 use crate::repo::Repo;
@@ -11,7 +12,8 @@ use std::path::Path;
 /// Per-worktree record of the remote commit whose memory is already here.
 const BASE_REF: &str = "refs/worktree/agent-memory/base";
 
-const STAGED: &str = "The shared memory is staged, so `git pull` works as usual; on a branch with its own commits, commit it first (git commit -m \"Shared memory\").";
+/// Subject of the memory-only commit `settle` makes for rebasing pulls.
+const MEMORY_COMMIT: &str = "Shared memory";
 
 fn branch(repo: &Repo) -> Result<String> {
     if let Some(branch) = repo.configured_branch() {
@@ -79,6 +81,8 @@ struct Shared {
     theirs: Option<String>,
     /// The shared commit whose memory is already here.
     base: Option<String>,
+    /// Whether HEAD's bank tree differs from the shared commit's.
+    head_differs: bool,
 }
 
 /// Fetch the shared branch, then resolve it and the recorded base together.
@@ -99,10 +103,20 @@ fn observe(repo: &Repo) -> Result<Shared> {
     if !exists && !fetched.error_text().contains("couldn't find remote ref") {
         bail!("Could not fetch origin/{branch}: {}", fetched.error_text());
     }
-    let ids = object_ids(repo, &[tracking, BASE_REF.to_owned()])?;
+    let bank = &repo.bank_rel;
+    let ids = object_ids(
+        repo,
+        &[
+            format!("{tracking}:{bank}"),
+            format!("HEAD:{bank}"),
+            tracking,
+            BASE_REF.to_owned(),
+        ],
+    )?;
     Ok(Shared {
-        theirs: if exists { ids[0].clone() } else { None },
-        base: ids.get(1).cloned().flatten(),
+        theirs: if exists { ids[2].clone() } else { None },
+        base: ids.get(3).cloned().flatten(),
+        head_differs: ids[0] != ids[1],
         branch,
     })
 }
@@ -507,8 +521,8 @@ fn merge_into_worktree(repo: &Repo, theirs: &str, base: Option<&str>) -> Result<
 }
 
 /// Remember `commit` as the shared memory already here, and stage its bank
-/// (index only; the working tree keeps local edits) so a later plain
-/// `git pull` of the shared branch finds the files already in place.
+/// (index only; the working tree keeps local edits); `settle` then leaves it
+/// so that a plain `git pull` works.
 fn record_shared(repo: &Repo, commit: &str) -> Result<()> {
     repo.git_ok(&["update-ref", BASE_REF, commit])?;
     repo.git_ok(&["reset", "-q", commit, "--", &repo.bank_rel])?;
@@ -516,28 +530,318 @@ fn record_shared(repo: &Repo, commit: &str) -> Result<()> {
 }
 
 /// Stage `commit`'s bank under the bank lock, unless the index holds the
-/// only copy of something the user staged (checked right before the reset).
-/// Returns those protected paths; empty means staged.
-fn stage_shared(repo: &Repo, commit: &str, known: &[&str]) -> Result<Vec<String>> {
+/// only copy of something the user staged (checked right before the reset),
+/// then settle it for the next `git pull`. Returns what to tell the user.
+fn stage_shared(
+    repo: &Repo,
+    shared: &str,
+    commit: &str,
+    known: &[&str],
+    previous: Option<&str>,
+) -> Result<String> {
     let _lock = lock_bank(repo)?;
     let mut recent = known.to_vec();
     recent.push(commit);
     let lost = staged_only(repo, "share", &recent).unwrap_or_else(|e| vec![e.0]);
-    if lost.is_empty() {
-        record_shared(repo, commit)?;
+    if !lost.is_empty() {
+        // The recorded base stays as it is, matching what is staged.
+        return Ok(format!(
+            "The shared memory was not staged, to keep the changes you staged meanwhile: {}.",
+            lost.join(", ")
+        ));
     }
-    // Otherwise the recorded base stays as it is, matching what is staged.
-    Ok(lost)
+    record_shared(repo, commit)?;
+    settle_note(repo, shared, commit, previous)
 }
 
-fn protected_note(lost: &[String]) -> String {
-    if lost.is_empty() {
-        return String::new();
+/// Does the index's bank equal `commit`'s?
+fn index_holds(repo: &Repo, commit: &str) -> Result<bool> {
+    let bank = format!("{}/", repo.bank_rel);
+    Ok(repo
+        .git(&["diff", "--cached", "--quiet", commit, "--", &bank])?
+        .ok())
+}
+
+/// Does `git pull` on `branch` rebase (`branch.<name>.rebase`, else `pull.rebase`)?
+fn pull_rebases(repo: &Repo, branch: &str) -> bool {
+    repo.config
+        .get(&format!("branch.{branch}.rebase"))
+        .or_else(|| repo.config.get("pull.rebase"))
+        .is_some_and(|v| !["false", "no", "off", "0"].contains(&v.to_ascii_lowercase().as_str()))
+}
+
+/// Where the shared memory staged by `record_shared` was left.
+enum Settled {
+    /// HEAD already holds it.
+    Clean,
+    /// The branch moved to the shared commit over memory-only commits.
+    Moved(String),
+    /// A memory-only commit on the branch, for a rebasing `git pull`.
+    Committed(String),
+    /// Still staged; whether a plain `git pull` accepts that.
+    Staged { pull_works: bool },
+}
+
+/// How `git pull` behaves on the current branch.
+#[derive(Default)]
+struct Pull {
+    /// It rebases (`branch.<name>.rebase`, else `pull.rebase`).
+    rebase: bool,
+    /// `pull.ff=only`: it refuses anything but a fast-forward.
+    ff_only: bool,
+    /// The branch has an upstream to pull from.
+    upstream: bool,
+}
+
+/// After `record_shared(commit)`, leave a state a plain `git pull` accepts.
+/// When the branch tracks the shared branch and only memory lies between
+/// HEAD and `commit`, move the branch there. When `git pull` merges and HEAD
+/// is behind `commit` (with `pull.ff=only`: HEAD can still fast-forward to
+/// its upstream), or the branch has no upstream, keep the memory staged: a
+/// fast-forward takes it.
+/// Otherwise, when the branch's own commits leave the bank alone, commit the
+/// shared bank on its own: a rebase onto commits that hold it drops that
+/// commit, a merge finds the same files on both sides. Such a commit made
+/// earlier for `previous` and not yet upstream is replaced, not stacked.
+fn settle(
+    repo: &Repo,
+    shared: &str,
+    commit: &str,
+    previous: Option<&str>,
+) -> Result<(Settled, Pull)> {
+    let stuck = Settled::Staged { pull_works: false };
+    let symbolic = repo.git(&["symbolic-ref", "-q", "HEAD"])?;
+    let Some(name) = symbolic
+        .ok()
+        .then(|| symbolic.text())
+        .and_then(|r| r.strip_prefix("refs/heads/").map(str::to_owned))
+    else {
+        return Ok((stuck, Pull::default())); // detached HEAD
+    };
+    let config = |key: &str| repo.config.get(&format!("branch.{name}.{key}"));
+    let rebase = pull_rebases(repo, &name);
+    let pull = Pull {
+        rebase,
+        ff_only: repo
+            .config
+            .get("pull.ff")
+            .is_some_and(|v| v.eq_ignore_ascii_case("only")),
+        upstream: config("merge").is_some(),
+    };
+    let none = "0".repeat(40); // names no object
+    let fork = repo.git(&["merge-base", "HEAD", commit])?;
+    let fork = if fork.ok() { fork.text() } else { none.clone() };
+    let bank = &repo.bank_rel;
+    let ids = object_ids(
+        repo,
+        &[
+            "HEAD".to_owned(),
+            "MERGE_HEAD".to_owned(),
+            "CHERRY_PICK_HEAD".to_owned(),
+            "REVERT_HEAD".to_owned(),
+            "HEAD^2".to_owned(),
+            format!("HEAD:{bank}"),
+            format!("{commit}:{bank}"),
+            format!("{fork}:{bank}"),
+            format!("HEAD^:{bank}"),
+            format!("{}:{bank}", previous.unwrap_or(&none)),
+        ],
+    )?;
+    let Some(head) = ids[0].clone() else {
+        return Ok((stuck, pull)); // no commit yet
+    };
+    if ids[1..4].iter().any(Option::is_some) {
+        return Ok((stuck, pull)); // a merge, cherry-pick or revert is in progress
     }
-    format!(
-        " The shared memory was not staged, to keep the changes you staged meanwhile: {}.",
-        lost.join(", ")
-    )
+    let (head_bank, fork_bank, parent_bank) = (&ids[5], &ids[7], &ids[8]);
+    if head_bank == &ids[6] {
+        return Ok((Settled::Clean, pull));
+    }
+    let prefix = format!("{bank}/");
+    let only_memory = |from: &str, to: &str| -> Result<bool> {
+        let changed = repo.git_ok(&["diff", "--name-only", "-z", "--no-renames", from, to])?;
+        Ok(changed
+            .split('\0')
+            .filter(|p| !p.is_empty())
+            .all(|p| p.starts_with(&prefix)))
+    };
+    let tracks = config("remote").is_some_and(|r| r == "origin")
+        && config("merge").is_some_and(|m| *m == format!("refs/heads/{shared}"));
+    if tracks && fork == head && only_memory(&head, commit)? {
+        let moved = repo.git(&[
+            "update-ref",
+            "-m",
+            &format!("am: memory-only commits from origin/{shared}"),
+            &format!("refs/heads/{name}"),
+            commit,
+            &head,
+        ])?;
+        if moved.ok() {
+            return Ok((Settled::Moved(name), pull));
+        }
+    }
+    // With `pull.ff=only` a merging pull only fast-forwards: the staged
+    // memory suits that while HEAD can still fast-forward to its upstream;
+    // once they diverged, a memory commit lets `git pull --no-ff` merge cleanly.
+    let ff_possible = || -> Result<bool> {
+        Ok(repo
+            .git(&["merge-base", "--is-ancestor", "HEAD", "@{upstream}"])?
+            .ok())
+    };
+    let stage = if pull.ff_only {
+        ff_possible()?
+    } else {
+        fork == head
+    };
+    if !pull.upstream || (!rebase && stage) {
+        return Ok((Settled::Staged { pull_works: true }, pull));
+    }
+    let parent = if head_bank == fork_bank {
+        head.clone()
+    } else if ids[9].is_some()
+        && head_bank == &ids[9]
+        && parent_bank == fork_bank
+        && ids[4].is_none()
+        && !repo
+            .git(&["merge-base", "--is-ancestor", "HEAD", "@{upstream}"])?
+            .ok()
+        && only_memory(&format!("{head}^"), &head)?
+    {
+        format!("{head}^")
+    } else {
+        return Ok((stuck, pull)); // the branch has its own memory commits
+    };
+    let made = temp_index(repo, |git| {
+        git(&["read-tree", &parent])?;
+        git(&["reset", "-q", commit, "--", bank])?;
+        let tree = git(&["write-tree"])?;
+        let message = format!(
+            "{MEMORY_COMMIT}\n\nOnly {bank}/, as on origin/{shared}, committed by am so that git pull\nworks: a rebase onto commits that hold this memory drops it, a merge\nfinds the same files on both sides."
+        );
+        git(&["commit-tree", &tree, "-p", &parent, "-m", &message])
+    });
+    let Ok(new) = made else {
+        return Ok((stuck, pull));
+    };
+    let moved = repo.git(&[
+        "update-ref",
+        "-m",
+        &format!("am: shared memory from origin/{shared}"),
+        &format!("refs/heads/{name}"),
+        &new,
+        &head,
+    ])?;
+    Ok((
+        if moved.ok() {
+            Settled::Committed(name)
+        } else {
+            stuck
+        },
+        pull,
+    ))
+}
+
+/// `settle`, in words.
+fn settle_note(repo: &Repo, shared: &str, commit: &str, previous: Option<&str>) -> Result<String> {
+    let (settled, pull) = settle(repo, shared, commit, previous)?;
+    let bank = &repo.bank_rel;
+    let done = match &settled {
+        Settled::Clean => return Ok(String::new()),
+        Settled::Staged { pull_works: false } => {
+            return Ok(
+                "The shared memory is staged; commit or stash your changes before `git pull`."
+                    .into(),
+            );
+        }
+        Settled::Moved(branch) => {
+            format!("{branch} moved to the shared memory commit (only {bank}/ changed).")
+        }
+        Settled::Committed(branch) => format!(
+            "The shared memory is committed on {branch} as one commit that changes only {bank}/."
+        ),
+        Settled::Staged { pull_works: true } => "The shared memory is staged.".into(),
+    };
+    if !pull.upstream {
+        return Ok(format!(
+            "{done} This branch has no upstream branch, so there is nothing for `git pull` to pull."
+        ));
+    }
+    // A rebasing pull refuses uncommitted changes to tracked files, any file.
+    let mut dirty = None;
+    if pull.rebase {
+        let status = repo.git(&[
+            "status",
+            "--porcelain",
+            "-z",
+            "--untracked-files=no",
+            "--no-renames",
+        ])?;
+        if !status.ok() {
+            bail!("git status failed: {}", status.error_text());
+        }
+        let status = String::from_utf8_lossy(&status.stdout);
+        let paths: Vec<&str> = status
+            .split('\0')
+            .filter_map(|entry| entry.get(3..))
+            .collect();
+        if !paths.is_empty() {
+            let prefix = format!("{bank}/");
+            dirty = Some(paths.iter().any(|p| p.starts_with(&prefix)));
+        }
+    }
+    // pull.ff=only refuses once HEAD (with any memory commit) and its
+    // upstream have both moved.
+    let mut command = None;
+    if pull.ff_only {
+        let counts = repo.git(&["rev-list", "--left-right", "--count", "HEAD...@{upstream}"])?;
+        let diverged = counts.ok()
+            && counts
+                .text()
+                .split_whitespace()
+                .all(|n| n.parse::<u64>().is_ok_and(|n| n > 0));
+        if diverged {
+            command = Some(if pull.rebase {
+                "git pull --rebase"
+            } else {
+                "git pull --no-ff"
+            });
+        }
+    }
+    let sentence = match (dirty, command) {
+        (None, None) => "`git pull` works as usual.".to_owned(),
+        (None, Some(command)) => format!(
+            "Pull with `{command}`: with pull.ff=only a plain `git pull` refuses, as this branch and its upstream have both moved."
+        ),
+        (Some(memory), command) => format!(
+            "You have uncommitted changes{}; git will ask you to commit or stash them before a rebasing pull.{}",
+            if memory {
+                " (memory edits not shared yet: am share shares them)"
+            } else {
+                ""
+            },
+            command
+                .map(|c| format!(
+                    " Then pull with `{c}` (with pull.ff=only a plain `git pull` refuses)."
+                ))
+                .unwrap_or_default(),
+        ),
+    };
+    Ok(match settled {
+        Settled::Moved(_) => format!("{done} {sentence}"),
+        _ => format!(
+            "{done} {sentence} If more memory is shared before you pull, run am refresh first."
+        ),
+    })
+}
+
+/// Append `note` on its own line, if any.
+fn push_note(out: &mut String, note: &str) {
+    if !note.is_empty() {
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        out.push_str(note);
+    }
 }
 
 fn conflict_help(conflicts: &[String]) -> String {
@@ -572,7 +876,13 @@ pub fn refresh() -> Result<String> {
         ));
     };
     if shared.base.as_deref() == Some(theirs) {
-        return Ok(format!("Memory is up to date with origin/{branch}."));
+        let mut out = format!("Memory is up to date with origin/{branch}.");
+        // Memory staged earlier (by v0.0.15, say) may still be settled.
+        if shared.head_differs && index_holds(&repo, theirs)? {
+            let _lock = lock_bank(&repo)?;
+            push_note(&mut out, &settle_note(&repo, branch, theirs, None)?);
+        }
+        return Ok(out);
     }
     let _lock = lock_bank(&repo)?;
     let known: Vec<&str> = shared.base.as_deref().into_iter().chain([theirs]).collect();
@@ -583,11 +893,15 @@ pub fn refresh() -> Result<String> {
         format!("Memory is up to date with origin/{branch}.")
     } else {
         format!(
-            "Brought {} memory file(s) from origin/{branch}:\n  {}\n{STAGED}",
+            "Brought {} memory file(s) from origin/{branch}:\n  {}",
             merged.updated.len(),
             merged.updated.join("\n  ")
         )
     };
+    push_note(
+        &mut out,
+        &settle_note(&repo, branch, theirs, shared.base.as_deref())?,
+    );
     if !merged.kept_rows.is_empty() {
         out.push('\n');
         out.push_str(&kept_note(&merged.kept_rows));
@@ -656,19 +970,23 @@ pub fn share(message: Option<&str>) -> Result<String> {
         }
         let snapshot = commit_bank(&repo, theirs, message)?;
         drop(lock);
-        let notes = if merged.kept_rows.is_empty() {
-            String::new()
-        } else {
-            format!("\n{}", kept_note(&merged.kept_rows))
-        };
+        let mut notes = String::new();
+        if !merged.kept_rows.is_empty() {
+            push_note(&mut notes, &kept_note(&merged.kept_rows));
+        }
         let Some(commit) = snapshot else {
-            let mut kept = String::new();
-            if let Some(theirs) = theirs.filter(|t| shared.base.as_deref() != Some(*t)) {
-                kept = protected_note(&stage_shared(&repo, theirs, &known)?);
+            let mut out = format!("Nothing new to share; origin/{branch} has all of this memory.");
+            if let Some(theirs) = theirs {
+                if shared.base.as_deref() != Some(theirs) {
+                    let note = stage_shared(&repo, branch, theirs, &known, shared.base.as_deref())?;
+                    push_note(&mut out, &note);
+                } else if shared.head_differs && index_holds(&repo, theirs)? {
+                    let _lock = lock_bank(&repo)?;
+                    push_note(&mut out, &settle_note(&repo, branch, theirs, None)?);
+                }
             }
-            return Ok(format!(
-                "Nothing new to share; origin/{branch} has all of this memory.{kept}{notes}"
-            ));
+            push_note(&mut out, &notes);
+            return Ok(out);
         };
         let pushed = repo.git(&[
             "push",
@@ -679,15 +997,11 @@ pub fn share(message: Option<&str>) -> Result<String> {
         ])?;
         let short = &commit[..commit.len().min(10)];
         if pushed.ok() {
-            let lost = stage_shared(&repo, &commit, &known)?;
-            let staged = if lost.is_empty() {
-                format!("\n{STAGED}")
-            } else {
-                protected_note(&lost)
-            };
-            return Ok(format!(
-                "Shared memory to origin/{branch} (commit {short}).{staged}{notes}"
-            ));
+            let mut out = format!("Shared memory to origin/{branch} (commit {short}).");
+            let note = stage_shared(&repo, branch, &commit, &known, shared.base.as_deref())?;
+            push_note(&mut out, &note);
+            push_note(&mut out, &notes);
+            return Ok(out);
         }
         let error = format!("{}\n{}", pushed.text(), pushed.error_text());
         if error.contains("fetch first")
@@ -707,9 +1021,11 @@ pub fn share(message: Option<&str>) -> Result<String> {
     bail!("The shared branch kept moving while sharing; run am share again.")
 }
 
-/// A commit holding the shared tree with this worktree's bank, or `None`
-/// when that equals the shared tree.
-fn commit_bank(repo: &Repo, theirs: Option<&str>, message: Option<&str>) -> Result<Option<String>> {
+/// Run `work` with a `git` that uses a private temporary index.
+fn temp_index<T>(
+    repo: &Repo,
+    work: impl FnOnce(&dyn Fn(&[&str]) -> Result<String>) -> Result<T>,
+) -> Result<T> {
     let index = std::env::temp_dir().join(format!("am-index-{}", uuid4()));
     let env = [("GIT_INDEX_FILE", index.as_os_str())];
     let git = |args: &[&str]| -> Result<String> {
@@ -722,7 +1038,15 @@ fn commit_bank(repo: &Repo, theirs: Option<&str>, message: Option<&str>) -> Resu
         }
         Ok(output.text())
     };
-    let result = (|| {
+    let result = work(&git);
+    let _ = std::fs::remove_file(&index);
+    result
+}
+
+/// A commit holding the shared tree with this worktree's bank, or `None`
+/// when that equals the shared tree.
+fn commit_bank(repo: &Repo, theirs: Option<&str>, message: Option<&str>) -> Result<Option<String>> {
+    temp_index(repo, |git| {
         match theirs {
             Some(theirs) => git(&["read-tree", theirs])?,
             None => git(&["read-tree", "--empty"])?,
@@ -745,9 +1069,7 @@ fn commit_bank(repo: &Repo, theirs: Option<&str>, message: Option<&str>) -> Resu
             args.extend(["-p", theirs]);
         }
         git(&args).map(Some)
-    })();
-    let _ = std::fs::remove_file(&index);
-    result
+    })
 }
 
 /// The branch is protected: push a memory branch and open a pull request.
