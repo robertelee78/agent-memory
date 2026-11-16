@@ -164,6 +164,11 @@ expect "text before an internal heading kept" sh -c "grep -l 'Release steps' '$w
 step recall "$work/a" am recall
 step "recall QUERY" "$work/a" am recall musl linker
 expect "recall finds the note" sh -c "cd '$work/a' && am recall musl | grep -q rust-lld"
+expect "recall QUERY prints only matching notes, not the summary" sh -c "cd '$work/a' && ! am recall musl | grep -q projectbrief && ! am recall musl | grep -q 'worktrees per session'"
+expect "recall needs every word: a note with one of two words is left out" sh -c "cd '$work/a' && test \"\$(am recall 'release tag' | grep -c '^## ')\" -eq 1 && am recall 'release tag' | grep -q 'Release steps' && ! am recall 'release tag' | grep -q rust-lld"
+expect "recall says when no note has every word" sh -c "cd '$work/a' && am recall 'musl kubernetes' | grep -q 'no note has every word' && am recall 'musl kubernetes' | grep -q rust-lld"
+expect "recall with nothing matching says so" sh -c "cd '$work/a' && am recall kubernetes | grep -q 'No note matches'"
+expect "common words alone match nothing" sh -c "cd '$work/a' && am recall 'the and of' | grep -q 'No note matches'"
 step share "$work/a" am share
 expect "remote main has the bank" sh -c "git -C '$work/remote.git' ls-tree -r --name-only main | grep -q memory-bank/MEMORY.md"
 expect "A's branch moved to the memory-only share commit: nothing staged" sh -c "cd '$work/a' && test -z \"\$(git status --porcelain)\" && test \"\$(git rev-parse HEAD)\" = \"\$(git rev-parse origin/main)\""

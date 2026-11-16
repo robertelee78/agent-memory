@@ -8,7 +8,7 @@ use std::path::PathBuf;
 const HELP: &str = "am — shared project memory for coding agents
 
 Memory:
-  am recall [QUERY]        Print the project summary and the notes matching QUERY
+  am recall [QUERY]        Print the project summary, or the notes matching QUERY
   am remember [OPTIONS]    Save a note the user approved (flags, or JSON on stdin)
       --title T --body B|- --kind fix|dead-end|correction|decision|fact|procedure|reference
       --evidence E (repeatable) --read-when R --scope S --reason R --harness H --session S
@@ -34,7 +34,7 @@ Run am COMMAND --help for one command's usage.
 const USAGES: [(&str, &str); 12] = [
     (
         "recall",
-        "Usage: am recall [QUERY] [--limit N]\n\nPrint the project summary (context files and lesson titles); with QUERY, also the\nN best-matching notes in full (default 5).",
+        "Usage: am recall [QUERY] [--limit N]\n\nWithout QUERY, print the project summary (context files and lesson titles).\nWith QUERY, print only the notes that contain every query word, best first\n(N at most, default 5). If no note has every word, the closest ones are shown\nand the output says so.",
     ),
     (
         "remember",

@@ -80,7 +80,24 @@ pub fn summary(bank: &Bank, per_file: usize, max_lessons: usize) -> String {
     out
 }
 
-/// `am recall [QUERY]`.
+/// Words too common to tell notes apart.
+const STOPWORDS: &[&str] = &[
+    "a", "an", "and", "are", "as", "at", "be", "but", "by", "can", "do", "does", "for", "from",
+    "how", "in", "is", "it", "its", "no", "not", "of", "on", "or", "our", "should", "that", "the",
+    "this", "to", "we", "what", "when", "where", "which", "why", "with",
+];
+
+/// A query word matches the same word; a word of four letters or more also
+/// matches longer forms of itself ("test" finds "tests").
+fn hits(words: &[String], term: &str) -> usize {
+    words
+        .iter()
+        .filter(|w| w.as_str() == term || (term.len() >= 4 && w.starts_with(term)))
+        .count()
+}
+
+/// `am recall [QUERY]`: the project summary, or with QUERY only the notes
+/// that match it.
 pub fn recall(query: &str, limit: usize) -> Result<String> {
     let repo = Repo::current()?;
     let bank = Bank::new(&repo.bank);
@@ -90,18 +107,20 @@ pub fn recall(query: &str, limit: usize) -> Result<String> {
             repo.bank_rel
         );
     }
-    let mut out = format!("# Project memory ({}/)\n\n", repo.bank_rel);
-    let terms: Vec<String> = bank::words(query)
+    let mut terms: Vec<String> = bank::words(query)
         .into_iter()
-        .filter(|w| w.len() > 1)
+        .filter(|w| w.len() > 1 && !STOPWORDS.contains(&w.as_str()))
         .collect();
-    if terms.is_empty() {
+    terms.sort();
+    terms.dedup();
+    if query.trim().is_empty() {
+        let mut out = format!("# Project memory ({}/)\n\n", repo.bank_rel);
         out.push_str(&summary(&bank, 4000, 50));
         return Ok(out);
     }
-    out.push_str(&summary(&bank, 1500, 0));
     let router = bank.router()?;
-    let mut scored: Vec<(usize, Note)> = lessons(&bank)
+    // (query words found, weighted score, note)
+    let mut scored: Vec<(usize, usize, Note)> = lessons(&bank)
         .into_iter()
         .map(|note| {
             let route = router.routes.iter().find(|r| r.path == note.rel);
@@ -110,30 +129,52 @@ pub fn recall(query: &str, limit: usize) -> Result<String> {
                 .map(|r| bank::words(&format!("{} {}", r.purpose, r.read_when)))
                 .unwrap_or_default();
             let body = bank::words(&note.body);
-            let score = terms
-                .iter()
-                .map(|t| {
-                    let hits = |words: &[String]| {
-                        words.iter().filter(|w| w.starts_with(t.as_str())).count()
-                    };
-                    hits(&heading) * 5 + hits(&routed) * 3 + hits(&body).min(5)
-                })
-                .sum();
-            (score, note)
+            let (mut found, mut score) = (0, 0);
+            for term in &terms {
+                let weight =
+                    hits(&heading, term) * 5 + hits(&routed, term) * 3 + hits(&body, term).min(5);
+                found += usize::from(weight > 0);
+                score += weight;
+            }
+            (found, score, note)
         })
-        .filter(|(score, _)| *score > 0)
+        .filter(|(found, _, _)| *found > 0)
         .collect();
-    scored.sort_by(|a, b| b.0.cmp(&a.0).then(b.1.recorded().cmp(a.1.recorded())));
+    scored.sort_by(|a, b| {
+        (b.0, b.1)
+            .cmp(&(a.0, a.1))
+            .then(b.2.recorded().cmp(a.2.recorded()))
+    });
+    // Notes with every query word win; only without any do partial matches show.
+    let best = scored.first().map_or(0, |row| row.0);
+    let full = best == terms.len() && best > 0;
+    scored.retain(|row| row.0 == best);
+    let mut out = String::new();
+    if scored.is_empty() {
+        let _ = writeln!(
+            out,
+            "No note matches \"{query}\". Try fewer or different words, or run `am recall` for the project summary and the list of lessons."
+        );
+        return Ok(out);
+    }
     let _ = writeln!(
         out,
-        "## Notes matching \"{query}\" ({} found)\n",
-        scored.len()
+        "# Notes matching \"{query}\" ({} found{})\n",
+        scored.len(),
+        if full {
+            String::new()
+        } else {
+            format!(
+                "; no note has every word, these have {best} of {}",
+                terms.len()
+            )
+        }
     );
-    for (_, note) in scored.iter().take(limit) {
+    for (_, _, note) in scored.iter().take(limit) {
         let evidence = note.evidence();
         let _ = writeln!(
             out,
-            "### {}/{} ({}, {})",
+            "## {}/{} ({}, {})",
             repo.bank_rel,
             note.rel,
             note.kind(),
@@ -145,8 +186,12 @@ pub fn recall(query: &str, limit: usize) -> Result<String> {
         let body = note.body.trim();
         let _ = writeln!(out, "\n{}\n", clip(body, 4000));
     }
-    if scored.is_empty() {
-        out.push_str("No lesson matched. Try fewer or different words.\n");
+    if scored.len() > limit {
+        let _ = writeln!(
+            out,
+            "{} more not shown; add words or use --limit.",
+            scored.len() - limit
+        );
     }
     Ok(out)
 }
