@@ -2,12 +2,16 @@
 
 ## Current focus
 
-v0.0.16 is published: omp set up by default (#268), install on a fresh machine
-and after any `am uninstall` (#269), and a plain `git pull` after `am refresh`
-and `am share` (#270). v0.0.17 (`fix/recall-precision`) is a small fix release:
-`am recall QUERY` prints only the notes that have every query word, without
-the project summary in front. The larger guided-recall, graph and embedding
-work is planned for v0.0.18.
+v0.0.17 is published and landed (2026-11-16); the operator's machine runs it
+with Claude, Codex and omp set up. The next focus is v0.0.18: the ten open
+items in that milestone (guided recall #252 and #253, large-bank recall speed
+#206, semantic recall #200, graph and embedding work #256, #257, #265, #56,
+#62, and stress qualification #209).
+
+Those items were written before the lean design. Before starting any of them,
+check it against [docs/mission.md](../docs/mission.md) and the
+[lean design](../docs/design/v0.0.15-lean.md) and confirm its scope with the
+operator in plain language.
 
 ## Working rules (operator, 2026-11-15)
 

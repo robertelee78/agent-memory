@@ -17,12 +17,13 @@
   shows closest matches instead.
 - `scripts/qa.sh` passes on macOS arm64, Linux arm64 and Linux x86_64; every
   command under about 200 ms locally.
-- v0.0.15 and v0.0.16 are published; v0.0.14 takeover verified from a real
-  install and an offline QA fixture; omp works on the operator's machine.
+- v0.0.15, v0.0.16 and v0.0.17 are published; v0.0.14 takeover verified from a
+  real install and an offline QA fixture; omp works on the operator's machine.
 
 ## Remaining
 
-- Publish the signed v0.0.17 release; run `verify-release.yml` on it.
+- v0.0.18: the ten open items in that milestone; none started. Scope each one
+  with the operator first (see activeContext).
 
 ## Known limits
 
