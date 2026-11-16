@@ -64,9 +64,16 @@ fn valid_login(login: &str) -> bool {
     !login.is_empty() && login.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
 }
 
+/// Run `gh` with colours off, so its output can be read as plain text.
 fn gh(args: &[&str]) -> Option<Output> {
     let args: Vec<&OsStr> = args.iter().map(OsStr::new).collect();
-    run("gh", &args, None, &[], None).ok()
+    let plain = [
+        ("NO_COLOR", OsStr::new("1")),
+        ("CLICOLOR", OsStr::new("0")),
+        ("CLICOLOR_FORCE", OsStr::new("0")),
+        ("GH_FORCE_TTY", OsStr::new("")),
+    ];
+    run("gh", &args, None, &plain, None).ok()
 }
 
 /// Accounts signed in to `gh` for github.com. `--json` needs gh 2.81 or
