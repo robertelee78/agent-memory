@@ -2,13 +2,12 @@
 
 ## Current focus
 
-v0.0.16 (`fix/v0.0.16`) is a small fix release of the lean `am`: omp is set up
-by default when it is on the machine (#268), install works on a fresh machine
-and after any `am uninstall` (#269), and a plain `git pull` works after
-`am refresh` and `am share` in merge and rebase mode (#270). Next steps:
-merge, publish the signed release, check `am update` from v0.0.15 on the
-operator's machine (run it twice: v0.0.15 installs v0.0.16, v0.0.16 then sets
-up omp), and one real omp session on the cheapest model.
+v0.0.16 is published: omp set up by default (#268), install on a fresh machine
+and after any `am uninstall` (#269), and a plain `git pull` after `am refresh`
+and `am share` (#270). v0.0.17 (`fix/recall-precision`) is a small fix release:
+`am recall QUERY` prints only the notes that have every query word, without
+the project summary in front. The larger guided-recall, graph and embedding
+work is planned for v0.0.18.
 
 ## Working rules (operator, 2026-11-15)
 
