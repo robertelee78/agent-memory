@@ -169,6 +169,18 @@ expect "recall needs every word: a note with one of two words is left out" sh -c
 expect "recall says when no note has every word" sh -c "cd '$work/a' && am recall 'musl kubernetes' | grep -q 'no note has every word' && am recall 'musl kubernetes' | grep -q rust-lld"
 expect "recall with nothing matching says so" sh -c "cd '$work/a' && am recall kubernetes | grep -q 'No note matches'"
 expect "common words alone match nothing" sh -c "cd '$work/a' && am recall 'the and of' | grep -q 'No note matches'"
+expect "recall without a query still prints the summary and lesson titles" sh -c "cd '$work/a' && am recall | grep -q 'projectbrief.md' && am recall | grep -q 'Musl builds need rust-lld'"
+expect "a longer word also finds its longer forms" sh -c "cd '$work/a' && am recall build | grep -q rust-lld"
+# A separate bank for exact numbers, one-letter words and speed at 2,000 notes.
+git init -q "$work/q"
+(cd "$work/q" && am init > /dev/null && for n in 1 2 17 170 1700 17001; do am remember --kind fact --title "Service $n port" --body "Service $n listens in staging." > /dev/null; done && am remember --kind fact --title "Language C" --body "The parser is written in C." > /dev/null)
+expect "numbers match exactly (17 is not 170, 1700 is not 17001)" sh -c "cd '$work/q' && test \"\$(am recall 'service 17 port' | grep -c '^## ')\" -eq 1 && am recall 'service 17 port' | grep -q '^# Service 17 port' && test \"\$(am recall 'service 1700 port' | grep -c '^## ')\" -eq 1"
+expect "a one-digit word counts (1 is not 2)" sh -c "cd '$work/q' && test \"\$(am recall 'service 1 port' | grep -c '^## ')\" -eq 1 && am recall 'service 1 port' | grep -q '^# Service 1 port'"
+expect "a one-letter word is searched" sh -c "cd '$work/q' && am recall C | grep -q 'Language C'"
+(cd "$work/q" && f=$(ls memory-bank/topics/*.md | head -1) && for n in $(seq 1 2000); do id=$(printf '00000000-0000-4000-8000-%012d' "$n"); sed "s/^id: .*/id: \"$id\"/" "$f" > "memory-bank/topics/$id.md"; done)
+step "recall QUERY in a 2,000-note bank" "$work/q" am recall language parser
+last_step_under() { [ "$(printf '%s' "$table" | tail -1 | awk -F'|' '{ split($4, t, " "); print t[1] + 0 }')" -lt "$1" ]; }
+expect "the 2,000-note search took under 200 ms" last_step_under 200
 step share "$work/a" am share
 expect "remote main has the bank" sh -c "git -C '$work/remote.git' ls-tree -r --name-only main | grep -q memory-bank/MEMORY.md"
 expect "A's branch moved to the memory-only share commit: nothing staged" sh -c "cd '$work/a' && test -z \"\$(git status --porcelain)\" && test \"\$(git rev-parse HEAD)\" = \"\$(git rev-parse origin/main)\""

@@ -28,7 +28,7 @@ summary. Otherwise, or for a specific topic, run:
 
 ```sh
 am recall              # the project summary and the list of lessons
-am recall "build musl" # only the notes that have every one of these words
+am recall "build musl" # the notes that have every one of these words (or says it shows the closest)
 ```
 
 Read the notes that apply before relying on assumptions. Memory is evidence

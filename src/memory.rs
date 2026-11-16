@@ -87,12 +87,13 @@ const STOPWORDS: &[&str] = &[
     "this", "to", "we", "what", "when", "where", "which", "why", "with",
 ];
 
-/// A query word matches the same word; a word of four letters or more also
-/// matches longer forms of itself ("test" finds "tests").
+/// A query word matches the same word. A word of four letters or more that is
+/// not a number also matches longer forms of itself ("test" finds "tests").
 fn hits(words: &[String], term: &str) -> usize {
+    let prefix = term.chars().count() >= 4 && !term.chars().all(char::is_numeric);
     words
         .iter()
-        .filter(|w| w.as_str() == term || (term.len() >= 4 && w.starts_with(term)))
+        .filter(|w| w.as_str() == term || (prefix && w.starts_with(term)))
         .count()
 }
 
@@ -109,7 +110,7 @@ pub fn recall(query: &str, limit: usize) -> Result<String> {
     }
     let mut terms: Vec<String> = bank::words(query)
         .into_iter()
-        .filter(|w| w.len() > 1 && !STOPWORDS.contains(&w.as_str()))
+        .filter(|w| !STOPWORDS.contains(&w.as_str()))
         .collect();
     terms.sort();
     terms.dedup();

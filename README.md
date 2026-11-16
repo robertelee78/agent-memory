@@ -60,7 +60,7 @@ install stops and names it.
 ```sh
 am init                     # create memory-bank/ in this repository
 am recall                   # the project summary and the list of lessons
-am recall "release build"   # only the notes that have every one of these words
+am recall "release build"   # the notes that have every one of these words (or says it shows the closest)
 am remember --kind fix --title "…" --body "…" --evidence "…"   # save an approved note
 am share                    # commit only memory-bank/ changes and push them
 am refresh                  # bring teammates' memory into this working tree
