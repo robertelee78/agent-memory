@@ -596,8 +596,9 @@ struct Pull {
 /// After `record_shared(commit)`, leave a state a plain `git pull` accepts.
 /// When the branch tracks the shared branch and only memory lies between
 /// HEAD and `commit`, move the branch there. When `git pull` merges and HEAD
-/// is behind `commit` (or `pull.ff=only` allows nothing else), or the branch
-/// has no upstream, keep the memory staged: a fast-forward takes it.
+/// is behind `commit` (with `pull.ff=only`: HEAD can still fast-forward to
+/// its upstream), or the branch has no upstream, keep the memory staged: a
+/// fast-forward takes it.
 /// Otherwise, when the branch's own commits leave the bank alone, commit the
 /// shared bank on its own: a rebase onto commits that hold it drops that
 /// commit, a merge finds the same files on both sides. Such a commit made
@@ -680,9 +681,19 @@ fn settle(
         }
     }
     // With `pull.ff=only` a merging pull only fast-forwards: the staged
-    // memory suits that, unless this branch already diverged from the shared
-    // one, where a memory commit lets `git pull --no-ff` merge cleanly.
-    if !pull.upstream || (!rebase && (fork == head || (pull.ff_only && !tracks))) {
+    // memory suits that while HEAD can still fast-forward to its upstream;
+    // once they diverged, a memory commit lets `git pull --no-ff` merge cleanly.
+    let ff_possible = || -> Result<bool> {
+        Ok(repo
+            .git(&["merge-base", "--is-ancestor", "HEAD", "@{upstream}"])?
+            .ok())
+    };
+    let stage = if pull.ff_only {
+        ff_possible()?
+    } else {
+        fork == head
+    };
+    if !pull.upstream || (!rebase && stage) {
         return Ok((Settled::Staged { pull_works: true }, pull));
     }
     let parent = if head_bank == fork_bank {
@@ -778,17 +789,28 @@ fn settle_note(repo: &Repo, shared: &str, commit: &str, previous: Option<&str>) 
             dirty = Some(paths.iter().any(|p| p.starts_with(&prefix)));
         }
     }
-    // pull.ff=only refuses to rebase or merge the memory commit.
-    let command =
-        (pull.ff_only && matches!(settled, Settled::Committed(_))).then_some(if pull.rebase {
-            "git pull --rebase"
-        } else {
-            "git pull --no-ff"
-        });
+    // pull.ff=only refuses once HEAD (with any memory commit) and its
+    // upstream have both moved.
+    let mut command = None;
+    if pull.ff_only {
+        let counts = repo.git(&["rev-list", "--left-right", "--count", "HEAD...@{upstream}"])?;
+        let diverged = counts.ok()
+            && counts
+                .text()
+                .split_whitespace()
+                .all(|n| n.parse::<u64>().is_ok_and(|n| n > 0));
+        if diverged {
+            command = Some(if pull.rebase {
+                "git pull --rebase"
+            } else {
+                "git pull --no-ff"
+            });
+        }
+    }
     let sentence = match (dirty, command) {
         (None, None) => "`git pull` works as usual.".to_owned(),
         (None, Some(command)) => format!(
-            "Pull with `{command}`: with pull.ff=only a plain `git pull` refuses, as this branch has a commit its upstream lacks."
+            "Pull with `{command}`: with pull.ff=only a plain `git pull` refuses, as this branch and its upstream have both moved."
         ),
         (Some(memory), command) => format!(
             "You have uncommitted changes{}; git will ask you to commit or stash them before a rebasing pull.{}",

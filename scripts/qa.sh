@@ -299,6 +299,32 @@ step "refresh (merge pull, pull.ff=only, behind)" "$work/f" am refresh
 expect "F keeps the memory staged and says git pull works" grep -q 'The shared memory is staged. `git pull` works as usual.' "$work/out"
 step "git pull (merge, pull.ff=only)" "$work/f" git pull -q
 expect "F clean at origin/main (merge, pull.ff=only)" at_origin "$work/f"
+# pull.ff=only judges the branch's own upstream, not the shared branch: a
+# feature branch that diverged from origin/feature (merge pull) gets a memory
+# commit and the `git pull --no-ff` it needs; one still level with its upstream
+# (rebase pull) keeps working with a plain `git pull` after the memory commit.
+git clone -q "$work/pull.git" "$work/g"
+git -C "$work/g" config pull.rebase false
+git -C "$work/g" config pull.ff only
+(cd "$work/g" && git checkout -q -b feature && echo g1 > g1.txt && git add g1.txt && git commit -qm g1 && git push -q -u origin feature 2>/dev/null)
+git clone -q "$work/pull.git" "$work/g2"
+(cd "$work/g2" && git checkout -q feature && echo g2 > g2.txt && git add g2.txt && git commit -qm g2 && git push -q origin feature)
+(cd "$work/g" && echo g3 > g3.txt && git add g3.txt && git commit -qm g3 && git fetch -q)
+teammate_note "Feature one"
+step "refresh (feature diverged from its upstream, merge pull, pull.ff=only)" "$work/g" am refresh
+expect "refresh says to pull with git pull --no-ff" grep -q 'Pull with `git pull --no-ff`: with pull.ff=only a plain `git pull` refuses, as this branch and its upstream have both moved.' "$work/out"
+refuse "plain git pull (diverged feature, pull.ff=only) refuses, as said" "$work/g" git pull -q
+step "git pull --no-ff (diverged feature, pull.ff=only)" "$work/g" git pull -q --no-ff --no-edit
+expect "G clean, with its upstream merged and the note" sh -c "cd '$work/g' && test -z \"\$(git status --porcelain)\" && git merge-base --is-ancestor origin/feature HEAD && am recall 'Feature one' | grep -q 'from the teammate'"
+git clone -q "$work/pull.git" "$work/h"
+git -C "$work/h" config pull.rebase true
+git -C "$work/h" config pull.ff only
+(cd "$work/h" && git checkout -q -b feature-h && echo h > h.txt && git add h.txt && git commit -qm h && git push -q -u origin feature-h 2>/dev/null)
+teammate_note "Feature two"
+step "refresh (feature level with its upstream, rebase pull, pull.ff=only)" "$work/h" am refresh
+expect "refresh made the memory commit and says git pull works" sh -c "grep -q 'committed on feature-h' '$work/out' && grep -q '\`git pull\` works as usual.' '$work/out'"
+step "git pull (feature ahead of its upstream, rebase, pull.ff=only)" "$work/h" git pull -q
+expect "H clean" sh -c "cd '$work/h' && test -z \"\$(git status --porcelain)\""
 # A code edit stops a rebasing pull whatever am does; am says so.
 (cd "$work/r" && git pull -q && echo v1 > mine.txt && git add mine.txt && git commit -qm mine && git push -q origin main && echo "my code edit" >> mine.txt)
 teammate_code "teammate code 9"; teammate_note "Code edit one"

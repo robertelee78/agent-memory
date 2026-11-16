@@ -3,7 +3,7 @@
 Branch `lean/v0.0.15`, built against [docs/design/v0.0.15-lean.md](docs/design/v0.0.15-lean.md).
 Committed through review batch 4 (c557117b); batch 5 below is not.
 
-## v0.0.16 fix release (branch `fix/v0.0.16`, committed in 0d30d596, PR #271; review fixes below not committed)
+## v0.0.16 fix release (branch `fix/v0.0.16`, PR #271: 0d30d596, review fixes 833e1372; the upstream fix below not committed)
 
 Three fixes ([#268](https://github.com/robertelee78/agent-memory/issues/268),
 [#269](https://github.com/robertelee78/agent-memory/issues/269),
@@ -79,16 +79,17 @@ committed memory), and one made earlier (bank = the previous shared memory,
 not on the upstream) is replaced, not stacked, so `am refresh` again fixes
 "more memory shared before you pull". No config change.
 
-Final matrix with the built `am`, after the review fixes: 128 cells
+Final matrix with the built `am`, after the review fixes: 144 cells
 (`matrix3.sh`, real git and `am`, kept outside the repo). Pull modes: merge,
 rebase, and each with `pull.ff=only`. Situations: up to date when memory
 arrives; behind (code and memory upstream); diverged (own unpushed code
-commit); feature branch with its own upstream; branch without upstream; more
-memory shared before the pull (up to date / behind); behind and `am refresh`
-run again. Uncommitted: none, an unshared memory edit, or an edit to a tracked
-code file. Each cell: what `am` did (moved / commit / staged); then either
-"ok" (plain `git pull` works) or "→" the step `am` printed, followed exactly,
-after which the pull works and the tree is clean.
+commit); feature branch level with its own upstream; feature branch whose
+local and upstream (`origin/feat`) code commits diverged; branch without
+upstream; more memory shared before the pull (up to date / behind); behind
+and `am refresh` run again. Uncommitted: none, an unshared memory edit, or an
+edit to a tracked code file. Each cell: what `am` did (moved / commit /
+staged); then either "ok" (plain `git pull` works) or "→" the step `am`
+printed, followed exactly, after which the pull works and the tree is clean.
 
 | situation | cmd | uncommitted | merge | rebase | merge, ff=only | rebase, ff=only |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -105,9 +106,13 @@ after which the pull works and the tree is clean.
 | diverged | refresh | code | commit; ok | commit; → stash, `git pull` | commit; → stash, `git pull --no-ff` | commit; → stash, `git pull --rebase` |
 | diverged | share | none | commit; ok | commit; ok | commit; → `git pull --no-ff` | commit; → `git pull --rebase` |
 | feature | refresh | none | commit; ok | commit; ok | staged; ok | commit; ok |
-| feature | refresh | memory | commit; ok | commit; → am share, `git pull` | staged; ok | commit; → am share, `git pull --rebase` |
-| feature | refresh | code | commit; ok | commit; → stash, `git pull` | staged; ok | commit; → stash, `git pull --rebase` |
+| feature | refresh | memory | commit; ok | commit; → am share, `git pull` | staged; ok | commit; → am share, `git pull` |
+| feature | refresh | code | commit; ok | commit; → stash, `git pull` | staged; ok | commit; → stash, `git pull` |
 | feature | share | none | commit; ok | commit; ok | staged; ok | commit; ok |
+| feature, diverged from its upstream | refresh | none | commit; ok | commit; ok | commit; → `git pull --no-ff` | commit; → `git pull --rebase` |
+| feature, diverged from its upstream | refresh | memory | commit; ok | commit; → am share, `git pull` | commit; → am share, `git pull --no-ff` | commit; → am share, `git pull --rebase` |
+| feature, diverged from its upstream | refresh | code | commit; ok | commit; → stash, `git pull` | commit; → stash, `git pull --no-ff` | commit; → stash, `git pull --rebase` |
+| feature, diverged from its upstream | share | none | commit; ok | commit; ok | commit; → `git pull --no-ff` | commit; → `git pull --rebase` |
 | no upstream | refresh | none | staged; says no upstream | staged; says no upstream | staged; says no upstream | staged; says no upstream |
 | no upstream | refresh | memory | staged; says no upstream | staged; says no upstream | staged; says no upstream | staged; says no upstream |
 | no upstream | refresh | code | staged; says no upstream | staged; says no upstream | staged; says no upstream | staged; says no upstream |
@@ -125,18 +130,18 @@ after which the pull works and the tree is clean.
 | behind, refresh again | refresh | code | staged; ok | commit; → stash, `git pull` | staged; ok | commit; → stash, `git pull --rebase` |
 | behind, refresh again | share | none | staged; ok | commit; ok | staged; ok | commit; → `git pull --rebase` |
 
-62 of 128 cells pull with a plain `git pull`. In the other 66 the pull is
+68 of 144 cells pull with a plain `git pull`. In the other 76 the pull is
 refused, but only where the printed message says so, and following its step
 works: "If more memory is shared before you pull, run am refresh first";
 "You have uncommitted changes[ (memory edits not shared yet: am share shares
 them)]; git will ask you to commit or stash them before a rebasing pull"
 (a rebasing pull refuses any uncommitted tracked change, with or without `am`);
 "Pull with `git pull --rebase`" / "`git pull --no-ff`: with pull.ff=only a
-plain `git pull` refuses, as this branch has a commit its upstream lacks"; "This
-branch has no upstream branch, so there is nothing for `git pull` to pull".
-No cell lost an edit. Before following the step, notes are readable in every
-cell except the two rebase-mode "behind, more memory" cells, where the pull
-stops on a `MEMORY.md` conflict (`am refresh` beforehand avoids it; `git
+plain `git pull` refuses, as this branch and its upstream have both moved";
+"This branch has no upstream branch, so there is nothing for `git pull` to
+pull". No cell lost an edit. Before following the step, notes are readable in
+every cell except the two rebase-mode "behind, more memory" cells, where the
+pull stops on a `MEMORY.md` conflict (`am refresh` beforehand avoids it; `git
 rebase --skip` recovers).
 
 Code: `share.rs` `settle` (after `record_shared`, under the bank lock),
@@ -172,10 +177,25 @@ memory-only commit, one `git status` in rebase mode.
    `pull.ff=only`, behind with code commits, a memory commit followed by
    `git pull --rebase` ends clean at the upstream; leaving the memory staged
    makes every pull form refuse (`--rebase`, `--ff-only` and plain). So the
-   commit stays and `am` says to use `git pull --rebase`. With a merging pull
-   and `pull.ff=only`, the memory stays staged (a fast-forward takes it) unless
-   the branch already diverged from the shared one; there the commit stays and
-   `am` names `git pull --no-ff`.
+   commit stays and `am` says to use `git pull --rebase`.
+   **Second review (not committed):** the decision and the message used
+   whether the branch tracks the shared branch, not the branch's own pull
+   upstream. Now both use `@{upstream}`: with a merging pull and
+   `pull.ff=only` the memory stays staged while HEAD can still fast-forward to
+   its upstream (`merge-base --is-ancestor HEAD @{upstream}`), else `am`
+   commits it; and after settling, `am` names `git pull --rebase` /
+   `git pull --no-ff` only when HEAD (with any memory commit) and its upstream
+   have both moved (`rev-list --left-right --count HEAD...@{upstream}`, both
+   counts above zero). The reviewer's example (feature branch tracking
+   `origin/feature`, `pull.rebase=false`, `pull.ff=only`, local and upstream
+   code commits diverged) now gets a memory commit and "Pull with `git pull
+   --no-ff`"; a plain pull refuses as said and `git pull --no-ff` ends clean.
+   The other direction: a feature branch level with its upstream, rebase and
+   `pull.ff=only`, gets the memory commit and "`git pull` works as usual", and
+   a plain pull does work (before, `am` wrongly asked for `--rebase` there).
+   `@{upstream}` is the remote-tracking ref as last fetched; `am` fetches only
+   the shared branch, so a feature upstream that moved since the user's last
+   fetch is judged on what was fetched.
 4. **Uncommitted changes.** In rebase mode `am` runs one `git status
    --porcelain --untracked-files=no` and, when anything tracked is changed or
    staged, says "You have uncommitted changes; git will ask you to commit or
@@ -196,7 +216,7 @@ commit is made for a pull that cannot happen).
   (rebuilt after `cargo clean`); `cargo fmt --check` clean;
   `aarch64-unknown-linux-musl` (statically linked) and `x86_64-unknown-linux-musl`
   (static-pie) with `rust-lld`: 0 warnings.
-- `scripts/qa.sh` on macOS arm64: **0 failures, 80 steps + 91 checks** (v0.0.15:
+- `scripts/qa.sh` on macOS arm64: **0 failures, 85 steps + 95 checks** (v0.0.15:
   40 + 51). New since v0.0.15: plain install with omp present beside the user's
   `vox.ts`; `--presets` without omp; status lists omp; pull-mode section (R
   rebases, M merges; refresh and share each, up to date, behind, refresh
@@ -209,17 +229,22 @@ commit is made for a pull that cannot happen).
   code edit in rebase mode (message, plain pull refused as said, stash/pull/pop
   keeps the edit), a branch without upstream, a relative `../shared-agent`
   `PI_CODING_AGENT_DIR` (resolved like omp) and one that cannot resolve with
-  omp left out of the presets. Finding 1 has no development-install
-  equivalent (a development install records no runtime), hence the signed hand
-  test above.
-- Timings (ms), last run: refresh 57–167, share 55–196 (local push included),
-  `git pull` 33–52, install 66–79 (first cold `--dry-run` 320), update adding
-  omp 31, uninstall 3–28, recall/remember/status/doctor/hook 0–15.
+  omp left out of the presets. Added with the second review: the feature
+  branch diverged from `origin/feature` (merge, `pull.ff=only`: message names
+  `git pull --no-ff`, plain pull refused as said, `--no-ff` clean with the
+  upstream merged and the note readable) and a feature branch level with its
+  upstream (rebase, `pull.ff=only`: memory commit, "works as usual", plain
+  pull clean). Finding 1 has no development-install equivalent (a development
+  install records no runtime), hence the signed hand test above.
+- Timings (ms), last run: refresh 63–167, share 55–217 (local push included;
+  217 is share behind code in rebase mode, with the memory commit), `git pull`
+  29–52, install 66–79 (first cold `--dry-run` 215), update adding omp 31,
+  uninstall 3–28, recall/remember/status/doctor/hook 0–15.
 
 ### Not done
 
 - Linux qa runs here (no Linux host); Main reports CI and Linux arm64 QA green
-  for 0d30d596, not yet for the review fixes.
+  for 833e1372, not yet for the upstream fix.
 - `am update` v0.0.15 → v0.0.16 against the real GitHub release (needs the
   published release and the real key; done above with a throwaway key).
 - `am uninstall` leaves the empty `~/.omp/agent/skills/` it created (as the
