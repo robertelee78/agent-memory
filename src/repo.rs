@@ -1,7 +1,9 @@
 //! The repository a command runs in: root, configuration and bank path,
 //! observed once per command.
 use crate::bail;
+use crate::github;
 use crate::util::{Error, Output, Result, run};
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
@@ -15,6 +17,8 @@ pub struct Repo {
     pub bank: PathBuf,
     /// Every `git config` entry, last value wins.
     pub config: BTreeMap<String, String>,
+    /// The GitHub account this command switched to after a refusal.
+    pub account: RefCell<Option<github::Switch>>,
 }
 
 /// The nearest ancestor holding `.git` (a directory or a worktree file).
@@ -54,6 +58,7 @@ impl Repo {
             root,
             bank_rel,
             config,
+            account: RefCell::new(None),
         }))
     }
 
@@ -106,6 +111,37 @@ impl Repo {
         input: Option<&[u8]>,
     ) -> Result<Output> {
         git_in(&self.root, args, env, input)
+    }
+    /// Run a git command that talks to `origin`. When GitHub refuses the
+    /// credentials, retry with the other signed-in `gh` accounts (see
+    /// `github`) and keep the one that works for the rest of the command.
+    pub fn remote(&self, args: &[&str]) -> Result<Output> {
+        let cached = self.account.borrow().as_ref().map(|s| s.login.clone());
+        let output = match &cached {
+            Some(login) => {
+                let env = github::credential_env(login);
+                let env: Vec<(&str, &OsStr)> = env
+                    .iter()
+                    .map(|(k, v)| (k.as_str(), v.as_os_str()))
+                    .collect();
+                self.git_with(args, &env, None)?
+            }
+            None => self.git(args)?,
+        };
+        if output.ok() || !github::refused(&github::said(&output)) {
+            return Ok(output);
+        }
+        match github::retry(self, args, &output, cached.as_deref())? {
+            Some((output, switch)) => {
+                *self.account.borrow_mut() = Some(switch);
+                Ok(output)
+            }
+            None => Ok(output),
+        }
+    }
+    /// The line telling the user which GitHub account was used, if switched.
+    pub fn account_note(&self) -> Option<String> {
+        self.account.borrow().as_ref().map(|s| s.note.clone())
     }
     /// Refuse when any component of the repository-relative `rel` (the
     /// bank root, a directory inside it or the file) is a symbolic link:

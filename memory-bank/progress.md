@@ -1,6 +1,6 @@
 # Progress
 
-## Works (v0.0.17)
+## Works (v0.0.18)
 
 - All lean commands: status, doctor, init, recall, remember, share, refresh,
   install/update/uninstall, session-start hooks for Claude, Codex and omp.
@@ -15,14 +15,18 @@
 - `am recall QUERY` returns only the notes that have every query word (common
   words ignored; short words and numbers exact), best first, and says when it
   shows closest matches instead.
+- `am share` and `am refresh` retry a refused github.com login with the other
+  accounts signed in to `gh` (the repository owner's first), for their own git
+  calls only, and say which account was used.
 - `scripts/qa.sh` passes on macOS arm64, Linux arm64 and Linux x86_64; every
-  command under about 200 ms locally.
-- v0.0.15, v0.0.16 and v0.0.17 are published; v0.0.14 takeover verified from a
-  real install and an offline QA fixture; omp works on the operator's machine.
+  local command under about 200 ms.
+- v0.0.15 to v0.0.17 are published; v0.0.14 takeover verified from a real
+  install and an offline QA fixture; omp works on the operator's machine.
 
 ## Remaining
 
-- v0.0.18: the ten open items in that milestone; none started. Scope each one
+- Publish the signed v0.0.18 release.
+- v0.0.19: the ten open items in that milestone; none started. Scope each one
   with the operator first (see activeContext).
 
 ## Known limits

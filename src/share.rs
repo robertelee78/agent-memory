@@ -30,7 +30,7 @@ fn branch(repo: &Repo) -> Result<String> {
             return Ok(name.to_owned());
         }
     }
-    let listed = repo.git(&["ls-remote", "--symref", "origin", "HEAD"])?;
+    let listed = repo.remote(&["ls-remote", "--symref", "origin", "HEAD"])?;
     if listed.ok() {
         for line in listed.text().lines() {
             if let Some(rest) = line.strip_prefix("ref: refs/heads/") {
@@ -92,7 +92,7 @@ fn observe(repo: &Repo) -> Result<Shared> {
     }
     let branch = branch(repo)?;
     let tracking = format!("refs/remotes/origin/{branch}");
-    let fetched = repo.git(&[
+    let fetched = repo.remote(&[
         "fetch",
         "--quiet",
         "--no-tags",
@@ -865,10 +865,23 @@ fn lock_bank(repo: &Repo) -> Result<crate::util::Lock> {
     lock(&repo.bank)
 }
 
+/// `out`, then the GitHub account line when the command switched accounts.
+fn with_account(repo: &Repo, mut out: String) -> String {
+    if let Some(note) = repo.account_note() {
+        push_note(&mut out, &note);
+    }
+    out
+}
+
 /// `am refresh`.
 pub fn refresh() -> Result<String> {
     let repo = Repo::current()?;
-    let shared = observe(&repo)?;
+    let out = refresh_in(&repo)?;
+    Ok(with_account(&repo, out))
+}
+
+fn refresh_in(repo: &Repo) -> Result<String> {
+    let shared = observe(repo)?;
     let branch = &shared.branch;
     let Some(theirs) = shared.theirs.as_deref() else {
         return Ok(format!(
@@ -938,6 +951,11 @@ fn has_markers(dir: &Path) -> Vec<String> {
 /// `am share`: commit only the bank on top of the shared branch and push it.
 pub fn share(message: Option<&str>) -> Result<String> {
     let repo = Repo::current()?;
+    let out = share_in(&repo, message)?;
+    Ok(with_account(&repo, out))
+}
+
+fn share_in(repo: &Repo, message: Option<&str>) -> Result<String> {
     if !bank::Bank::new(&repo.bank).exists() {
         bail!("No memory bank at {}/. Run `am init` first.", repo.bank_rel);
     }
@@ -988,7 +1006,7 @@ pub fn share(message: Option<&str>) -> Result<String> {
             push_note(&mut out, &notes);
             return Ok(out);
         };
-        let pushed = repo.git(&[
+        let pushed = repo.remote(&[
             "push",
             "--porcelain",
             "--no-verify",
@@ -1010,11 +1028,19 @@ pub fn share(message: Option<&str>) -> Result<String> {
         {
             continue; // Someone shared meanwhile: merge again and retry.
         }
-        if ["protected", "GH006", "GH013", "declined", "denied", "rule"]
+        // A refusal of the credentials is never a protected branch (GitHub
+        // HTTPS refusals were already retried with the other gh accounts).
+        if crate::github::refused(&error) {
+            bail!(
+                "origin refused your credentials for the push to {branch}; nothing was shared. Check that you may push to this repository. Git said: {}",
+                error.trim()
+            );
+        }
+        if ["protected", "GH006", "GH013", "declined", "rule"]
             .iter()
             .any(|word| error.contains(word))
         {
-            return propose(&repo, branch, &commit);
+            return propose(repo, branch, &commit);
         }
         bail!("Push to origin/{branch} failed: {}", error.trim());
     }
@@ -1080,17 +1106,30 @@ fn propose(repo: &Repo, branch: &str, commit: &str) -> Result<String> {
         .unwrap_or("memory")
         .to_owned();
     let head = format!("agent-memory/{project}/{}", &commit[..commit.len().min(12)]);
-    repo.git_ok(&[
+    let pushed = repo.remote(&[
         "push",
         "--porcelain",
         "--no-verify",
         "origin",
         &format!("{commit}:refs/heads/{head}"),
     ])?;
+    if !pushed.ok() {
+        bail!(
+            "origin/{branch} is protected, and pushing the memory to a new branch {head} failed too: {}",
+            pushed.error_text()
+        );
+    }
     if crate::util::which("gh").is_none() {
         return Ok(format!(
             "origin/{branch} is protected, so memory was pushed to branch {head}. Open a pull request from it into {branch} (install the gh CLI to have am open it)."
         ));
+    }
+    // The same GitHub account as the push, when the command switched.
+    let login = repo.account.borrow().as_ref().map(|s| s.login.clone());
+    let token = login.as_deref().and_then(crate::github::token);
+    let mut env = vec![("GH_PROMPT_DISABLED", OsStr::new("1"))];
+    if let Some(token) = &token {
+        env.push(("GH_TOKEN", token.as_os_str()));
     }
     let output = run(
         "gh",
@@ -1109,7 +1148,7 @@ fn propose(repo: &Repo, branch: &str, commit: &str) -> Result<String> {
             ),
         ],
         Some(&repo.root),
-        &[("GH_PROMPT_DISABLED", OsStr::new("1"))],
+        &env,
         None,
     )?;
     if output.ok() {
