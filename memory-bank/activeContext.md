@@ -2,9 +2,9 @@
 
 ## Current focus
 
-v0.0.18 (`fix/share-account`) is a small fix release: `am share` and
-`am refresh` use the GitHub account that may reach the repository when `gh` is
-signed in to several (#275). The next focus after it is v0.0.19: the ten open
+v0.0.18 is published and landed (2026-11-16): `am share` and `am refresh` use
+the GitHub account that may reach the repository when `gh` is signed in to
+several (#275). The next focus is v0.0.19: the ten open
 items in that milestone (guided recall #252 and #253, large-bank recall speed
 #206, semantic recall #200, graph and embedding work #256, #257, #265, #56,
 #62, and stress qualification #209).

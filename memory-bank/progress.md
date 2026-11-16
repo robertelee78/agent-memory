@@ -20,12 +20,11 @@
   calls only, and say which account was used.
 - `scripts/qa.sh` passes on macOS arm64, Linux arm64 and Linux x86_64; every
   local command under about 200 ms.
-- v0.0.15 to v0.0.17 are published; v0.0.14 takeover verified from a real
+- v0.0.15 to v0.0.18 are published; v0.0.14 takeover verified from a real
   install and an offline QA fixture; omp works on the operator's machine.
 
 ## Remaining
 
-- Publish the signed v0.0.18 release.
 - v0.0.19: the ten open items in that milestone; none started. Scope each one
   with the operator first (see activeContext).
 
