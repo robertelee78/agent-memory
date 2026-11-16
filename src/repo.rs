@@ -113,30 +113,31 @@ impl Repo {
         git_in(&self.root, args, env, input)
     }
     /// Run a git command that talks to `origin`. When GitHub refuses the
-    /// credentials, retry with another signed-in `gh` account (see
-    /// `github`) and keep it for the rest of the command.
+    /// credentials, retry with the other signed-in `gh` accounts (see
+    /// `github`) and keep the one that works for the rest of the command.
     pub fn remote(&self, args: &[&str]) -> Result<Output> {
-        if let Some(login) = self.account.borrow().as_ref().map(|s| s.login.clone()) {
-            let env = github::credential_env(&login);
-            let env: Vec<(&str, &OsStr)> = env
-                .iter()
-                .map(|(k, v)| (k.as_str(), v.as_os_str()))
-                .collect();
-            return self.git_with(args, &env, None);
-        }
-        let output = self.git(args)?;
-        let text = format!(
-            "{}\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            output.error_text()
-        );
-        let github_https = self.remote_url().and_then(github::https_repo).is_some();
-        if output.ok() || !github_https || !github::refused(&text) {
+        let cached = self.account.borrow().as_ref().map(|s| s.login.clone());
+        let output = match &cached {
+            Some(login) => {
+                let env = github::credential_env(login);
+                let env: Vec<(&str, &OsStr)> = env
+                    .iter()
+                    .map(|(k, v)| (k.as_str(), v.as_os_str()))
+                    .collect();
+                self.git_with(args, &env, None)?
+            }
+            None => self.git(args)?,
+        };
+        if output.ok() || !github::refused(&github::said(&output)) {
             return Ok(output);
         }
-        let (output, switch) = github::retry(self, args, &output)?;
-        *self.account.borrow_mut() = Some(switch);
-        Ok(output)
+        match github::retry(self, args, &output, cached.as_deref())? {
+            Some((output, switch)) => {
+                *self.account.borrow_mut() = Some(switch);
+                Ok(output)
+            }
+            None => Ok(output),
+        }
     }
     /// The line telling the user which GitHub account was used, if switched.
     pub fn account_note(&self) -> Option<String> {

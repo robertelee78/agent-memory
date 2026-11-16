@@ -1,9 +1,10 @@
 //! GitHub accounts for git calls that talk to `origin`. When GitHub refuses
-//! the user's usual credentials on a github.com HTTPS remote, the call is
-//! retried with the other accounts signed in to `gh` (the repository owner's
-//! first), and the one that works is kept for the rest of the command. The
-//! token reaches only the child git through a credential helper given in its
-//! environment: never argv, output, files, git config or the active account.
+//! a call whose destination (after git's URL rewrites) is a github.com HTTPS
+//! repository, the call is retried with the accounts signed in to `gh` (the
+//! repository owner's first), and the one that works is kept for the rest of
+//! the command. The token reaches only the child git, through a credential
+//! helper given in its environment and scoped to https://github.com: never
+//! argv, output, files, git config, another host or the active gh account.
 use crate::bail;
 use crate::install::shell_quote;
 use crate::repo::Repo;
@@ -16,8 +17,11 @@ pub struct Switch {
     pub note: String,
 }
 
-/// `owner/name` of a github.com HTTPS remote URL.
-pub fn https_repo(url: &str) -> Option<String> {
+/// What the user's own credentials are called when GitHub does not name them.
+const CURRENT: &str = "your current Git login";
+
+/// `owner/name` of a github.com HTTPS URL.
+fn https_repo(url: &str) -> Option<String> {
     let rest = url.strip_prefix("https://")?;
     let (host, path) = rest.split_once('/')?;
     let host = host.rsplit('@').next()?;
@@ -47,14 +51,30 @@ pub fn refused(error: &str) -> bool {
     .any(|text| error.contains(text))
 }
 
+/// Standard output and error of a git call, for matching git's messages.
+pub fn said(output: &Output) -> String {
+    format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        output.error_text()
+    )
+}
+
 fn valid_login(login: &str) -> bool {
     !login.is_empty() && login.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
 }
 
-/// Accounts signed in to `gh` for github.com: `(login, active)`.
-fn accounts() -> Vec<(String, bool)> {
-    let query = r#".hosts["github.com"][] | select(.state == "success") | "\(.login) \(.active)""#;
-    let args = [
+fn gh(args: &[&str]) -> Option<Output> {
+    let args: Vec<&OsStr> = args.iter().map(OsStr::new).collect();
+    run("gh", &args, None, &[], None).ok()
+}
+
+/// Accounts signed in to `gh` for github.com. `--json` needs gh 2.81 or
+/// newer; older ones (2.40+, the first with several accounts) print
+/// "Logged in to github.com account NAME" lines instead.
+fn accounts() -> Vec<String> {
+    let query = r#".hosts["github.com"][] | select(.state == "success") | .login"#;
+    let json = [
         "auth",
         "status",
         "--hostname",
@@ -64,24 +84,26 @@ fn accounts() -> Vec<(String, bool)> {
         "--jq",
         query,
     ];
-    let args: Vec<&OsStr> = args.iter().map(OsStr::new).collect();
-    let Ok(output) = run("gh", &args, None, &[], None) else {
-        return Vec::new();
+    let logins: Vec<String> = match gh(&json) {
+        Some(output) if output.ok() => output.text().lines().map(str::to_owned).collect(),
+        Some(_) => match gh(&["auth", "status", "--hostname", "github.com"]) {
+            Some(output) => said(&output)
+                .lines()
+                .filter_map(|line| line.split("Logged in to github.com account ").nth(1))
+                .filter_map(|rest| rest.split_whitespace().next())
+                .map(str::to_owned)
+                .collect(),
+            None => Vec::new(),
+        },
+        None => Vec::new(),
     };
-    output
-        .text()
-        .lines()
-        .filter_map(|line| {
-            let (login, active) = line.split_once(' ')?;
-            valid_login(login).then(|| (login.to_owned(), active == "true"))
-        })
-        .collect()
+    logins.into_iter().filter(|l| valid_login(l)).collect()
 }
 
-/// Environment that makes a child git authenticate to GitHub as `login`:
-/// the configured credential helpers are reset and replaced by one that asks
-/// `gh` for that account's token. Appended after any `GIT_CONFIG_COUNT`
-/// entries the user already set.
+/// Environment that makes a child git authenticate to https://github.com as
+/// `login`: the helpers configured for github.com are reset and replaced by
+/// one that asks `gh` for that account's token. Other hosts keep the user's
+/// helpers. Appended after any `GIT_CONFIG_COUNT` entries the user set.
 pub fn credential_env(login: &str) -> Vec<(String, OsString)> {
     let gh = which("gh").map_or_else(|| "gh".to_owned(), |p| p.to_string_lossy().into_owned());
     let helper = format!(
@@ -99,7 +121,7 @@ pub fn credential_env(login: &str) -> Vec<(String, OsString)> {
     for (i, value) in [String::new(), helper].into_iter().enumerate() {
         env.push((
             format!("GIT_CONFIG_KEY_{}", start + i),
-            "credential.helper".into(),
+            "credential.https://github.com.helper".into(),
         ));
         env.push((format!("GIT_CONFIG_VALUE_{}", start + i), value.into()));
     }
@@ -108,75 +130,83 @@ pub fn credential_env(login: &str) -> Vec<(String, OsString)> {
 
 /// `login`'s token for a `gh` child (`GH_TOKEN`), read from `gh` itself.
 pub fn token(login: &str) -> Option<OsString> {
-    let words = ["auth", "token", "--hostname", "github.com", "--user", login];
-    let args: Vec<&OsStr> = words.iter().map(OsStr::new).collect();
-    let output = run("gh", &args, None, &[], None).ok()?;
+    let output = gh(&["auth", "token", "--hostname", "github.com", "--user", login])?;
     let token = output.text();
     (output.ok() && !token.is_empty()).then(|| token.into())
 }
 
-/// `args` failed with `failed` because GitHub refused the credentials: try
-/// the other `gh` accounts. Returns the first output that is not a refusal
-/// (success, or an ordinary failure such as a moved branch) together with the
-/// account that produced it; refuses plainly when no account is let in.
-pub fn retry(repo: &Repo, args: &[&str], failed: &Output) -> Result<(Output, Switch)> {
-    let error = format!(
-        "{}\n{}",
-        String::from_utf8_lossy(&failed.stdout),
-        failed.error_text()
-    );
-    let Some(target) = repo.remote_url().and_then(https_repo) else {
-        bail!("origin is not a github.com HTTPS remote");
+/// Where `args` sends git, after git's URL rewrites: the push URL for a
+/// push, the fetch URL otherwise.
+fn destination(repo: &Repo, args: &[&str]) -> Option<String> {
+    let push = args.first() == Some(&"push");
+    let get: &[&str] = if push {
+        &["remote", "get-url", "--push", "origin"]
+    } else {
+        &["remote", "get-url", "origin"]
     };
+    let output = repo.git(get).ok()?;
+    output.ok().then(|| output.text())
+}
+
+/// `args` failed with `failed` because the remote refused the credentials
+/// (this command's own `supplied` account, if any). When the call goes to a
+/// github.com HTTPS repository, try the other `gh` accounts, owner first.
+/// Returns the first output that is not a refusal (success, or an ordinary
+/// failure such as a moved branch) and the account that produced it; `None`
+/// when the destination is not GitHub over HTTPS; refuses plainly when no
+/// account is let in.
+pub fn retry(
+    repo: &Repo,
+    args: &[&str],
+    failed: &Output,
+    supplied: Option<&str>,
+) -> Result<Option<(Output, Switch)>> {
+    let Some(target) = destination(repo, args).as_deref().and_then(https_repo) else {
+        return Ok(None);
+    };
+    let error = said(failed);
     let owner = target.split('/').next().unwrap_or_default().to_owned();
-    let pushing = args.first() == Some(&"push");
-    let action = if pushing { "push to" } else { "read" };
-    let mut known = accounts();
+    let action = if args.first() == Some(&"push") {
+        "push to"
+    } else {
+        "read"
+    };
+    // Who was refused: the account GitHub names, else the one this command
+    // supplied; otherwise the user's own Git login, which may be anything.
     let named = error
         .split(" denied to ")
         .nth(1)
         .and_then(|rest| rest.split(['.', '\n', ' ']).next())
         .filter(|login| valid_login(login))
+        .or(supplied)
         .map(str::to_owned);
-    let first = named.or_else(|| {
-        known
-            .iter()
-            .find(|(_, active)| *active)
-            .map(|(login, _)| login.clone())
-    });
-    let mut refused_by: Vec<String> = first.iter().cloned().collect();
-    // Owner first, then the others, the active account (most likely the one
-    // just refused) last; the account named in the refusal is skipped.
-    known.sort_by_key(|(login, active)| (!login.eq_ignore_ascii_case(&owner), *active));
-    for (login, _) in known {
-        if refused_by.contains(&login) {
+    let mut refused_by = vec![named.clone().unwrap_or_else(|| CURRENT.to_owned())];
+    let mut known = accounts();
+    known.sort_by_key(|login| !login.eq_ignore_ascii_case(&owner));
+    for login in &known {
+        if named.as_deref() == Some(login) || supplied == Some(login) {
             continue;
         }
-        let env = credential_env(&login);
+        let env = credential_env(login);
         let env: Vec<(&str, &OsStr)> = env
             .iter()
             .map(|(k, v)| (k.as_str(), v.as_os_str()))
             .collect();
         let output = repo.git_with(args, &env, None)?;
-        let text = format!(
-            "{}\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            output.error_text()
-        );
-        if output.ok() || !refused(&text) {
-            let was = first
-                .as_deref()
-                .map(|f| format!(" ({f} may not {action} it)"))
-                .unwrap_or_default();
-            let note = format!("Used GitHub account {login} for {target}{was}.");
-            return Ok((output, Switch { login, note }));
+        if output.ok() || !refused(&said(&output)) {
+            let note = format!(
+                "Used GitHub account {login} for {target} ({} may not {action} it).",
+                refused_by[0]
+            );
+            let login = login.clone();
+            return Ok(Some((output, Switch { login, note })));
         }
-        refused_by.push(login);
+        refused_by.push(login.clone());
     }
     let who = match refused_by.as_slice() {
-        [] => "Your current GitHub credentials may not".to_owned(),
-        [login] => format!("GitHub account {login} may not"),
-        logins => format!("None of your GitHub accounts ({}) may", logins.join(", ")),
+        [one] if one == CURRENT => "Your current Git login may not".to_owned(),
+        [one] => format!("GitHub account {one} may not"),
+        many => format!("None of your GitHub logins ({}) may", many.join(", ")),
     };
     let missing = if error.contains("Repository not found") {
         " (or it does not exist)"
@@ -185,6 +215,8 @@ pub fn retry(repo: &Repo, args: &[&str], failed: &Output) -> Result<(Output, Swi
     };
     let fix = if which("gh").is_none() {
         "install the GitHub CLI (gh) and sign in to an account that has access with `gh auth login`"
+    } else if known.is_empty() {
+        "sign in to an account that has access with `gh auth login` (am chooses among the github.com accounts gh 2.40 or newer lists)"
     } else {
         "sign in to an account that has access with `gh auth login`"
     };

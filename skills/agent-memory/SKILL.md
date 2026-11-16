@@ -1,7 +1,7 @@
 ---
 name: agent-memory
 description: Shared project memory in the repository's memory-bank/. Use at session start to learn what the project is, how it is built and its lessons; at milestones to suggest a memory, ask the user and save it with am remember.
-metadata: {"version": "0.0.17"}
+metadata: {"version": "0.0.18"}
 ---
 
 # Agent memory
@@ -85,6 +85,9 @@ Share when the user asks or agrees. After `am share` or `am refresh` a plain
 `git pull` works: `am` moves the branch over memory-only commits, adds one
 memory-only commit, or stages the memory, and prints which, plus any step the
 user must take first. Relay that message to the user as it is.
+When `gh` is signed in to several GitHub accounts, `am` picks the one that may
+reach the repository by itself and says which it used; do not switch accounts
+for it.
 
 ## A new project
 

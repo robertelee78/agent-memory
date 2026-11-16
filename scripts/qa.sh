@@ -30,7 +30,9 @@ trap 'rm -rf "$work"' EXIT
 export HOME="$work/home"
 # Inherited omp locations would point default omp detection outside the
 # temporary HOME; the scenarios that need them set them explicitly.
-unset XDG_STATE_HOME XDG_DATA_HOME XDG_CONFIG_HOME CODEX_HOME CLAUDE_CONFIG_DIR GIT_DIR GIT_WORK_TREE PI_CODING_AGENT_DIR PI_CONFIG_DIR
+unset XDG_STATE_HOME XDG_DATA_HOME XDG_CONFIG_HOME CODEX_HOME CLAUDE_CONFIG_DIR GIT_DIR GIT_WORK_TREE PI_CODING_AGENT_DIR PI_CONFIG_DIR GIT_CONFIG_COUNT
+# The system git config (a keychain credential helper, say) stays out.
+export GIT_CONFIG_NOSYSTEM=1
 mkdir -p "$HOME/.claude" "$HOME/.omp/agent/extensions" "$HOME/dotfiles"
 # omp is on this machine, with an extension of the user's own.
 printf '// my own omp extension\n' > "$HOME/.omp/agent/extensions/vox.ts"
@@ -357,50 +359,92 @@ teammate_note "No upstream one"
 step "refresh on a branch without upstream" "$work/r" am refresh
 expect "refresh says there is no upstream to pull" grep -q 'This branch has no upstream branch, so there is nothing for `git pull` to pull.' "$work/out"
 
-# A github.com HTTPS remote whose push GitHub refuses for the active gh
-# account (offline: the URL is rewritten to a local bare repository, a fake
-# `gh` knows two accounts, and a `git` shim answers a push with GitHub's exact
-# 403 text unless the credential helper am passes names the allowed account).
+# GitHub over HTTPS, offline. The remote URL stays https://github.com/qa-owner/qa.git;
+# a `git` shim stands in for GitHub: for fetch, ls-remote and push it asks the
+# configured credential helpers for the destination (`git credential fill`,
+# so the helper am passes really runs), logs what it was offered, and lets the
+# call through to a local bare repository only when the password is the token
+# of an account allowed to read (QA_READERS) or push (QA_PUSHERS); otherwise it
+# refuses with GitHub's own text. A fake `gh` knows qa-other (active) and
+# qa-owner, and hands out token-LOGIN. The user's own Git login for github.com
+# is a helper answering token-$QA_DEFAULT ("stale" = an unknown credential).
 shim="$work/shim"; mkdir -p "$shim"
 cat > "$shim/gh" <<'EOF'
 #!/bin/sh
 case "$*" in
-  "auth status"*) printf 'qa-other true\nqa-owner false\n' ;;
-  "auth token"*) echo qa-token ;;
-  "pr create"*) [ "${GH_TOKEN:-}" = qa-token ] && echo "https://github.com/qa-owner/qa/pull/1 (as qa-owner)" ;;
+  *--json*) [ -n "${QA_OLD_GH:-}" ] && { echo "unknown flag: --json" >&2; exit 1; }; printf 'qa-other\nqa-owner\n' ;;
+  "auth status"*) printf 'github.com\n  ✓ Logged in to github.com account qa-other (keyring)\n  - Active account: true\n  ✓ Logged in to github.com account qa-owner (keyring)\n  - Active account: false\n' ;;
+  "auth token"*) for last; do :; done; echo "token-$last" ;;
+  "pr create"*) [ "${GH_TOKEN:-}" = token-qa-owner ] && echo "https://github.com/qa-owner/qa/pull/1 (as qa-owner)" ;;
   *) exit 1 ;;
 esac
 EOF
 cat > "$shim/git" <<EOF
 #!/bin/sh
-case " \$* " in *" push "*)
-  if ! env | grep -q -- "--user \${QA_PUSHER:-none};"; then
-    echo "remote: Permission to qa-owner/qa.git denied to qa-other." >&2
-    echo "fatal: unable to access 'https://github.com/qa-owner/qa.git/': The requested URL returned error: 403" >&2
-    exit 128
-  fi ;;
-esac
-exec $(command -v git) "\$@"
+real=$(command -v git)
+case "\$1" in fetch|ls-remote|push) ;; *) exec "\$real" "\$@" ;; esac
+if [ "\$1" = push ]; then url=\$("\$real" remote get-url --push origin); allowed=\$QA_PUSHERS
+else url=\$("\$real" remote get-url origin); allowed=\$QA_READERS; fi
+rest=\${url#https://}; host=\${rest%%/*}; path=\${rest#*/}
+password=\$(printf 'protocol=https\nhost=%s\npath=%s\n\n' "\$host" "\$path" | GIT_TERMINAL_PROMPT=0 GIT_ASKPASS= SSH_ASKPASS= "\$real" credential fill 2>/dev/null | sed -n 's/^password=//p')
+echo "\$1 \$host \${password:-none}" >> "$work/credentials.log"
+login=\${password#token-}
+if [ "\$host" = github.com ]; then
+  case " \$allowed " in *" \$login "*) exec "\$real" -c "url.$work/gh.git.insteadOf=\$url" "\$@" ;; esac
+  if [ "\$1" != push ]; then
+    printf 'remote: Repository not found.\nfatal: repository %s not found\n' "'\$url/'" >&2
+  elif [ "\$login" = qa-other ] || [ "\$login" = qa-owner ]; then
+    printf 'remote: Permission to %s denied to %s.\nfatal: unable to access %s: The requested URL returned error: 403\n' "\$path" "\$login" "'\$url/'" >&2
+  else
+    printf 'remote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for %s\n' "'\$url/'" >&2
+  fi
+  exit 128
+fi
+printf 'fatal: Authentication failed for %s\n' "'\$url/'" >&2
+exit 128
 EOF
 chmod +x "$shim/gh" "$shim/git"
+git config --global credential.https://github.com.helper '!f() { test "$1" = get && echo username=me && echo "password=token-${QA_DEFAULT:-stale}"; }; f'
+as_github() { env PATH="$shim:$PATH" "$@"; }
+local_git() { git -c url."$work/gh.git".insteadOf=https://github.com/qa-owner/qa.git "$@"; }
 git init -q --bare "$work/gh.git"
-git config --global url."$work/gh.git".insteadOf https://github.com/qa-owner/qa.git
-git clone -q https://github.com/qa-owner/qa.git "$work/k" 2>/dev/null
-(cd "$work/k" && echo code > code.txt && git add code.txt && git commit -qm init && git push -q origin main && am init > /dev/null)
+local_git clone -q https://github.com/qa-owner/qa.git "$work/k" 2>/dev/null
+(cd "$work/k" && echo code > code.txt && git add code.txt && git commit -qm init && local_git push -q origin main && am init > /dev/null)
 (cd "$work/k" && am remember --kind fact --title "Account switch" --body "Pushed as the owner's account." > /dev/null)
-step "share (GitHub refuses the active account)" "$work/k" env PATH="$shim:$PATH" QA_PUSHER=qa-owner am share
+step "share (GitHub refuses the user's login by name)" "$work/k" as_github QA_DEFAULT=qa-other QA_READERS="qa-other qa-owner" QA_PUSHERS=qa-owner am share
 expect "share used the owner's account and says so" grep -q 'Used GitHub account qa-owner for qa-owner/qa (qa-other may not push to it).' "$work/out"
+expect "the helper am passed ran and gave the owner's token" grep -q '^push github.com token-qa-owner$' "$work/credentials.log"
 expect "the memory reached the remote" sh -c "git -C '$work/gh.git' ls-tree -r --name-only main | grep -q 'memory-bank/topics/'"
-expect "no git config written for the account" sh -c "! git -C '$work/k' config --local --get-regexp credential && ! git config --global --get-regexp credential"
+expect "no git config written for the account" sh -c "! git -C '$work/k' config --local --get-regexp credential && test \"\$(git config --global --get-regexp credential | wc -l)\" -eq 1"
 (cd "$work/k" && am remember --kind fact --title "Nobody may push" --body "Refused for every account." > /dev/null)
-refuse "share when no account may push" "$work/k" env PATH="$shim:$PATH" QA_PUSHER=nobody am share
-expect "one plain refusal, not a protected branch" sh -c "grep -q 'None of your GitHub accounts (qa-other, qa-owner) may push to qa-owner/qa.' '$work/out' && ! grep -q -e protected -e fatal '$work/out'"
+refuse "share when no account may push" "$work/k" as_github QA_DEFAULT=qa-other QA_READERS="qa-other qa-owner" QA_PUSHERS=nobody am share
+expect "one plain refusal, not a protected branch" sh -c "grep -q 'None of your GitHub logins (qa-other, qa-owner) may push to qa-owner/qa.' '$work/out' && ! grep -q -e protected -e fatal '$work/out'"
 expect "no memory branch pushed" sh -c "test -z \"\$(git -C '$work/gh.git' for-each-ref refs/heads/agent-memory)\""
+step "share with a gh older than 2.81 (no --json)" "$work/k" as_github QA_OLD_GH=1 QA_DEFAULT=qa-other QA_READERS="qa-other qa-owner" QA_PUSHERS=qa-owner am share
+expect "older gh: accounts read from its text, owner's account used" grep -q 'Used GitHub account qa-owner for qa-owner/qa (qa-other may not push to it).' "$work/out"
+# A second clone whose own login is an unknown credential ("Repository not
+# found", no name): every gh account is tried, the active one included.
+local_git clone -q https://github.com/qa-owner/qa.git "$work/k2" 2>/dev/null
+step "refresh (unnamed refusal; only the active gh account may read)" "$work/k2" as_github QA_DEFAULT=stale QA_READERS=qa-other am refresh
+expect "refresh used the active account and calls the refused one the current Git login" grep -q 'Used GitHub account qa-other for qa-owner/qa (your current Git login may not read it).' "$work/out"
+expect "refresh brought the shared notes" sh -c "cd '$work/k2' && am recall 'Account switch' | grep -q \"owner's account\""
+(cd "$work/k2" && am remember --kind fact --title "Read-only account" --body "Pushed after the reading account was refused." > /dev/null)
+step "share (the account that may read may not push)" "$work/k2" as_github QA_DEFAULT=stale QA_READERS=qa-owner QA_PUSHERS=qa-other am share
+expect "the push went on to the next account" grep -q 'Used GitHub account qa-other for qa-owner/qa (qa-owner may not push to it).' "$work/out"
+expect "the note reached the remote" sh -c "git -C '$work/gh.git' log -1 --format=%s main | grep -q memory"
+# A push URL on another host: the GitHub token is never offered there.
+git -C "$work/k2" config remote.origin.pushurl https://other.example/qa.git
+(cd "$work/k2" && am remember --kind fact --title "Other host" --body "Never reaches other.example." > /dev/null)
+refuse "share with a push URL on another host" "$work/k2" as_github QA_DEFAULT=stale QA_READERS=qa-owner QA_PUSHERS=qa-owner am share
+expect "plain refusal from the other host, no GitHub account retried" sh -c "grep -q 'origin refused your credentials for the push to main' '$work/out' && ! grep -q 'Used GitHub account' '$work/out'"
+expect "no token was offered to other.example" sh -c "grep -q '^push other.example none$' '$work/credentials.log' && ! grep -q '^push other.example token-' '$work/credentials.log'"
+git -C "$work/k2" config --unset remote.origin.pushurl
 # Protected main (GitHub's GH006 from a hook): the memory branch push and
 # `gh pr create` use the same account the share switched to.
 printf '#!/bin/sh\nwhile read old new ref; do [ "$ref" = refs/heads/main ] && { echo "remote: error: GH006: Protected branch update failed for refs/heads/main." >&2; exit 1; }; done; exit 0\n' > "$work/gh.git/hooks/pre-receive"
 chmod +x "$work/gh.git/hooks/pre-receive"
-step "share to a protected branch (GitHub refuses the active account)" "$work/k" env PATH="$shim:$PATH" QA_PUSHER=qa-owner am share
+(cd "$work/k" && am remember --kind fact --title "Protected" --body "Goes to a memory branch." > /dev/null)
+step "share to a protected branch (GitHub refuses the user's login)" "$work/k" as_github QA_DEFAULT=qa-other QA_READERS="qa-other qa-owner" QA_PUSHERS=qa-owner am share
 expect "memory branch pushed and the PR opened as the owner's account" sh -c "grep -q 'opened a pull request for the memory: https://github.com/qa-owner/qa/pull/1 (as qa-owner)' '$work/out' && test -n \"\$(git -C '$work/gh.git' for-each-ref refs/heads/agent-memory)\""
 
 # --------------------------------------------------------------- hooks, health
