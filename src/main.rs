@@ -46,11 +46,11 @@ const USAGES: [(&str, &str); 12] = [
     ),
     (
         "share",
-        "Usage: am share [-m MESSAGE]\n\nCommit only memory-bank/ changes on top of the shared branch and push them. A\nprotected branch gets a memory branch and a pull request. The shared bank is staged\nso a plain `git pull` works.",
+        "Usage: am share [-m MESSAGE]\n\nCommit only memory-bank/ changes on top of the shared branch and push them. A\nprotected branch gets a memory branch and a pull request. Afterwards a plain\n`git pull` works (merge or rebase): am moves the branch over memory-only commits,\nadds one commit that changes only memory-bank/, or stages it, and says which.",
     ),
     (
         "refresh",
-        "Usage: am refresh\n\nMerge teammates' shared memory into this working tree, keeping your edits, and\nstage it. Code, HEAD and other index entries are untouched.",
+        "Usage: am refresh\n\nMerge teammates' shared memory into this working tree, keeping your edits. Code is\nuntouched. Afterwards a plain `git pull` works (merge or rebase): am moves the\nbranch over memory-only commits, adds one commit that changes only memory-bank/,\nor stages it, and says which.",
     ),
     (
         "status",
@@ -62,11 +62,11 @@ const USAGES: [(&str, &str); 12] = [
     ),
     (
         "install",
-        "Usage: am install [--development-source PATH] [--mode link|copy] [--presets all|none|LIST]\n                  [--target-dir PATH]... [--bin-dir PATH] [--no-guidance] [--omp-agent-dir PATH] [--dry-run]\n\nInstall or repair the skill, activation blocks, session-start hooks and the am command.\nPresets: agents, codex, claude, opencode (all) and omp (opt-in, needs --omp-agent-dir).\nA signed release installs through install.sh; --development-source installs a checkout\nwith a built target/release/am.",
+        "Usage: am install [--development-source PATH] [--mode link|copy] [--presets all|none|LIST]\n                  [--target-dir PATH]... [--bin-dir PATH] [--no-guidance] [--omp-agent-dir PATH] [--dry-run]\n\nInstall or repair the skill, activation blocks, session-start hooks and the am command.\nPresets: agents, codex, claude, opencode and omp. all (the default) includes omp when\nomp is on this machine: its agent directory ($PI_CODING_AGENT_DIR, else ~/.omp/agent)\nexists. --omp-agent-dir PATH sets up omp in PATH instead.\nA signed release installs through install.sh; --development-source installs a checkout\nwith a built target/release/am.",
     ),
     (
         "update",
-        "Usage: am update [--check]\n\nInstall the newest signed release; --check only reports whether one is available.",
+        "Usage: am update [--check]\n\nInstall the newest signed release; --check only reports whether one is available.\nAlso sets up clients installed since (omp, with the default presets).",
     ),
     (
         "uninstall",

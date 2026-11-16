@@ -41,7 +41,7 @@ am_help() {
   printf '%s\n' \
     'Install Agent Memory: install.sh [--dry-run] [--mode link|copy] [--presets all|none|CLIENTS]' \
     'Custom discovery: --target-dir PATH, --bin-dir PATH, --no-guidance' \
-    'Native omp (excluded from all): --presets omp --omp-agent-dir ABSOLUTE_ROOT' \
+    'omp: part of all when its agent directory exists ($PI_CODING_AGENT_DIR or ~/.omp/agent); --omp-agent-dir ABSOLUTE_ROOT picks another' \
     'Explicit source: --development-source PATH (a checkout with a prebuilt target/release/am)' \
     'Bootstrap: downloads the signed am binary for this host, verifies it with ssh-keygen, then runs am install.' \
     'Requires curl and ssh-keygen. Hosts: aarch64-apple-darwin, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl.' \

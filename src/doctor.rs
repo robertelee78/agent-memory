@@ -99,6 +99,12 @@ fn installation(report: &mut Report, deep: bool) {
     } else {
         report.line(format!("Session-start hooks: {}", hooks.join(", ")));
     }
+    if let Some(dir) = install::omp_pending(&receipt) {
+        report.problem(format!(
+            "omp is installed ({}) but agent-memory is not set up for it yet. Run `am update`.",
+            dir.display()
+        ));
+    }
     for check in &checks {
         if !check.ok {
             report.problem(format!(

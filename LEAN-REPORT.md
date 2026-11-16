@@ -3,6 +3,153 @@
 Branch `lean/v0.0.15`, built against [docs/design/v0.0.15-lean.md](docs/design/v0.0.15-lean.md).
 Committed through review batch 4 (c557117b); batch 5 below is not.
 
+## v0.0.16 fix release (branch `fix/v0.0.16`, not committed)
+
+Three fixes ([#268](https://github.com/robertelee78/agent-memory/issues/268),
+[#269](https://github.com/robertelee78/agent-memory/issues/269),
+[#270](https://github.com/robertelee78/agent-memory/issues/270)), version 0.0.16
+(`Cargo.toml`, `Cargo.lock`, SKILL.md metadata; `release::VERSION` follows Cargo).
+Notes: [docs/releases/v0.0.16.md](docs/releases/v0.0.16.md).
+
+### #268 omp set up by default
+
+- omp 18.20.1 source (`packages/utils/src/dirs.ts`): the agent directory is a
+  non-empty `PI_CODING_AGENT_DIR` (resolved), else `~/<PI_CONFIG_DIR or .omp>/agent`;
+  `discovery/builtin.ts` loads `extensions/`, `skills/` and `AGENTS.md` from it.
+  `am` resolves it the same way (named profiles, `OMP_PROFILE`, are not followed).
+- `all` (the default) now includes omp when that directory exists, or when
+  `--omp-agent-dir` is given or recorded. No omp: nothing omp-related is created.
+  `--presets` without `omp` excludes it. A detected directory is not recorded,
+  so it is re-resolved on every install/update.
+- `am update` on an up-to-date release install now re-plans and activates when
+  the plan differs from the receipt (omp installed since), instead of returning
+  "up to date". `am status`/`am doctor` report "omp is installed (…) but
+  agent-memory is not set up for it yet. Run `am update`."
+- From v0.0.15, `am update` is run by the v0.0.15 binary, whose plan has no omp:
+  it installs v0.0.16 without omp. `am status` then says so; a second `am update`
+  (now v0.0.16) sets omp up. The one-line installer does it in one step.
+  Checked end to end on the signed-release path, in scratch copies of d77f1feb
+  and this branch with a throwaway key and `file://` asset URLs (test-only
+  patch, not in the product), `~/.omp/agent/extensions/vox.ts` present:
+  v0.0.15 `am install --bootstrap-binary` (no omp files); `am update` by
+  v0.0.15 → "Installed agent-memory 0.0.16 (release)" (104 ms), still no omp;
+  `am status` (v0.0.16) shows the omp problem; `am update` by v0.0.16 (61 ms)
+  adds the omp skill link, AGENTS.md block and extension, `vox.ts` untouched;
+  status "codex ok, claude ok, omp ok", no problems; a third `am update` says
+  "up to date"; `am doctor` verifies the runtime; `am uninstall` leaves only
+  `vox.ts`. `release.rs`, the manifest fields and the command surface are
+  unchanged, so v0.0.15 accepts the v0.0.16 release.
+
+### #269 install on a fresh machine and after `am uninstall`
+
+- `read_receipt` treats a receipt marked `"uninstalled": true` (v0.0.14's
+  uninstall keeps it) as no installation, for install, update, uninstall,
+  status and doctor; install replaces it with a new receipt.
+- The uncommitted preflight change is kept: a recorded target that no longer
+  exists is installed again (a user deleting `~/.local/bin/am`, say). A file
+  that agent-memory did not put at a target is still refused.
+- Reproduced first: the qa fixture (shape of the operator's
+  `receipt.v014.json`, generated in the script) makes v0.0.15 (d77f1feb) refuse
+  with "… changed since agent-memory installed it" for each link; v0.0.16
+  installs.
+
+### #270 `git pull` after `am refresh` and `am share`
+
+Experiment first (`git` 2.55, bare remote, a teammate clone and a user clone,
+real `am` for refresh/share, candidates applied with git afterwards). 30 cells
+(merge/rebase × up to date, behind with code commits, feature branch, more
+memory after refresh (up to date / behind) × refresh/share, plus unshared
+edits). Pull succeeded with readable notes in:
+
+| Candidate | Cells passing | Trace / side effects |
+| --- | ---: | --- |
+| v0.0.15 (staged) | 9/30 | every rebase cell fails: "Your index contains uncommitted changes" |
+| move branch over memory-only commits, else staged | 16/30 | none |
+| + (a) memory-only commit when pull rebases | 20/30 | a commit; the rebasing pull drops it |
+| + (b) repo-local `rebase.autoStash`/`merge.autoStash` | 22/30 | config changed in 18 cells; 6 more "pass" with conflict markers in MEMORY.md and a stash entry |
+
+(b) only wins on cells where the user's own unstaged edits block a rebasing
+pull, and leaves conflict markers when memory moved again; (a) never leaves a
+mess. Chosen: move the branch when possible, else (a), extended to merging
+pulls on a branch with its own commits (the old message already told users to
+make exactly that commit; with it the merge finds identical files), else
+staged for a fast-forward merge pull. A memory-only commit is made only when
+the branch's own commits leave the bank alone (so it never reverts the user's
+committed memory), and one made earlier (bank = the previous shared memory,
+not on the upstream) is replaced, not stacked, so `am refresh` again fixes
+"more memory shared before you pull". No config change.
+
+Final matrix with the built `am` (42 cells; "diverged" = own unpushed code
+commit on main; "+again" = `am refresh` once more before pulling). Each cell:
+what `am` did; then plain `git pull`.
+
+| Situation | Cmd | merge | merge + unshared edits | rebase | rebase + unshared edits |
+| --- | --- | --- | --- | --- | --- |
+| up to date, memory arrives | refresh | moved; ok | moved; ok | moved; ok | moved; refused¹ |
+| | share | moved; ok | | moved; ok | |
+| behind (code + memory upstream) | refresh | staged; ok | staged; ok | commit; ok | commit; refused¹ |
+| | share | staged; ok | | commit; ok | |
+| diverged (own code commit) | refresh | commit; ok | commit; ok | commit; ok | commit; refused¹ |
+| | share | commit; ok | | commit; ok | |
+| feature branch | refresh | commit; ok | commit; ok | commit; ok | commit; refused¹ |
+| | share | commit; ok | | commit; ok | |
+| up to date, more memory before pull | refresh | moved; ok | moved; ok | moved; ok | moved; refused¹ |
+| | share | moved; ok | | moved; ok | |
+| behind, more memory before pull | refresh | staged; refused² | staged; refused² | commit; conflict² | commit; refused¹ |
+| | share | staged; refused² | | commit; conflict² | |
+| behind, more memory, refresh again | refresh | staged; ok | staged; ok | commit; ok | commit; refused¹ |
+| | share | staged; ok | | commit; ok | |
+
+¹ git refuses a rebasing pull with uncommitted changes (the user's own edits;
+same without `am`). `am` prints "Your memory edits that are not shared yet are
+uncommitted, so `git pull` (rebase) refuses to run until you share them
+(am share) or use git pull --autostash." Both verified in every such cell
+(autostash fails only in the "behind, more memory" cell, where the message
+also says to run `am refresh` first). Edits were kept in all cells.
+² `am` prints "If more memory is shared before you pull, run am refresh first."
+Following it, the pull succeeds (verified per cell). The rebase conflict is in
+`MEMORY.md` only; `git rebase --skip` also recovers (drops am's commit).
+
+30 of 42 cells pass outright; the other 12 fail only as the printed message
+says, and its instruction works. Notes stay readable by `am recall` in every
+cell except the two conflict cells before recovery.
+
+Code: `share.rs` `settle` (after `record_shared`, under the bank lock),
+`settle_note`, `pull_rebases` (`branch.<b>.rebase`, else `pull.rebase`),
+`temp_index` shared with `commit_bank`. An up-to-date refresh (or "nothing new"
+share) also settles memory left staged by v0.0.15 when the index already holds
+the shared bank. Extra git calls: about 4 to move the branch, about 10 for a
+memory-only commit.
+
+### Checks
+
+- `cargo build --release`: 0 warnings, also with `--features dev-tools`;
+  `cargo fmt --check` clean; `aarch64-unknown-linux-musl` (static) and
+  `x86_64-unknown-linux-musl` (static-pie) with `rust-lld`: 0 warnings.
+- `scripts/qa.sh` on macOS arm64: **0 failures, 69 steps + 83 checks** (was 40 +
+  51). New: plain install with omp present beside the user's `vox.ts`;
+  `--presets` without omp; status lists omp; pull-mode section (R rebases, M
+  merges; refresh and share each, up to date, behind, refresh twice, unshared
+  edits); diverged clone C now gets the memory-only commit; fresh machine,
+  reinstall after the lean uninstall, omp installed later + `am update`,
+  `PI_CODING_AGENT_DIR`; the v0.0.14-uninstalled fixture, including the refusal
+  of a user's file at a target.
+- Timings (ms): install 79 (`--dry-run` 124), fresh install 66, reinstall 67,
+  install after v0.0.14 uninstall 55, update adding omp 31, uninstall 3–28;
+  refresh 98–199, share 141–215 (local push included), `git pull` 34–62;
+  recall/remember/status/doctor 2–19; hook 2–11. One run over 200 ms: share
+  behind code in rebase mode (215, including the local push and the
+  memory-only commit); refresh on the diverged clone 199.
+
+### Not done
+
+- Linux qa runs (no Linux host; CI runs `qa.sh` on both Linux targets).
+- `am update` v0.0.15 → v0.0.16 against the real GitHub release (needs the
+  published release and the real key; done above with a throwaway key).
+- A real omp session after a plain install.
+- `am uninstall` leaves the empty `~/.omp/agent/skills/` it created (as the
+  v0.0.15 omp preset did).
+
 ## Line count (product)
 
 | | Before | After |

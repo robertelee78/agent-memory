@@ -25,16 +25,20 @@ signed release manifest and skill pack, installs itself under
 `~/.local/bin`, and records every file it owns in a receipt
 (`~/.local/state/agent-memory/install/receipt.json`).
 
-Defaults cover the Agent Skills directory, Codex, Claude and OpenCode:
+Defaults cover the Agent Skills directory, Codex, Claude and OpenCode, plus omp
+when it is on the machine (its agent directory, `$PI_CODING_AGENT_DIR` or
+`~/.omp/agent`, exists):
 
 - the skill (`skills/agent-memory`) is linked into each client's skills folder;
 - a short activation block is added to `AGENTS.md` / `CLAUDE.md`;
-- Claude and Codex get a **session-start hook** that injects the project summary.
+- Claude and Codex get a **session-start hook** that injects the project summary;
+  omp gets a small extension (`extensions/agent-memory.ts`) that hands the
+  summary to the first prompt of each session. Your other omp files stay as they are.
 
 Options (pass after `sh -s --`): `--dry-run`, `--presets all|none|agents,codex,claude,opencode,omp`,
-`--mode link|copy`, `--target-dir PATH`, `--bin-dir PATH`, `--no-guidance`.
-omp is opt-in: `--presets omp --omp-agent-dir ~/.omp/agent` installs a small
-extension that hands the summary to the first prompt of each session.
+`--mode link|copy`, `--target-dir PATH`, `--bin-dir PATH`, `--no-guidance`,
+`--omp-agent-dir PATH` (set up omp in another agent directory). If you install
+omp later, `am update` sets it up.
 
 Restart running agent sessions afterwards. Then:
 
@@ -46,7 +50,10 @@ am uninstall   # remove exactly what the receipt owns
 
 An existing v0.0.14 (or older) installation is taken over by re-running the
 one-line install: each recorded file is replaced only if it is unchanged since
-it was installed, and the old per-turn hooks are removed.
+it was installed, and the old per-turn hooks are removed. After `am uninstall`
+(of any version) the one-line install works like a fresh one. A file that
+agent-memory did not put at an install location is never overwritten: the
+install stops and names it.
 
 ## Use
 
@@ -65,14 +72,23 @@ finished task, your correction) it suggests one short memory and asks you; only
 what you approve is saved. `am remember` also reads JSON on stdin; see
 [skills/agent-memory/templates/remember.example.json](skills/agent-memory/templates/remember.example.json).
 
-`am share` never touches your code or branch. It commits the bank on top
-of the shared branch (`git config agent-memory.authoritybranch`, default the
-remote's default branch) and pushes. When that branch is protected it pushes a
-memory branch and opens a pull request with `gh`. `am refresh` merges others'
-memory into your working tree, keeping your own edits; overlapping edits get
-ordinary conflict markers to resolve. Both stage the shared `memory-bank/` so a
-plain `git pull` works; on a branch with its own commits, commit the staged
-memory first (`git commit -m "Shared memory"`).
+`am share` never touches your code. It commits the bank on top of the shared
+branch (`git config agent-memory.authoritybranch`, default the remote's default
+branch) and pushes. When that branch is protected it pushes a memory branch and
+opens a pull request with `gh`. `am refresh` merges others' memory into your
+working tree, keeping your own edits; overlapping edits get ordinary conflict
+markers to resolve.
+
+Afterwards a plain `git pull` works, whether your git merges or rebases on pull.
+When your branch tracks the shared branch and only memory commits lie between
+them, `am` moves the branch to the shared memory (nothing is staged). When
+your git rebases on pull, or your branch has its own commits, `am` adds one
+commit that changes only `memory-bank/`; a rebasing pull drops it once the
+shared branch holds that memory. Otherwise (a merging pull that
+fast-forwards) the shared memory is staged. `am` says which it did. Two cases
+need a step first, and `am` says so: memory shared again before you pull (run
+`am refresh` again), and, with a rebasing pull, your own memory edits not
+shared yet (`am share`, or `git pull --autostash`).
 
 ## The memory bank
 

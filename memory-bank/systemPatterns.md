@@ -21,12 +21,16 @@ linked from `MEMORY.md`. A superseded lesson keeps its file with
 ## Sharing
 
 `am share` commits only `memory-bank/` on top of the shared branch (a temporary
-index; code, HEAD and other index entries untouched) and pushes; a protected
-branch gets a memory branch and a pull request. `am refresh` merges others'
-memory into the working tree (MEMORY.md row by row, other files with
-`git merge-file`) and stages the shared bank so a plain `git pull` works. Both
-refuse rather than lose data: links inside the bank, memory staged only in the
-index, unresolved conflict markers.
+index; code and other index entries untouched) and pushes; a protected branch
+gets a memory branch and a pull request. `am refresh` merges others' memory
+into the working tree (MEMORY.md row by row, other files with `git merge-file`).
+Both then leave a state where a plain `git pull` works in merge and rebase
+mode: the branch moves to the shared commit when it tracks the shared branch
+and only memory lies between; else one memory-only commit (rebase mode, or a
+branch with its own commits; replaced, not stacked, on the next refresh); else
+the memory stays staged for a fast-forward pull. Both refuse rather than lose
+data: links inside the bank, memory staged only in the index, unresolved
+conflict markers.
 
 ## Install
 
@@ -35,3 +39,7 @@ the release-v2 manifest and pack). A receipt records every owned file; files are
 replaced only while unchanged, whole files deleted only if am created them and
 nothing else is left. A small leftovers record (with hashes) lets a killed run
 be finished safely. A v0.0.14 install is taken over the same way.
+The default presets include omp when its agent directory exists
+(`$PI_CODING_AGENT_DIR`, else `~/.omp/agent`, as omp resolves it); `am update`
+sets up omp installed later. A receipt marked `"uninstalled": true` (left by
+the v0.0.14 `am uninstall`) counts as no installation.

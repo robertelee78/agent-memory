@@ -2,10 +2,13 @@
 
 ## Current focus
 
-v0.0.15 is the lean rebuild (`lean/v0.0.15`): Rust `am`, about 6k lines,
-reviewed and ready to merge. Next steps: merge, publish the signed release, run
-`.github/workflows/verify-release.yml` against it, and a few real omp sessions
-on the cheapest model.
+v0.0.16 (`fix/v0.0.16`) is a small fix release of the lean `am`: omp is set up
+by default when it is on the machine (#268), install works on a fresh machine
+and after any `am uninstall` (#269), and a plain `git pull` works after
+`am refresh` and `am share` in merge and rebase mode (#270). Next steps:
+merge, publish the signed release, check `am update` from v0.0.15 on the
+operator's machine (run it twice: v0.0.15 installs v0.0.16, v0.0.16 then sets
+up omp), and one real omp session on the cheapest model.
 
 ## Working rules (operator, 2026-11-15)
 
