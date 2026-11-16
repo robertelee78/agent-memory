@@ -1,7 +1,7 @@
 ---
 name: agent-memory
 description: Shared project memory in the repository's memory-bank/. Use at session start to learn what the project is, how it is built and its lessons; at milestones to suggest a memory, ask the user and save it with am remember.
-metadata: {"version": "0.0.16"}
+metadata: {"version": "0.0.17"}
 ---
 
 # Agent memory
@@ -28,7 +28,7 @@ summary. Otherwise, or for a specific topic, run:
 
 ```sh
 am recall              # the project summary and the list of lessons
-am recall "build musl" # plus the notes matching these words
+am recall "build musl" # the notes that have every one of these words (or says it shows the closest)
 ```
 
 Read the notes that apply before relying on assumptions. Memory is evidence

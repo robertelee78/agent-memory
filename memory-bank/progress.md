@@ -1,6 +1,6 @@
 # Progress
 
-## Works (v0.0.16, branch `fix/v0.0.16`)
+## Works (v0.0.17)
 
 - All lean commands: status, doctor, init, recall, remember, share, refresh,
   install/update/uninstall, session-start hooks for Claude, Codex and omp.
@@ -12,15 +12,17 @@
 - A plain `git pull` works after refresh and share with `pull.rebase` true or
   false, also with `pull.ff=only` (144-cell matrix in [LEAN-REPORT.md](../LEAN-REPORT.md)); the printed
   message names the step first needed in the cells where it cannot.
-- `scripts/qa.sh` passes on macOS arm64; every command under 200 ms locally.
-- v0.0.15 is published; v0.0.14 takeover verified from a real install and an
-  offline QA fixture.
+- `am recall QUERY` returns only the notes that have every query word (common
+  words ignored; short words and numbers exact), best first, and says when it
+  shows closest matches instead.
+- `scripts/qa.sh` passes on macOS arm64, Linux arm64 and Linux x86_64; every
+  command under about 200 ms locally.
+- v0.0.15 and v0.0.16 are published; v0.0.14 takeover verified from a real
+  install and an offline QA fixture; omp works on the operator's machine.
 
 ## Remaining
 
-- Publish the signed v0.0.16 release; run `verify-release.yml` on it.
-- `am update` from v0.0.15 on the operator's machine (two runs; see activeContext).
-- A few real omp sessions on the cheapest model after a plain install.
+- Publish the signed v0.0.17 release; run `verify-release.yml` on it.
 
 ## Known limits
 
@@ -34,5 +36,5 @@
 ## History
 
 Releases up to v0.0.14 and their evidence: [docs/releases/](../docs/releases/).
-v0.0.15 and v0.0.16: [docs/releases/](../docs/releases/) and
+v0.0.15 to v0.0.17: [docs/releases/](../docs/releases/) and
 [LEAN-REPORT.md](../LEAN-REPORT.md).
