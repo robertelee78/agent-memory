@@ -15,9 +15,9 @@
 # help, an existing bank without every context file, the session-start hook,
 # status, doctor, uninstall, the takeover of a small offline v0.0.14 install,
 # install on a fresh machine and again after `am uninstall` (the lean one and
-# the v0.0.14 one), omp installed after agent-memory and a relative
-# PI_CODING_AGENT_DIR. Needs bash 5
-# (EPOCHREALTIME) and git.
+# the v0.0.14 one), omp installed after agent-memory, a relative
+# PI_CODING_AGENT_DIR, and a GitHub push refused for the active gh account
+# (simulated offline). Needs bash 5 (EPOCHREALTIME) and git.
 set -euo pipefail
 [ -n "${EPOCHREALTIME:-}" ] || { echo "qa.sh needs bash 5 or newer (macOS: brew install bash)" >&2; exit 2; }
 
@@ -356,6 +356,52 @@ expect "R has origin/main and keeps the code edit" sh -c "cd '$work/r' && test \
 teammate_note "No upstream one"
 step "refresh on a branch without upstream" "$work/r" am refresh
 expect "refresh says there is no upstream to pull" grep -q 'This branch has no upstream branch, so there is nothing for `git pull` to pull.' "$work/out"
+
+# A github.com HTTPS remote whose push GitHub refuses for the active gh
+# account (offline: the URL is rewritten to a local bare repository, a fake
+# `gh` knows two accounts, and a `git` shim answers a push with GitHub's exact
+# 403 text unless the credential helper am passes names the allowed account).
+shim="$work/shim"; mkdir -p "$shim"
+cat > "$shim/gh" <<'EOF'
+#!/bin/sh
+case "$*" in
+  "auth status"*) printf 'qa-other true\nqa-owner false\n' ;;
+  "auth token"*) echo qa-token ;;
+  "pr create"*) [ "${GH_TOKEN:-}" = qa-token ] && echo "https://github.com/qa-owner/qa/pull/1 (as qa-owner)" ;;
+  *) exit 1 ;;
+esac
+EOF
+cat > "$shim/git" <<EOF
+#!/bin/sh
+case " \$* " in *" push "*)
+  if ! env | grep -q -- "--user \${QA_PUSHER:-none};"; then
+    echo "remote: Permission to qa-owner/qa.git denied to qa-other." >&2
+    echo "fatal: unable to access 'https://github.com/qa-owner/qa.git/': The requested URL returned error: 403" >&2
+    exit 128
+  fi ;;
+esac
+exec $(command -v git) "\$@"
+EOF
+chmod +x "$shim/gh" "$shim/git"
+git init -q --bare "$work/gh.git"
+git config --global url."$work/gh.git".insteadOf https://github.com/qa-owner/qa.git
+git clone -q https://github.com/qa-owner/qa.git "$work/k" 2>/dev/null
+(cd "$work/k" && echo code > code.txt && git add code.txt && git commit -qm init && git push -q origin main && am init > /dev/null)
+(cd "$work/k" && am remember --kind fact --title "Account switch" --body "Pushed as the owner's account." > /dev/null)
+step "share (GitHub refuses the active account)" "$work/k" env PATH="$shim:$PATH" QA_PUSHER=qa-owner am share
+expect "share used the owner's account and says so" grep -q 'Used GitHub account qa-owner for qa-owner/qa (qa-other may not push to it).' "$work/out"
+expect "the memory reached the remote" sh -c "git -C '$work/gh.git' ls-tree -r --name-only main | grep -q 'memory-bank/topics/'"
+expect "no git config written for the account" sh -c "! git -C '$work/k' config --local --get-regexp credential && ! git config --global --get-regexp credential"
+(cd "$work/k" && am remember --kind fact --title "Nobody may push" --body "Refused for every account." > /dev/null)
+refuse "share when no account may push" "$work/k" env PATH="$shim:$PATH" QA_PUSHER=nobody am share
+expect "one plain refusal, not a protected branch" sh -c "grep -q 'None of your GitHub accounts (qa-other, qa-owner) may push to qa-owner/qa.' '$work/out' && ! grep -q -e protected -e fatal '$work/out'"
+expect "no memory branch pushed" sh -c "test -z \"\$(git -C '$work/gh.git' for-each-ref refs/heads/agent-memory)\""
+# Protected main (GitHub's GH006 from a hook): the memory branch push and
+# `gh pr create` use the same account the share switched to.
+printf '#!/bin/sh\nwhile read old new ref; do [ "$ref" = refs/heads/main ] && { echo "remote: error: GH006: Protected branch update failed for refs/heads/main." >&2; exit 1; }; done; exit 0\n' > "$work/gh.git/hooks/pre-receive"
+chmod +x "$work/gh.git/hooks/pre-receive"
+step "share to a protected branch (GitHub refuses the active account)" "$work/k" env PATH="$shim:$PATH" QA_PUSHER=qa-owner am share
+expect "memory branch pushed and the PR opened as the owner's account" sh -c "grep -q 'opened a pull request for the memory: https://github.com/qa-owner/qa/pull/1 (as qa-owner)' '$work/out' && test -n \"\$(git -C '$work/gh.git' for-each-ref refs/heads/agent-memory)\""
 
 # --------------------------------------------------------------- hooks, health
 step "hook claude" "$work/a" sh -c "printf '{\"cwd\":\"$work/a\",\"hook_event_name\":\"SessionStart\"}' | am hook session-start --client claude"
